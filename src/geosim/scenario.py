@@ -24,7 +24,8 @@ class ScenarioConfig:
     cn_up_db: float = 25.0        # carrier power / uplink noise in `bandwidth`
     cn_dn_db: float = 20.0        # OMUX output power / downlink noise in `bandwidth`
     linear: bool = False          # True: replace the TWTA by its small-signal gain
-    filter_model: str = "dvbs2x"  # IMUX/OMUX model, see payload.imux_sos
+    filter_model: str = "etsi"    # IMUX/OMUX model, see payload.imux
+    amplifier: str = "dvbs2_nl"   # TWTA model, see payload.amplifier
     n_snap: int = 128
     snap_interval: float = 10e-3  # s between snapshot starts
     seed: int = 0
@@ -56,12 +57,14 @@ def simulate(cfg: ScenarioConfig, plan: list[Carrier] | None = None,
     n0_up = 1.0 / (cfg.bandwidth * 10 ** (cfg.cn_up_db / 10))
     x += sn.awgn(np.random.default_rng(s_up), shape, n0_up, fs)
 
-    x = pl.apply_filter(pl.imux_sos(cfg.bandwidth, fs, cfg.filter_model), x)
-    x *= pl.drive_gain(1.0, cfg.ibo_db)          # fixed gain, set for the carriers alone
-    drive_ibo = 10 * np.log10(pl.R_SAT ** 2 / np.mean(np.abs(x) ** 2))
-    y = pl.linear_amp(x) if cfg.linear else pl.saleh(x)
-    obo = pl.obo_db(y)
-    y = pl.apply_filter(pl.omux_sos(cfg.bandwidth, fs, cfg.filter_model), y)
+    amp = pl.amplifier(cfg.amplifier)
+    x = pl.imux(cfg.bandwidth, fs, cfg.filter_model).apply(x)
+    x *= amp.drive_gain(1.0, cfg.ibo_db)         # fixed gain, set for the carriers alone
+    w = slice(sn.WARMUP_SIM, None)               # statistics exclude the filter warm-up
+    drive_ibo = 10 * np.log10(amp.r_sat ** 2 / np.mean(np.abs(x[:, w]) ** 2))
+    y = amp.linear(x) if cfg.linear else amp(x)
+    obo = amp.obo_db(y[:, w])
+    y = pl.omux(cfg.bandwidth, fs, cfg.filter_model).apply(y)
 
     p_out = float(np.mean(np.abs(y[:, sn.WARMUP_SIM:]) ** 2))
     n0_dn = p_out / (cfg.bandwidth * 10 ** (cfg.cn_dn_db / 10))

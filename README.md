@@ -9,3 +9,5 @@ GEO bent-pipe transponderindeki girişimi, operatörün downlink spektrum izleme
 pip install -e .[dev]
 pytest
 ```
+
+Simülatör, DVB-S2 referans transponderinden türetilmiş verilerle birlikte gelir (`src/geosim/data/`). Ham ETSI dosyaları depoda değildir; yeniden üretmek için `docs/plan/kaynak_transponder_modeli.md` içindeki bağlantılardan indirip `data/` altına koyun ve `scripts/` altındaki iki betiği çalıştırın.

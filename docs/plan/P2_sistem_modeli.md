@@ -273,3 +273,18 @@ Ayrıntı: `kaynak_transponder_modeli.md`.
   36 MHz'te genlik: IMUX ±18 MHz'te −1,2 dB, ±23 MHz'te −34 dB; OMUX ±18 MHz'te −2,1 dB, ±28,6 MHz'te −38 dB **[HESAP]**. Makale örnekleme hızını vermiyor; sayısal tasarım 288 MHz'te yapıldığı için bant kenarı değerleri yazarınkinden biraz farklı olabilir (144 ve 576 MHz'te IMUX'un ±18 MHz kazancı −0,7 ve −1,3 dB çıkıyor).
 - **Etiketi [STANDART]'a yükselenler:** PL başlığının karıştırılmaması (5.5.4), APSK halka açıları, 36/40 MHz referansı ve ölçekleme kuralı (H.7, TR 102 376-2 4.4.1.2).
 - **TWTA değişmedi:** referans eğriler yalnızca şekil olarak yayımlanmış; Saleh katsayıları hâlâ **[DOĞRULANACAK]**.
+
+## 12. Referans verilerle güncelleme (2026-10-09)
+
+Ayrıntı ve sayılar: `kaynak_transponder_modeli.md`, "Güncelleme" bölümü. **§0'daki C kararı artık geçersiz**: referans eğriler elde edildi.
+
+| Blok | Varsayılan model | Kaynak | Seçenekler |
+|---|---|---|---|
+| IMUX, OMUX (§2.4, §2.7) | `etsi`: TR 102 376-2 Ek E tablosundan FIR | [STANDART] sayısal tablo | `cheby2` (Dimitrov 2016), `generic` |
+| TWTA (§2.6) | `dvbs2_nl`: EN 302 307-1 Şekil H.3 | [STANDART] şekilden vektör sayısallaştırma | `dvbs2_lin` (Şekil H.2), `saleh` |
+
+- Tablo tabanlı yükselteçlerde r_sat = 1 ve A_max = 1; IBO ve OBO tanımları değişmedi.
+- Sabit zarflı tek ton için `dvbs2_nl` IBO → OBO: 0 → 0,00 · 3 → 0,39 · 6 → 1,43 · 10 → 3,92 · 15 → 8,29 dB.
+- FIR süzgeçler 1024 katsayılı; iki süzgecin toplam geçici rejimi 2048 örnek, ısınma payı 2304 örnek.
+- T5–T8 testleri Saleh modeli için duruyor; tablo modelleri için ayrı testler eklendi (41 test).
+- Senaryo süresi: 2,1 s (36 MHz), 3,0 s (72 MHz), bulut makinesi.

@@ -53,54 +53,98 @@ def test_t3_noise_density():
     assert abs(db(1.0 / in_band) - 25.0) <= 0.2
 
 
-def _group_delay_ns(sos, offsets_hz):
-    f = np.linspace(-0.6, 0.6, 24001) * offsets_hz[-1] / 0.5
-    _, h = sosfreqz(sos, worN=2 * np.pi * f / FS)
-    gd = -np.gradient(np.unwrap(np.angle(h)), 2 * np.pi * f)
+def _rel_delay_ns(filt, offsets_hz):
+    span = 1.3 * max(abs(o) for o in offsets_hz)
+    f = np.linspace(-span, span, 8001)
+    gd = -np.gradient(np.unwrap(np.angle(filt.response(f))), 2 * np.pi * f)
     centre = gd[np.argmin(np.abs(f))]
     return [(gd[np.argmin(np.abs(f - o))] - centre) * 1e9 for o in offsets_hz]
 
 
+def _gain_db(filt, f):
+    return 20 * np.log10(np.abs(filt.response(np.atleast_1d(f))))
+
+
+# Values copied from the ETSI TR 102 376-2 Annex E tables (36 MHz): offset MHz -> (gain dB, delay ns
+# relative to band centre).
+ETSI_IMUX = {-18.0: (-1.18, 36.8), 18.0: (-1.34, 39.9), -15.075: (-0.377, 10.0), 13.5: (-0.185, 4.4),
+             20.025: (-5.57, 94.9)}
+ETSI_OMUX = {-18.0: (-1.073, 40.1), 18.0: (-1.013, 34.9), 14.0: (-0.204, 11.5), -14.0: (-0.314, 13.5),
+             20.0: (-3.866, 45.2)}
+
+
+@pytest.mark.parametrize("kind,table", [("imux", ETSI_IMUX), ("omux", ETSI_OMUX)])
+@pytest.mark.parametrize("bw", [36e6, 72e6])
+def test_t4_etsi_filters_match_tables(kind, table, bw):
+    """Default filters reproduce the reference tables; 72 MHz follows the H.7 scaling rule."""
+    k = bw / 36e6
+    filt = getattr(pl, kind)(bw, FS)
+    offs = [o * 1e6 * k for o in table]
+    assert np.allclose(_gain_db(filt, offs), [v[0] for v in table.values()], atol=0.1)
+    assert np.allclose(_rel_delay_ns(filt, offs), [v[1] / k for v in table.values()], atol=2.0)
+
+
 @pytest.mark.parametrize("model,bw,imux,omux", [
-    ("dvbs2x", 36e6, [4.9, 20.4, 35.8, 64.7], [4.0, 16.2, 30.8]),
-    ("dvbs2x", 72e6, [2.4, 9.5, 16.4, 30.9], [1.7, 6.7, 15.1]),
+    ("cheby2", 36e6, [4.9, 20.4, 35.8, 64.7], [4.0, 16.2, 30.8]),
+    ("cheby2", 72e6, [2.4, 9.5, 16.4, 30.9], [1.7, 6.7, 15.1]),
     ("generic", 36e6, [6.8, 28.7, 48.1, 136.5], [2.1, 4.4, 10.8]),
     ("generic", 72e6, [3.6, 15.0, 25.6, 75.4], [1.3, 2.8, 6.8]),
 ])
-def test_t4_group_delay(model, bw, imux, omux):
-    got = _group_delay_ns(pl.imux_sos(bw, FS, model), [0.25 * bw, 0.40 * bw, 0.45 * bw, 0.50 * bw])
+def test_t4_parametric_filters(model, bw, imux, omux):
+    got = _rel_delay_ns(pl.imux(bw, FS, model), [0.25 * bw, 0.40 * bw, 0.45 * bw, 0.50 * bw])
     assert np.allclose(got, imux, atol=1.0)
-    got = _group_delay_ns(pl.omux_sos(bw, FS, model), [0.25 * bw, 0.40 * bw, 0.50 * bw])
+    got = _rel_delay_ns(pl.omux(bw, FS, model), [0.25 * bw, 0.40 * bw, 0.50 * bw])
     assert np.allclose(got, omux, atol=1.0)
 
 
-def test_t4_reference_filter_selectivity():
-    """36 MHz reference filters: flat to +/-14 MHz, about -34 / -38 dB at the stop-band edges."""
-    def gain_db(sos, f):
-        return 20 * np.log10(np.abs(sosfreqz(sos, worN=2 * np.pi * np.array([f]) / FS)[1][0]))
-    assert gain_db(pl.imux_sos(36e6, FS), 14e6) > -0.1 and abs(gain_db(pl.imux_sos(36e6, FS), 23e6) + 34) < 0.1
-    assert gain_db(pl.omux_sos(36e6, FS), 14e6) > -0.2 and abs(gain_db(pl.omux_sos(36e6, FS), 28.6e6) + 38) < 0.1
+def test_t4_filter_apply_matches_response():
+    """Filtering a tone scales it by the filter's response (checks the FIR and IIR code paths)."""
+    n, f0 = 1 << 14, 15e6
+    tone = np.exp(2j * np.pi * f0 * np.arange(n) / FS).astype(np.complex64)
+    for model in ("etsi", "cheby2"):
+        filt = pl.imux(36e6, FS, model)
+        y = filt.apply(tone[None, :])[0, 4096:]
+        assert abs(20 * np.log10(np.sqrt(np.mean(np.abs(y) ** 2))) - _gain_db(filt, f0)[0]) < 0.02
+
+
+SALEH = pl.amplifier("saleh")
 
 
 def test_t5_am_am_am_pm():
     r = np.linspace(1e-3, 2.0, 2000)
-    y = pl.saleh((r * np.exp(1j * 0.7)).astype(np.complex128))
+    y = SALEH((r * np.exp(1j * 0.7)).astype(np.complex128))
     assert np.max(np.abs(db(np.abs(y) ** 2) - db((2.1587 * r / (1 + 1.1517 * r ** 2)) ** 2))) <= 0.01
     phase = np.degrees(np.angle(y * np.exp(-1j * 0.7)))
     assert np.max(np.abs(phase - np.degrees(4.0033 * r ** 2 / (1 + 9.1040 * r ** 2)))) <= 0.1
-    assert abs(r[np.argmax(np.abs(y))] - pl.R_SAT) < 2e-3 and abs(np.abs(y).max() - 1.0058) < 1e-3
+    assert abs(r[np.argmax(np.abs(y))] - SALEH.r_sat) < 2e-3 and abs(np.abs(y).max() - 1.0058) < 1e-3
 
 
 @pytest.mark.parametrize("ibo,obo", [(0, 0.00), (3, 0.51), (6, 1.93), (10, 4.81), (15, 9.25)])
 def test_t6_tone_ibo_obo(ibo, obo):
     tone = np.exp(2j * np.pi * 0.01 * np.arange(4096)).astype(np.complex64)
-    assert abs(pl.obo_db(pl.saleh(pl.drive_gain(1.0, ibo) * tone)) - obo) <= 0.02
+    assert abs(SALEH.obo_db(SALEH(SALEH.drive_gain(1.0, ibo) * tone)) - obo) <= 0.02
+
+
+# EN 302 307-1 Figure H.3 / H.2 values read off the digitized curves: IBO dB -> (OBO dB, phase deg)
+@pytest.mark.parametrize("name,points", [
+    ("dvbs2_nl", {0: (0.00, 42.0), 6: (1.43, 21.3), 10: (3.92, 10.5), 20: (13.19, 0.0)}),
+    ("dvbs2_lin", {0: (0.00, 12.3), 6: (1.24, 10.4), 10: (4.47, 8.7), 20: (16.91, 1.3)}),
+])
+def test_t5_table_amplifiers(name, points):
+    amp = pl.amplifier(name)
+    assert amp.r_sat == 1.0 and amp.a_max == 1.0
+    for ibo, (obo, phase) in points.items():
+        y = amp(amp.drive_gain(1.0, ibo) * np.ones(4, np.complex128))
+        assert abs(amp.obo_db(y) - obo) <= 0.05 and abs(np.degrees(np.angle(y[0])) - phase) <= 0.3
+    weak = amp(np.full(4, 1e-4, np.complex128))          # far below the table: linear, no phase shift
+    assert abs(np.abs(weak[0]) / 1e-4 - amp.small_signal_gain) < 1e-9 and abs(np.angle(weak[0])) < 1e-3
+    assert np.all(np.isfinite(amp(np.array([0.0, 5.0, 50.0], np.complex128))))
 
 
 def _two_tone_c_im3(ibo):
     n, k1, k2 = 1 << 14, 400, 520
     x = (np.exp(2j * np.pi * k1 * np.arange(n) / n) + np.exp(2j * np.pi * k2 * np.arange(n) / n)) / np.sqrt(2)
-    s = np.abs(np.fft.fft(pl.saleh((pl.drive_gain(1.0, ibo) * x).astype(np.complex128)))) ** 2
+    s = np.abs(np.fft.fft(SALEH((SALEH.drive_gain(1.0, ibo) * x).astype(np.complex128)))) ** 2
     return s, k1, k2
 
 
@@ -119,32 +163,48 @@ def test_t8_im3_slope():
     assert 1.0 < (c_im3(8.0) - c_im3(3.0)) / 5.0 < 1.5      # operating range: much shallower
 
 
-def test_t9_multicarrier_c_im_monotonic():
+def _gap_c_im(amp_name, ibos):
+    amp = pl.amplifier(amp_name)
     plan = [Carrier(-9e6, 6e6, 0.2, "QPSK", 0.5), Carrier(9e6, 6e6, 0.2, "8PSK", 0.5)]
-    rng = np.random.default_rng(9)
-    x = sum(generate_carrier(rng, c, 32, 1 << 14, FS) for c in plan)
-    ratios = []
-    for ibo in (3, 6, 9, 12, 15):
-        y = pl.saleh(pl.drive_gain(1.0, ibo) * x).ravel()
-        f, p = welch(y, fs=FS, nperseg=2048, return_onesided=False, detrend=False)
-        ratios.append(db(p[np.abs(np.abs(f) - 9e6) < 2e6].mean() / p[np.abs(f) < 2e6].mean()))
-    assert np.all(np.diff(ratios) > 0)
+    x = sum(generate_carrier(np.random.default_rng(9), c, 32, 1 << 14, FS) for c in plan)
+    out = []
+    for ibo in ibos:
+        f, p = welch(amp(amp.drive_gain(1.0, ibo) * x).ravel(), fs=FS, nperseg=2048, return_onesided=False,
+                     detrend=False)
+        out.append(db(p[np.abs(np.abs(f) - 9e6) < 2e6].mean() / p[np.abs(f) < 2e6].mean()))
+    return np.array(out)
 
 
+@pytest.mark.parametrize("amp_name", ["dvbs2_nl", "saleh"])
+def test_t9_multicarrier_c_im_monotonic(amp_name):
+    assert np.all(np.diff(_gap_c_im(amp_name, (0, 3, 6, 9, 12, 15))) > 0)
+
+
+def test_t9_linearized_twta_is_cleaner_near_saturation():
+    """The linearized tube gives higher C/IM than the non-linearized one at practical back-off.
+
+    Its C/IM is not monotonic in back-off: the figure gives one point per dB with a stepped phase.
+    """
+    ibos = (0, 3, 6, 9)
+    assert np.all(_gap_c_im("dvbs2_lin", ibos) > _gap_c_im("dvbs2_nl", ibos))
+
+
+@pytest.mark.parametrize("amp_name", ["dvbs2_nl", "saleh"])
 @pytest.mark.parametrize("bw", [36e6, 72e6])
-def test_t10_aliasing(bw):
+def test_t10_aliasing(bw, amp_name):
+    amp = pl.amplifier(amp_name)
     plan = random_plan(np.random.default_rng(10), bw)
     rng = np.random.default_rng(11)
     hi = sum(generate_carrier(rng, c, 16, 1 << 15, 2 * FS) for c in plan)   # 576 MHz
     lo = hi[:, ::2]                                                        # same waveform at 288 MHz
-    g = pl.drive_gain(1.0, 3.0)
+    g = amp.drive_gain(1.0, 3.0)
 
     def band_power(y, fs, nperseg):
         f, p = welch(y, fs=fs, nperseg=nperseg, return_onesided=False, detrend=False, window="boxcar",
                      noverlap=0, axis=-1)
         edges = np.linspace(-bw / 2, bw / 2, 19)
         return np.array([p[:, (f >= a) & (f < b)].mean() for a, b in zip(edges[:-1], edges[1:])])
-    d = db(band_power(pl.saleh(g * hi), 2 * FS, 4096)) - db(band_power(pl.saleh(g * lo), FS, 2048))
+    d = db(band_power(amp(g * hi), 2 * FS, 4096)) - db(band_power(amp(g * lo), FS, 2048))
     assert np.max(np.abs(d)) <= 0.1
 
 

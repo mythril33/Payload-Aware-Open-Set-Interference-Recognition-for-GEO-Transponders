@@ -28,7 +28,7 @@ fig, ax = plt.subplots(figsize=(9, 4.6), dpi=150, facecolor=SURFACE)
 ax.set_facecolor(SURFACE)
 ax.fill_between(f, -70, np.where(lin.mask_db > -30, 5, -70), color="#e9e8e4", lw=0, label="Planlı taşıyıcılar")
 ax.plot(f, a, color=BLUE, lw=2, label="Doğrusal zincir")
-ax.plot(f, b, color=ORANGE, lw=2, label=f"TWTA (Saleh), IBO {cfg.ibo_db:.0f} dB")
+ax.plot(f, b, color=ORANGE, lw=2, label=f"TWTA (DVB-S2 Şekil H.3), IBO {cfg.ibo_db:.0f} dB")
 ax.set(xlim=(-30, 30), ylim=(-60, 5), xlabel="Transponder merkezinden frekans kayması (MHz)",
        ylabel="Güç yoğunluğu (dB, tepeye göre)")
 ax.set_title("Aynı taşıyıcı planı, iki zincir: TWTA taşıyıcı aralarını intermodülasyonla dolduruyor",
