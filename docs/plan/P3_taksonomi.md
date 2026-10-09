@@ -86,7 +86,7 @@ Toplam taşıyıcı gücüne eşit bir CW (C/I = 0 dB) gerçekleşen IBO'yu 3,0 
 
 9 yeni test (toplam 50): CW frekansı ve gücü, süpürmenin tanımlanan yolu izlemesi, plansız taşıyıcının boş aralığa oturması ve gücü, eşleştirme, güçlü CW'nin zincir sonunda doğru kutuda görünmesi, sabit kazanç etkisi, parametre aralıkları.
 
-Senaryo süresi FIR süzgeçlerle 3,3 s'ye çıktı (36 MHz, bulut makinesi). 20 000 senaryo tek çekirdekte yaklaşık 18 saat; P5-A'da paralel üretim veya süzgeç hızlandırma gerekecek.
+Senaryo süresi FIR süzgeçlerle 3,3 s'ye çıkmıştı; P5-A'da taşıyıcı üreteci hızlandırılarak 1,05 s'ye indirildi.
 
 ## 7. Hakem itirazları
 

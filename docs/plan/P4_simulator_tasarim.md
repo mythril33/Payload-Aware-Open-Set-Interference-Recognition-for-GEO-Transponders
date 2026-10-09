@@ -15,6 +15,7 @@ Durum: **KAPANDI** (girişimci üreteçleri hariç; onlar P3-A'da) · 2026-10-09
 | `src/geosim/scenario.py` | Uçtan uca tek senaryo: `simulate(ScenarioConfig)` |
 | `src/geosim/interferers.py` | CW, süpürülen CW ve plansız taşıyıcı üreteçleri |
 | `src/geosim/classes.py` | Sınıf tanımları ve etiketli senaryo: `sample(label, bandwidth, seed)` |
+| `src/geosim/dataset.py` | Bölünme tanımları ve parçalı, kaldığı yerden süren veri üretimi |
 | `tests/test_chain.py` | T1–T12 doğrulama testleri |
 | `scripts/plot_linear_vs_twta.py` | Doğrusal ve TWTA zincirinin spektrum karşılaştırması |
 
@@ -40,10 +41,10 @@ r.meta      # konfigürasyon, taşıyıcı planı, gerçekleşen IBO ve OBO
 
 | Test | Ölçüt | Ölçülen |
 |---|---|---|
-| T2 EVM | ≤ %1 | %0,10–0,14 |
+| T2 EVM | ≤ %1 | ihmal edilebilir (ideal SRRC, frekans düzleminde) |
 | T8 IM3 eğimi (IBO 30→35 dB) | 2 ± 0,05 dB/dB | 1,98 |
 | T10 örtüşme (IBO 3 dB) | ≤ 0,1 dB | geçti, 36 ve 72 MHz |
-| Senaryo süresi | — | 2,1 s (36 MHz), 3,0 s (72 MHz), bulut makinesi, tek çekirdek |
+| Senaryo süresi | — | 1,05 s (36 MHz), 1,2 s (72 MHz), bulut makinesi |
 
 Şartnameden sapmalar `P2_sistem_modeli.md` §10'da.
 

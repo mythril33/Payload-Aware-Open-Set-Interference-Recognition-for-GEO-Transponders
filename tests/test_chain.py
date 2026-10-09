@@ -8,7 +8,7 @@ from geosim import payload as pl
 from geosim import sensor as sn
 from geosim.plan import plan_mask_db, random_plan
 from geosim.scenario import ScenarioConfig, simulate
-from geosim.waveform import Carrier, constellation, generate_carrier, shape, srrc_taps
+from geosim.waveform import Carrier, constellation, generate_carrier, modulate, srrc_response
 
 FS = FS_SIM
 
@@ -35,14 +35,25 @@ def test_t1_bandwidths(alpha):
 @pytest.mark.parametrize("mod", ["QPSK", "8PSK", "16APSK", "32APSK"])
 @pytest.mark.parametrize("alpha", [0.20, 0.35])
 def test_t2_evm(mod, alpha):
+    """A matched filter and symbol-rate sampling recover the transmitted symbols."""
     sps, rng = 8, np.random.default_rng(2)
     pts = constellation(mod)
     assert abs(np.mean(np.abs(pts) ** 2) - 1) < 1e-12
-    a = pts[rng.integers(0, len(pts), 4000)]
-    taps = srrc_taps(alpha, sps)
-    rx = np.convolve(shape(a, alpha, sps), taps)[len(taps) - 1::sps][:len(a)]
+    a = pts[rng.integers(0, len(pts), 4000)].astype(np.complex64)
+    x = modulate(a, alpha, sps)
+    assert abs(np.mean(np.abs(x) ** 2) - 1.0) < 0.03
+    f = np.fft.fftfreq(len(x), 1 / sps)                                  # in units of the symbol rate
+    rx = np.fft.ifft(np.fft.fft(x) * srrc_response(f, 1.0, alpha))[::sps]
     evm = np.sqrt(np.mean(np.abs(rx - a) ** 2) / np.mean(np.abs(a) ** 2))
     assert evm <= 0.01
+
+
+def test_t2_carrier_lands_on_its_frequency():
+    c = Carrier(3.21e6, 6e6, 0.25, "QPSK", 0.3)                          # not on an FFT bin
+    x = generate_carrier(np.random.default_rng(3), c, 32, 1 << 14, FS).ravel()
+    f, p = welch(x, fs=FS, nperseg=8192, return_onesided=False, detrend=False)
+    assert abs(np.sum(f * p) / np.sum(p) - 3.21e6) < 20e3               # spectral centroid
+    assert abs(np.mean(np.abs(x) ** 2) - 0.3) < 0.01
 
 
 def test_t3_noise_density():
