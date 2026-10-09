@@ -11,7 +11,8 @@ Durum: **KAPANDI** · 2026-10-09 · Girdi: `00_ana_plan.md` v0.3
 | Depo | `mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders` | Kullanıcı |
 | Gerçek veri | Operatör verisi yok, masaüstü ölçüm yok | Kullanıcı |
 | Veri biçimi | Simülatör IQ üretir; model girdisi IQ'dan türetilen spektrogram | Karar (açık veri taraması sonucu) |
-| Donanım | Tek GPU'lu iş istasyonu | **[VARSAYIM]** |
+| Donanım | GPU var; alt sınır standart bir dizüstü. Üretim ve eğitim dizüstünde çalışacak boyutta tasarlanır | Kullanıcı |
+| Transponder genişliği | 36 MHz ve 72 MHz; genişlik bir konfigürasyon parametresidir | Kullanıcı |
 
 ## 2. Ana katkı
 
@@ -41,7 +42,9 @@ Durum: **KAPANDI** · 2026-10-09 · Girdi: `00_ana_plan.md` v0.3
 - Open-set reddi (MSP, energy, Mahalanobis) ve bilinmeyen sınıflar
 - Spektrogram transformer, cyclic özellik dalı
 - Dış veri setleriyle karşılaştırma (SnT, OpenDPD, DARCY, TorchSig)
-- Tam DVB-S2 çerçeveleme (BBFRAME, LDPC/BCH, PL başlığı): yalnızca modülasyon + SRRC şekillendirme **[VARSAYIM — P2'de doğrulanacak]**
+- DVB-S2 FEC zinciri (BBFRAME, BCH, LDPC, bit serpiştirme): yapılmaz. Yük sembolleri rastgele üretilir.
+
+**DVB-S2 dalga biçimi kararı (2026-10-09):** "FEC'siz fiziksel katman çerçevesi". Yapılır: takımyıldız eşleme, PL başlığı (SOF + PLS kodu), isteğe bağlı pilot blokları, PL karıştırma, SRRC. Gerekçe: izleme alıcısı demodülasyon yapmaz; kodlanmış ve karıştırılmış bitler istatistiksel olarak rastgele bitlerden ayırt edilemez, bu yüzden FEC spektrumu ve zarf dağılımını (dolayısıyla TWTA tepkisini) değiştirmez. Çerçeve yapısı ise döngüsel-durağan imza bırakır ve Kademe B'deki cyclic dalı için gereklidir. Sıra: önce çerçevesiz sürüm doğrulanır, PL çerçevesi bir anahtar olarak eklenir. Sembol sayıları P2-A'da EN 302 307-1'e karşı doğrulanacak **[DOĞRULANACAK]**.
 
 ## 5. Hızlı yol — faz sırası değişti
 
@@ -67,8 +70,8 @@ Kabul edilen risk: P1 ertelendiği için benzer bir çalışmanın varlığı Ka
 
 ## 7. Açık sorular
 
-- GPU belleği ve disk alanı (veri seti boyut bütçesi için; P5-A'da gerekli)
-- Hedeflenen bant ve transponder genişliği (Ku, 36 MHz varsayılacak **[VARSAYIM]**; P2-A'da sabitlenir)
+- Bant: Ku varsayılıyor **[VARSAYIM]**. Karmaşık temel bant modelinde bant yalnızca gürültü ve faz gürültüsü parametrelerini etkiler; P2-A'da sabitlenir.
+- 36/72 MHz ayrımı "görülmemiş bant genişliği" testini doğrudan verir (birinde eğit, diğerinde test et); P5-A'da karara bağlanır.
 
 ## 8. P2-A'nın bu fazdan aldığı girdi
 
