@@ -1,6 +1,6 @@
 # Ana Plan — Payload-Aware Open-Set Interference Recognition for GEO Transponders
 
-Sürüm 0.4 · 2026-10-09 · Durum: P0 kapandı; sıradaki P2-A
+Sürüm 0.5 · 2026-10-09 · Durum: P0 kapandı; P2-A taslak (3 karar onay bekliyor); sıradaki P4-A
 
 Bu dosya projenin "harita" belgesidir. Her faz ayrı bir oturumda, tek bir alana odaklanarak detaylandırılır; bu dosya yalnızca fazları, sıralarını, çıktılarını ve açık kararları tutar.
 
@@ -157,8 +157,8 @@ Her faz = bir (veya birkaç) odaklı planlama oturumu. Çıktısı ayrı bir dos
 | # | Karar | Hangi fazda |
 |---|---|---|
 | K1 | ~~Hedef çıktı türü ve süre~~ — kapandı: ders projesi → makale, sabit tarih yok | P0 ✔ |
-| K2 | Sensör: IQ (kapandı); fs ve gözlem süresi açık | P2-A |
-| K3 | Tek transponder mı, çok transponderli görünüm mü | P2 |
+| K2 | Sensör: IQ; 96 MHz, 128 × 43 µs aralıklı anlık görüntü, Δt = 10 ms — onay bekliyor (`P2_sistem_modeli.md` §0) | P2-A |
+| K3 | ~~Tek mi çok mu transponder~~ — kapandı: Kademe A tek transponder | P2-A ✔ |
 | K4 | Tek-etiket / çok-etiket / segmentasyon | P3 |
 | K5 | Adjacent-satellite: uplink, downlink ya da ikisi | P3 |
 | K6 | Overdrive eşiği | P3 |
