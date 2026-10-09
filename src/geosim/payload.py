@@ -1,0 +1,44 @@
+"""Transponder blocks: IMUX, channel amplifier, TWTA, OMUX (spec §2.4-§2.7)."""
+from __future__ import annotations
+
+import numpy as np
+from scipy.signal import cheby1, ellip, sosfilt
+
+# Saleh 1981 TWT coefficients as commonly quoted; not yet checked against the paper.
+A_A, B_A, A_P, B_P = 2.1587, 1.1517, 4.0033, 9.1040
+R_SAT = 1 / np.sqrt(B_A)
+A_MAX = A_A * R_SAT / (1 + B_A * R_SAT ** 2)
+
+
+def imux_sos(bandwidth: float, fs: float) -> np.ndarray:
+    return ellip(6, 0.1, 40, (bandwidth / 2) / (fs / 2), output="sos")
+
+
+def omux_sos(bandwidth: float, fs: float) -> np.ndarray:
+    return cheby1(4, 0.1, 1.1 * (bandwidth / 2) / (fs / 2), output="sos")
+
+
+def apply_filter(sos: np.ndarray, x: np.ndarray) -> np.ndarray:
+    return sosfilt(sos, x, axis=-1).astype(np.complex64)
+
+
+def saleh(x: np.ndarray) -> np.ndarray:
+    r2 = np.abs(x) ** 2
+    return (x * (A_A / (1 + B_A * r2)) * np.exp(1j * A_P * r2 / (1 + B_P * r2))).astype(x.dtype)
+
+
+def linear_amp(x: np.ndarray) -> np.ndarray:
+    """Linear reference: Saleh small-signal gain, no compression, no AM/PM."""
+    return (A_A * x).astype(x.dtype)
+
+
+def drive_gain(nominal_power: float, ibo_db: float) -> float:
+    """Fixed channel-amplifier voltage gain putting `nominal_power` at the given IBO.
+
+    IBO = 10 log10(R_SAT^2 / E|x|^2), referenced to single-carrier saturation.
+    """
+    return float(np.sqrt(R_SAT ** 2 * 10 ** (-ibo_db / 10) / nominal_power))
+
+
+def obo_db(y: np.ndarray) -> float:
+    return float(10 * np.log10(A_MAX ** 2 / np.mean(np.abs(y) ** 2)))

@@ -1,6 +1,6 @@
 # P2-A — Sinyal ve sistem modeli şartnamesi (Kademe A)
 
-Durum: **TASLAK — kullanıcı onayı bekleyen 3 karar var (§0)** · 2026-10-09 · Girdi: `P0_kapsam.md`
+Durum: **KAPANDI** (A, B, C kararları onaylandı; §10'daki uygulama düzeltmeleriyle) · 2026-10-09 · Girdi: `P0_kapsam.md`
 
 Kapanış kriteri: zincirin her bloğu için denklem, parametre aralığı, kaynak ve birim yazılı; sensör modeli (örnekleme hızı, süre, çıktı) sabit.
 
@@ -8,7 +8,7 @@ Etiketler: **[STANDART]** = EN 302 307-1 V1.4.1 metninden bu oturumda doğruland
 
 ---
 
-## 0. Onay bekleyen üç karar
+## 0. Onaylanan üç karar
 
 | # | Karar | Neden | Reddedilirse |
 |---|---|---|---|
@@ -202,7 +202,7 @@ Yavaş zaman: taşıyıcı sembolleri her görüntüde bağımsız çekilir. Gir
 | T5 | Tek ton süpürmesi: AM/AM ve AM/PM | Saleh denkleminden sapma ≤ 0,01 dB ve ≤ 0,1° |
 | T6 | Tek ton IBO → OBO | §2.6'daki beş değerden sapma ≤ 0,02 dB |
 | T7 | İki ton: IM3 ürünleri 2f₁−f₂ ve 2f₂−f₁'de | Frekans hatası ≤ 1 kutu |
-| T8 | İki ton, küçük sinyal bölgesi (IBO ≥ 15 dB): C/IM3 eğimi | 2 ± 0,2 dB/dB |
+| T8 | İki ton, küçük sinyal bölgesi (IBO 30–35 dB): C/IM3 eğimi | 2 ± 0,05 dB/dB; çalışma aralığında (IBO 3–8 dB) 1,0–1,5 dB/dB |
 | T9 | Çok taşıyıcı, çentikli yükleme: C/IM'in IBO'ya göre değişimi | Tekdüze artan |
 | T10 | Örtüşme: f_s = 288 ve 576 MHz'te bant içi spektrum farkı | ≤ 0,1 dB |
 | T11 | Seyreltme ve Welch: bilinen güçte beyaz gürültü | Kestirilen yoğunluk hatası ≤ 0,2 dB |
@@ -245,3 +245,14 @@ Yavaş zaman: taşıyıcı sembolleri her görüntüde bağımsız çekilir. Gir
 ## 9. Sonraki fazın bu fazdan aldığı girdi
 
 P4-A: §1–§3 modül sınırlarını, §4 test listesini verir. P3-A: girişimci giriş noktası (uplink, IMUX öncesi), yavaş zaman modeli (§3.1) ve IBO tanımı (§2.6).
+
+## 10. Uygulama sırasında yapılan düzeltmeler (2026-10-09)
+
+| Madde | Şartnamedeki | Uygulanan | Neden |
+|---|---|---|---|
+| T8 | Eğim 2 dB/dB, IBO ≥ 15 dB | 2 dB/dB yalnızca IBO ≳ 30 dB'de; ölçülen: 15→20 dB arası 1,50, 20→25 arası 1,81, 30→35 arası 1,98, çalışma aralığında (3→8 dB) 1,25 dB/dB | Saleh'in AM/PM terimi (β_φ = 9,1) yüksek dereceli ürünleri geç söndürüyor. "Geri çekilme başına 2 dB" kuralı çalışma aralığında geçerli değil. |
+| §3.1 ısınma payı | 2048 simülasyon örneği | 2304 (= 768 alıcı örneği) | 3'e seyreltmede tamsayı olması için |
+| §2.8 (C/N)_dn | ±B/2 içindeki güç | OMUX çıkışındaki toplam güç | OMUX bant dışını zaten bastırıyor; ölçüm basitleşiyor |
+| §2.5 nominal güç | Girişimsiz yükleme | Yalnızca taşıyıcı gücü (gürültü hariç); gerçekleşen IBO üst veriye yazılır | Belirlenimci kazanç |
+| §5, 2. itiraz | 1 Mbaud taşıyıcıda kestirim gürültülü olabilir | Ölçüldü: kutu başına sapma 0,92 dB (beyaz gürültüde 1,16 dB); bant gücü sapması 0,45 dB (12 Mbaud'da 0,17 dB) | 1 Mbaud alt sınırı korunur |
+| §3.5 süre | < 1 s/senaryo bekleniyor | Bulut makinesinde ölçülen: 1,9 s (36 MHz), 2,6 s (72 MHz) | Dizüstü ölçümü hâlâ yok |
