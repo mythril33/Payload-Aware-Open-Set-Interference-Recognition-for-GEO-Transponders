@@ -22,7 +22,7 @@ class ScenarioConfig:
     bandwidth: float = 36e6       # Hz, 36e6 or 72e6
     ibo_db: float = 6.0           # input back-off of the interference-free carrier load
     cn_up_db: float = 25.0        # carrier power / uplink noise in `bandwidth`
-    cn_dn_db: float = 20.0        # OMUX output power / downlink noise in `bandwidth`
+    cn_dn_db: float = 25.0        # OMUX output power / downlink noise in `bandwidth`
     linear: bool = False          # True: replace the TWTA by its small-signal gain
     filter_model: str = "etsi"    # IMUX/OMUX model, see payload.imux
     amplifier: str = "dvbs2_nl"   # TWTA model, see payload.amplifier
@@ -39,12 +39,17 @@ class ScenarioResult:
     iq: np.ndarray | None = None  # (n_snap, 4096) complex64 at 96 MHz, if requested
 
 
+def default_plan(seed: int, bandwidth: float) -> list[Carrier]:
+    """The carrier plan simulate() draws for this seed when none is passed."""
+    return random_plan(np.random.default_rng(np.random.SeedSequence(seed).spawn(5)[0]), bandwidth)
+
+
 def simulate(cfg: ScenarioConfig, plan: list[Carrier] | None = None,
              interferer: Interferer | None = None, keep_iq: bool = False) -> ScenarioResult:
     # independent streams, so adding an interferer leaves carriers and noise unchanged
     s_plan, s_car, s_up, s_dn, s_int = np.random.SeedSequence(cfg.seed).spawn(5)
     if plan is None:
-        plan = random_plan(np.random.default_rng(s_plan), cfg.bandwidth)
+        plan = default_plan(cfg.seed, cfg.bandwidth)
     fs, n, shape = FS_SIM, sn.N_SIM, (cfg.n_snap, sn.N_SIM)
 
     rng = np.random.default_rng(s_car)

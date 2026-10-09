@@ -13,6 +13,8 @@ Durum: **KAPANDI** (girişimci üreteçleri hariç; onlar P3-A'da) · 2026-10-09
 | `scripts/build_mux_filters.py`, `scripts/digitize_twta_figures.py` | Yukarıdaki iki veri dosyasını ham ETSI dosyalarından üretir |
 | `src/geosim/sensor.py` | Gürültü, 96 MHz'e seyreltme, Welch spektrogramı |
 | `src/geosim/scenario.py` | Uçtan uca tek senaryo: `simulate(ScenarioConfig)` |
+| `src/geosim/interferers.py` | CW, süpürülen CW ve plansız taşıyıcı üreteçleri |
+| `src/geosim/classes.py` | Sınıf tanımları ve etiketli senaryo: `sample(label, bandwidth, seed)` |
 | `tests/test_chain.py` | T1–T12 doğrulama testleri |
 | `scripts/plot_linear_vs_twta.py` | Doğrusal ve TWTA zincirinin spektrum karşılaştırması |
 

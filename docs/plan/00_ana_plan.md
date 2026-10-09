@@ -1,6 +1,6 @@
 # Ana Plan — Payload-Aware Open-Set Interference Recognition for GEO Transponders
 
-Sürüm 0.6 · 2026-10-09 · Durum: P0, P2-A, P4-A kapandı (simülatör çalışıyor, 41 test geçiyor; süzgeçler ve TWTA DVB-S2 referans verisinden); sıradaki P3-A
+Sürüm 0.7 · 2026-10-09 · Durum: P0, P2-A, P3-A, P4-A kapandı (simülatör ve beş sınıf çalışıyor, 50 test geçiyor); sıradaki P5-A
 
 Bu dosya projenin "harita" belgesidir. Her faz ayrı bir oturumda, tek bir alana odaklanarak detaylandırılır; bu dosya yalnızca fazları, sıralarını, çıktılarını ve açık kararları tutar.
 
@@ -159,8 +159,8 @@ Her faz = bir (veya birkaç) odaklı planlama oturumu. Çıktısı ayrı bir dos
 | K1 | ~~Hedef çıktı türü ve süre~~ — kapandı: ders projesi → makale, sabit tarih yok | P0 ✔ |
 | K2 | Sensör: IQ; 96 MHz, 128 × 43 µs aralıklı anlık görüntü, Δt = 10 ms — kapandı | P2-A |
 | K3 | ~~Tek mi çok mu transponder~~ — kapandı: Kademe A tek transponder | P2-A ✔ |
-| K4 | Tek-etiket / çok-etiket / segmentasyon | P3 |
+| K4 | Kademe A: tek etiket, kök neden kuralı (`P3_taksonomi.md` §0); çok etiket ve konumlama Kademe B | P3-A ✔ |
 | K5 | Adjacent-satellite: uplink, downlink ya da ikisi | P3 |
-| K6 | Overdrive eşiği | P3 |
+| K6 | Aşırı sürme: IBO 0–5 dB; nominal 8–14 dB; arası üretilmez (`P3_taksonomi.md` §3) | P3-A ✔ |
 | K7 | DVB-S2 dalga biçimi: kendi üretici mi, hazır kütüphane mi | P4 |
 | K8 | ~~Gerçeklik çapası~~ — kapandı: yalnızca (c) ölçülmüş PA verisi, Kademe B | P0 ✔ |
