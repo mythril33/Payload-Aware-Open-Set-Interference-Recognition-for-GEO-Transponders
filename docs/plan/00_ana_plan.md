@@ -1,6 +1,6 @@
 # Ana Plan — Payload-Aware Open-Set Interference Recognition for GEO Transponders
 
-Sürüm 0.3 · 2026-10-09 · Durum: planlama (kod yok)
+Sürüm 0.4 · 2026-10-09 · Durum: P0 kapandı; sıradaki P2-A
 
 Bu dosya projenin "harita" belgesidir. Her faz ayrı bir oturumda, tek bir alana odaklanarak detaylandırılır; bu dosya yalnızca fazları, sıralarını, çıktılarını ve açık kararları tutar.
 
@@ -11,7 +11,7 @@ Bu dosya projenin "harita" belgesidir. Her faz ayrı bir oturumda, tek bir alana
 | # | Varsayım | Etkilediği yer |
 |---|---|---|
 | V1 | **[ONAYLANDI 2026-10-09]** Ders projesi; sonra makaleye dönüştürülecek. İki kademe: Kademe A = ders teslimi (küçük kapsam), Kademe B = makale genişletmesi | Kapsam, süre, C1/C2/C3 seçimi |
-| V2 | Tek araştırmacı, ~9–12 ay, yarı zamanlı | Faz süreleri |
+| V2 | **[ONAYLANDI 2026-10-09]** Sabit teslim tarihi yok; öncelik erken üretim. Hızlı yol sırası için bkz. `P0_kapsam.md` §5 | Faz sırası |
 | V3 | Tek GPU'lu iş istasyonu sınıfı donanım | Veri seti boyutu, transformer boyutu |
 | V4 | Operatör verisi YOK kabul edilir; gelirse bonus | Risk R1, doğrulama stratejisi |
 | V5 | **[ONAYLANDI 2026-10-09]** Ana depo: `mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders` (ESM-DL değil). Planlama dosyaları `docs/plan/` altında; kod yapısı P4'te belirlenir | Depo yapısı (P4) |
@@ -23,7 +23,7 @@ Bu dosya projenin "harita" belgesidir. Her faz ayrı bir oturumda, tek bir alana
 |---|---|---|
 | Simülatör | Tek pol, tek transponder; doğrusal + IMUX/OMUX + TWTA; çok taşıyıcı | + çift pol, faz gürültüsü, ölçülmüş PA modeli |
 | Sınıflar | clean, CW, swept CW, unauthorized carrier, overdrive IM | 8 bilinen + open-set rotasyonu |
-| Model | Tek ResNet + CA-CFAR baseline | + plan maskesi, çapraz pol kanalı, open-set skorları, transformer (opsiyonel) |
+| Model | Tek ResNet + plan maskesi + CA-CFAR baseline | + çapraz pol kanalı, open-set skorları, transformer (opsiyonel) |
 | Ana sonuç | Payload gap'in ilk ölçümü (doğrusal eğitim → doğrusal olmayan test) | Tam C3 + ablasyonlar + SnT formatında karşılaştırma |
 
 ### Dış veri — doğrulanan durum (2026-10-09, kaynak sayfalarından)
@@ -97,7 +97,7 @@ Her faz = bir (veya birkaç) odaklı planlama oturumu. Çıktısı ayrı bir dos
 | **P8** | Dış veri denetimi | `P8_dis_veri.md` | Her kaynak: erişilebilirlik, lisans, format, bant/fs, projedeki kesin rolü, "kullan / kullanma" kararı | veri denetçisi agent |
 | **P9** | Yol haritası, riskler, hedef yayın | `P9_yol_haritasi.md` | Haftalık kilometre taşları, risk kaydı (olasılık/etki/önlem), 2–3 hedef dergi + yedek | proje skill'i + kırmızı takım agent |
 
-**Sıra:** P0 → P1 ∥ P8 → P2 → P3 → P4 → P5 → P6 → P7 → P9. (P1 ve P8 web araştırması gerektirir, paralel yürür; P3'ün sonucu P5–P7'yi değiştirebilir, bu yüzden önce gelir.)
+**Sıra (v0.4, hızlı yol):** P0 ✔ → P2-A → P4-A + kod → P3-A + kod → P5-A → P6-A/P7-A → [Kademe B: P1 ∥ P8 → P2–P7 B dilimleri → P9]. Ayrıntı `P0_kapsam.md` §5. Eski sıra: P0 → P1 ∥ P8 → P2 → P3 → P4 → P5 → P6 → P7 → P9. (P1 ve P8 web araştırması gerektirir, paralel yürür; P3'ün sonucu P5–P7'yi değiştirebilir, bu yüzden önce gelir.)
 
 **Uygulamaya geçiş (planlama bittikten sonra)** — önceki önerideki sıra geçerli, P4'te detaylanacak:
 1. Tek taşıyıcı, doğrusal kanal (referans) → 2. IMUX/OMUX → 3. TWTA + IBO süpürme → 4. çok taşıyıcı → 5. faz gürültüsü, çift pol → 6. clean+CW ile uçtan uca pipeline + CA-CFAR baseline → 7. 8 sınıf.
@@ -156,11 +156,11 @@ Her faz = bir (veya birkaç) odaklı planlama oturumu. Çıktısı ayrı bir dos
 
 | # | Karar | Hangi fazda |
 |---|---|---|
-| K1 | Hedef çıktı türü ve süre (V1, V2) | P0 |
-| K2 | Sensör: IQ mi PSD izi mi; fs ve gözlem süresi | P0/P2 |
+| K1 | ~~Hedef çıktı türü ve süre~~ — kapandı: ders projesi → makale, sabit tarih yok | P0 ✔ |
+| K2 | Sensör: IQ (kapandı); fs ve gözlem süresi açık | P2-A |
 | K3 | Tek transponder mı, çok transponderli görünüm mü | P2 |
 | K4 | Tek-etiket / çok-etiket / segmentasyon | P3 |
 | K5 | Adjacent-satellite: uplink, downlink ya da ikisi | P3 |
 | K6 | Overdrive eşiği | P3 |
 | K7 | DVB-S2 dalga biçimi: kendi üretici mi, hazır kütüphane mi | P4 |
-| K8 | Gerçeklik çapası: (a)/(b)/(c) | P0/P8 |
+| K8 | ~~Gerçeklik çapası~~ — kapandı: yalnızca (c) ölçülmüş PA verisi, Kademe B | P0 ✔ |
