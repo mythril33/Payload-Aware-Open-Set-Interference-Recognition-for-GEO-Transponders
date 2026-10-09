@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import numpy as np
-from scipy.signal import cheby1, ellip, sosfilt
+from scipy.signal import cheby1, cheby2, ellip, sosfilt
 
 # Saleh 1981 TWT coefficients as commonly quoted; not yet checked against the paper.
 A_A, B_A, A_P, B_P = 2.1587, 1.1517, 4.0033, 9.1040
@@ -10,12 +10,30 @@ R_SAT = 1 / np.sqrt(B_A)
 A_MAX = A_A * R_SAT / (1 + B_A * R_SAT ** 2)
 
 
-def imux_sos(bandwidth: float, fs: float) -> np.ndarray:
-    return ellip(6, 0.1, 40, (bandwidth / 2) / (fs / 2), output="sos")
+def imux_sos(bandwidth: float, fs: float, model: str = "dvbs2x") -> np.ndarray:
+    """Low-pass equivalent of the input multiplexer filter.
+
+    "dvbs2x": 7th-order Chebyshev II, 34 dB, 23 MHz stop-band edge for a 36 MHz transponder --
+    the approximation of the ETSI TR 102 376-2 reference IMUX given by Dimitrov (2016),
+    scaled in frequency by bandwidth/36 MHz as EN 302 307-1 H.7 prescribes.
+    "generic": the project's earlier elliptic placeholder.
+    """
+    k = bandwidth / 36e6
+    if model == "dvbs2x":
+        return cheby2(7, 34, 23e6 * k / (fs / 2), output="sos")
+    if model == "generic":
+        return ellip(6, 0.1, 40, (bandwidth / 2) / (fs / 2), output="sos")
+    raise ValueError(f"unknown filter model {model!r}")
 
 
-def omux_sos(bandwidth: float, fs: float) -> np.ndarray:
-    return cheby1(4, 0.1, 1.1 * (bandwidth / 2) / (fs / 2), output="sos")
+def omux_sos(bandwidth: float, fs: float, model: str = "dvbs2x") -> np.ndarray:
+    """Output multiplexer; "dvbs2x" is 5th-order Chebyshev II, 38 dB, 28.6 MHz edge at 36 MHz."""
+    k = bandwidth / 36e6
+    if model == "dvbs2x":
+        return cheby2(5, 38, 28.6e6 * k / (fs / 2), output="sos")
+    if model == "generic":
+        return cheby1(4, 0.1, 1.1 * (bandwidth / 2) / (fs / 2), output="sos")
+    raise ValueError(f"unknown filter model {model!r}")
 
 
 def apply_filter(sos: np.ndarray, x: np.ndarray) -> np.ndarray:

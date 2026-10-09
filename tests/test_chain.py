@@ -61,15 +61,25 @@ def _group_delay_ns(sos, offsets_hz):
     return [(gd[np.argmin(np.abs(f - o))] - centre) * 1e9 for o in offsets_hz]
 
 
-@pytest.mark.parametrize("bw,imux,omux", [
-    (36e6, [6.8, 28.7, 48.1, 136.5], [2.1, 4.4, 10.8]),
-    (72e6, [3.6, 15.0, 25.6, 75.4], [1.3, 2.8, 6.8]),
+@pytest.mark.parametrize("model,bw,imux,omux", [
+    ("dvbs2x", 36e6, [4.9, 20.4, 35.8, 64.7], [4.0, 16.2, 30.8]),
+    ("dvbs2x", 72e6, [2.4, 9.5, 16.4, 30.9], [1.7, 6.7, 15.1]),
+    ("generic", 36e6, [6.8, 28.7, 48.1, 136.5], [2.1, 4.4, 10.8]),
+    ("generic", 72e6, [3.6, 15.0, 25.6, 75.4], [1.3, 2.8, 6.8]),
 ])
-def test_t4_group_delay(bw, imux, omux):
-    got = _group_delay_ns(pl.imux_sos(bw, FS), [0.25 * bw, 0.40 * bw, 0.45 * bw, 0.50 * bw])
+def test_t4_group_delay(model, bw, imux, omux):
+    got = _group_delay_ns(pl.imux_sos(bw, FS, model), [0.25 * bw, 0.40 * bw, 0.45 * bw, 0.50 * bw])
     assert np.allclose(got, imux, atol=1.0)
-    got = _group_delay_ns(pl.omux_sos(bw, FS), [0.25 * bw, 0.40 * bw, 0.50 * bw])
+    got = _group_delay_ns(pl.omux_sos(bw, FS, model), [0.25 * bw, 0.40 * bw, 0.50 * bw])
     assert np.allclose(got, omux, atol=1.0)
+
+
+def test_t4_reference_filter_selectivity():
+    """36 MHz reference filters: flat to +/-14 MHz, about -34 / -38 dB at the stop-band edges."""
+    def gain_db(sos, f):
+        return 20 * np.log10(np.abs(sosfreqz(sos, worN=2 * np.pi * np.array([f]) / FS)[1][0]))
+    assert gain_db(pl.imux_sos(36e6, FS), 14e6) > -0.1 and abs(gain_db(pl.imux_sos(36e6, FS), 23e6) + 34) < 0.1
+    assert gain_db(pl.omux_sos(36e6, FS), 14e6) > -0.2 and abs(gain_db(pl.omux_sos(36e6, FS), 28.6e6) + 38) < 0.1
 
 
 def test_t5_am_am_am_pm():

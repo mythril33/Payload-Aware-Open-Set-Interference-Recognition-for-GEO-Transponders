@@ -32,7 +32,7 @@ r.meta      # konfigürasyon, taşıyıcı planı, gerçekleşen IBO ve OBO
 
 ## 3. Doğrulama sonucu
 
-28 test geçti (T1–T12 ve maske–spektrum uyumu). Ölçülen değerler:
+31 test geçti (T1–T12, süzgeç seçiciliği ve maske–spektrum uyumu). Ölçülen değerler:
 
 | Test | Ölçüt | Ölçülen |
 |---|---|---|
@@ -45,11 +45,10 @@ r.meta      # konfigürasyon, taşıyıcı planı, gerçekleşen IBO ve OBO
 
 ## 4. İlk gözlem
 
-`docs/figures/psd_linear_vs_twta.png`: 6 taşıyıcılı 36 MHz planı, IBO 3 dB, C/N 40 dB. Taşıyıcı aralarındaki seviye doğrusal zincirde tepeye göre −39,8 dB, TWTA zincirinde −18,8 dB. Tek bir plan ve tek bir çalışma noktasıdır; genelleme değildir.
+`docs/figures/psd_linear_vs_twta.png`: 6 taşıyıcılı 36 MHz planı, IBO 3 dB, C/N 40 dB. Taşıyıcı aralarındaki seviye doğrusal zincirde tepeye göre −39,9 dB, TWTA zincirinde −18,9 dB. Tek bir plan ve tek bir çalışma noktasıdır; genelleme değildir.
 
 ## 5. Açık konular
 
 - PL çerçevesi anahtarı henüz yok (çerçevesiz sürüm doğrulandı).
 - Dizüstünde süre ölçülmedi.
 - Rastgele planın doluluğu hedefin biraz altına inebiliyor (2000 planda en düşük %45).
-- OMUX (4. derece Chebyshev) bant dışı intermodülasyonu yavaş bastırıyor; komşu kanal sızıntısı incelenecekse derece yeniden seçilmeli.

@@ -1,6 +1,6 @@
 # Ana Plan — Payload-Aware Open-Set Interference Recognition for GEO Transponders
 
-Sürüm 0.6 · 2026-10-09 · Durum: P0, P2-A, P4-A kapandı (simülatör çalışıyor, 28 test geçiyor); sıradaki P3-A
+Sürüm 0.6 · 2026-10-09 · Durum: P0, P2-A, P4-A kapandı (simülatör çalışıyor, 31 test geçiyor; süzgeçler yayımlanmış referans yaklaşımına geçti); sıradaki P3-A
 
 Bu dosya projenin "harita" belgesidir. Her faz ayrı bir oturumda, tek bir alana odaklanarak detaylandırılır; bu dosya yalnızca fazları, sıralarını, çıktılarını ve açık kararları tutar.
 

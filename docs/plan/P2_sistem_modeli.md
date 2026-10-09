@@ -256,3 +256,20 @@ P4-A: §1–§3 modül sınırlarını, §4 test listesini verir. P3-A: girişim
 | §2.5 nominal güç | Girişimsiz yükleme | Yalnızca taşıyıcı gücü (gürültü hariç); gerçekleşen IBO üst veriye yazılır | Belirlenimci kazanç |
 | §5, 2. itiraz | 1 Mbaud taşıyıcıda kestirim gürültülü olabilir | Ölçüldü: kutu başına sapma 0,92 dB (beyaz gürültüde 1,16 dB); bant gücü sapması 0,45 dB (12 Mbaud'da 0,17 dB) | 1 Mbaud alt sınırı korunur |
 | §3.5 süre | < 1 s/senaryo bekleniyor | Bulut makinesinde ölçülen: 1,9 s (36 MHz), 2,6 s (72 MHz) | Dizüstü ölçümü hâlâ yok |
+
+## 11. Kaynak taraması sonrası değişiklikler (2026-10-09)
+
+Ayrıntı: `kaynak_transponder_modeli.md`.
+
+- **§2.4 ve §2.7 değişti.** Varsayılan süzgeçler artık TR 102 376-2 referans süzgeçlerinin yayımlanmış Chebyshev II yaklaşımı (Dimitrov 2016), frekansta B/36 ile ölçeklenir. Önceki eliptik ve Chebyshev I süzgeçler `filter_model="generic"` olarak duruyor; §2.4 ve §2.7'deki tablolar o modele aittir.
+
+| Kayma | IMUX grup gecikmesi, 36 MHz | 72 MHz | OMUX, 36 MHz | 72 MHz |
+|---|---|---|---|---|
+| ±0,25 B | +4,9 ns | +2,4 ns | +4,0 ns | +1,7 ns |
+| ±0,40 B | +20,4 ns | +9,5 ns | +16,2 ns | +6,7 ns |
+| ±0,45 B | +35,8 ns | +16,4 ns | — | — |
+| ±0,50 B | +64,7 ns | +30,9 ns | +30,8 ns | +15,1 ns |
+
+  36 MHz'te genlik: IMUX ±18 MHz'te −1,2 dB, ±23 MHz'te −34 dB; OMUX ±18 MHz'te −2,1 dB, ±28,6 MHz'te −38 dB **[HESAP]**. Makale örnekleme hızını vermiyor; sayısal tasarım 288 MHz'te yapıldığı için bant kenarı değerleri yazarınkinden biraz farklı olabilir (144 ve 576 MHz'te IMUX'un ±18 MHz kazancı −0,7 ve −1,3 dB çıkıyor).
+- **Etiketi [STANDART]'a yükselenler:** PL başlığının karıştırılmaması (5.5.4), APSK halka açıları, 36/40 MHz referansı ve ölçekleme kuralı (H.7, TR 102 376-2 4.4.1.2).
+- **TWTA değişmedi:** referans eğriler yalnızca şekil olarak yayımlanmış; Saleh katsayıları hâlâ **[DOĞRULANACAK]**.
