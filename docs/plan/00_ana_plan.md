@@ -1,6 +1,6 @@
 # Ana Plan — Payload-Aware Open-Set Interference Recognition for GEO Transponders
 
-Sürüm 0.8 · 2026-10-09 · Durum: P0, P2-A, P3-A, P4-A, P5-A kapandı (veri protokolü A1 donduruldu, üretici hazır, 55 test geçiyor); sıradaki P6-A/P7-A
+Sürüm 0.9 · 2026-10-10 · Durum: Kademe A zinciri uçtan uca çalışıyor, pilot sonuç var; güncel durum ve eksikler `DURUM.md` dosyasında
 
 Bu dosya projenin "harita" belgesidir. Her faz ayrı bir oturumda, tek bir alana odaklanarak detaylandırılır; bu dosya yalnızca fazları, sıralarını, çıktılarını ve açık kararları tutar.
 

@@ -16,7 +16,7 @@ Kademe A'nın (ders projesi) bütün zinciri kodlandı ve uçtan uca çalışıy
 | P3-A | Sınıflar ve girişimciler | Kapandı | `P3_taksonomi.md` |
 | P5-A | Veri protokolü | Donduruldu (A1) | `P5_veri_protokol.md` |
 | P6-A | Model ve baseline | Kapandı | `P6_modeller.md` |
-| P7-A | Değerlendirme | Kapandı; tam sonuç yok | `P7_degerlendirme.md` |
+| P7-A | Değerlendirme | Kapandı; yalnızca pilot sonuç var | `P7_degerlendirme.md`, `../results/pilot_A.md` |
 | P1 | Literatür ve yenilik | **Başlanmadı** | — |
 | P8 | Dış veri denetimi | Kısmen (ana plan §0) | — |
 | P9 | Yol haritası, hedef yayın | **Başlanmadı** | — |
@@ -43,6 +43,8 @@ Kademe A'nın (ders projesi) bütün zinciri kodlandı ve uçtan uca çalışıy
 
 Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 
+**Pilot koşu** (verinin %6'sı, `docs/results/pilot_A.md`): boru hattı uçtan uca çalışıyor. Beş sınıflı model dağılım içinde %83,4. Yük farkı nominal geri çekilmede küçük çıktı (doğruluk %78,7 → %76,8, aralıklar içinde); en belirgin etki, doğrusal eğitilen modelin aşırı sürme örneklerinin %84'üne dış girişim demesi. Model CW'de planlı CFAR'ı geçemiyor.
+
 ## 5. Eksik kaydı
 
 ### 5.1 Bu oturumda kapananlar
@@ -68,7 +70,9 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 
 | # | Eksik | Önem | Not |
 |---|---|---|---|
-| B1 | **Literatür ve yenilik denetimi (P1) hiç yapılmadı** | Yüksek | Benzer bir çalışma varsa makale iddiası değişir. Ders projesini etkilemez. S1–S2 koşarken yapılabilir. |
+| B0 | **Ana iddianın biçimi.** Pilotta yük farkı doğrulukta görünmedi | Yüksek | Tam veriyle teyit; gerekirse iddia yanlış alarm ve yanlış etiketleme üzerinden kurulur veya daha düşük geri çekilme eklenir (protokol değişikliği, günlüğe yazılır) |
+| B1 | **Literatür ve yenilik denetimi (P1)** başlandı, bitmedi | Yüksek | Aday çalışmalar listelendi (SnT ICASSP 2023, Henarejos ve ark. 2019, GNSS ve radar open-set çalışmaları); hiçbiri okunup karşılaştırılmadı |
+| B1b | Model dar bantlı girişimde (CW) zayıf | Orta | Tam veriyle yeniden bakılacak; gerekirse zaman ortalamalı spektrum ek kanal olarak verilir |
 | B2 | Sonuç şekilleri (ROC, C/I eğrileri, karışıklık matrisi) | Orta | Tam sonuç gelince |
 | B3 | Mutlak seviye ablasyonu | Orta | `--level absolute`; tam veriyle |
 | B4 | Parametre aralıklarının hiçbiri kaynaklı değil (C/N, C/I, taşıyıcı sayısı) | Orta | B1 ile birlikte literatürden dayanak aranacak |
