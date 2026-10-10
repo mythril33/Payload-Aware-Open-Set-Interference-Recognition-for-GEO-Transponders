@@ -11,6 +11,7 @@ dependencies = ["numpy>=1.24", "scipy>=1.10"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7", "matplotlib>=3.7"]
+ml = ["torch>=2.2"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
