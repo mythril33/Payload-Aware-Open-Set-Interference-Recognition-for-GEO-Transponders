@@ -1,0 +1,7 @@
+{
+  "data_fingerprint": "7ade9d084051e2b47782fb39cf158e9c8d5b6c2405add5cf19c94826339e4c91",
+  "independent_pilots": 64,
+  "relative_response_error": 0.00011955266781455268,
+  "pilot_residual_rms": 0.0010121999900371758,
+  "interpretation": "Synthetic independent instrument-pilot calibration; not a real hardware measurement or propagation-XPD estimate."
+}

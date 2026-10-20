@@ -10,7 +10,7 @@ import torch
 from torch import nn
 
 from .artifacts import fingerprint
-from .data import CORE_DB, preprocess, reference_level
+from .data import CORE_DB, preprocess, preprocess_dual, reference_level
 from .metrics import macro_f1
 from .model import SmallResNet, n_parameters
 
@@ -27,6 +27,7 @@ class TrainConfig:
     augment: bool = True         # random frequency mirror and circular time shift
     weight_decay: float = 1e-4
     seed: int = 0
+    input_mode: str = "single"  # single: [N,T,F]; dual/co: [N,2,T,F] observations
 
     def __post_init__(self):
         if (not isinstance(self.labels, (tuple, list)) or len(self.labels) < 2
@@ -35,6 +36,8 @@ class TrainConfig:
             raise ValueError("labels must contain at least two distinct nonempty names")
         if self.level not in ("carrier", "absolute"):
             raise ValueError("level must be 'carrier' or 'absolute'")
+        if self.input_mode not in ("single", "dual", "co"):
+            raise ValueError("input_mode must be 'single', 'dual' or 'co'")
         for name in ("time_pool", "width", "epochs", "batch"):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 1:
@@ -51,9 +54,13 @@ class TrainConfig:
 
 def _inputs(d: dict, cfg: TrainConfig, absolute_ref_db):
     spec, mask = np.asarray(d["spec"]), np.asarray(d["mask"])
-    if spec.ndim != 3 or not len(spec) or not spec.shape[1] or not spec.shape[2]:
+    if cfg.input_mode != "single":
+        x = preprocess_dual(spec, mask, cfg.level, cfg.time_pool, absolute_ref_db, view=cfg.input_mode)
+        return torch.from_numpy(x)
+    if (spec.dtype.kind not in "iuf" or spec.ndim != 3 or not len(spec)
+            or not spec.shape[1] or not spec.shape[2]):
         raise ValueError("spec must be a nonempty (N, time, frequency) array")
-    if mask.shape != (len(spec), spec.shape[2]):
+    if mask.dtype.kind not in "iuf" or mask.shape != (len(spec), spec.shape[2]):
         raise ValueError("mask must match the sample and frequency dimensions of spec")
     if spec.shape[1] % cfg.time_pool:
         raise ValueError("time_pool must divide the spectrogram time dimension")
@@ -65,6 +72,31 @@ def _inputs(d: dict, cfg: TrainConfig, absolute_ref_db):
     if not np.isfinite(x).all():
         raise ValueError("preprocessed model inputs must be finite")
     return torch.from_numpy(x)
+
+
+def _training_reference(d: dict, cfg: TrainConfig) -> float:
+    """Absolute reference from known training co-pol observations only."""
+    spec, mask = np.asarray(d["spec"]), np.asarray(d["mask"])
+    if cfg.input_mode != "single":
+        if spec.ndim != 4 or spec.shape[1] != 2 or mask.ndim != 3 or mask.shape[1] != 2:
+            raise ValueError("dual/co training requires [N,2,time,frequency] spec and [N,2,frequency] masks")
+        spec, mask = spec[:, 0], mask[:, 0]
+    if (spec.dtype.kind not in "iuf" or spec.ndim != 3 or not len(spec)
+            or not spec.shape[1] or not spec.shape[2]
+            or mask.dtype.kind not in "iuf" or mask.shape != (len(spec), spec.shape[2])):
+        raise ValueError("training observations must have matching nonempty spectra and plan masks")
+    if not np.isfinite(spec).all() or not np.isfinite(mask).all():
+        raise ValueError("training observations must be finite")
+    if np.any(~np.any(mask > CORE_DB, axis=1)):
+        raise ValueError("each plan mask must contain at least one planned carrier core bin")
+    try:
+        with np.errstate(over="raise", invalid="raise", divide="raise", under="ignore"):
+            ref = float(reference_level(spec, mask).mean())
+    except FloatingPointError as error:
+        raise ValueError("training reference exceeds supported finite range") from error
+    if not np.isfinite(ref):
+        raise ValueError("training reference must be finite")
+    return ref
 
 
 def _labels(d: dict, n_classes: int, name: str) -> np.ndarray:
@@ -99,10 +131,10 @@ def fit(train: dict, val: dict, cfg: TrainConfig, device: str | None = None, log
     if not len(train["spec"]) or not len(val["spec"]):
         raise ValueError("training and validation data must be nonempty")
     torch.manual_seed(cfg.seed)
-    ref = float(reference_level(train["spec"], train["mask"]).mean())      # training data only
+    ref = _training_reference(train, cfg)      # training co-pol data only
     xt, xv = _inputs(train, cfg, ref), _inputs(val, cfg, ref)
     yt = torch.from_numpy(_labels(train, len(cfg.labels), "training"))
-    model = SmallResNet(len(cfg.labels), cfg.width).to(device)
+    model = SmallResNet(len(cfg.labels), cfg.width, in_ch=4 if cfg.input_mode == "dual" else 2).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
     steps = cfg.epochs * -(-len(xt) // cfg.batch)
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=cfg.lr, total_steps=steps)
@@ -164,14 +196,18 @@ def load(path, device: str | None = None, expected_config: TrainConfig | dict | 
             raise ValueError("checkpoint artifact metadata is invalid or has changed")
     if expected_config is not None:
         config = asdict(expected_config) if isinstance(expected_config, TrainConfig) else expected_config
-        if fingerprint(ck["config"]) != fingerprint(config):
+        # Check the original metadata fingerprint above before filling defaults.
+        # Historical A1 checkpoints omit input_mode, which means single-pol.
+        actual_config = asdict(TrainConfig(**ck["config"]))
+        expected = asdict(TrainConfig(**config))
+        if fingerprint(actual_config) != fingerprint(expected):
             raise ValueError("checkpoint training configuration does not match this experiment")
     if expected_provenance is not None:
         if "provenance" not in ck or fingerprint(ck["provenance"]) != fingerprint(expected_provenance):
             raise ValueError("checkpoint provenance does not match this experiment's data")
     cfg = TrainConfig(**ck["config"])
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-    model = SmallResNet(len(cfg.labels), cfg.width).to(device)
+    model = SmallResNet(len(cfg.labels), cfg.width, in_ch=4 if cfg.input_mode == "dual" else 2).to(device)
     model.load_state_dict(ck.pop("state"))
     return {"model": model, "device": device, **ck}
 

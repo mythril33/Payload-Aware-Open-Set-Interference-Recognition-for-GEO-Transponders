@@ -2,6 +2,11 @@
 
 Durum: **ÖNERİ — HENÜZ KODLANMADI** · 2026-10-20. Mevcut repo Kademe A: beş sınıf / tek pol / kapalı-küme. Bu belge gelecekteki sekiz sınıflı çalışmayı tarif eder; deney sonucu değildir.
 
+Geliştirme güncellemesi: B1-dev/1–2 açık-küme skorları/unknown aileleri ve
+[D1-dev/1 çift-pol geliştirme hattı](../plan/P14_dual_polarization.md) artık
+kodlanmıştır. Buradaki **nihai sekiz sınıflı benchmark önerisi** henüz tamamlanmış
+bir uygulama veya deney sonucu değildir.
+
 ## 1. Sınıflar ve gözlenebilirlik
 
 Bilinen hedefler: `clean`, `cw`, `swept_cw`, `cross_pol`, `adjacent_satellite`, `unauthorized`, `carrier_under_carrier`, `overdrive_im`.

@@ -40,6 +40,65 @@ def preprocess(spec_db: np.ndarray, mask_db: np.ndarray, level: str = "carrier",
     return np.stack([x, m], axis=1).astype(np.float32)
 
 
+def preprocess_dual(spec_db: np.ndarray, mask_db: np.ndarray, level: str = "carrier", time_pool: int = 2,
+                    absolute_ref_db: float | None = None, view: str = "dual") -> np.ndarray:
+    """Two observed polarizations and their independent plans -> model channels.
+
+    Inputs are spectra ``[N,2,T,F]`` and plan masks ``[N,2,F]``. ``view='dual'``
+    returns ``[co PSD, cross PSD, co plan, cross plan]``; ``view='co'`` returns
+    the existing two-channel co-pol preprocessing as a matched ablation.
+
+    Both PSDs share the co-pol planned-carrier reference. Independent per-pol
+    normalization would erase the relative polarization power needed to study
+    leakage. Time pooling averages linear power, not dB. The inputs contain
+    observable spectra and operator masks only, never the generating XPD.
+    """
+    spec, mask = np.asarray(spec_db), np.asarray(mask_db)
+    if (spec.dtype.kind not in "iuf" or spec.ndim != 4 or not len(spec)
+            or spec.shape[1] != 2 or not spec.shape[2] or not spec.shape[3]):
+        raise ValueError("dual spec must be a nonempty numeric [N,2,time,frequency] array")
+    if mask.dtype.kind not in "iuf" or mask.shape != (len(spec), 2, spec.shape[3]):
+        raise ValueError("dual mask must be a numeric [N,2,frequency] array matching spec")
+    if not np.isfinite(spec).all() or not np.isfinite(mask).all():
+        raise ValueError("dual model observations and masks must be finite")
+    if isinstance(time_pool, bool) or not isinstance(time_pool, int) or time_pool < 1:
+        raise ValueError("time_pool must be a positive integer")
+    if spec.shape[2] % time_pool:
+        raise ValueError("time_pool must divide the spectrogram time dimension")
+    if np.any(~np.any(mask > CORE_DB, axis=2)):
+        raise ValueError("each polarization plan mask must contain a planned carrier core bin")
+    if view not in ("dual", "co"):
+        raise ValueError("dual view must be 'dual' or 'co'")
+    if level not in ("carrier", "absolute"):
+        raise ValueError(f"unknown level mode {level!r}")
+    if level == "absolute":
+        raw_ref = np.asarray(absolute_ref_db)
+        if raw_ref.shape != () or raw_ref.dtype.kind not in "iuf" or not np.isfinite(raw_ref):
+            raise ValueError("absolute level needs a finite absolute_ref_db from the training split")
+    try:
+        with np.errstate(over="raise", invalid="raise", divide="raise", under="ignore"):
+            if view == "co":
+                result = preprocess(spec[:, 0], mask[:, 0], level, time_pool, absolute_ref_db)
+            else:
+                values = spec.astype(np.float32)
+                if level == "carrier":
+                    ref = reference_level(values[:, 0], mask[:, 0])[:, None, None, None]
+                else:
+                    ref = np.float32(absolute_ref_db)
+                n, _, t, f = values.shape
+                if time_pool > 1:
+                    power = 10 ** (values.reshape(n, 2, t // time_pool, time_pool, f) / 10)
+                    values = 10 * np.log10(power.mean(axis=3))
+                normalized = np.clip(values - ref, *CLIP_DB) / SCALE_DB
+                plans = np.broadcast_to(mask.astype(np.float32)[:, :, None, :] / SCALE_DB, normalized.shape)
+                result = np.concatenate([normalized, plans], axis=1).astype(np.float32)
+    except FloatingPointError as error:
+        raise ValueError("dual observations exceed the supported finite preprocessing range") from error
+    if not np.isfinite(result).all():
+        raise ValueError("preprocessed dual observations must be finite")
+    return result
+
+
 def select(d: dict, labels: tuple, all_labels: tuple) -> dict:
     """Keep the samples whose label is in `labels` and re-index labels to that order."""
     keep_idx = [all_labels.index(lab) for lab in labels]

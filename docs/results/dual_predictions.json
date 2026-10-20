@@ -1,0 +1,194 @@
+[
+  {
+    "scenario_id": 1200000,
+    "true_label": "clean",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.46378201154120974,
+        "alarm": true
+      },
+      "dual": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.4951255180170132,
+        "alarm": false
+      }
+    }
+  },
+  {
+    "scenario_id": 1200000,
+    "true_label": "cross_pol",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.46374597615115265,
+        "alarm": true
+      },
+      "dual": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.49549707744302396,
+        "alarm": false
+      }
+    }
+  },
+  {
+    "scenario_id": 1200001,
+    "true_label": "clean",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.4635406065878471,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.4949505350852598,
+        "alarm": false
+      }
+    }
+  },
+  {
+    "scenario_id": 1200001,
+    "true_label": "cross_pol",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.4632400431828911,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.4953443673220806,
+        "alarm": false
+      }
+    }
+  },
+  {
+    "scenario_id": 1200002,
+    "true_label": "clean",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.4634048987786564,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.49601396980954093,
+        "alarm": true
+      }
+    }
+  },
+  {
+    "scenario_id": 1200002,
+    "true_label": "cross_pol",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.46335085319765285,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.4964177001425583,
+        "alarm": true
+      }
+    }
+  },
+  {
+    "scenario_id": 1200003,
+    "true_label": "clean",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.4641966035951374,
+        "alarm": true
+      },
+      "dual": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.4958635217812647,
+        "alarm": true
+      }
+    }
+  },
+  {
+    "scenario_id": 1200003,
+    "true_label": "cross_pol",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.46379428406020234,
+        "alarm": true
+      },
+      "dual": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.4962102276532863,
+        "alarm": true
+      }
+    }
+  },
+  {
+    "scenario_id": 1200004,
+    "true_label": "clean",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.4634654824662485,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.4957791209806263,
+        "alarm": true
+      }
+    }
+  },
+  {
+    "scenario_id": 1200004,
+    "true_label": "cross_pol",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.46356428470239464,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.4957794376077379,
+        "alarm": true
+      }
+    }
+  },
+  {
+    "scenario_id": 1200005,
+    "true_label": "clean",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.4639356523330809,
+        "alarm": true
+      },
+      "dual": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.49508765872434296,
+        "alarm": false
+      }
+    }
+  },
+  {
+    "scenario_id": 1200005,
+    "true_label": "cross_pol",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.46397869488512816,
+        "alarm": true
+      },
+      "dual": {
+        "prediction": "clean",
+        "cross_pol_probability": 0.4957113991759568,
+        "alarm": true
+      }
+    }
+  }
+]

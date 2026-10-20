@@ -53,6 +53,23 @@ See [unknown-source definitions](docs/plan/P12_unknown_events.md) and
 Reusable coding-agent briefs are versioned in [.agents/](.agents/README.md), with
 repository instructions in [AGENTS.md](AGENTS.md).
 
+## Dual-polarization leakage development
+
+`D1-dev/1` adds separate polarization payload paths, physical uplink/downlink
+coupling and receiver calibration from independent pilots. Each feed has its own
+operator carrier plan. The matched models use co-pol spectrum/plan (two channels)
+or both spectra/plans (four channels), with one shared power reference.
+
+```bash
+python -m geosim.dual_dataset --out data/dual-pilot --n-seeds 6
+python -m geoml.dual_experiment --config configs/dual_polarization.json --data data/dual-pilot --out runs/dual-pilot
+```
+
+This controlled `clean` versus `cross_pol` experiment tests a simulated uplink-XPD
+change. It is not the final eight-class open-set benchmark or proof of a unique
+physical cause. Calibration corrects instrument response while retaining
+propagation leakage. See [physics, data and experiment details](docs/plan/P14_dual_polarization.md).
+
 ## Research dossier (2026-10-20)
 
 This is an evolving research project, **not** a completed dual-polarization, eight-class open-set system.
@@ -66,4 +83,4 @@ This is an evolving research project, **not** a completed dual-polarization, eig
 - [Literature bibliography (BibTeX)](references/references.bib)
 - [Detailed current Stage A status](docs/plan/DURUM.md) and [pilot-only results](docs/results/pilot_A.md)
 
-**Current research boundary:** Stage A is single-polarization/five known classes, with a small pilot. B1-dev/1 implements known-class holdout rejection with MSP and energy; B1-dev/2 adds unknown families, Mahalanobis and ranking metrics. Full-data results and the complete Stage B benchmark remain outstanding. The pilot is not evidence of field/deployment performance. The code repository does not currently specify a top-level license; third-party PDF/data licenses and redistribution conditions must be handled separately. Official primary-source links are preserved instead of automatically mirroring restricted documents.
+**Current research boundary:** Stage A is single-polarization/five known classes, with a small pilot. B1-dev/1 implements known-class holdout rejection with MSP and energy; B1-dev/2 adds unknown families, Mahalanobis and ranking metrics. D1-dev/1 adds calibrated dual-polarization observations and a controlled two-class leakage task. Full-data results and the complete Stage B benchmark remain outstanding. The pilots are not evidence of field/deployment performance. The code repository does not currently specify a top-level license; third-party PDF/data licenses and redistribution conditions must be handled separately. Official primary-source links are preserved instead of automatically mirroring restricted documents.

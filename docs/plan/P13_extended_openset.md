@@ -4,6 +4,10 @@ Date: 2026-10-20. Development milestone following [P11](P11_openset_development.
 This connects additional unknown sources to the single-polarization A1 model;
 it does not implement the final eight-known-class, dual-polarization benchmark.
 
+Update: [P14](P14_dual_polarization.md) implements a separate calibrated
+dual-polarization development task. This document continues to describe the
+single-polarization B1-dev/2 experiment.
+
 ## Protocol and data roles
 
 The known classes remain A1 minus one non-clean held-out family (default swept

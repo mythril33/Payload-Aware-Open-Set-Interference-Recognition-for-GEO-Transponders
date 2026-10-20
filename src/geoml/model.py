@@ -1,4 +1,4 @@
-"""Small ResNet for 2-channel (spectrogram, plan mask) inputs (P6 §3)."""
+"""Small ResNet with two single/co-pol or four dual-pol observable channels."""
 from __future__ import annotations
 
 import torch
