@@ -1,0 +1,937 @@
+{
+  "protocol": "B2-feat/1",
+  "parent_protocol": "B2/1",
+  "benchmark_complete": false,
+  "labels": [
+    "clean",
+    "cw",
+    "swept_cw",
+    "unauthorized",
+    "overdrive",
+    "cross_pol",
+    "adjacent_satellite",
+    "carrier_under_carrier"
+  ],
+  "config": {
+    "protocol": "B2-feat/1",
+    "views": [
+      "co",
+      "dual",
+      "dual_residual"
+    ],
+    "plan_consistency": true,
+    "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+    ],
+    "target_acceptance": 0.95,
+    "pfa": 0.05,
+    "mahalanobis_regularization": 0.1,
+    "training": {
+      "level": "carrier",
+      "time_pool": 2,
+      "width": 8,
+      "epochs": 3,
+      "batch": 8,
+      "lr": 0.001,
+      "augment": true,
+      "weight_decay": 0.0001,
+      "seed": 0,
+      "plan_loss_weight": 1.0,
+      "center_loss_weight": 0.005
+    }
+  },
+  "experiment_fingerprint": "7f9c424b110e1e52fd2f6096a967fdd7f882da54e8aa1e70667cf8dfb9f5a759",
+  "data_fingerprint": "325317b75dfaea64bd4872d09afd7511ffaf441dfd9e219153217081a9027831",
+  "partitions": {
+    "train": {
+      "n_samples": 16,
+      "scenario_ids": [
+        3000000,
+        3000001
+      ],
+      "per_label": {
+        "clean": 2,
+        "cw": 2,
+        "swept_cw": 2,
+        "unauthorized": 2,
+        "overdrive": 2,
+        "cross_pol": 2,
+        "adjacent_satellite": 2,
+        "carrier_under_carrier": 2
+      },
+      "n_planned_carrier_missing": 0
+    },
+    "val-select": {
+      "n_samples": 16,
+      "scenario_ids": [
+        3100000,
+        3100001
+      ],
+      "per_label": {
+        "clean": 2,
+        "cw": 2,
+        "swept_cw": 2,
+        "unauthorized": 2,
+        "overdrive": 2,
+        "cross_pol": 2,
+        "adjacent_satellite": 2,
+        "carrier_under_carrier": 2
+      },
+      "n_planned_carrier_missing": 0
+    },
+    "val-calib": {
+      "n_samples": 16,
+      "scenario_ids": [
+        3150000,
+        3150001
+      ],
+      "per_label": {
+        "clean": 2,
+        "cw": 2,
+        "swept_cw": 2,
+        "unauthorized": 2,
+        "overdrive": 2,
+        "cross_pol": 2,
+        "adjacent_satellite": 2,
+        "carrier_under_carrier": 2
+      },
+      "n_planned_carrier_missing": 0
+    },
+    "test": {
+      "n_samples": 16,
+      "scenario_ids": [
+        3200000,
+        3200001
+      ],
+      "per_label": {
+        "clean": 2,
+        "cw": 2,
+        "swept_cw": 2,
+        "unauthorized": 2,
+        "overdrive": 2,
+        "cross_pol": 2,
+        "adjacent_satellite": 2,
+        "carrier_under_carrier": 2
+      },
+      "n_planned_carrier_missing": 0
+    }
+  },
+  "cancellation": {
+    "srrc_span_symbols": 10,
+    "phase_grid": 16,
+    "iterations": 3,
+    "edge_guard": 512,
+    "version": "obs-cancel/1"
+  },
+  "runtime": {
+    "python": "3.13.16",
+    "numpy": "2.5.4",
+    "torch": "2.14.1+cu130",
+    "device": "cpu"
+  },
+  "scope": "Known-class learning slice on frozen B2/1 roles; not the complete open-set benchmark.",
+  "source_revision": "8e862872319a8431f8d6d6c5956590b214cf6343 (working tree; see commit recorded in DURUM)",
+  "methods": {
+    "co": {
+      "input_channels": 2,
+      "accuracy": {
+        "mean": 0.125,
+        "ci95": [
+          0.125,
+          0.125
+        ],
+        "n_samples": 16,
+        "n_scenarios": 2
+      },
+      "macro_f1": 0.027777777777777776,
+      "confusion": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0
+        ]
+      ],
+      "ece": {
+        "ece": 0.008978485482699305,
+        "n_bins": 15,
+        "n_samples": 16
+      },
+      "clean_false_alarm": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "n_samples": 2,
+        "n_scenarios": 2
+      },
+      "event_detection": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "n_samples": 14,
+        "n_scenarios": 2
+      },
+      "alarm": {
+        "score": "one_minus_softmax_clean",
+        "threshold": 0.8707008206112828,
+        "target_clean_pfa": 0.05,
+        "n_clean_calibration": 2
+      },
+      "plan_consistency": {
+        "positive_class": "planned_carrier_missing",
+        "decision_rule": "auxiliary logit > 0",
+        "accuracy": {
+          "mean": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "n_samples": 16,
+          "n_scenarios": 2
+        },
+        "recall": null,
+        "precision": null,
+        "n_positive": 0,
+        "n_predicted_positive": 0,
+        "n_samples": 16
+      },
+      "rejection": {
+        "msp": {
+          "calibration": {
+            "method": "msp",
+            "threshold": 0.8660935125254875,
+            "target_acceptance": 0.95,
+            "n_calibration": 16,
+            "temperature": 1.0,
+            "provenance": "b345634d0ce296a4ca8f5646da3e1c72c228d4674357c50a6610ea6b75ceffd8"
+          },
+          "known_acceptance": {
+            "mean": 0.5,
+            "ci95": [
+              0.0,
+              1.0
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          },
+          "accepted_known_accuracy": {
+            "mean": 0.125,
+            "ci95": null,
+            "n_samples": 8,
+            "n_scenarios": 1
+          },
+          "unknown_rejection": null,
+          "n_unknown": 0,
+          "note": "no unknown or benign test-only families exist in this known-only stage"
+        },
+        "energy": {
+          "calibration": {
+            "method": "energy",
+            "threshold": -2.0992040742507965,
+            "target_acceptance": 0.95,
+            "n_calibration": 16,
+            "temperature": 1.0,
+            "provenance": "e72e9b09a15e0b429d7c3c086e2b4d340d25d44a7b59029613076b74a9527e86"
+          },
+          "known_acceptance": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          },
+          "accepted_known_accuracy": {
+            "mean": 0.125,
+            "ci95": [
+              0.125,
+              0.125
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          },
+          "unknown_rejection": null,
+          "n_unknown": 0,
+          "note": "no unknown or benign test-only families exist in this known-only stage"
+        },
+        "mahalanobis": {
+          "calibration": {
+            "method": "mahalanobis",
+            "threshold": 7649.896032604582,
+            "target_acceptance": 0.95,
+            "n_calibration": 16,
+            "temperature": 1.0,
+            "provenance": "ba22a633e896e75c667f6672f60b89f03ec5e32f5ff1a8c1febff980b6fb1c24"
+          },
+          "known_acceptance": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          },
+          "accepted_known_accuracy": {
+            "mean": 0.125,
+            "ci95": [
+              0.125,
+              0.125
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          },
+          "unknown_rejection": null,
+          "n_unknown": 0,
+          "note": "no unknown or benign test-only families exist in this known-only stage"
+        }
+      },
+      "open_set": {
+        "unknown_auroc": null,
+        "unknown_ap": null,
+        "oscr": null,
+        "fpr_at_95_tpr": null,
+        "n_unknown": 0,
+        "note": "unknown families are a later B2 stage"
+      },
+      "checkpoint_sha256": "a5f0100c74e1cc4cdddd8f2925acdfb10d20c323c85763d5616f2b482a9d957b",
+      "n_parameters": 78777,
+      "history": [
+        {
+          "epoch": 0,
+          "train_loss": 11.172454357147217,
+          "val_macro_f1": 0.027777777777777776,
+          "val_plan_accuracy": 1.0
+        },
+        {
+          "epoch": 1,
+          "train_loss": 8.022769212722778,
+          "val_macro_f1": 0.027777777777777776,
+          "val_plan_accuracy": 1.0
+        },
+        {
+          "epoch": 2,
+          "train_loss": 6.5279083251953125,
+          "val_macro_f1": 0.027777777777777776,
+          "val_plan_accuracy": 1.0
+        }
+      ]
+    },
+    "dual": {
+      "input_channels": 4,
+      "accuracy": {
+        "mean": 0.125,
+        "ci95": [
+          0.125,
+          0.125
+        ],
+        "n_samples": 16,
+        "n_scenarios": 2
+      },
+      "macro_f1": 0.027777777777777776,
+      "confusion": [
+        [
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "ece": {
+        "ece": 0.010189721724413486,
+        "n_bins": 15,
+        "n_samples": 16
+      },
+      "clean_false_alarm": {
+        "mean": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ],
+        "n_samples": 2,
+        "n_scenarios": 2
+      },
+      "event_detection": {
+        "mean": 0.9285714285714286,
+        "ci95": [
+          0.8571428571428571,
+          1.0
+        ],
+        "n_samples": 14,
+        "n_scenarios": 2
+      },
+      "alarm": {
+        "score": "one_minus_softmax_clean",
+        "threshold": 0.8798964624751724,
+        "target_clean_pfa": 0.05,
+        "n_clean_calibration": 2
+      },
+      "plan_consistency": {
+        "positive_class": "planned_carrier_missing",
+        "decision_rule": "auxiliary logit > 0",
+        "accuracy": {
+          "mean": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "n_samples": 16,
+          "n_scenarios": 2
+        },
+        "recall": null,
+        "precision": null,
+        "n_positive": 0,
+        "n_predicted_positive": 0,
+        "n_samples": 16
+      },
+      "rejection": {
+        "msp": {
+          "calibration": {
+            "method": "msp",
+            "threshold": 0.8645619028403504,
+            "target_acceptance": 0.95,
+            "n_calibration": 16,
+            "temperature": 1.0,
+            "provenance": "f14b089f1d7505a1d91daf4a7b7c3a9aee10c560a7f706eba016b90e5fdae04e"
+          },
+          "known_acceptance": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          },
+          "accepted_known_accuracy": {
+            "mean": null,
+            "ci95": null,
+            "n_samples": 0,
+            "n_scenarios": 0
+          },
+          "unknown_rejection": null,
+          "n_unknown": 0,
+          "note": "no unknown or benign test-only families exist in this known-only stage"
+        },
+        "energy": {
+          "calibration": {
+            "method": "energy",
+            "threshold": -2.035976616985557,
+            "target_acceptance": 0.95,
+            "n_calibration": 16,
+            "temperature": 1.0,
+            "provenance": "b6f04282bdd2ca9f046f7eb7edc978aab8a1265739574dd651412ab7ad2ef1d0"
+          },
+          "known_acceptance": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          },
+          "accepted_known_accuracy": {
+            "mean": 0.125,
+            "ci95": [
+              0.125,
+              0.125
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          },
+          "unknown_rejection": null,
+          "n_unknown": 0,
+          "note": "no unknown or benign test-only families exist in this known-only stage"
+        },
+        "mahalanobis": {
+          "calibration": {
+            "method": "mahalanobis",
+            "threshold": 339.22752705751316,
+            "target_acceptance": 0.95,
+            "n_calibration": 16,
+            "temperature": 1.0,
+            "provenance": "db7876d6cfbde529c3ea2edd52c3fb76868a1d3f7e312213a78d7a6b02460c25"
+          },
+          "known_acceptance": {
+            "mean": 0.5625,
+            "ci95": [
+              0.125,
+              1.0
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          },
+          "accepted_known_accuracy": {
+            "mean": 0.1111111111111111,
+            "ci95": [
+              0.0,
+              0.125
+            ],
+            "n_samples": 9,
+            "n_scenarios": 2
+          },
+          "unknown_rejection": null,
+          "n_unknown": 0,
+          "note": "no unknown or benign test-only families exist in this known-only stage"
+        }
+      },
+      "open_set": {
+        "unknown_auroc": null,
+        "unknown_ap": null,
+        "oscr": null,
+        "fpr_at_95_tpr": null,
+        "n_unknown": 0,
+        "note": "unknown families are a later B2 stage"
+      },
+      "checkpoint_sha256": "13310617a2017c79dcbe678651d474c1a0dab2478ecbb5f11c58745d7e9b1d7d",
+      "n_parameters": 79177,
+      "history": [
+        {
+          "epoch": 0,
+          "train_loss": 9.573047637939453,
+          "val_macro_f1": 0.027777777777777776,
+          "val_plan_accuracy": 1.0
+        },
+        {
+          "epoch": 1,
+          "train_loss": 6.846144437789917,
+          "val_macro_f1": 0.027777777777777776,
+          "val_plan_accuracy": 1.0
+        },
+        {
+          "epoch": 2,
+          "train_loss": 5.4817047119140625,
+          "val_macro_f1": 0.027777777777777776,
+          "val_plan_accuracy": 1.0
+        }
+      ]
+    },
+    "dual_residual": {
+      "input_channels": 5,
+      "accuracy": {
+        "mean": 0.125,
+        "ci95": [
+          0.125,
+          0.125
+        ],
+        "n_samples": 16,
+        "n_scenarios": 2
+      },
+      "macro_f1": 0.027777777777777776,
+      "confusion": [
+        [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "ece": {
+        "ece": 0.01104691693035248,
+        "n_bins": 15,
+        "n_samples": 16
+      },
+      "clean_false_alarm": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "n_samples": 2,
+        "n_scenarios": 2
+      },
+      "event_detection": {
+        "mean": 0.07142857142857142,
+        "ci95": [
+          0.0,
+          0.14285714285714285
+        ],
+        "n_samples": 14,
+        "n_scenarios": 2
+      },
+      "alarm": {
+        "score": "one_minus_softmax_clean",
+        "threshold": 0.8640770823118489,
+        "target_clean_pfa": 0.05,
+        "n_clean_calibration": 2
+      },
+      "plan_consistency": {
+        "positive_class": "planned_carrier_missing",
+        "decision_rule": "auxiliary logit > 0",
+        "accuracy": {
+          "mean": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "n_samples": 16,
+          "n_scenarios": 2
+        },
+        "recall": null,
+        "precision": null,
+        "n_positive": 0,
+        "n_predicted_positive": 0,
+        "n_samples": 16
+      },
+      "rejection": {
+        "msp": {
+          "calibration": {
+            "method": "msp",
+            "threshold": 0.8641866657461202,
+            "target_acceptance": 0.95,
+            "n_calibration": 16,
+            "temperature": 1.0,
+            "provenance": "5bc0edca9930482c9d65ab63809861a338aa12b70c05f5e1dae06ed73736d011"
+          },
+          "known_acceptance": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          },
+          "accepted_known_accuracy": {
+            "mean": 0.125,
+            "ci95": [
+              0.125,
+              0.125
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          },
+          "unknown_rejection": null,
+          "n_unknown": 0,
+          "note": "no unknown or benign test-only families exist in this known-only stage"
+        },
+        "energy": {
+          "calibration": {
+            "method": "energy",
+            "threshold": -2.067521802754851,
+            "target_acceptance": 0.95,
+            "n_calibration": 16,
+            "temperature": 1.0,
+            "provenance": "04e8f9a67e6d9c2c011a58d994123b578126d8152644ecc155a0640f45b727b3"
+          },
+          "known_acceptance": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          },
+          "accepted_known_accuracy": {
+            "mean": 0.125,
+            "ci95": [
+              0.125,
+              0.125
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          },
+          "unknown_rejection": null,
+          "n_unknown": 0,
+          "note": "no unknown or benign test-only families exist in this known-only stage"
+        },
+        "mahalanobis": {
+          "calibration": {
+            "method": "mahalanobis",
+            "threshold": 1559.9085397575625,
+            "target_acceptance": 0.95,
+            "n_calibration": 16,
+            "temperature": 1.0,
+            "provenance": "bc844c2bc6dce55e548309f4b271deba79885adbb0f80c640c9a39ed2da08644"
+          },
+          "known_acceptance": {
+            "mean": 0.5,
+            "ci95": [
+              0.0,
+              1.0
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          },
+          "accepted_known_accuracy": {
+            "mean": 0.125,
+            "ci95": null,
+            "n_samples": 8,
+            "n_scenarios": 1
+          },
+          "unknown_rejection": null,
+          "n_unknown": 0,
+          "note": "no unknown or benign test-only families exist in this known-only stage"
+        }
+      },
+      "open_set": {
+        "unknown_auroc": null,
+        "unknown_ap": null,
+        "oscr": null,
+        "fpr_at_95_tpr": null,
+        "n_unknown": 0,
+        "note": "unknown families are a later B2 stage"
+      },
+      "checkpoint_sha256": "cd5778e570cd286d7b8ae90c8898b0e449f01e4ade71c68e46fceccb399aecbd",
+      "n_parameters": 79377,
+      "history": [
+        {
+          "epoch": 0,
+          "train_loss": 9.878284931182861,
+          "val_macro_f1": 0.027777777777777776,
+          "val_plan_accuracy": 1.0
+        },
+        {
+          "epoch": 1,
+          "train_loss": 7.328012228012085,
+          "val_macro_f1": 0.027777777777777776,
+          "val_plan_accuracy": 1.0
+        },
+        {
+          "epoch": 2,
+          "train_loss": 6.024041175842285,
+          "val_macro_f1": 0.027777777777777776,
+          "val_plan_accuracy": 1.0
+        }
+      ]
+    }
+  },
+  "generation_cost": {
+    "wall_s": 243.7599536969999,
+    "cpu_s": 285.10292971,
+    "peak_rss_mib": 585.23828125,
+    "artifact_mib": 24.751423835754395,
+    "note": "single producer, 2 OMP/BLAS threads; the full test suite ran concurrently for part of generation"
+  }
+}

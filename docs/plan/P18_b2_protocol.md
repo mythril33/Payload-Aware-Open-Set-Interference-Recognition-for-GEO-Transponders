@@ -1,7 +1,8 @@
 # P18 — B2/1: sekiz bilinen sınıflı, çift-pol, açık-küme benchmark protokolü
 
 Durum: **DONDURULDU — 2026-10-20 (K17, kullanıcı onayı)**; bilinen fiziksel gözlem aşaması
-`B2-base/1` [P19](P19_b2_base_observations.md)'da uygulanıyor; nihai B2/1 hattı tamamlanmadı ·
+`B2-base/1` [P19](P19_b2_base_observations.md)'da, iptal artığı (beşinci kanal) ve iki çıktılı model
+arayüzü `B2-feat/1` [P20](P20_b2_cancellation_residual.md)'de uygulandı; nihai B2/1 hattı tamamlanmadı ·
 Bütün K17 kararları aşağıya işlendi (§10). Hazır ve test edilmiş üreteçler: uplink ASI `geosim.asi`,
 DVB-CID `geosim.cid` ·
 Girdi: [P3](P3_taksonomi.md), [P5](P5_veri_protokol.md) (A1), [P12](P12_unknown_events.md),
@@ -246,6 +247,7 @@ Veri, eğitim bütçesi, eşik seçimi ve tohum protokolü bütün ablasyonlarda
 
 | Tarih | Değişiklik | Gerekçe |
 |---|---|---|
+| 2026-10-21 | Beşinci kanal gözlemden iptal artığı olarak `B2-feat/1` aşamasında kodlandı ([P20](P20_b2_cancellation_residual.md)): yalnız kalibre co-pol IQ + co-pol operatör planı girdi; karar yönlü yeniden modülasyon, `obs-cancel/1` ayarları isteğe bağlanır. **Belirtilmemiş hiperparametre tamamlandı (K18 adayı, araştırmacı onayı bekler):** merkez kaybı ağırlığı **0,005**, plan-tutarlılık BCE ağırlığı 1,0; her ikisi B2 eğitiminden önce `configs/b2_feat.json`'da donduruldu, arama yapılmadı. Checkpoint seçimi yalnız bilinen sınıf makro-F1 ile; yardımcı çıktı seçime girmez. Bölünme, sınıf, eşik ve gruplama değişmedi | §5 K9 ve §7a K17b'nin uygulanması; P6 merkez kaybı değeri vermiyordu, P19 bunun eğitimden önce yazılmasını istiyordu |
 | 2026-10-21 | Bilinen fiziksel gözlem aşaması `B2-base/1` olarak ayrıldı; iptal/unknown/model tamamlanmadan B2/1 tamamlandı denmez. K17b'nin %10–20 aralığı içinde taşıyıcı düşmesi Bernoulli olasılığı %15 seçildi; iki feed'den tek taşıyıcı, tek kalan co taşıyıcı hariç; CuC kurbanı aktif olmalı. Bütün sınıflar için ortak plan yalnız açık yerleşim olanaksızlığında en çok 64 çekilişle yenilenir; koşullama metadata'ya yazılır | Dondurulmuş fiziksel olayları tam eşleşmiş sekizli sahnelere bağlamak; nominal kazancı ve tarihsel sürümleri korumak. Sayısal uygulama seçimleri fiziksel pilot sonuçlarından önce kaydedildi |
 | 2026-10-20 | Taslak | — |
 | 2026-10-20 | **Donduruldu (K17).** Son kararlar: prototip/merkez kaybı; iptal artığı ana girdide (SCF yalnız A4b); CID için gerçek DVB-CID üreteci ve yalnız-test `cid_overlay` ailesi (beklenen `clean`); ASI dağılımları olduğu gibi + R2-eval/1 duyarlılığı; üretim bulutta, eğitim kullanıcıda | Kullanıcı yanıtları; CID seviyesi ETSI TS 103 129 Tablo 6 ile doğrulandı |

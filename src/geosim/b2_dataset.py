@@ -1,10 +1,16 @@
 """Verified known-class physical observations for the B2 foundation.
 
     python -m geosim.b2_dataset --out data/b2-base-pilot --limit-groups 2
+    python -m geosim.b2_dataset --out data/b2-feat-pilot --limit-groups 2 \
+        --cancellation configs/cancellation.json
 
-This B2-base/1 stage stores two calibrated PSD streams and two operator plans.
-It does not fabricate cancellation features or implement the final B2/1
-unknown/CID/matched-test generation or five-channel learning benchmark.
+The B2-base/1 stage stores two calibrated PSD streams and two operator plans.
+With ``--cancellation`` the separately versioned B2-feat/1 stage additionally
+stores the observation-based co-pol cancellation residual PSD (fifth model
+channel), computed at generation time from the calibrated co-pol monitor IQ
+and the co-pol operator plan only. Raw IQ is never stored. Existing B2-base/1
+artifacts remain readable and keep their identity. Neither stage implements
+the final B2/1 unknown/CID/matched-test generation.
 """
 from __future__ import annotations
 
@@ -17,18 +23,21 @@ from zipfile import BadZipFile
 import numpy as np
 import scipy
 
-from .b2_protocol import (BASE_PROTOCOL, BASE_ROLES, LABELS, PROTOCOL, B2Config,
-                          protocol_contract, receiver_response, scenario_ids)
+from .b2_protocol import (BASE_PROTOCOL, BASE_ROLES, BASE_STAGE, FEATURE_PROTOCOL, FEATURE_STAGE,
+                          FIFTH_CHANNEL, LABELS, PROTOCOL, B2Config, protocol_contract, receiver_response,
+                          scenario_ids)
 from .b2_scenarios import sample_scene
 from .asi import overlap_fraction
+from .cancellation import CancellationConfig, cancel_planned_carriers
 from .dataset import _atomic_json, _commit, _file_hash, _fingerprint, _generator_provenance
 from .event_dataset import _real, _stored_carrier, _strict_json
 from .plan import plan_mask_db
 from .polarization import ReceiverCalibration, fit_receiver_calibration
 
 ARRAY_KEYS = ("spec", "mask", "label", "seed", "plan_consistency")
+FEATURE_ARRAY_KEYS = ARRAY_KEYS + ("residual",)
 GROUPS_PER_SHARD = 8
-ARTIFACT_STAGE = "known_physical_observations"
+ARTIFACT_STAGE = BASE_STAGE
 _WAVEFORM_LABELS = {"cw", "swept_cw", "unauthorized", "adjacent_satellite", "carrier_under_carrier"}
 _READ_ERRORS = (OSError, KeyError, TypeError, ValueError, IndexError, EOFError, BadZipFile)
 
@@ -50,24 +59,41 @@ def _selection(roles, limit_groups, groups_per_shard):
     return list(roles), {role: scenario_ids(role, limit_groups) for role in roles}, groups_per_shard
 
 
-def _request(config, roles, limit_groups, groups_per_shard):
+def _request(config, roles, limit_groups, groups_per_shard, cancellation=None):
     roles, groups, groups_per_shard = _selection(roles, limit_groups, groups_per_shard)
     limit_groups = None if limit_groups is None else int(limit_groups)
-    return {"protocol": BASE_PROTOCOL, "parent_protocol": PROTOCOL, "artifact_stage": ARTIFACT_STAGE,
-            "benchmark_complete": False, "contract": protocol_contract(), "config": config.to_dict(),
-            "roles": roles, "scenario_groups": groups, "limit_groups": limit_groups,
-            "groups_per_shard": groups_per_shard, "source_sha256": _generator_provenance(),
-            "numpy_version": np.__version__, "scipy_version": scipy.__version__}
+    if cancellation is not None and not isinstance(cancellation, CancellationConfig):
+        raise ValueError("cancellation must be a CancellationConfig or None")
+    request = {"protocol": BASE_PROTOCOL, "parent_protocol": PROTOCOL, "artifact_stage": BASE_STAGE,
+               "benchmark_complete": False, "contract": protocol_contract(), "config": config.to_dict(),
+               "roles": roles, "scenario_groups": groups, "limit_groups": limit_groups,
+               "groups_per_shard": groups_per_shard, "source_sha256": _generator_provenance(),
+               "numpy_version": np.__version__, "scipy_version": scipy.__version__}
+    if cancellation is not None:
+        # The base request layout is unchanged so historical B2-base/1 identities survive.
+        request.update(protocol=FEATURE_PROTOCOL, artifact_stage=FEATURE_STAGE,
+                       cancellation=cancellation.to_dict(), fifth_channel=dict(FIFTH_CHANNEL))
+    return request
 
 
-def _fit_calibration(config, request_id):
+def _stage(request):
+    """Return (protocol, artifact stage, cancellation config or None, array keys) of a request."""
+    if "cancellation" in request or "fifth_channel" in request:
+        cancellation = CancellationConfig(**request["cancellation"])
+        if request.get("fifth_channel") != FIFTH_CHANNEL:
+            raise ValueError("B2 feature request has an unexpected fifth-channel contract")
+        return FEATURE_PROTOCOL, FEATURE_STAGE, cancellation, FEATURE_ARRAY_KEYS
+    return BASE_PROTOCOL, BASE_STAGE, None, ARRAY_KEYS
+
+
+def _fit_calibration(config, request_id, protocol=BASE_PROTOCOL):
     rng = np.random.default_rng([config.calibration_seed, 18001])
     reference = (rng.standard_normal((2, config.calibration_samples))
                  + 1j * rng.standard_normal((2, config.calibration_samples))) / np.sqrt(2)
     noise = config.calibration_noise_std * (rng.standard_normal(reference.shape)
                                             + 1j * rng.standard_normal(reference.shape)) / np.sqrt(2)
     return fit_receiver_calibration(reference, receiver_response(config) @ reference + noise,
-                                    provenance=f"{BASE_PROTOCOL}:{request_id}:independent_pilots")
+                                    provenance=f"{protocol}:{request_id}:independent_pilots")
 
 
 def _save_calibration(root, calibration):
@@ -77,14 +103,14 @@ def _save_calibration(root, calibration):
                                              "metadata": calibration.to_dict()})
 
 
-def _calibration(root, request_id):
+def _calibration(root, request_id, protocol=BASE_PROTOCOL):
     descriptor = _strict_json((root / "calibration.json").read_text())
     path = root / "receiver_calibration.npz"
     if descriptor.get("file") != path.name or descriptor.get("sha256") != _file_hash(path):
         raise ValueError("missing or modified B2 receiver calibration")
     calibration = ReceiverCalibration.load(path)
     if (calibration.to_dict() != descriptor.get("metadata")
-            or calibration.provenance != f"{BASE_PROTOCOL}:{request_id}:independent_pilots"):
+            or calibration.provenance != f"{protocol}:{request_id}:independent_pilots"):
         raise ValueError("B2 receiver calibration is not bound to this independent pilot request")
     return calibration, descriptor
 
@@ -211,9 +237,32 @@ def _event(record, name, plans, active, bandwidth):
                 raise ValueError("ASI geometry and PSD power reference disagree")
 
 
-def _record(record, config, role, group, index, consistency, calibration_metadata):
+def _cancellation_record(record, plans, cancellation):
+    """Check the stored canceller provenance; diagnostics are observation-derived, never truth."""
+    if cancellation is None:
+        if "cancellation" in record:
+            raise ValueError("B2 base records must not carry cancellation metadata")
+        return
+    item = record.get("cancellation")
+    if (not isinstance(item, dict) or item.get("version") != cancellation.version
+            or item.get("config") != cancellation.to_dict() or item.get("inputs") != FIFTH_CHANNEL["inputs"]
+            or item.get("polarization") != "co" or item.get("stored") != FIFTH_CHANNEL["storage"]):
+        raise ValueError("B2 cancellation provenance differs from the request")
+    carriers = item.get("carriers")
+    if (not isinstance(carriers, list) or len(carriers) != len(plans[0])
+            or any(not isinstance(entry, dict) or entry.get("plan_index") != position
+                   or entry.get("f0") != plans[0][position].f0
+                   or entry.get("symbol_rate") != plans[0][position].symbol_rate
+                   or entry.get("mod") != plans[0][position].mod
+                   or entry.get("basis") != "observed IQ and operator plan only"
+                   for position, entry in enumerate(carriers))):
+        raise ValueError("B2 cancellation diagnostics do not describe every planned co-pol carrier")
+
+
+def _record(record, config, role, group, index, consistency, calibration_metadata, protocol=BASE_PROTOCOL,
+            cancellation=None):
     name = LABELS[index]
-    if (record["protocol"] != BASE_PROTOCOL or record["parent_protocol"] != PROTOCOL
+    if (record["protocol"] != protocol or record["parent_protocol"] != PROTOCOL
             or record["label"] != name or record["role"] != role or record["scenario_id"] != group
             or type(record["plan_consistency"]) is not int or record["plan_consistency"] != consistency
             or record["receiver_calibration_applied"] is not True
@@ -262,6 +311,7 @@ def _record(record, config, role, group, index, consistency, calibration_metadat
         raise ValueError("B2 operator plans must contain two unit nominal loads")
     active = _activity(record, plans, consistency)
     _event(record, name, plans, active, config.bandwidth)
+    _cancellation_record(record, plans, cancellation)
     source = record["operator_plan_source"]
     rejected = source["co_rejected_plan_draws"]
     if (source["co_initial_seed"] != 2 * group or source["cross_seed"] != 2 * group + 1
@@ -277,11 +327,13 @@ def _record(record, config, role, group, index, consistency, calibration_metadat
     return {**common, "config": common_config}, np.stack([plan_mask_db(plan) for plan in plans]).astype(np.float16)
 
 
-def _read_part(part, metadata, config, role, groups, calibration_metadata):
+def _read_part(part, metadata, config, role, groups, calibration_metadata, protocol=BASE_PROTOCOL,
+               cancellation=None):
+    keys = ARRAY_KEYS if cancellation is None else FEATURE_ARRAY_KEYS
     with np.load(part, allow_pickle=False) as archive:
-        if set(archive.files) != set(ARRAY_KEYS):
+        if set(archive.files) != set(keys):
             raise ValueError("unexpected B2 array keys")
-        data = {key: archive[key] for key in ARRAY_KEYS}
+        data = {key: archive[key] for key in keys}
     records = [_strict_json(line) for line in metadata.read_text().splitlines()]
     n = len(groups) * len(LABELS)
     if (data["spec"].shape != (n, 2, 128, 512) or data["mask"].shape != (n, 2, 512)
@@ -290,12 +342,16 @@ def _read_part(part, metadata, config, role, groups, calibration_metadata):
             or not np.isfinite(data["spec"]).all() or not np.isfinite(data["mask"]).all()
             or not np.isin(data["plan_consistency"], [0, 1]).all() or len(records) != n):
         raise ValueError("invalid B2 dimensions, dtypes, values or metadata count")
+    if cancellation is not None and (data["residual"].shape != (n, 128, 512) or data["residual"].dtype != np.float16
+                                     or not np.isfinite(data["residual"]).all()):
+        raise ValueError("invalid B2 cancellation-residual array")
     pairs = list(zip(data["seed"].tolist(), data["label"].tolist()))
     if len(set(pairs)) != n or set(pairs) != {(seed, label) for seed in groups for label in range(len(LABELS))}:
         raise ValueError("B2 scenario-label pairs differ from the requested known groups")
     paired = {}
     for seed, label, consistency, mask, record in zip(data["seed"], data["label"], data["plan_consistency"], data["mask"], records):
-        common, expected_mask = _record(record, config, role, int(seed), int(label), int(consistency), calibration_metadata)
+        common, expected_mask = _record(record, config, role, int(seed), int(label), int(consistency),
+                                        calibration_metadata, protocol, cancellation)
         if not np.array_equal(mask, expected_mask):
             raise ValueError("B2 masks differ from full operator plans")
         if int(seed) in paired and paired[int(seed)] != common:
@@ -307,6 +363,7 @@ def _read_part(part, metadata, config, role, groups, calibration_metadata):
 def _verify_part(root, request, role, index, descriptor, config, calibration_metadata):
     part, metadata, descriptor_path = _paths(root, role, index)
     groups = _groups(request, role, index)
+    protocol, _, cancellation, _ = _stage(request)
     if (descriptor.get("part") != part.name or descriptor.get("meta") != metadata.name
             or descriptor.get("role") != role or descriptor.get("scenario_seeds") != groups
             or descriptor.get("n_samples") != len(groups) * len(LABELS)
@@ -317,16 +374,32 @@ def _verify_part(root, request, role, index, descriptor, config, calibration_met
     for path in (part, metadata):
         if not path.is_file() or descriptor.get("sha256", {}).get(path.name) != _file_hash(path):
             raise ValueError(f"missing or modified B2 artifact: {path}")
-    return _read_part(part, metadata, config, role, groups, calibration_metadata)
+    return _read_part(part, metadata, config, role, groups, calibration_metadata, protocol, cancellation)
+
+
+def _residual(result, plans, cancellation):
+    """Fifth channel from the calibrated co-pol IQ and co-pol operator plan only."""
+    if result.iq is None or np.shape(result.iq)[0] != 2:
+        raise ValueError("cancellation requires the calibrated two-polarization monitor IQ")
+    outcome = cancel_planned_carriers(result.iq[0], plans[0], cancellation)
+    result.meta["cancellation"] = {"version": cancellation.version, "config": cancellation.to_dict(),
+                                   "inputs": FIFTH_CHANNEL["inputs"], "polarization": "co",
+                                   "stored": FIFTH_CHANNEL["storage"], "carriers": outcome.carriers}
+    return outcome.residual_db.astype(np.float16)
 
 
 def generate_b2_dataset(out_dir, config: B2Config | None = None, *, roles=BASE_ROLES,
-                        limit_groups=None, groups_per_shard=GROUPS_PER_SHARD) -> None:
-    """Generate known physical observations; all eight variants stay together."""
+                        limit_groups=None, groups_per_shard=GROUPS_PER_SHARD,
+                        cancellation: CancellationConfig | None = None) -> None:
+    """Generate known physical observations; all eight variants stay together.
+
+    ``cancellation`` selects the B2-feat/1 stage with the stored fifth channel.
+    """
     config = B2Config() if config is None else config
     if not isinstance(config, B2Config):
         raise ValueError("config must be a B2Config")
-    request = _request(config, roles, limit_groups, groups_per_shard)
+    request = _request(config, roles, limit_groups, groups_per_shard, cancellation)
+    protocol, stage, cancellation, keys = _stage(request)
     request_id = _fingerprint(request)
     root = Path(out_dir)
     request_path = root / "request.json"
@@ -336,19 +409,19 @@ def generate_b2_dataset(out_dir, config: B2Config | None = None, *, roles=BASE_R
     elif root.exists() and any(root.iterdir()):
         raise ValueError("unverified B2 output directory; use a fresh directory")
     else:
-        calibration = _fit_calibration(config, request_id)
+        calibration = _fit_calibration(config, request_id, protocol)
         root.mkdir(parents=True, exist_ok=True)
         _atomic_json(request_path, request)
         _save_calibration(root, calibration)
     if (root / "manifest.json").exists():
         manifest = read_b2_manifest(root)
-        print(f"reusing verified B2 base dataset ({sum(info['n_samples'] for info in manifest['roles'].values())} samples)", flush=True)
+        print(f"reusing verified {protocol} dataset ({sum(info['n_samples'] for info in manifest['roles'].values())} samples)", flush=True)
         return
     if not (root / "calibration.json").exists():
         if (root / "receiver_calibration.npz").exists():
             raise ValueError("unverified partial B2 calibration; use a fresh output directory")
-        _save_calibration(root, _fit_calibration(config, request_id))
-    calibration, calibration_artifact = _calibration(root, request_id)
+        _save_calibration(root, _fit_calibration(config, request_id, protocol))
+    calibration, calibration_artifact = _calibration(root, request_id, protocol)
     role_info = {}
     for role in request["roles"]:
         (root / role).mkdir(exist_ok=True)
@@ -362,10 +435,17 @@ def generate_b2_dataset(out_dir, config: B2Config | None = None, *, roles=BASE_R
             else:
                 if part.exists() or metadata.exists():
                     raise ValueError("unverified partial B2 shard; use a fresh output directory")
-                arrays, records = {key: [] for key in ARRAY_KEYS}, []
+                arrays, records = {key: [] for key in keys}, []
                 for group in _groups(request, role, index):
                     for label, name in enumerate(LABELS):
-                        result = sample_scene(name, group, config, calibration=calibration)
+                        result = sample_scene(name, group, config, calibration=calibration,
+                                              keep_iq=cancellation is not None)
+                        if cancellation is not None:
+                            plans = [[_stored_carrier(item, config.bandwidth) for item in plan]
+                                     for plan in result.meta["plans"]]
+                            arrays["residual"].append(_residual(result, plans, cancellation))
+                            result.iq = None
+                            result.meta.update(protocol=protocol, base_protocol=BASE_PROTOCOL)
                         arrays["spec"].append(result.spec_db.astype(np.float16))
                         arrays["mask"].append(result.mask_db.astype(np.float16))
                         arrays["label"].append(label)
@@ -373,11 +453,15 @@ def generate_b2_dataset(out_dir, config: B2Config | None = None, *, roles=BASE_R
                         arrays["plan_consistency"].append(result.meta["plan_consistency"])
                         records.append(result.meta)
                 temporary_part, temporary_meta = part.with_suffix(".tmp.npz"), metadata.with_suffix(".jsonl.tmp")
-                np.savez(temporary_part, spec=np.stack(arrays["spec"]), mask=np.stack(arrays["mask"]),
-                         label=np.asarray(arrays["label"], np.int8), seed=np.asarray(arrays["seed"], np.int64),
-                         plan_consistency=np.asarray(arrays["plan_consistency"], np.int8))
+                stacked = {"spec": np.stack(arrays["spec"]), "mask": np.stack(arrays["mask"]),
+                           "label": np.asarray(arrays["label"], np.int8), "seed": np.asarray(arrays["seed"], np.int64),
+                           "plan_consistency": np.asarray(arrays["plan_consistency"], np.int8)}
+                if cancellation is not None:
+                    stacked["residual"] = np.stack(arrays["residual"])
+                np.savez(temporary_part, **stacked)
                 temporary_meta.write_text("".join(json.dumps(record, allow_nan=False) + "\n" for record in records))
-                _read_part(temporary_part, temporary_meta, config, role, _groups(request, role, index), calibration.to_dict())
+                _read_part(temporary_part, temporary_meta, config, role, _groups(request, role, index),
+                           calibration.to_dict(), protocol, cancellation)
                 temporary_part.replace(part)
                 temporary_meta.replace(metadata)
                 descriptor = {"part": part.name, "meta": metadata.name, "role": role,
@@ -391,11 +475,13 @@ def generate_b2_dataset(out_dir, config: B2Config | None = None, *, roles=BASE_R
                            "n_samples": count * len(LABELS), "per_label": {name: count for name in LABELS},
                            "shards": descriptors}
         print(f"{role}: {count * len(LABELS)} calibrated B2 base samples", flush=True)
-    manifest = {"artifact_version": 1, "protocol": BASE_PROTOCOL, "parent_protocol": PROTOCOL,
-                "artifact_stage": ARTIFACT_STAGE, "benchmark_complete": False, "labels": list(LABELS),
+    manifest = {"artifact_version": 1, "protocol": protocol, "parent_protocol": PROTOCOL,
+                "artifact_stage": stage, "benchmark_complete": False, "labels": list(LABELS),
                 "config": config.to_dict(), "request": request, "request_fingerprint": request_id,
                 "commit": _commit(), "calibration": calibration.to_dict(),
                 "calibration_artifact": calibration_artifact, "roles": role_info}
+    if cancellation is not None:
+        manifest.update(cancellation=cancellation.to_dict(), fifth_channel=dict(FIFTH_CHANNEL))
     _atomic_json(root / "manifest.json", manifest)
     read_b2_manifest(root)
 
@@ -405,6 +491,7 @@ def _header(root):
     manifest = _strict_json((root / "manifest.json").read_text())
     request = manifest["request"]
     config = B2Config(**request["config"])
+    protocol, stage, cancellation, _ = _stage(request)
     roles, groups, _ = _selection(request["roles"], request["limit_groups"], request["groups_per_shard"])
     source_hashes = request["source_sha256"]
     if (not isinstance(source_hashes, dict) or not source_hashes
@@ -412,18 +499,20 @@ def _header(root):
                    or any(char not in "0123456789abcdef" for char in digest)
                    for name, digest in source_hashes.items())):
         raise ValueError("B2 request must retain generator source hashes")
-    if (request["protocol"] != BASE_PROTOCOL or request["parent_protocol"] != PROTOCOL
-            or request["artifact_stage"] != ARTIFACT_STAGE or request["benchmark_complete"] is not False
+    if (request["protocol"] != protocol or request["parent_protocol"] != PROTOCOL
+            or request["artifact_stage"] != stage or request["benchmark_complete"] is not False
             or request["contract"] != protocol_contract() or request["scenario_groups"] != groups
             or request["config"] != config.to_dict()
             or _strict_json((root / "request.json").read_text()) != request
-            or manifest["artifact_version"] != 1 or manifest["protocol"] != BASE_PROTOCOL
-            or manifest["parent_protocol"] != PROTOCOL or manifest["artifact_stage"] != ARTIFACT_STAGE
+            or manifest["artifact_version"] != 1 or manifest["protocol"] != protocol
+            or manifest["parent_protocol"] != PROTOCOL or manifest["artifact_stage"] != stage
+            or manifest.get("cancellation") != (None if cancellation is None else cancellation.to_dict())
+            or manifest.get("fifth_channel") != (None if cancellation is None else FIFTH_CHANNEL)
             or manifest["benchmark_complete"] is not False or manifest["labels"] != list(LABELS)
             or manifest["config"] != config.to_dict() or manifest["request_fingerprint"] != _fingerprint(request)
             or set(manifest["roles"]) != set(roles)):
         raise ValueError("inconsistent B2 manifest/request")
-    calibration, descriptor = _calibration(root, _fingerprint(request))
+    calibration, descriptor = _calibration(root, _fingerprint(request), protocol)
     if (descriptor != manifest["calibration_artifact"] or calibration.to_dict() != manifest["calibration"]
             or calibration.n_pilots != config.calibration_samples):
         raise ValueError("B2 manifest differs from the independent calibration artifact")
@@ -474,9 +563,13 @@ def iter_b2_shards(root, role: str):
 
 
 def load_b2_split(root, role: str) -> dict:
-    """Load one role into memory; prefer iter_b2_shards for full-scale data."""
+    """Load one role into memory; prefer iter_b2_shards for full-scale data.
+
+    B2-feat/1 splits additionally carry ``residual`` ``[N,128,512]``.
+    """
     parts = list(iter_b2_shards(root, role))
-    return {**{key: np.concatenate([part[key] for part in parts]) for key in ARRAY_KEYS},
+    keys = [key for key in FEATURE_ARRAY_KEYS if all(key in part for part in parts)]
+    return {**{key: np.concatenate([part[key] for part in parts]) for key in keys},
             "meta": [record for part in parts for record in part["meta"]]}
 
 
@@ -492,11 +585,21 @@ def main(argv=None):
     parser.add_argument("--roles", nargs="+", choices=BASE_ROLES, default=BASE_ROLES)
     parser.add_argument("--limit-groups", type=int, help="pilot prefix per selected role; default full frozen counts")
     parser.add_argument("--groups-per-shard", type=int, default=GROUPS_PER_SHARD)
+    parser.add_argument("--cancellation", help="JSON canceller settings; selects the B2-feat/1 stage with the fifth channel")
     args = parser.parse_args(argv)
     try:
         config = B2Config.from_file(args.config) if args.config else B2Config()
+        cancellation = None
+        if args.cancellation:
+            raw = _strict_json(Path(args.cancellation).read_text())
+            if not isinstance(raw, dict):
+                raise ValueError("cancellation configuration must be a JSON object")
+            try:
+                cancellation = CancellationConfig(**raw)
+            except TypeError as error:
+                raise ValueError(f"invalid cancellation configuration: {error}") from error
         generate_b2_dataset(args.out, config, roles=args.roles, limit_groups=args.limit_groups,
-                            groups_per_shard=args.groups_per_shard)
+                            groups_per_shard=args.groups_per_shard, cancellation=cancellation)
     except (ValueError, OSError) as error:
         parser.exit(2, f"error: {error}\n")
 

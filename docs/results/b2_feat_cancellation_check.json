@@ -1,0 +1,259 @@
+{
+  "protocol": "B2-feat/1",
+  "benchmark_complete": false,
+  "data_fingerprint": "325317b75dfaea64bd4872d09afd7511ffaf441dfd9e219153217081a9027831",
+  "cancellation": {
+    "srrc_span_symbols": 10,
+    "phase_grid": 16,
+    "iterations": 3,
+    "edge_guard": 512,
+    "version": "obs-cancel/1"
+  },
+  "n_observations": 64,
+  "roles": {
+    "train": {
+      "n_samples": 16,
+      "n_scenarios": 2
+    },
+    "val-select": {
+      "n_samples": 16,
+      "n_scenarios": 2
+    },
+    "val-calib": {
+      "n_samples": 16,
+      "n_scenarios": 2
+    },
+    "test": {
+      "n_samples": 16,
+      "n_scenarios": 2
+    }
+  },
+  "per_label": {
+    "clean": {
+      "n": 8,
+      "n_active_carriers": 37,
+      "mean_depth_db": 16.466462125859636,
+      "min_depth_db": 14.197426688304304,
+      "mean_gap_floor_shift_db": -0.09081332454106672,
+      "median_decision_snr_db": 16.44869965591065
+    },
+    "cw": {
+      "n": 8,
+      "n_active_carriers": 37,
+      "mean_depth_db": 15.525060034995784,
+      "min_depth_db": 4.508050329129745,
+      "mean_gap_floor_shift_db": -0.05106674974344827,
+      "median_decision_snr_db": 15.802110895231678
+    },
+    "swept_cw": {
+      "n": 8,
+      "n_active_carriers": 37,
+      "mean_depth_db": 15.649529404702637,
+      "min_depth_db": 11.697185063369261,
+      "mean_gap_floor_shift_db": -0.059069887794183984,
+      "median_decision_snr_db": 16.189479127340423
+    },
+    "unauthorized": {
+      "n": 8,
+      "n_active_carriers": 37,
+      "mean_depth_db": 16.289206552877154,
+      "min_depth_db": 14.167375542755408,
+      "mean_gap_floor_shift_db": -0.039377156315115514,
+      "median_decision_snr_db": 16.090220802791222
+    },
+    "overdrive": {
+      "n": 8,
+      "n_active_carriers": 37,
+      "mean_depth_db": 13.325301647915666,
+      "min_depth_db": 11.151370986061266,
+      "mean_gap_floor_shift_db": -0.032837518797469656,
+      "median_decision_snr_db": 12.823013707987691
+    },
+    "cross_pol": {
+      "n": 8,
+      "n_active_carriers": 37,
+      "mean_depth_db": 12.778685414571573,
+      "min_depth_db": 8.96797341150436,
+      "mean_gap_floor_shift_db": -0.0236870165338523,
+      "median_decision_snr_db": 12.000877083207286
+    },
+    "adjacent_satellite": {
+      "n": 8,
+      "n_active_carriers": 37,
+      "mean_depth_db": 15.325490065770955,
+      "min_depth_db": 6.823076530456362,
+      "mean_gap_floor_shift_db": -0.0808228544362457,
+      "median_decision_snr_db": 15.231186831886191
+    },
+    "carrier_under_carrier": {
+      "n": 8,
+      "n_active_carriers": 37,
+      "mean_depth_db": 15.189315583106884,
+      "min_depth_db": 6.205347742328641,
+      "mean_gap_floor_shift_db": -0.08676204898171136,
+      "median_decision_snr_db": 16.02219940219759
+    }
+  },
+  "paired_cuc": [
+    {
+      "scenario_id": 3000000,
+      "c_over_i_db": 28.36217206222321,
+      "victim_c_over_i_db": 14.311331416062382,
+      "victim_mod": "8PSK",
+      "interferer_mod": "16APSK",
+      "delta_psd_before_cancellation_db": 0.1468396162833585,
+      "delta_psd_after_cancellation_db": 2.914234973034752
+    },
+    {
+      "scenario_id": 3000001,
+      "c_over_i_db": 18.79116636364514,
+      "victim_c_over_i_db": 6.152673155587813,
+      "victim_mod": "8PSK",
+      "interferer_mod": "8PSK",
+      "delta_psd_before_cancellation_db": 1.028656027436071,
+      "delta_psd_after_cancellation_db": 7.574975402884903
+    },
+    {
+      "scenario_id": 3100000,
+      "c_over_i_db": 24.114312417000033,
+      "victim_c_over_i_db": 12.98057464116357,
+      "victim_mod": "16APSK",
+      "interferer_mod": "16APSK",
+      "delta_psd_before_cancellation_db": 0.26537319967634687,
+      "delta_psd_after_cancellation_db": 4.440608192703522
+    },
+    {
+      "scenario_id": 3100001,
+      "c_over_i_db": 18.972307179213146,
+      "victim_c_over_i_db": 5.810942103895359,
+      "victim_mod": "QPSK",
+      "interferer_mod": "16APSK",
+      "delta_psd_before_cancellation_db": 1.015604704577882,
+      "delta_psd_after_cancellation_db": 7.884664763048647
+    },
+    {
+      "scenario_id": 3150000,
+      "c_over_i_db": 25.913201969042376,
+      "victim_c_over_i_db": 24.60924665957639,
+      "victim_mod": "32APSK",
+      "interferer_mod": "8PSK",
+      "delta_psd_before_cancellation_db": 0.029165990330170644,
+      "delta_psd_after_cancellation_db": 1.4486644525223653
+    },
+    {
+      "scenario_id": 3150001,
+      "c_over_i_db": 16.04970851732542,
+      "victim_c_over_i_db": 3.4179301304339518,
+      "victim_mod": "16APSK",
+      "interferer_mod": "QPSK",
+      "delta_psd_before_cancellation_db": 1.5820372635720332,
+      "delta_psd_after_cancellation_db": 5.3478592271502805
+    },
+    {
+      "scenario_id": 3200000,
+      "c_over_i_db": 9.92770261766995,
+      "victim_c_over_i_db": 4.9576522000086625,
+      "victim_mod": "QPSK",
+      "interferer_mod": "16APSK",
+      "delta_psd_before_cancellation_db": 0.9794347522233409,
+      "delta_psd_after_cancellation_db": 10.815443539404626
+    },
+    {
+      "scenario_id": 3200001,
+      "c_over_i_db": 17.16123115392383,
+      "victim_c_over_i_db": 10.434533836169361,
+      "victim_mod": "QPSK",
+      "interferer_mod": "16APSK",
+      "delta_psd_before_cancellation_db": 0.9928175150449761,
+      "delta_psd_after_cancellation_db": 11.034579939588056
+    }
+  ],
+  "paired_cuc_summary": {
+    "n_pairs": 8,
+    "median_delta_before_db": 0.9861261336341585,
+    "median_delta_after_db": 6.4614173150175915,
+    "n_pairs_after_exceeds_before": 8
+  },
+  "overdrive_vs_clean_floor_db": [
+    {
+      "scenario_id": 3000000,
+      "overdrive_actual_ibo_db": 2.7682952269238745,
+      "clean_actual_ibo_db": 11.684431779627602,
+      "gap_shift_spec_db": 9.308638331994189,
+      "gap_shift_residual_db": 9.578643060451682
+    },
+    {
+      "scenario_id": 3000001,
+      "overdrive_actual_ibo_db": 2.9687960954736816,
+      "clean_actual_ibo_db": 12.33162160333964,
+      "gap_shift_spec_db": 9.94397282333307,
+      "gap_shift_residual_db": 10.004335574971492
+    },
+    {
+      "scenario_id": 3100000,
+      "overdrive_actual_ibo_db": 1.6122411044546223,
+      "clean_actual_ibo_db": 11.53916451955749,
+      "gap_shift_spec_db": 10.580709523797807,
+      "gap_shift_residual_db": 10.727679484715637
+    },
+    {
+      "scenario_id": 3100001,
+      "overdrive_actual_ibo_db": 2.23372158624236,
+      "clean_actual_ibo_db": 9.600030758393778,
+      "gap_shift_spec_db": 5.824876020624302,
+      "gap_shift_residual_db": 5.902343841524541
+    },
+    {
+      "scenario_id": 3150000,
+      "overdrive_actual_ibo_db": 3.8510008178176323,
+      "clean_actual_ibo_db": 10.568874744335835,
+      "gap_shift_spec_db": 9.028848172832085,
+      "gap_shift_residual_db": 8.967989745341555
+    },
+    {
+      "scenario_id": 3150001,
+      "overdrive_actual_ibo_db": 3.015453285152127,
+      "clean_actual_ibo_db": 12.409893320276087,
+      "gap_shift_spec_db": 8.851451476592132,
+      "gap_shift_residual_db": 8.840568171960228
+    },
+    {
+      "scenario_id": 3200000,
+      "overdrive_actual_ibo_db": 3.0880478035149506,
+      "clean_actual_ibo_db": 9.727048726018332,
+      "gap_shift_spec_db": 6.46469491764158,
+      "gap_shift_residual_db": 6.476749490910478
+    },
+    {
+      "scenario_id": 3200001,
+      "overdrive_actual_ibo_db": 1.5491110152676648,
+      "clean_actual_ibo_db": 10.56381950650502,
+      "gap_shift_spec_db": 8.092414129784459,
+      "gap_shift_residual_db": 8.061102472672786
+    }
+  ],
+  "recognition_metrics": null,
+  "scope": "Residual-channel physics on known observations; no classifier or recognition-quality claim.",
+  "depth_by_modulation_db": {
+    "16APSK": {
+      "n": 96,
+      "mean": 14.926202012518763,
+      "min": 10.694622644617397
+    },
+    "32APSK": {
+      "n": 80,
+      "mean": 16.16642818766099,
+      "min": 13.76653782212199
+    },
+    "8PSK": {
+      "n": 48,
+      "mean": 14.721425276909294,
+      "min": 8.547344284600399
+    },
+    "QPSK": {
+      "n": 72,
+      "mean": 14.270233599948394,
+      "min": 4.508050329129745
+    }
+  }
+}

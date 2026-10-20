@@ -1,7 +1,9 @@
-"""Frozen B2/1 contracts and the first, known-observation artifact stage.
+"""Frozen B2/1 contracts and the known-observation artifact stages.
 
-B2-base/1 contains physical observations only. It is not the completed five-
-channel B2 benchmark: cancellation, final unknowns and matched tests follow.
+B2-base/1 contains physical observations only. B2-feat/1 adds the observation-
+based co-pol cancellation residual (fifth model channel, P18 §5). Neither is
+the completed B2 benchmark: final unknowns, CID overlays and the matched ASI
+test set follow in separate stages.
 """
 from __future__ import annotations
 
@@ -16,6 +18,14 @@ from .event_dataset import EventDatasetConfig, _strict_json, receiver_response
 
 PROTOCOL = "B2/1"
 BASE_PROTOCOL = "B2-base/1"
+FEATURE_PROTOCOL = "B2-feat/1"
+BASE_STAGE = "known_physical_observations"
+FEATURE_STAGE = "known_physical_observations_with_cancellation_residual"
+FIFTH_CHANNEL = {"name": "co_pol_cancellation_residual",
+                 "inputs": "calibrated co-pol monitor IQ and the co-pol operator plan only",
+                 "excluded": ["transmitted symbols", "active-carrier masks", "realized back-off", "XPD",
+                              "event labels", "event parameters", "cross-pol observations"],
+                 "storage": "float16 Welch PSD [n_snap, 512] in dB(power/Hz) on the monitor grid, same scale as spec"}
 LABELS = ("clean", "cw", "swept_cw", "unauthorized", "overdrive", "cross_pol",
           "adjacent_satellite", "carrier_under_carrier")
 BASE_ROLES = ("train", "val-select", "val-calib", "test")

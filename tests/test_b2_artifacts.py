@@ -299,7 +299,7 @@ def test_cli_preserves_config_and_limits(tmp_path, monkeypatch):
     ds.main(["--out", str(tmp_path / "data"), "--config", str(path), "--roles", "train", "test",
              "--limit-groups", "2", "--groups-per-shard", "1"])
     assert calls[0][1].calibration_seed == 7
-    assert calls[0][2] == {"roles": ["train", "test"], "limit_groups": 2, "groups_per_shard": 1}
+    assert calls[0][2] == {"roles": ["train", "test"], "limit_groups": 2, "groups_per_shard": 1, "cancellation": None}
 
 
 def test_numpy_integer_limits_are_normalized_for_request_json(tmp_path, generator):
@@ -307,3 +307,147 @@ def test_numpy_integer_limits_are_normalized_for_request_json(tmp_path, generato
     ds.generate_b2_dataset(root, roles=("train",), limit_groups=np.int64(1), groups_per_shard=np.int64(1))
     request = json.loads((root / "request.json").read_text())
     assert type(request["limit_groups"]) is int and type(request["groups_per_shard"]) is int
+
+
+# ---- B2-feat/1: stored observation-based cancellation residual (fifth channel) ----
+
+@pytest.fixture
+def feature_generator(monkeypatch, generator):
+    """Fake simulator with IQ and a fake canceller that records exactly what it was given."""
+    from types import SimpleNamespace as NS
+    from geosim import cancellation as cx
+    calls = {"cancel": []}
+    inner = scenes.simulate_dual          # the base fixture's fake, captured before patching again
+
+    def simulate(cfg, *, plans, interferers, active_carriers, calibration, keep_iq):
+        base = inner(cfg, plans=plans, interferers=interferers, active_carriers=active_carriers,
+                     calibration=calibration, keep_iq=False)
+        iq = None
+        if keep_iq:
+            rng = np.random.default_rng([int(cfg.co.seed), 99])
+            iq = (rng.standard_normal((2, 128, 4096)) + 1j * rng.standard_normal((2, 128, 4096))).astype(np.complex64)
+        return NS(spec_db=base.spec_db, mask_db=base.mask_db, meta=dict(base.meta), iq=iq)
+
+    def cancel(iq, plan, config=None):
+        calls["cancel"].append((np.asarray(iq).copy(), list(plan), config))
+        rng = np.random.default_rng(int(np.abs(iq[0, 0].real) * 1e6) % 1000)
+        return NS(residual_iq=iq, residual_db=rng.normal(-95, 1, (128, 512)).astype(np.float32),
+                  carriers=[{"plan_index": i, "f0": c.f0, "symbol_rate": c.symbol_rate, "mod": c.mod,
+                             "samples_per_symbol": 60, "symbols_per_snapshot": 200, "timing_samples": [0] * 128,
+                             "gain_power_db_mean": 0.0, "decision_snr_db_median": 20.0,
+                             "basis": "observed IQ and operator plan only"} for i, c in enumerate(plan)],
+                  config=config)
+
+    monkeypatch.setattr(scenes, "simulate_dual", simulate)
+    monkeypatch.setattr(ds, "cancel_planned_carriers", cancel)
+    return {**generator, **calls}
+
+
+def test_feature_stage_stores_residual_from_co_iq_and_co_plan_only(tmp_path, feature_generator):
+    from geosim.cancellation import CancellationConfig
+    root = tmp_path / "feat"
+    config = CancellationConfig(iterations=2)
+    ds.generate_b2_dataset(root, roles=("train", "test"), limit_groups=1, groups_per_shard=1, cancellation=config)
+    manifest = ds.read_b2_manifest(root)
+    assert manifest["protocol"] == "B2-feat/1" and manifest["parent_protocol"] == "B2/1"
+    assert manifest["artifact_stage"] == "known_physical_observations_with_cancellation_residual"
+    assert manifest["benchmark_complete"] is False
+    assert manifest["cancellation"] == config.to_dict() and manifest["request"]["cancellation"] == config.to_dict()
+    assert manifest["fifth_channel"]["name"] == "co_pol_cancellation_residual"
+    data = ds.load_b2_split(root, "train")
+    assert data["residual"].shape == (8, 128, 512) and data["residual"].dtype == np.float16
+    assert data["spec"].shape == (8, 2, 128, 512)
+    assert len(feature_generator["cancel"]) == 16
+    for (iq, plan, used), record in zip(feature_generator["cancel"], data["meta"] + ds.load_b2_split(root, "test")["meta"]):
+        assert iq.shape == (128, 4096) and used == config
+        assert [asdict(c) for c in plan] == record["plans"][0]            # co-pol operator plan, not activity
+        assert record["cancellation"]["inputs"].startswith("calibrated co-pol monitor IQ")
+        assert len(record["cancellation"]["carriers"]) == len(record["plans"][0])
+    # Every simulate call for the feature stage asked for IQ; raw IQ is not stored.
+    with np.load(root / "train" / "part-00000.npz") as archive:
+        assert set(archive.files) == {"spec", "mask", "label", "seed", "plan_consistency", "residual"}
+    assert "iq" not in json.loads((root / "train" / "meta-00000.jsonl").read_text().splitlines()[0])
+    assert manifest["request_fingerprint"] != ds._fingerprint(ds._request(B2Config(), ["train", "test"], 1, 1))
+
+
+def test_feature_stage_resume_and_cross_stage_rejection(tmp_path, feature_generator):
+    from geosim.cancellation import CancellationConfig
+    root = tmp_path / "feat"
+    ds.generate_b2_dataset(root, roles=("train",), limit_groups=1, groups_per_shard=1,
+                           cancellation=CancellationConfig())
+    before = ds.b2_fingerprint(root)
+    n_cancel = len(feature_generator["cancel"])
+    ds.generate_b2_dataset(root, roles=("train",), limit_groups=1, groups_per_shard=1,
+                           cancellation=CancellationConfig())
+    assert ds.b2_fingerprint(root) == before and len(feature_generator["cancel"]) == n_cancel
+    with pytest.raises(ValueError, match="request changed"):
+        ds.generate_b2_dataset(root, roles=("train",), limit_groups=1, groups_per_shard=1)
+    with pytest.raises(ValueError, match="request changed"):
+        ds.generate_b2_dataset(root, roles=("train",), limit_groups=1, groups_per_shard=1,
+                               cancellation=CancellationConfig(iterations=5))
+
+
+def test_base_stage_is_unchanged_and_rejects_residual_or_cancellation_metadata(tmp_path, generator):
+    root = tmp_path / "base"
+    ds.generate_b2_dataset(root, roles=("train",), limit_groups=1, groups_per_shard=1)
+    request = json.loads((root / "request.json").read_text())
+    assert request["protocol"] == "B2-base/1" and "cancellation" not in request and "fifth_channel" not in request
+    manifest = json.loads((root / "manifest.json").read_text())
+    assert "cancellation" not in manifest and "residual" not in ds.load_b2_split(root, "train")
+    part = root / "train" / "part-00000.npz"
+    with np.load(part) as archive:
+        arrays = {key: archive[key] for key in archive.files}
+    np.savez(part, **arrays, residual=np.zeros((8, 128, 512), np.float16))
+    with pytest.raises(ValueError, match="modified|array keys"):
+        ds.read_b2_manifest(root)
+
+
+def test_feature_stage_detects_corrupt_residual_and_provenance(tmp_path, feature_generator):
+    from geosim.cancellation import CancellationConfig
+    root = tmp_path / "feat"
+    ds.generate_b2_dataset(root, roles=("train",), limit_groups=1, groups_per_shard=1,
+                           cancellation=CancellationConfig())
+    part = root / "train" / "part-00000.npz"
+    descriptor = root / "train" / "shard-00000.json"
+    with np.load(part) as archive:
+        arrays = {key: archive[key] for key in archive.files}
+    arrays["residual"][0, 0, 0] = np.float16(np.inf)
+    np.savez(part, **arrays)
+    info = json.loads(descriptor.read_text())
+    info["sha256"][part.name] = ds._file_hash(part)
+    descriptor.write_text(json.dumps(info))
+    manifest = json.loads((root / "manifest.json").read_text())
+    manifest["roles"]["train"]["shards"][0] = info
+    (root / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="residual"):
+        ds.read_b2_manifest(root)
+    arrays["residual"][0, 0, 0] = np.float16(-95)
+    np.savez(part, **arrays)
+    info["sha256"][part.name] = ds._file_hash(part)
+    descriptor.write_text(json.dumps(info))
+    manifest["roles"]["train"]["shards"][0] = info
+    (root / "manifest.json").write_text(json.dumps(manifest))
+    meta = root / "train" / "meta-00000.jsonl"
+    records = [json.loads(line) for line in meta.read_text().splitlines()]
+    records[0]["cancellation"]["config"]["iterations"] = 9
+    meta.write_text("".join(json.dumps(r) + "\n" for r in records))
+    info["sha256"][meta.name] = ds._file_hash(meta)
+    descriptor.write_text(json.dumps(info))
+    manifest["roles"]["train"]["shards"][0] = info
+    (root / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="cancellation provenance"):
+        ds.read_b2_manifest(root)
+
+
+def test_cli_selects_feature_stage_from_cancellation_json(tmp_path, monkeypatch):
+    from geosim.cancellation import CancellationConfig
+    path = tmp_path / "cancel.json"
+    path.write_text(json.dumps({"iterations": 4}))
+    calls = []
+    monkeypatch.setattr(ds, "generate_b2_dataset", lambda out, cfg, **kwargs: calls.append(kwargs))
+    ds.main(["--out", str(tmp_path / "data"), "--cancellation", str(path), "--limit-groups", "1"])
+    assert calls[0]["cancellation"] == CancellationConfig(iterations=4)
+    bad = tmp_path / "bad.json"
+    bad.write_text(json.dumps({"iterations": 0}))
+    with pytest.raises(SystemExit):
+        ds.main(["--out", str(tmp_path / "data2"), "--cancellation", str(bad)])
