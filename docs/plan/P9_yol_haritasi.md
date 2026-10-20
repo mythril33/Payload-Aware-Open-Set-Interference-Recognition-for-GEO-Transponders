@@ -34,7 +34,7 @@ Tarih 2026-10-20 · **öneri**, proje teslim sözü veya tamamlanmış deney lis
 
 Kesin hedef dergi veya kabul olasılığı belirtilmemiştir. Tamamlanan bilimsel katkının türüne göre IEEE Transactions on Aerospace and Electronic Systems (sistem/değerlendirme), IEEE Transactions on Machine Learning in Communications and Networking (öğrenme yöntemi) ve International Journal of Satellite Communications and Networking (uydu işletimi) **uygunluk açısından araştırılabilecek** yerlerdir. Aims & scope, güncel kurallar ve ücretler başvuru anında ayrı kontrol edilmelidir; burada bir editör kararı/uygunluk garantisi verilmez.
 
-2026-10-20 literatür taraması ([P15](P15_literatur_duzeltme_programi.md)) şu adayları ekledi; aynı uyarı geçerlidir:
+2026-10-20 literatür taraması ([P16](P16_literatur_duzeltme_programi.md)) şu adayları ekledi; aynı uyarı geçerlidir:
 
 | Yer | Uygun olduğu çıktı | Taramadaki karşılaştırılabilir iş |
 |---|---|---|
@@ -45,7 +45,7 @@ Kesin hedef dergi veya kabul olasılığı belirtilmemiştir. Tamamlanan bilimse
 | ASMS/SPSC, ICSSC | Operatör kitlesi | Pellaco 2019 |
 | IEEE Aerospace Conf., MILCOM | Uygulamalı/savunma; karıştırma açısı | — |
 
-Bu adaylar P15'teki kilometre taşlarıyla eşleşir: Kademe A + R1-eval/1 sonuçları bir konferans/çalıştay sürümüne, B2/1 benchmark'ı dergi sürümüne yeter.
+Bu adaylar P16'teki kilometre taşlarıyla eşleşir: Kademe A + R1-eval/1 sonuçları bir konferans/çalıştay sürümüne, B2/1 benchmark'ı dergi sürümüne yeter.
 
 ## 4. Gerçek tamamlanma kriteri
 

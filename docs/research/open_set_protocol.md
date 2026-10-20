@@ -18,7 +18,7 @@ Bilinen hedefler: `clean`, `cw`, `swept_cw`, `cross_pol`, `adjacent_satellite`, 
 | cross-pol leakage | çoğu kez yetersiz | **gerekli**, ancak tek başına her zaman yeterli değil | yararlı | XPD kalibrasyonu gerekir |
 | unauthorized vs planned | tek başına yetersiz | tek başına yetersiz | **gerekli**, ama güncel/eksiksiz olmalı | yetkilendirme metadata'sı gerekir |
 | adjacent-satellite vs başka modüleli taşıyıcı | genellikle yetersiz | yardımcı | yararlı ama kesin değil | yörünge/anten/geolokasyon veya yön bilgisi gerekebilir |
-| carrier-under-carrier | düşük C/I'de **tanımlanamaz beklenir** (ticari araçlar taşıyıcı iptaliyle bulur) | yardımcı | yardımcı | **gerekli**: gözlemden hesaplanan iptal artığı veya döngüsel özellik; kâhin iptal yalnız etiketli üst sınır ([P15](../plan/P15_literatur_duzeltme_programi.md) İP-4, K9) |
+| carrier-under-carrier | düşük C/I'de **tanımlanamaz beklenir** (ticari araçlar taşıyıcı iptaliyle bulur) | yardımcı | yardımcı | **gerekli**: gözlemden hesaplanan iptal artığı veya döngüsel özellik; kâhin iptal yalnız etiketli üst sınır ([P16](../plan/P16_literatur_duzeltme_programi.md) İP-4, K9) |
 | overdrive IM vs dış girişim | yalnız PSD ile karışabilir | yardımcı | plan ve IBO yardımcı | çok taşıyıcılı doğrusal olmayan zincir modeli kritik |
 
 **İlke:** Ölçümlerin aynı olduğu iki fiziksel sebebi sinir ağı kesin olarak ayıramaz. Gerektiğinde birleşik `unresolved_modulated_interference` etiketi veya çok-etiket/hiyerarşik karar üretilmeli; ground-truth sebep çıkarımı için yetkilendirme/yön bilgisi gerekliliği raporlanmalı.

@@ -1,4 +1,4 @@
-> Kullanıcının 2026-10-20 tarihli literatür taraması, değiştirilmeden saklanan kopya. "(verify)" işaretli künyeler ve ticari basın rakamları doğrulanmamıştır; projedeki kullanım kuralları ve tarama↔depo düzeltmeleri: [P15](../plan/P15_literatur_duzeltme_programi.md).
+> Kullanıcının 2026-10-20 tarihli literatür taraması, değiştirilmeden saklanan kopya. "(verify)" işaretli künyeler ve ticari basın rakamları doğrulanmamıştır; projedeki kullanım kuralları ve tarama↔depo düzeltmeleri: [P16](../plan/P16_literatur_duzeltme_programi.md).
 
 # Payload-Aware Open-Set Interference Recognition for GEO Transponders: Literature Review
 

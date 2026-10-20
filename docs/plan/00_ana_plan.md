@@ -96,7 +96,7 @@ Her faz = bir (veya birkaç) odaklı planlama oturumu. Çıktısı ayrı bir dos
 | **P7** | Değerlendirme ve ablasyon protokolü | `P7_degerlendirme.md` | Her iddia ↔ deney ↔ metrik ↔ tablo/şekil eşlemesi; istatistik (tohum sayısı, güven aralığı) | openset-rf-eval-protocol |
 | **P8** | Dış veri denetimi | `P8_dis_veri.md` | Her kaynak: erişilebilirlik, lisans, format, bant/fs, projedeki kesin rolü, "kullan / kullanma" kararı | veri denetçisi agent |
 | **P9** | Yol haritası, riskler, hedef yayın | `P9_yol_haritasi.md` | Haftalık kilometre taşları, risk kaydı (olasılık/etki/önlem), 2–3 hedef dergi + yedek | proje skill'i + kırmızı takım agent |
-| **P15** | Literatür taraması sonrası düzeltme ve tamamlama programı | `P15_literatur_duzeltme_programi.md` | Her tarama↔depo çelişkisi kapatılmış veya sahipli; her iş paketinin kapanış ölçütü yazılı | proje skill'i |
+| **P16** | Literatür taraması sonrası düzeltme ve tamamlama programı | `P16_literatur_duzeltme_programi.md` | Her tarama↔depo çelişkisi kapatılmış veya sahipli; her iş paketinin kapanış ölçütü yazılı | proje skill'i |
 
 **Sıra (v0.4, hızlı yol):** P0 ✔ → P2-A → P4-A + kod → P3-A + kod → P5-A → P6-A/P7-A → [Kademe B: P1 ∥ P8 → P2–P7 B dilimleri → P9]. Ayrıntı `P0_kapsam.md` §5. Eski sıra: P0 → P1 ∥ P8 → P2 → P3 → P4 → P5 → P6 → P7 → P9. (P1 ve P8 web araştırması gerektirir, paralel yürür; P3'ün sonucu P5–P7'yi değiştirebilir, bu yüzden önce gelir.)
 
@@ -164,11 +164,13 @@ Her faz = bir (veya birkaç) odaklı planlama oturumu. Çıktısı ayrı bir dos
 | K5 | Adjacent-satellite: uplink, downlink ya da ikisi | P3 |
 | K6 | Aşırı sürme: IBO 0–5 dB; nominal 8–14 dB; arası üretilmez (`P3_taksonomi.md` §3) | P3-A ✔ |
 | K7 | DVB-S2 dalga biçimi: kendi üretici mi, hazır kütüphane mi | P4 |
-| K8 | ~~Gerçeklik çapası~~ — kapandı: yalnızca (c) ölçülmüş PA verisi, Kademe B. **2026-10-20 ek (P15):** (c)'ye yükselteç ailesi uyumsuzluğu (Rapp, bellek polinomu) ve NPR kontrolü eklenmesi önerildi → K11 | P0 ✔ |
-| K5 güncel | ASI giriş noktası: öneri downlink-ASI [VARSAYIM] | P15 §5 |
-| K9 | Carrier-under-carrier gözlem kanalı: gözlemden iptal artığı + etiketli kâhin üst sınır; tam cyclic dalı kesme listesinde ilk | P15 §5 |
-| K10 | Yenilik cümlesi: "birlikte modelleyen ilk" biçimi | P15 §5 |
-| K11 | Yükselteç uyumsuzluk kümesi: Rapp + bellek polinomu + OpenDPD-öğrenilmiş | P15 §5 |
-| K12 | Takvim: 15 Aralık 2026 makale hedefi | P15 §4 |
-| K13 | Depo lisansı ve veri yayımı | P15 §5 |
-| K14 | Vekil (surrogate) unknown doğrulama: şimdilik yok | P15 §5 |
+| K8 | ~~Gerçeklik çapası~~ — kapandı: yalnızca (c) ölçülmüş PA verisi, Kademe B. **2026-10-20 ek (P16):** (c)'ye yükselteç ailesi uyumsuzluğu (Rapp, bellek polinomu) ve NPR kontrolü eklenmesi önerildi → K11 | P0 ✔ |
+| K5 | ~~ASI giriş noktası~~ — **kapandı 2026-10-20: uplink-ASI** (downlink önerisi kullanıcı tarafından veto edildi) | P16 §5 ✔ |
+| K9 | ~~CuC gözlem kanalı~~ — kapandı: iptal artığı **ve** cyclic (SCF) dalı; önce iptal artığı | P16 §5 ✔ |
+| K10 | ~~Yenilik cümlesi~~ — kapandı: aşamalı cümle; çift-pol/open-set B2/1 sonrası eklenir | P16 §5 ✔ |
+| K11 | ~~Ölçülmüş PA kullanımı~~ — kapandı: OpenDPD yalnız ölçüm aralığında, nominal IBO; + Rapp, sentetik bellek polinomu | P16 §5 ✔ |
+| K12 | ~~Takvim~~ — kapandı: sabit tarih yok (V2 sürer) | P16 §4 ✔ |
+| K13 | Depo lisansı — **şimdilik lisans yok**; yayın öncesi yeniden sorulacak | P16 §5 |
+| K14 | ~~Vekil unknown~~ — kapandı: yok, yalnız bilinen doğrulama | P16 §5 ✔ |
+| K15 | SmartSpace on-board — bulutta işlenecek; host izni ve kullanım koşulu teyidi kullanıcıda | P16 §5 |
+| K16 | ~~E1-dev/1 downlink ASI olayı~~ — kapandı 2026-10-20: `adjacent_satellite_downlink` adıyla ayrı tutulur; B2/1 `adjacent_satellite` = uplink | P16 §5 ✔ |
