@@ -166,10 +166,10 @@ Bu bölüm sonuçlardan **önce** yazıldı. Dilim sınırları test sonuçları
   eğitimde temsil edilir. Toplam sapmalı örnek oranı %10–20.
   - Etki: tek etiket kuralı (A1 karar B) B2/1'de iki çıktıya genişler. Bu bir protokol değişikliğidir;
     A1 değişmez.
-  - **[KULLANICI ONAYI BEKLİYOR]** Yukarıdaki iki yorum, "eksik/fazla taşıyıcı ayrı etiket" kararının
-    simülatöre uyarlanmış hâlidir.
-  - Yükün sürüşü: düşen taşıyıcının giriş gücünü azaltıp azaltmadığı, yani sabit kazanç mı ALC mi, ayrıca
-    yazılmalıdır. Varsayılan sabit kazançtır **[VARSAYIM]**: IBO artar.
+  - **Onaylandı (K17b, 2026-10-20):** fazla taşıyıcı `unauthorized` anlamını korur; eksik taşıyıcı ikinci
+    çıktı `plan_consistency` ile öğrenilir.
+  - Yükün sürüşü **sabit kazançtır (FGM; K17b, kullanıcı kararı)**: düşen taşıyıcı toplam giriş gücünü
+    azaltır, IBO büyür ve IM azalır. Gerçekleşen IBO metadata'ya yazılır.
 
 **K17c — Seviye eşleşmiş ASI ↔ `unauthorized` alt kutusu.**
 - **Dilimler:** C/I_psd 7–10 dB ana dilim; 4–7 ve 10–13 dB komşu dilimler. Hepsi sonuçtan önce sabit.
@@ -235,6 +235,6 @@ Veri, eğitim bütçesi, eşik seçimi ve tohum protokolü bütün ablasyonlarda
 |---|---|---|
 | 2026-10-20 | Taslak | — |
 | 2026-10-20 | K17 alt kararları işlendi: CuC 5–30 dB; roller 1500/150/150/500; downlink ASI yakın; LOKO 3 tohum | Kullanıcı yanıtları (dondurma öncesi) |
-| 2026-10-20 | K17a–d kararları §7a'ya yazıldı: gözlemde nominal aşırı sürme alt kutusu; kaydırma artırımı (%15, sürekli ±0,5 MHz); fazla taşıyıcı = `unauthorized` (gözlemsel olarak aynı); eksik taşıyıcı için ikinci çıktı (onay bekliyor); seviye eşleşmiş ASI/unauthorized kümesi; downlink ASI'de seviye sabit | Kullanıcı yanıtları; ana dağılımda 7–10 dB ASI sayısı ≈ 12/500 |
+| 2026-10-20 | K17a–d kararları §7a'ya yazıldı: gözlemde nominal aşırı sürme alt kutusu; kaydırma artırımı (%15, sürekli ±0,5 MHz); fazla taşıyıcı = `unauthorized` (gözlemsel olarak aynı); eksik taşıyıcı için ikinci çıktı `plan_consistency` ve sabit kazanç (onaylandı); seviye eşleşmiş ASI/unauthorized kümesi; downlink ASI'de seviye sabit | Kullanıcı yanıtları; ana dağılımda 7–10 dB ASI sayısı ≈ 12/500 |
 | 2026-10-20 | Aşırı sürme etiketi açık konusu ve A5 plan sapması artırımı önerisi eklendi | [R1 pilotu](../results/r1_pilot.md), [A5 pilotu](../results/plan_shortcut_pilot.md) |
 | 2026-10-20 | `adjacent_satellite` parametreleri kaynaklı geometriyle değiştirildi (eski: örtüşme %20–80, PSD −15…−3 dB [VARSAYIM]) | ITU-R S.1428-1/S.580-6/S.465-6, FCC iki derece, ITU BR uplink C/I yöntemi; [ASI ölçümü](../results/asi_visibility.md) |

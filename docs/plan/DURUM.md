@@ -167,7 +167,7 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 | S3 | Dizüstünde süre ölçülmedi | S1'i önce `--limit-seeds 10` ile deneyip süreyi yazın |
 | S4 | Üç varsayılan karar onaysız | Aşırı sürme sınırı (P3 §0-A), tek etiket kuralı (P3 §0-B), doğrusal zincirde aşırı sürme (P5 §0) |
 | S5 | ~~P16 kararları~~ — **2026-10-20 yanıtlandı** (P16 §5): uplink-ASI, iptal artığı + cyclic, aşamalı yenilik cümlesi, OpenDPD ölçüm aralığında, sabit tarih yok, lisans şimdilik yok, vekil unknown yok | — |
-| S9 | K17: P18 B2/1 protokolünü dondurun | Alt kararlar alındı (CuC 5–30 dB, 1500/150/150/500, downlink ASI yakın, LOKO 3 tohum; K17a–d P18 §7a). Kalan tek onay: plan sapmasının simülatöre uyarlanması (fazla taşıyıcı = `unauthorized`, eksik taşıyıcı için ikinci çıktı `plan_consistency`) |
+| S9 | K17: P18 B2/1 protokolünü dondurun | Alt kararlar alındı (CuC 5–30 dB, 1500/150/150/500, downlink ASI yakın, LOKO 3 tohum; K17a–d P18 §7a). Plan sapması da onaylandı (fazla taşıyıcı = `unauthorized`; eksik taşıyıcı için ikinci çıktı `plan_consistency`; sabit kazanç). Kalan: yalnız dondurma onayı |
 | S8 | R1-eval/1 tam koşu (S2'den sonra) | `python -m geosim.dataset --protocol R1-eval/1 --out data/r1 --workers 4` (≈ 2,6 çekirdek-saat, ayrı dizin) ve `python -m geoml.robustness --data data/stageA --runs runs/stageA --r1 data/r1 --out runs/r1`; `runs/r1/results.md` dosyasını gönderin |
 | S6 | SmartSpace verisi bulutta işlenecek | Ortam ayarlarında **Network access → Allowed domains**'e `fnr-smartspace-project.uni.lu` ekleyin (paket yöneticileri kutusu işaretli kalsın) ve araştırma-amaçlı, ticari olmayan kullanım koşulunu kabul ettiğinizi yazın |
 
