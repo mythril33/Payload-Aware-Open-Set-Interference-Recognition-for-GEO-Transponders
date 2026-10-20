@@ -1,6 +1,6 @@
 # P1 — Literatür, en yakın çalışmalar ve yenilik denetimi
 
-Durum: **ARAŞTIRMA TARAMASI TAMAMLANDI; EN YAKIN 7 ÇALIŞMADAN 6'SI TAM METİN OKUNDU (§8), AGON YALNIZ ÖZET; SİSTEMATİK DERLEME DEĞİL** · 2026-10-20. Bazı bulgular makale özetine, veri kaynağının açıklamasına veya mevcut depo testlerine dayanmaktadır. Bu farklı kanıt seviyeleri eşdeğer değildir.
+Durum: **ARAŞTIRMA TARAMASI TAMAMLANDI; EN YAKIN 7 ÇALIŞMANIN TAM METNİ OKUNDU (§8); SİSTEMATİK DERLEME DEĞİL** · 2026-10-20. Bazı bulgular makale özetine, veri kaynağının açıklamasına veya mevcut depo testlerine dayanmaktadır. Bu farklı kanıt seviyeleri eşdeğer değildir.
 
 ## 1. Araştırma sorusu
 
@@ -102,7 +102,7 @@ veya düzeltilmiş; en yakın 5 çalışma ile fark tablosu". Fark tablosu artı
 
 ## 8. Tam metin denetimi (2026-10-20, P16 İP-0 / B9)
 
-Açık erişimli tam metinler bu oturumda okundu (Agon hariç: yalnız özet erişilebildi). Konum
+Açık erişimli tam metinler bu oturumda okundu (Agon: arXiv HTML v1). Konum
 bilgileri ilgili PDF'teki bölüm ve denklem numaralarıdır.
 
 | Çalışma | Gözlem noktası | Sinyal / veri | Doğrusalsızlık / transponder | Plan bilgisi | Polarizasyon | Görev | Bilinmeyen sınıf testi | Kanıt |
@@ -113,14 +113,16 @@ bilgileri ilgili PDF'teki bölüm ve denklem numaralarıdır.
 | Pellaco ve ark., ICSSC 2019 | Yer istasyonu alıcısı | **Gerçek** spektrum verisi (Swedish Space Corporation), 1024 kutulu PSD | Model edilmiyor (veri gerçek) | Yok | Belirtilmemiş | LSTM ile bir sonraki spektrumun tahmini, eşik aşımında anomali; zamanda ve frekansta konumlama. İkincil ağ **modülasyonu** sınıflıyor, girişimi değil | Anomali tespiti doğası gereği tür bağımsız; sınıf bazlı open-set yok | §1, §2.1–2.2 |
 | Politis ve ark., ICASSP 2017 | **Uydu üstü**, uplink (kısmen rejeneratif SMU) | Analitik + simülasyon; QPSK/BPSK taban bant sembol modeli | **Yok.** `H1: y = hs + w + i`, düz sönümleme (denklem 1–2). Yer tabanlı tespitin "transponder bozulmalarından" etkilendiğini açıkça not ediyor (§1) | Yok | Tek anten | İkili; çöz-iptal et-ED, kusurlu iptal altında Pfa türetimi | Yok | §1, §2.1–2.2, Teorem 1 |
 | Daoud ve ark., ICASSPW 2023 | **Uydu üstü**, GSO uplink dönüş bağlantısı | Simülasyon: BPSK, f_d = 29,55 GHz, W = 50 MHz, f_s = 5 GHz, SNR_d = 12 dB, SNR_i = 6 dB sabit; sınıf başına 2500 örnek | **Yok** | 5 alt bant ızgarası | Belirtilmemiş | Kapalı küme 6 sınıf: temiz + girişimin bulunduğu alt bant | Yok | §3, §3.1–3.2 |
-| Yang ve ark., Agon (arXiv 2606.14147) | NGSO-GSO ve NGSO-NGSO | Kamusal NGSO-GSO seti + "yüksek doğruluklu" NGSO-NGSO seti | **Doğrulanamadı** (yalnız özet okundu) | — | — | İkili tespit + çok görevli modülasyon sınıflandırma | Özette yalnız eksen dışı açı ve INR çeşitlemesi; bilinmeyen sınıf reddi yok | Yalnız özet; ön baskı |
+| Yang ve ark., Agon (arXiv 2606.14147v1; ön sürümü IEEE/CIC ICCC 2025) | Yer istasyonu; NGSO→GSO ve NGSO→NGSO | Kamusal NGSO-GSO seti (17 281 etiketli anlık görüntü) + "yüksek doğruluklu" NGSO-NGSO seti; ITU-R S.1428-1 anten deseni, Doppler | **Yok.** Bileşik sinyal açıkça "doğrusal süperpozisyon": `y = x_d√CNR + Σ x_k e^{j2πΔf t}√INR_k + ζ` (§III-B, denklem 4); girdi PWVD zaman-frekans gösterimi (denklem 5) | Yok | Belirtilmemiş | İkili tespit (eşiksiz doğrudan sınıflandırıcı) + çok görevli modülasyon sınıflandırma | OOD = kovaryat kayması (eksen dışı açı, INR, çapraz bant); bilinmeyen sınıf reddi yok | HTML tam metin §I–III; ön baskı |
 
-**Sonuç:** Okunan altı tam metnin hiçbiri (a) bir uydu transponderinin çok taşıyıcılı TWTA/IMUX/OMUX
+| Chen ve ark., Appl. Sci. 12(9):4380, 2022 (açık-küme karşılaştırma) | Genel anti-jamming iletişim | Simülasyon: 9 karıştırma türü (tek/çok ton, darbeli Gauss, frekans atlamalı, doğrusal/ikinci derece süpürme, BPSK, gürültü-FM, QPSK); JNR ekseni | Yok (uydu yok) | Yok | Yok | Açık-küme tanıma: konvolüsyonel prototip öğrenme (HCPL), farklı "openness" düzeyleri | **Var:** bilinen sınıf doğruluğu + bilinmeyen reddi; JNR −10 dB'de bilinen sınıf doğruluğu diğerlerinden %2–7 yüksek | §1–2, özet |
+
+**Sonuç:** Okunan yedi GEO/uydu tam metninin hiçbiri (a) bir uydu transponderinin çok taşıyıcılı TWTA/IMUX/OMUX
 zincirini girişim tanıma verisine katmıyor, (b) taşıyıcı planını model girdisi yapmıyor, (c) çift
 polarizasyon gözlemi kullanmıyor, (d) bilinmeyen girişim sınıfı reddini ölçmüyor. Bu bulgu tarama
-iddiasını tam metin düzeyinde destekliyor. Kapsam sınırı: tarama sistematik değil; Agon'un tam metni
-okunmadı. P1 kapanış kriteri için Agon tam metni ve en az bir ek bağımsız kaynak (ör. açık-küme
-karıştırma, Appl. Sci. 2022) gerekli.
+iddiasını tam metin düzeyinde destekliyor. Açık-küme girişim tanıma ise uydu dışında vardır (Appl. Sci. 2022 tam metin; Remote Sens. 2022, IET RSN 2024 ve
+IET Commun. 2026 özet düzeyinde); bu eksende yenilik "ilk açık-küme girişim tanıma" değil, "GEO transponder
+gözleminde ilk" biçiminde kurulmalıdır. Kapsam sınırı: tarama sistematik değil (CNKI ve IEEE tam metinleri kısmen).
 
 İki ince ayrım makale metnine taşınmalı:
 - Henarejos 2019 ve Pellaco 2019 **gerçek** kayıt kullanıyor. "Bütün önceki işler simülasyondur" denemez.

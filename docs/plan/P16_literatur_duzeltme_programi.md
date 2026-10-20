@@ -143,7 +143,7 @@ Kapanış ölçütü: her ayırt edilemeyen çift için "hangi gözlem eklenince
 
 | İş | Kapanış ölçütü |
 |---|---|
-| `P18` B2/1 protokolü: 8 bilinen sınıf, 3 unknown ailesi + leave-one-known-out rotasyonu, yakın/uzak OOD gruplaması (L12), kalibrasyon grupları ağırlık seçiminden ayrı | Kod yazılmadan dondurulmuş; P5 kuralı gibi değişiklik günlüğü |
+| [`P18`](P18_b2_protocol.md) B2/1 protokolü (**taslak yazıldı, onay bekliyor**): 8 bilinen sınıf, 3 unknown ailesi + leave-one-known-out rotasyonu, yakın/uzak OOD gruplaması (L12), kalibrasyon grupları ağırlık seçiminden ayrı | Kod yazılmadan dondurulmuş; P5 kuralı gibi değişiklik günlüğü |
 | Eğitim-zamanı open-set yöntemi (ana plan D13): ARPL veya prototip/merkez kaybı; OpenMax ikincil; ODIN opsiyonel (sıcaklık **yalnız bilinen** doğrulamada) | Asıl unknown aileleri eğitim/seçim/kalibrasyona girmez — mevcut sızıntı testleri yeni yöntemlere de uygulanır |
 | Rapor: unknown-pozitif AUROC/AP aile başına ve birleşik, OSCR, FPR@95TPR (TPR'nin hangi popülasyon olduğu yazılı), ECE, sabit Pfa'da Pd (C/I, I/N, IBO'ya göre), kapalı-küme doğruluğu OSCR ile birlikte (Vaze 2022) | Katı JSON, `null`+sayım; senaryo-bootstrap ve eğitim tohumu belirsizliği ayrı |
 
