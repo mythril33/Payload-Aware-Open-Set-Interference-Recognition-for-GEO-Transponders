@@ -15,6 +15,7 @@ tested milestone. Reuse existing checkout and authentication.
 | [Open-set methods](open-set-methods.md) | Scoring, calibration and open-set metrics |
 | [ML integration](ml-integration.md) | Model/checkpoint compatibility and experiment execution |
 | [Polarization modelling](polarization-modeling.md) | Dual-path physics, calibration boundaries and polarization observables |
+| [Impairment modelling](impairment-modeling.md) | Sparse oscillator phase, uplink/downlink events and power conventions |
 | [Independent review](review.md) | Physics, leakage, numerical correctness and integration review |
 
 Never assign overlapping files to concurrent agents. Hand off ownership or

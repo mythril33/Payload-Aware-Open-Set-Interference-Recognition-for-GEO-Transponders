@@ -6,7 +6,9 @@ Implementation update: M0 and the first M1 slice are now implemented; see
 [P11](P11_openset_development.md) for scope, commands, validation and limitations.
 The M2 development extension is now implemented in [P13](P13_extended_openset.md).
 The dual-polarization and instrument-calibration part of M3 is implemented in
-[P14](P14_dual_polarization.md); phase noise and the remaining taxonomy are still outstanding.
+[P14](P14_dual_polarization.md). [P15](P15_phase_noise_and_events.md) adds phase
+noise, under-carrier and received adjacent-satellite development events. The
+unified taxonomy and final dual-pol open-set benchmark are still outstanding.
 
 This plan combines the supplied project proposal with the actual code and the
 open-set protocol on GitHub main (`2840063`). The local source baseline is

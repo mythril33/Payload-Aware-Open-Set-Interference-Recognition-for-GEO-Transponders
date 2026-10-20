@@ -1,0 +1,15 @@
+{
+  "protocol": "E1-dev/1",
+  "calibration_fraction": 0.5,
+  "split_seed": 0,
+  "pfa": 0.05,
+  "views": ["co", "dual"],
+  "training": {
+    "epochs": 3,
+    "batch": 8,
+    "width": 8,
+    "time_pool": 2,
+    "level": "carrier",
+    "seed": 0
+  }
+}

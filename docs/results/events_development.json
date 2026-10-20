@@ -1,0 +1,384 @@
+{
+  "protocol": "E1-dev/1",
+  "labels": [
+    "clean",
+    "carrier_under_carrier",
+    "adjacent_satellite"
+  ],
+  "config": {
+    "protocol": "E1-dev/1",
+    "calibration_fraction": 0.5,
+    "split_seed": 0,
+    "pfa": 0.05,
+    "views": [
+      "co",
+      "dual"
+    ],
+    "training": {
+      "level": "carrier",
+      "time_pool": 2,
+      "width": 8,
+      "epochs": 3,
+      "batch": 8,
+      "lr": 0.001,
+      "augment": true,
+      "weight_decay": 0.0001,
+      "seed": 0
+    }
+  },
+  "experiment_fingerprint": "00e01cc0592adb31c03d8f7e4b08867fd9b22dab5e7c64404c5e69ffe71a2ea2",
+  "data_fingerprint": "3103aa2cb68bfe8aea09e4479e730e05be5b42bb73ec0ccea78fdb5e015d7fe1",
+  "source": {
+    "revision": "3682e6cfc3c080b5948f28d38b2c5369635dc838",
+    "files_sha256": {
+      "geoml/__init__.py": "36d9afb2c93bdf7bf87734caae8a96946e6b41aab5000c2402909589e14095a9",
+      "geoml/artifacts.py": "642bc0ec1d0155460be5c609a08e0d2775705ff393e5d1a9064168d011055477",
+      "geoml/calibration.py": "081cf3fdcc5954a422bc40c7017ff95750a88d8cba7c808c3f2fd7fe4b6da1ae",
+      "geoml/cfar.py": "7278de278fd1b29fb04ac5fabaf009a4f4e5ee4e9cb3ebe462dc8e22eb567c8d",
+      "geoml/data.py": "a5d0562ecd00c89bb451156f621cc388737d04edcc83bc52343e422ed13a368a",
+      "geoml/dual_experiment.py": "5e8777aa409afa054f812cc69821f7ecfb4220f0cc9d7be35b47a64f7b10bb9a",
+      "geoml/evaluation.py": "87792c84c85352b366a6dd36c9465400017c9b18a6e30927e0bfd22db4ae2162",
+      "geoml/experiment.py": "5569efff230a955ab6c943c13e62b0b7ecdc67c8150ad9ac50214ff142394f98",
+      "geoml/mahalanobis.py": "0fbbc984e0af6317ce12b100efeeec46f36e0e7ea9f1e8efd5e774b9d2713ac0",
+      "geoml/metrics.py": "2d287df07ff2c442bba94e744cd3c205525eca9409212c65060ecbe89287deed",
+      "geoml/model.py": "43a538e9cd3761bd0f2efbf0500aadeb252c60ac9acc82ebde7a4d674f8fb45c",
+      "geoml/openset.py": "d1cd61b4d2a398ae547718573d3403acc1ed24310b8b6415b7096e8f6e87a4a9",
+      "geoml/openset_metrics.py": "e37005b24c08a582fd2591eb89bdc8338b237d735b14b2aad29cc2a127dd9f7e",
+      "geoml/pipeline.py": "e9c2dfa34d69d029644c09fb69a00427fbbdb9c4b13285f6d1e91faed7945f0c",
+      "geoml/train.py": "9a12be947ce421ee00e6d7e884f9408a863558cf08089e8d165898a2d228295e",
+      "geosim/__init__.py": "fed3f675bdd0ce44073fec6a170ec73f752e5225927215dc460de04dab6da007",
+      "geosim/classes.py": "0c28a077afe3e9da49718aed04588cc519febc19b96e85352007f8b094a36c7b",
+      "geosim/dataset.py": "5d034445009ee67066cfe187d4a47552af76f934cae1319ef848d600f84f35bf",
+      "geosim/dual.py": "5bfcfd0660d0e5bdfa87407081ce577e1ade3351b2cfe88db035873dbe283a0e",
+      "geosim/dual_dataset.py": "6160eeeee3fe8292c340f4df0adf2757871fa827b57fd416486527118e2fa280",
+      "geosim/event_dataset.py": "aa0a5c9d7e648b25d3ed8b63b3c157ebeb13df045e1458dae7cc04d12cb0cc78",
+      "geosim/events.py": "7b56ff6d8d8657d7e9863eedafc0ec11eb6a038f55d2175b558feec954e98f92",
+      "geosim/interferers.py": "eb2d20c999b4a1f744e93f8aec062576e519c8df7be935012e371a671efa0383",
+      "geosim/payload.py": "85fa68fe3e06117d35211a5af279edebe3bb821a98d73ac2f5060526fafc846c",
+      "geosim/phase_noise.py": "529493b773f81df9e0e51b020b74a0bd52fdb4d4e5effc2cb741a18165142a96",
+      "geosim/plan.py": "470bd9aef9729940d510fc9c883ee9df50bcff6800738bea13902e8f8edd14b2",
+      "geosim/polarization.py": "0d8c4c20a5d38b1e02287bbb74e81ad86172437b4d2b3d10beefaeedcf7ca7f7",
+      "geosim/protocol.py": "815c8861eaf33f2d78239c0cbb676770f0c40d43b496f48c3f86b4d6f822c16f",
+      "geosim/scenario.py": "63b38d9acfa038f53caa45bdf68a17fd6bbcfa18f919b9167ed3e660264d2060",
+      "geosim/sensor.py": "e78151a893e617b7eaa3af8016b4e47ee25a61e15eb30e37093bbf84971c3226",
+      "geosim/unknowns.py": "5c5219b52c6133f0168f2eecd47880f71f8f21326cd15a641b99971db19fef23",
+      "geosim/waveform.py": "308641f19a573b7ee5897d7cac11d0d87e28e1200e0c53c61ddff09fd9abdf90",
+      "geosim/data/dvbs2_twta.json": "0da3a624f9e94058ed100d6c06b62aff08f49f3a5a93df3ddc23f4b3f082c4f1",
+      "geosim/data/mux_fir.npz": "58b78bdaf6b749f9f45e8c1f0541674ad0d81f9bd6f17762e667965cd8ba11e8"
+    }
+  },
+  "partitions": {
+    "train": {
+      "n_samples": 18,
+      "scenario_ids": [
+        2000000,
+        2000001,
+        2000002,
+        2000003,
+        2000004,
+        2000005
+      ],
+      "per_label": {
+        "clean": 6,
+        "carrier_under_carrier": 6,
+        "adjacent_satellite": 6
+      }
+    },
+    "validation": {
+      "n_samples": 9,
+      "scenario_ids": [
+        2100000,
+        2100001,
+        2100004
+      ],
+      "per_label": {
+        "clean": 3,
+        "carrier_under_carrier": 3,
+        "adjacent_satellite": 3
+      }
+    },
+    "calibration": {
+      "n_samples": 9,
+      "scenario_ids": [
+        2100002,
+        2100003,
+        2100005
+      ],
+      "per_label": {
+        "clean": 3,
+        "carrier_under_carrier": 3,
+        "adjacent_satellite": 3
+      }
+    },
+    "test": {
+      "n_samples": 18,
+      "scenario_ids": [
+        2200000,
+        2200001,
+        2200002,
+        2200003,
+        2200004,
+        2200005
+      ],
+      "per_label": {
+        "clean": 6,
+        "carrier_under_carrier": 6,
+        "adjacent_satellite": 6
+      }
+    }
+  },
+  "methods": {
+    "co": {
+      "input_channels": 2,
+      "accuracy": {
+        "mean": 0.3333333333333333,
+        "ci95": [
+          0.3333333333333333,
+          0.3333333333333333
+        ],
+        "n_samples": 18,
+        "n_scenarios": 6
+      },
+      "macro_f1": 0.16666666666666666,
+      "confusion": [
+        [
+          6,
+          0,
+          0
+        ],
+        [
+          6,
+          0,
+          0
+        ],
+        [
+          6,
+          0,
+          0
+        ]
+      ],
+      "clean_false_alarm": {
+        "mean": 0.16666666666666666,
+        "ci95": [
+          0.0,
+          0.5
+        ],
+        "n_samples": 6,
+        "n_scenarios": 6
+      },
+      "calibration_clean_false_alarm": 0.3333333333333333,
+      "detector": {
+        "score": "one_minus_softmax_clean",
+        "threshold": 0.6349085449329986,
+        "target_clean_pfa": 0.05,
+        "n_clean_calibration": 3,
+        "provenance": "a130742ed9a9282eb2016de0526fe929af55f6e7088e18d2a8f9f97fc81bd75e"
+      },
+      "checkpoint_sha256": "6a93ce7d1965192ca70c7c5a070534729ef09debdbb2616706647ac418262047",
+      "training_source_revision": "3682e6cfc3c080b5948f28d38b2c5369635dc838",
+      "n_parameters": 78003,
+      "history": [
+        {
+          "epoch": 0,
+          "train_loss": 1.4212980800204806,
+          "val_macro_f1": 0.16666666666666666
+        },
+        {
+          "epoch": 1,
+          "train_loss": 1.1866805950800579,
+          "val_macro_f1": 0.16666666666666666
+        },
+        {
+          "epoch": 2,
+          "train_loss": 1.3266034523646038,
+          "val_macro_f1": 0.16666666666666666
+        }
+      ],
+      "event_detection": {
+        "carrier_under_carrier": {
+          "mean": 0.16666666666666666,
+          "ci95": [
+            0.0,
+            0.5
+          ],
+          "n_samples": 6,
+          "n_scenarios": 6
+        },
+        "adjacent_satellite": {
+          "mean": 0.16666666666666666,
+          "ci95": [
+            0.0,
+            0.5
+          ],
+          "n_samples": 6,
+          "n_scenarios": 6
+        }
+      },
+      "pooled_event_detection": {
+        "mean": 0.16666666666666666,
+        "ci95": [
+          0.0,
+          0.5
+        ],
+        "n_samples": 12,
+        "n_scenarios": 6
+      }
+    },
+    "dual": {
+      "input_channels": 4,
+      "accuracy": {
+        "mean": 0.3333333333333333,
+        "ci95": [
+          0.3333333333333333,
+          0.3333333333333333
+        ],
+        "n_samples": 18,
+        "n_scenarios": 6
+      },
+      "macro_f1": 0.16666666666666666,
+      "confusion": [
+        [
+          0,
+          0,
+          6
+        ],
+        [
+          0,
+          0,
+          6
+        ],
+        [
+          0,
+          0,
+          6
+        ]
+      ],
+      "clean_false_alarm": {
+        "mean": 0.6666666666666666,
+        "ci95": [
+          0.3333333333333333,
+          1.0
+        ],
+        "n_samples": 6,
+        "n_scenarios": 6
+      },
+      "calibration_clean_false_alarm": 0.3333333333333333,
+      "detector": {
+        "score": "one_minus_softmax_clean",
+        "threshold": 0.6630938316106523,
+        "target_clean_pfa": 0.05,
+        "n_clean_calibration": 3,
+        "provenance": "09f16016d14b2c7847c260209f71283d1a9b1de3f75ce334b1ac425d212e1d75"
+      },
+      "checkpoint_sha256": "45b95644249cb4a0d4416d816651d1205f2259fcbdf02c96143045ada1415abd",
+      "training_source_revision": "3682e6cfc3c080b5948f28d38b2c5369635dc838",
+      "n_parameters": 78403,
+      "history": [
+        {
+          "epoch": 0,
+          "train_loss": 2.031118551890055,
+          "val_macro_f1": 0.16666666666666666
+        },
+        {
+          "epoch": 1,
+          "train_loss": 1.346107588873969,
+          "val_macro_f1": 0.16666666666666666
+        },
+        {
+          "epoch": 2,
+          "train_loss": 1.403097649415334,
+          "val_macro_f1": 0.16666666666666666
+        }
+      ],
+      "event_detection": {
+        "carrier_under_carrier": {
+          "mean": 0.6666666666666666,
+          "ci95": [
+            0.3333333333333333,
+            1.0
+          ],
+          "n_samples": 6,
+          "n_scenarios": 6
+        },
+        "adjacent_satellite": {
+          "mean": 0.6666666666666666,
+          "ci95": [
+            0.3333333333333333,
+            1.0
+          ],
+          "n_samples": 6,
+          "n_scenarios": 6
+        }
+      },
+      "pooled_event_detection": {
+        "mean": 0.6666666666666666,
+        "ci95": [
+          0.3333333333333333,
+          1.0
+        ],
+        "n_samples": 12,
+        "n_scenarios": 6
+      }
+    }
+  },
+  "generation": {
+    "bandwidth": 36000000.0,
+    "c_over_i_max_db": 15.0,
+    "c_over_i_min_db": 5.0,
+    "calibration_noise_std": 0.001,
+    "calibration_samples": 64,
+    "calibration_seed": 424242,
+    "downlink_xpd_db": 35.0,
+    "n_seeds": 6,
+    "nominal_xpd_db": 30.0,
+    "receiver_coupling_phase_rad": 0.3,
+    "receiver_gain_db": [
+      1.5,
+      -1.0
+    ],
+    "receiver_linewidth_hz": 50.0,
+    "receiver_phase_rad": [
+      0.2,
+      -0.4
+    ],
+    "receiver_xpd_db": 25.0,
+    "satellite_linewidth_hz": 100.0
+  },
+  "receiver_calibration": {
+    "artifact_version": 1,
+    "n_pilots": 64,
+    "max_condition": 1000000.0,
+    "reference_condition": 1.0990793937618086,
+    "response_condition": 1.3334300867264075,
+    "residual_rms": 0.0010121999900371758,
+    "provenance": "E1-dev/1:2a97e46ad0a818e01fe9e8962de8783d85685162ee62164ff50f2f66038992ce:independent_pilots",
+    "response_real": [
+      [
+        1.1628602699853698,
+        0.0584598293951958
+      ],
+      [
+        -0.03824954814842307,
+        0.8195698031694647
+      ]
+    ],
+    "response_imag": [
+      [
+        0.23577656564041627,
+        0.03195480224372877
+      ],
+      [
+        0.032303984766556895,
+        -0.34653605639771745
+      ]
+    ],
+    "parameter_sha256": "2fcec9a0358850bc93160fe8e624236191c93e2bbbdbb83980514381364550b7",
+    "artifact_sha256": "116ff455d7ce941dd189238c5a535103f0de948928f9df19aebe174f344eff49"
+  },
+  "runtime": {
+    "python": "3.12.14",
+    "numpy": "2.5.4",
+    "torch": "2.14.1+cpu",
+    "device": "cpu"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "protocol": "E1-dev/1",
+  "n_observations": 54,
+  "per_role_observations": {
+    "train": 18,
+    "validation": 18,
+    "test": 18
+  },
+  "data_fingerprint": "3103aa2cb68bfe8aea09e4479e730e05be5b42bb73ec0ccea78fdb5e015d7fe1",
+  "generator_source_matches_current": true,
+  "satellite_linewidth_hz": 100.0,
+  "receiver_linewidth_hz": 50.0,
+  "checks": {
+    "paired_scenes": 18,
+    "adjacent_preserves_payload_and_thermal_reference": true,
+    "adjacent_preserves_wanted_feed_reference": true,
+    "under_carrier_changes_payload": true,
+    "identical_paired_plans_phase_settings_and_event_ci": true
+  },
+  "scope": "Paired physical development run; exact metadata checks do not establish recognition quality or measured RF fidelity."
+}
