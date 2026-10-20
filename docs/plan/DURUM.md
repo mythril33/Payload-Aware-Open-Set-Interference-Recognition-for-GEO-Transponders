@@ -16,6 +16,13 @@ Son güncelleme: 2026-10-20 (literatür taraması eki P16; temel deney durumu 20
 
 ## Uygulama eki — 2026-10-20
 
+- **Plan maskesi kısa yolu testi (A5, P16 İP-4.4) kodlandı:** `geoml.plan_shortcut`.
+  - Kademe A checkpoint'lerini kimlik denetimiyle yükler ve yalnız plan maskesini bozulmuş bir operatör planından yeniden kurar.
+  - Bozmalar: plan 0,5 MHz kaymış; bir taşıyıcı plandan düşmüş; yayınlanmayan hayalet taşıyıcı; yetkisiz taşıyıcı plana "yetkili" eklenmiş.
+  - Spektrumlar değişmez; yeniden eğitim ve kalibrasyon yok.
+  - Gerçek veride kaydedilmiş maskeler metadata planından en çok 0,0135 dB farkla yeniden kuruluyor (float16).
+  - 3 test geçti.
+
 - **R1-eval/1 kodlandı ([P17](P17_r1_robustness_eval.md)):** A1'i değiştirmeyen, ayrı protokol adlı ve ayrı tohumlu (400000–430299) **yalnız-test** bölünmeler:
   - `r1_ibo_sweep`: nominal IBO 5–14 dB, aşırı sürme 0–5 dB;
   - `r1_amp_rapp`: Rapp SSPA, p = 2 [VARSAYIM];

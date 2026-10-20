@@ -127,7 +127,7 @@ Sonuçtan önce yazılan beklentiler. Her biri en az bir ablasyonla sınanır.
 1. **A0** co-only; **A1** + plan; **A2** + çift-pol (ana model).
 2. **A3** doğrusal zincirle eğit, doğrusal olmayanda test (C3).
 3. **A4** + iptal artığı; **A4b** + SCF.
-4. **A5** plan bozma (bayat, kaydırılmış, eksik).
+4. **A5** plan bozma (bayat, kaydırılmış, eksik). Değerlendirme aracı A1 için hazır: `geoml.plan_shortcut` (bozmalar `shift_plus/minus`, `drop_one`, `phantom`, `authorize_intruder`); B2/1'e çift-pol maskelerle genişletilecek.
 5. **A6** R1 yükselteçlerine aktarım.
 6. **A7** FiLM koşullaması (maske kanalı yerine).
 7. **A8** unknown aileleri ve leave-one-known-out.
