@@ -1,6 +1,14 @@
 # Proje durumu ve eksik kaydı
 
-Son güncelleme: 2026-10-10 · Bu dosya "şu an neredeyiz, ne eksik" sorusunun tek yanıtıdır; her oturum sonunda güncellenir.
+Son güncelleme: 2026-10-20 (araştırma eki; temel deney durumu 2026-10-10) · Bu dosya "şu an neredeyiz, ne eksik" sorusunun tek yanıtıdır; her oturum sonunda güncellenir.
+
+## Araştırma eki — 2026-10-20
+
+- **P1 literatür / yakın çalışmalar:** ilk kaynak-tabanlı denetim eklendi: [P1_literatur.md](P1_literatur.md). “GEO'da ilk DL” ve “önceki çalışmaların hepsi idealize” iddiaları **geçersiz**; doğrulanmış yenilik yerine test edilebilir aday katkı önerildi. Kapsamlı sistematik tarama veya bütün yakın makalelerin tam metin analizi henüz yapılmadı.
+- **P8 dış kaynak:** veri temsilleri, SmartSpace araştırma amaçlı kullanım koşulu, GaN PA vs TWTA ve GNSS kayıtlarının görev farkı belgelendi: [P8_dis_veri.md](P8_dis_veri.md). Ham veri indirilip deney yapılmadı.
+- **P9 ve B açık-küme protokolü:** [P9_yol_haritasi.md](P9_yol_haritasi.md) ve [open_set_protocol.md](../research/open_set_protocol.md) yayımlandı. **B fazı hâlâ tasarımdır; kodlanmış/test edilmiş değildir.**
+- **Kaynakça ve birincil kaynak yolları:** [references.bib](../../references/references.bib) ve [ORIGINALS.md](../../sources/ORIGINALS.md); özgün DOCX'in [Markdown transkripsiyonu](../../sources/original_proposal.md).
+- **S1–S4, B0/B1b/B2/B3/B4/B7 ve tam benchmark** bu araştırma commit'leriyle kapanmadı. Eski pilot rakamları değişmedi.
 
 ## 1. Tek cümleyle
 
