@@ -174,5 +174,5 @@ Her faz = bir (veya birkaç) odaklı planlama oturumu. Çıktısı ayrı bir dos
 | K13 | Depo lisansı — **şimdilik lisans yok**; yayın öncesi yeniden sorulacak | P16 §5 |
 | K14 | ~~Vekil unknown~~ — kapandı: yok, yalnız bilinen doğrulama | P16 §5 ✔ |
 | K15 | SmartSpace on-board — bulutta işlenecek; host izni ve kullanım koşulu teyidi kullanıcıda | P16 §5 |
-| K17 | P18 B2/1 protokol taslağının dondurulması | P18 (kullanıcıda) |
+| K17 | P18 B2/1 protokol taslağının dondurulması; alt kararlar alındı 2026-10-20 (CuC 5–30 dB, 1500/150/150/500, downlink ASI yakın, LOKO 3 tohum) | P18 (dondurma kullanıcıda) |
 | K16 | ~~E1-dev/1 downlink ASI olayı~~ — kapandı 2026-10-20: `adjacent_satellite_downlink` adıyla ayrı tutulur; B2/1 `adjacent_satellite` = uplink | P16 §5 ✔ |

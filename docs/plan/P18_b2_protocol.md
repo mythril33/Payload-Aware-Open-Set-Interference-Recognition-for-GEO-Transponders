@@ -1,6 +1,8 @@
 # P18 — B2/1: sekiz bilinen sınıflı, çift-pol, açık-küme benchmark protokolü
 
-Durum: **TASLAK — KULLANICI ONAYI BEKLİYOR (K17); KOD YAZILMADI** · 2026-10-20 ·
+Durum: **TASLAK — KULLANICI ONAYI BEKLİYOR (K17); B2/1 ÜRETECİ YAZILMADI** · 2026-10-20 ·
+K17 alt kararları (CuC aralığı, rol boyutları, downlink ASI grubu, LOKO tohumu) kullanıcıdan alındı ve aşağıya işlendi;
+protokolün dondurulması hâlâ kullanıcıda. Uplink ASI üreteci `geosim.asi` hazır ve test edildi ·
 Girdi: [P3](P3_taksonomi.md), [P5](P5_veri_protokol.md) (A1), [P12](P12_unknown_events.md),
 [P14](P14_dual_polarization.md), [P15](P15_phase_noise_and_events.md), [P16](P16_literatur_duzeltme_programi.md)
 (K5, K9, K14, K16), [P17](P17_r1_robustness_eval.md), [open-set önerisi](../research/open_set_protocol.md).
@@ -45,13 +47,17 @@ diğerleri **[VARSAYIM]**dır.
 | `unauthorized` | uplink, co-pol | A1 `unauthorized` (boş aralıkta) | PSD −10…+3 dB (plan ortalamasına göre) |
 | `overdrive` | yük içi | sürüş seviyesi | IBO 1–4 dB (A1 ile aynı) |
 | `cross_pol` | uplink anten | XPD bozulması | uplink XPD 10 dB (arıza değeri, P14) |
-| `adjacent_satellite` | **uplink** (K5) | **yeni:** komşu sistem yer istasyonu yan lobu | Planlı bir taşıyıcıyla kısmen örtüşen modüleli taşıyıcı; örtüşme %20–80, PSD −15…−3 dB, farklı sembol hızı **[VARSAYIM]** |
-| `carrier_under_carrier` | uplink, co-pol | E1 `carrier_under_carrier` | Kurban taşıyıcının bandı içinde; C/I (toplam plana göre) 5–25 dB taslak, **5–30 dB önerilir** ([görünürlük ölçümü](../results/cuc_visibility.md): eşleşmiş ΔPSD ortancası 5 dB'de 5,6 dB, 20 dB'de 0,37 dB, 30 dB'de 0,04 dB); CID metacarrier'ın −27,5 dB referansı **[DOĞRULANACAK]** ayrı bir alt-kutuda raporlanır |
+| `adjacent_satellite` | **uplink** (K5) | **`geosim.asi.adjacent_satellite_uplink`**: komşu ağ yer istasyonunun eksen dışı ışıması | C/I_psd = Gmax − G(φ) − ΔEIRP (ITU BR uplink yöntemi). Aralık 2,06–2,36° (FCC iki derece); desen ITU-R S.1428-1 (S.580 yan lobu) ya da S.465-6, %50; çap 0,75–2,4 m, işaretleme hatası 0–0,4 θ₃dB, ΔEIRP −3…+6 dB **[VARSAYIM]**. Sonuç: C/I_psd ortanca 20 dB, %10–%90 14–27 dB, kuyruk 2,5–33 dB. Plan örtüşmesi %20–80 (sınıf tanımı); sembol hızı ve konum plandan bağımsız. Ayrıntı ve kaynaklar: [ASI ölçümü](../results/asi_visibility.md) |
+| `carrier_under_carrier` | uplink, co-pol | E1 `carrier_under_carrier` | Kurban taşıyıcının bandı içinde; C/I (toplam plana göre) **5–30 dB (K17, kullanıcı kararı)**; kutular 5–15, 15–25, 25–30 dB ([görünürlük ölçümü](../results/cuc_visibility.md): eşleşmiş ΔPSD ortancası 5 dB'de 5,6 dB, 20 dB'de 0,37 dB, 30 dB'de 0,04 dB); CID metacarrier'ın −27,5 dB referansı **[DOĞRULANACAK]** ayrı bir alt-kutuda raporlanır |
 
 Kurallar:
-- `adjacent_satellite` ile `unauthorized` arasındaki tek tasarımsal fark, ASI'nin planlı bir
-  taşıyıcıyla **örtüşmesi**dir; yetkisiz taşıyıcı ise boş aralıktadır. İkisi spektral olarak benzer olduğundan
+- `adjacent_satellite` ile `unauthorized` arasındaki yerleşim farkı, ASI'nin planlı bir taşıyıcıyla
+  **örtüşmesi**dir; yetkisiz taşıyıcı ise boş aralıktadır. İkisi spektral olarak benzer olduğundan
   "**tasarım gereği karışabilir çift**" olarak önceden kaydedilir (§6).
+  - [ASI ölçümü](../results/asi_visibility.md): plan içi kısım kâhin ikizle bile neredeyse görünmez
+    (ΔPSD ortancası 0,005–0,18 dB). Görünen, plan dışına taşan kısımdır.
+  - İkinci fark seviyedir: `unauthorized` C/I_psd −3…10 dB, ASI ise kaynaklı geometride çoğunlukla 10 dB'nin
+    üstünde. Bu fizikseldir (yan lob ve ana lob farkı), ama bir seviye kısa yolu olarak §6'da ayrıca sınanır.
 - `carrier_under_carrier` için C/I üst sınırı, P6 §6'daki görünürlük ölçümüne göre PSD'de neredeyse görünmez
   bölgeyi kapsar. Bu bilinçli bir seçimdir: ayırt edilebilirlik sınırını ölçmek için (K9).
 
@@ -61,7 +67,7 @@ Kurallar:
 |---|---|---|---|
 | `pulsed` | U1-dev/1 | **yakın** | Bilinen `cw` dalga biçimi, yalnız zaman kapılı |
 | `intermittent_bursts` | U1-dev/1 | **yakın** | Bilinen `cw` dalga biçimi, uzun ve düzensiz kapılı |
-| `adjacent_satellite_downlink` | E1-dev/1 olayı (K16) | **yakın** | Bilinen `adjacent_satellite` ile aynı dalga biçimi; yalnız giriş noktası farklı (TWTA'dan geçmez) |
+| `adjacent_satellite_downlink` | E1-dev/1 olayı (K16) | **yakın (K17, kullanıcı kararı)** | Bilinen `adjacent_satellite` ile aynı dalga biçimi; yalnız giriş noktası farklı (TWTA'dan geçmez). **[ÖNERİ]** C/I_psd aynı `geosim.asi.draw_geometry` ile, alıcı antenimiz için 11,7 GHz'de çekilir; böylece iki olay yalnız giriş noktasında ayrışır |
 | `wideband_noise` | U1-dev/1 | **eşdeğerlik-sınırlı** | Yükseltilmiş uplink gürültü tabanıyla gözlemsel olarak eşdeğer olabilir (P12); ayrı raporlanır, birleşik sayıya ağırlıklı katılmaz |
 
 Gruplama bu tabloda **sonuçtan önce** sabitlenir. "Uzak" bir aile yoktur: bu bir bulgudur, yani GEO'daki
@@ -71,7 +77,7 @@ olası bilinmeyenlerin çoğu bilinen bir mekanizmanın varyantıdır.
 
 | Rol | Senaryo grupları | Tohum başlangıcı | Kullanım |
 |---|---|---|---|
-| train | 1500 **[VARSAYIM]** | 3 000 000 | Ağırlık optimizasyonu; Mahalanobis istatistikleri |
+| train | 1500 (K17, kullanıcı kararı) | 3 000 000 | Ağırlık optimizasyonu; Mahalanobis istatistikleri |
 | val-select | 150 | 3 100 000 | Yalnız checkpoint seçimi |
 | val-calib | 150 | 3 150 000 | Yalnız ret eşiği ve alarm eşiği kalibrasyonu (yalnız bilinen sınıflar, K14) |
 | test | 500 | 3 200 000 | Bilinen test + aynı gruplarda bilinmeyen aileler |
@@ -105,7 +111,8 @@ Sonuçtan önce yazılan beklentiler. Her biri en az bir ablasyonla sınanır.
 |---|---|---|
 | `overdrive` ↔ gürültülü `clean` | Düşük downlink C/N'de karışır (P3 §4) | C/N kutularına göre karışıklık |
 | `cross_pol` ↔ `unauthorized` | Karşı-pol kanalıyla ayrılır, co-pol tek başına ayırmaz | `co` vs `dual` |
-| `adjacent_satellite` ↔ `unauthorized` | **Tasarım gereği karışabilir**; yalnız plan örtüşmesi ipucu | Plan maskesi var/yok, plan bozma |
+| `adjacent_satellite` ↔ `unauthorized` | **Tasarım gereği karışabilir**; plan örtüşmesi zayıf ipucu, seviye güçlü ipucu | Plan maskesi var/yok, plan bozma; **[ÖNERİ]** seviye eşleşmiş alt kutu (C/I_psd 7–10 dB, her iki sınıf) ayrı raporlanır |
+| `adjacent_satellite` ↔ `carrier_under_carrier` | Plan dışına taşan kısım ASI'yi ayırır; ≥ 25 dB ASI'de bu kısım da zayıf | C/I kutuları |
 | `carrier_under_carrier` ↔ `clean` | Spektrumla yüksek C/I'de şans düzeyi; iptal artığı/SCF ile ayrılır | Ek kanal var/yok, C/I kutuları |
 | `adjacent_satellite_downlink` (unknown) ↔ `adjacent_satellite` | Ayrım ancak yük süzgeci/IM izinden mümkün; zayıf ret beklenir | Aile başına AUROC |
 | `unauthorized` | Maske kısa yolu riski | Bayat plan, ±kaydırılmış plan, eksik/fazla taşıyıcı |
@@ -118,7 +125,7 @@ Sonuçtan önce yazılan beklentiler. Her biri en az bir ablasyonla sınanır.
 | Açık küme | Unknown pozitif AUROC/AP, OSCR, FPR@95TPR (payda: bilinen test olayları); aile başına ve ön kayıtlı grup başına; birleşik sayı yalnız "yakın" ailelerden |
 | Eşikli işletim | val-calib'den sabitlenen ret eşiğinde bilinen kabul, kabul edilen bilinen doğruluğu, bilinmeyen reddi, temizde yanlış alarm |
 | Algılama | val-calib temizde Pfa %5 ile sınıf başına Pd; C/I, I/N ve IBO kutularına göre |
-| Leave-one-known-out | 7 temiz-dışı sınıfın her biri sırayla bilinmeyen; 1 eğitim tohumu **[VARSAYIM]** |
+| Leave-one-known-out | 7 temiz-dışı sınıfın her biri sırayla bilinmeyen; **3 eğitim tohumu (K17, kullanıcı kararı)**, yani 21 ek eğitim |
 | Maliyet | Parametre, CPU ms/çerçeve |
 | İstatistik | 3 eğitim tohumu; senaryo grubu bootstrap (ağırlık ve eşik sabit). Eğitim tohumu belirsizliği ayrı. Boş seçim `null` + sayım |
 
@@ -147,3 +154,5 @@ Veri, eğitim bütçesi, eşik seçimi ve tohum protokolü bütün ablasyonlarda
 | Tarih | Değişiklik | Gerekçe |
 |---|---|---|
 | 2026-10-20 | Taslak | — |
+| 2026-10-20 | K17 alt kararları işlendi: CuC 5–30 dB; roller 1500/150/150/500; downlink ASI yakın; LOKO 3 tohum | Kullanıcı yanıtları (dondurma öncesi) |
+| 2026-10-20 | `adjacent_satellite` parametreleri kaynaklı geometriyle değiştirildi (eski: örtüşme %20–80, PSD −15…−3 dB [VARSAYIM]) | ITU-R S.1428-1/S.580-6/S.465-6, FCC iki derece, ITU BR uplink C/I yöntemi; [ASI ölçümü](../results/asi_visibility.md) |

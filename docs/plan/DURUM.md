@@ -16,6 +16,22 @@ Son güncelleme: 2026-10-20 (literatür taraması eki P16; temel deney durumu 20
 
 ## Uygulama eki — 2026-10-20
 
+- **Uplink ASI üreteci (K5, P18 `adjacent_satellite`) kaynaklı geometriyle kodlandı:** `geosim.asi`.
+  - Komşu ağ yer istasyonunun eksen dışı ışıması bizim uydunun alıcısına girer ve IMUX/TWTA/OMUX'tan geçer.
+  - C/I_psd = Gmax − G(φ) − ΔEIRP (ITU BR uplink C/I yöntemi).
+  - Desenler: ITU-R S.1428-1 tam desen (S.580 yan lobu) ya da S.465-6 zarfı.
+  - Uydu aralığı 2,06–2,36°, FCC iki derece aralığından topo-merkezli açıya çevrildi.
+  - θ₃dB = 69,3 λ/D (ITU-R F.699-6).
+  - Çap, işaretleme hatası ve ΔEIRP dağılımları **[VARSAYIM]**; plan örtüşmesi %20–80 sınıf tanımıdır.
+  - E1 `events.py` değişmedi; doğrulama yardımcıları yeniden kullanıldı.
+  - 18 yeni test geçti; tam paket **594 test geçti**.
+- **[ASI ölçümü](../results/asi_visibility.md)** (120 senaryo, A1 zinciri):
+  - C/I_psd ortancası 20,3 dB (%10–%90: 14,4–26,6 dB), çapla monoton.
+  - Plan içi kısım kâhin ikizle bile neredeyse görünmez (ΔPSD ortancası ≤ 0,18 dB).
+  - Plan dışı kısım C/I_psd < 20 dB'de her olayda 1 dB'nin üstünde.
+  - Sonuç: ASI ile `unauthorized` ayrımı plan örtüşmesinden çok seviyeden gelir (yan lob ve ana lob farkı). P18 §6'ya seviye eşleşmiş alt kutu önerisi eklendi.
+- **K17 alt kararları P18'e işlendi:** CuC C/I 5–30 dB; roller 1500/150/150/500; `adjacent_satellite_downlink` yakın-OOD bilinmeyen; LOKO 3 eğitim tohumu (21 ek eğitim). P18'in dondurulması hâlâ kullanıcıda (S9).
+
 - **Plan maskesi kısa yolu testi (A5, P16 İP-4.4) kodlandı:** `geoml.plan_shortcut`.
   - Kademe A checkpoint'lerini kimlik denetimiyle yükler ve yalnız plan maskesini bozulmuş bir operatör planından yeniden kurar.
   - Bozmalar: plan 0,5 MHz kaymış; bir taşıyıcı plandan düşmüş; yayınlanmayan hayalet taşıyıcı; yetkisiz taşıyıcı plana "yetkili" eklenmiş.
@@ -94,7 +110,7 @@ Kademe A'nın (ders projesi) bütün zinciri kodlandı ve uçtan uca çalışıy
 | P15 | Faz gürültüsü ve olaylar (E1-dev/1) | Geliştirme dilimi | `P15_phase_noise_and_events.md` |
 | P16 | Literatür sonrası düzeltme programı | Plan; İP-0…İP-7 | `P16_literatur_duzeltme_programi.md` |
 | P17 | R1-eval/1 sağlamlık değerlendirmesi | Kodlandı, küçük koşu; tam sonuç yok | `P17_r1_robustness_eval.md` |
-| P18 | B2/1 sekiz sınıflı çift-pol açık-küme protokolü | **Taslak, onay bekliyor (K17)**; kod yok | `P18_b2_protocol.md` |
+| P18 | B2/1 sekiz sınıflı çift-pol açık-küme protokolü | **Taslak, dondurma onayı bekliyor (K17)**; alt kararlar alındı; uplink ASI üreteci hazır, B2/1 üreteci yok | `P18_b2_protocol.md` |
 | Kademe B | Çift pol, 8 sınıf, open-set | Geliştirme dilimleri var (B1-dev/1–2, D1-dev/1, E1-dev/1); nihai B2/1 benchmark yok | `P11`–`P14` |
 
 ## 3. Elde ne var
@@ -141,7 +157,7 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 | S3 | Dizüstünde süre ölçülmedi | S1'i önce `--limit-seeds 10` ile deneyip süreyi yazın |
 | S4 | Üç varsayılan karar onaysız | Aşırı sürme sınırı (P3 §0-A), tek etiket kuralı (P3 §0-B), doğrusal zincirde aşırı sürme (P5 §0) |
 | S5 | ~~P16 kararları~~ — **2026-10-20 yanıtlandı** (P16 §5): uplink-ASI, iptal artığı + cyclic, aşamalı yenilik cümlesi, OpenDPD ölçüm aralığında, sabit tarih yok, lisans şimdilik yok, vekil unknown yok | — |
-| S9 | K17: P18 B2/1 protokol taslağını onaylayın veya değiştirin | Özellikle: `adjacent_satellite` parametreleri, CuC C/I aralığı (ölçüme göre 5–30 dB öneriliyor, [CuC görünürlüğü](../results/cuc_visibility.md)), rol boyutları (1500/150/150/500), `adjacent_satellite_downlink`'in yakın-OOD bilinmeyen olması, leave-one-known-out için tek eğitim tohumu |
+| S9 | K17: P18 B2/1 protokolünü dondurun ya da değiştirin | Alt kararlar alındı (CuC 5–30 dB, 1500/150/150/500, downlink ASI yakın, LOKO 3 tohum). Bakılacaklar: kaynaklı `adjacent_satellite` geometrisi ve [VARSAYIM] dağılımları ([ASI ölçümü](../results/asi_visibility.md)); seviye eşleşmiş ASI/unauthorized alt kutusu; downlink ASI'nin aynı geometriyle 11,7 GHz'de çekilmesi önerisi |
 | S8 | R1-eval/1 tam koşu (S2'den sonra) | `python -m geosim.dataset --protocol R1-eval/1 --out data/r1 --workers 4` (≈ 2,6 çekirdek-saat, ayrı dizin) ve `python -m geoml.robustness --data data/stageA --runs runs/stageA --r1 data/r1 --out runs/r1`; `runs/r1/results.md` dosyasını gönderin |
 | S6 | SmartSpace verisi bulutta işlenecek | Ortam ayarlarında **Network access → Allowed domains**'e `fnr-smartspace-project.uni.lu` ekleyin (paket yöneticileri kutusu işaretli kalsın) ve araştırma-amaçlı, ticari olmayan kullanım koşulunu kabul ettiğinizi yazın |
 
@@ -162,7 +178,7 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 | B9 | P16 İP-0: L1 Jammertest lisansı; L10 uydu anteni XPD'si; isteğe bağlı sistematik tarama (CNKI/IEEE) | Düşük | En yakın 7 GEO/uydu çalışması ve bir açık-küme karşılaştırması tam metin okundu ([P1 §8](P1_literatur.md)): hiçbir uydu çalışması transponder zinciri, plan, çift-pol veya bilinmeyen sınıf reddi içermiyor; L2, L7 (a–c) kapandı |
 | B10 | P16 İP-1: C3'ün IBO eğrisi, ECE, FPR@95TPR | Yüksek | **Kodlandı (P17)**; tam üretim ve değerlendirme sizde (S8) |
 | B11 | P16 İP-2: sentetik bellek polinomu, OpenDPD eşleme duyarlılığı (R1-eval/2), NPR'nin literatürle sayısal karşılaştırması | Yüksek | Rapp ve OpenDPD bellek polinomları (P17) ve [NPR kontrolü](../results/npr_check.md) yapıldı |
-| B12 | P16 İP-3/4: ASI, CuC, faz gürültüsü, PL çerçeve; iptal artığı, plan bozma testleri | Yüksek | K5, K9 kararlarına bağlı |
+| B12 | P16 İP-3/4: ASI, CuC, faz gürültüsü, PL çerçeve; iptal artığı, plan bozma testleri | Yüksek | Uplink ASI üreteci (`geosim.asi`) ve plan bozma aracı (`geoml.plan_shortcut`) hazır; kalan: B2/1'e bağlama, K16 yeniden adlandırması, iptal artığı, PL çerçeve |
 | B13 | P16 İP-5/6: B2/1 protokolü (`P18`), eğitim-zamanı OSR, EDSC ve XGBoost baseline'ları | Orta | B2/1 kod yazılmadan dondurulur |
 
 ### 5.4 Bilinçli olarak ertelenenler (Kademe B)
