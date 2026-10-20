@@ -23,7 +23,7 @@ Son güncelleme: 2026-10-20 (literatür taraması eki P16; temel deney durumu 20
   - Dağılım içi %5 eşiği kaymada %18–27 yanlış alarm veriyor.
   - Yük farkı IBO süpürmesinde yanlış alarmda görünüyor (M-lin %23,3, M-nl4 %1,7). Bu, B0'daki "iddia yanlış alarm üzerinden kurulur" yönünü destekliyor.
   - **A5:** model planı istenen anlamda kullanıyor (eksik taşıyıcı → `unauthorized`, yetkili sayılan intruder → `clean`). Ama 0,5 MHz bayat plan temizde yanlış alarmı %3 → %93'e çıkarıyor.
-  - P18'e iki açık konu eklendi: aşırı sürme etiketi ve plan sapması artırımı.
+  - P18'e iki açık konu eklendi: aşırı sürme etiketi ve plan sapması artırımı. Kullanıcı yanıtladı; K17a–d olarak P18 §7a'ya yazıldı.
   - A5 çıktısına karışıklık matrisleri eklendi.
 
 - **Uplink ASI üreteci (K5, P18 `adjacent_satellite`) kaynaklı geometriyle kodlandı:** `geosim.asi`.
@@ -167,7 +167,7 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 | S3 | Dizüstünde süre ölçülmedi | S1'i önce `--limit-seeds 10` ile deneyip süreyi yazın |
 | S4 | Üç varsayılan karar onaysız | Aşırı sürme sınırı (P3 §0-A), tek etiket kuralı (P3 §0-B), doğrusal zincirde aşırı sürme (P5 §0) |
 | S5 | ~~P16 kararları~~ — **2026-10-20 yanıtlandı** (P16 §5): uplink-ASI, iptal artığı + cyclic, aşamalı yenilik cümlesi, OpenDPD ölçüm aralığında, sabit tarih yok, lisans şimdilik yok, vekil unknown yok | — |
-| S9 | K17: P18 B2/1 protokolünü dondurun ya da değiştirin | Alt kararlar alındı (CuC 5–30 dB, 1500/150/150/500, downlink ASI yakın, LOKO 3 tohum). Bakılacaklar: kaynaklı `adjacent_satellite` geometrisi ve [VARSAYIM] dağılımları ([ASI ölçümü](../results/asi_visibility.md)); seviye eşleşmiş ASI/unauthorized alt kutusu; downlink ASI'nin aynı geometriyle 11,7 GHz'de çekilmesi önerisi |
+| S9 | K17: P18 B2/1 protokolünü dondurun | Alt kararlar alındı (CuC 5–30 dB, 1500/150/150/500, downlink ASI yakın, LOKO 3 tohum; K17a–d P18 §7a). Kalan tek onay: plan sapmasının simülatöre uyarlanması (fazla taşıyıcı = `unauthorized`, eksik taşıyıcı için ikinci çıktı `plan_consistency`) |
 | S8 | R1-eval/1 tam koşu (S2'den sonra) | `python -m geosim.dataset --protocol R1-eval/1 --out data/r1 --workers 4` (≈ 2,6 çekirdek-saat, ayrı dizin) ve `python -m geoml.robustness --data data/stageA --runs runs/stageA --r1 data/r1 --out runs/r1`; `runs/r1/results.md` dosyasını gönderin |
 | S6 | SmartSpace verisi bulutta işlenecek | Ortam ayarlarında **Network access → Allowed domains**'e `fnr-smartspace-project.uni.lu` ekleyin (paket yöneticileri kutusu işaretli kalsın) ve araştırma-amaçlı, ticari olmayan kullanım koşulunu kabul ettiğinizi yazın |
 
