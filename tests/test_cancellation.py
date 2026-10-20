@@ -181,3 +181,20 @@ def test_invalid_inputs_are_rejected():
     # Zero input is a valid, degenerate observation: finite residual, no crash.
     result = cancel_planned_carriers(iq, [carrier])
     assert np.isfinite(result.residual_db).all()
+
+
+def test_untracked_phase_noise_caps_depth_independently_of_cn():
+    """obs-cancel/1 fits one gain per snapshot; a 150 Hz Wiener walk bounds the depth (reviewer finding)."""
+    from geosim.phase_noise import rotate_phase, wiener_phase
+    rng = np.random.default_rng(41)
+    carrier = Carrier(f0=2e6, symbol_rate=9.6e6, alpha=0.2, mod="QPSK", power=1.0)
+    x = generate_carrier(rng, carrier, 6, sn.N_SIM, FS_SIM)
+    t0 = np.arange(6) * 0.01
+    depths = {}
+    for linewidth in (0.0, 150.0):
+        y = x if linewidth == 0 else rotate_phase(x, wiener_phase(np.random.default_rng(1), t0, sn.N_SIM, FS_SIM, linewidth))
+        y = y + sn.awgn(np.random.default_rng(2), x.shape, 1.0 / (36e6 * 10 ** (40 / 10)), FS_SIM)
+        iq = sn.to_monitor(y)
+        depths[linewidth] = _depth(iq, cancel_planned_carriers(iq, [carrier]), carrier)
+    assert depths[0.0] > 35.0
+    assert 15.0 < depths[150.0] < 30.0

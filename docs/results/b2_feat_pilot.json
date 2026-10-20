@@ -42,7 +42,7 @@
       "center_loss_weight": 0.005
     }
   },
-  "experiment_fingerprint": "7f9c424b110e1e52fd2f6096a967fdd7f882da54e8aa1e70667cf8dfb9f5a759",
+  "experiment_fingerprint": "3a307ad63ae294f816e3bbbe538ae5515817db9aa877aec273fb27fa23acadf6",
   "data_fingerprint": "325317b75dfaea64bd4872d09afd7511ffaf441dfd9e219153217081a9027831",
   "partitions": {
     "train": {
@@ -132,7 +132,7 @@
     "device": "cpu"
   },
   "scope": "Known-class learning slice on frozen B2/1 roles; not the complete open-set benchmark.",
-  "source_revision": "8e862872319a8431f8d6d6c5956590b214cf6343 (working tree; see commit recorded in DURUM)",
+  "source_revision": "46b13fc238fc7d99a51aea005e534c90d34c6d46 (working tree with uncommitted reviewer fixes; follow-up commit recorded in DURUM)",
   "methods": {
     "co": {
       "input_channels": 2,
@@ -261,13 +261,11 @@
         "positive_class": "planned_carrier_missing",
         "decision_rule": "auxiliary logit > 0",
         "accuracy": {
-          "mean": 1.0,
-          "ci95": [
-            1.0,
-            1.0
-          ],
+          "mean": null,
+          "ci95": null,
           "n_samples": 16,
-          "n_scenarios": 2
+          "n_scenarios": 2,
+          "note": "undefined: only one plan-consistency class present"
         },
         "recall": null,
         "precision": null,
@@ -283,7 +281,7 @@
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "b345634d0ce296a4ca8f5646da3e1c72c228d4674357c50a6610ea6b75ceffd8"
+            "provenance": "581fdbac2d4daad98f0c61111afc987abda79dcdd3d7496f39723748f5ea951e"
           },
           "known_acceptance": {
             "mean": 0.5,
@@ -311,7 +309,7 @@
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "e72e9b09a15e0b429d7c3c086e2b4d340d25d44a7b59029613076b74a9527e86"
+            "provenance": "824552fdef5c06c4acbacc49c35837e2682ef398a5b2c35167269405a301bcbf"
           },
           "known_acceptance": {
             "mean": 1.0,
@@ -342,7 +340,7 @@
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "ba22a633e896e75c667f6672f60b89f03ec5e32f5ff1a8c1febff980b6fb1c24"
+            "provenance": "188b8dda0ab31e67822e1b841af7cbec682c7dae7313d6247bb2e93a2bc82832"
           },
           "known_acceptance": {
             "mean": 1.0,
@@ -375,7 +373,7 @@
         "n_unknown": 0,
         "note": "unknown families are a later B2 stage"
       },
-      "checkpoint_sha256": "a5f0100c74e1cc4cdddd8f2925acdfb10d20c323c85763d5616f2b482a9d957b",
+      "checkpoint_sha256": "0d0a75d3d8e9aa5047d2cd3f375dbebb2f5f9b2ee70bcc3c777416d1cf753690",
       "n_parameters": 78777,
       "history": [
         {
@@ -525,13 +523,11 @@
         "positive_class": "planned_carrier_missing",
         "decision_rule": "auxiliary logit > 0",
         "accuracy": {
-          "mean": 1.0,
-          "ci95": [
-            1.0,
-            1.0
-          ],
+          "mean": null,
+          "ci95": null,
           "n_samples": 16,
-          "n_scenarios": 2
+          "n_scenarios": 2,
+          "note": "undefined: only one plan-consistency class present"
         },
         "recall": null,
         "precision": null,
@@ -547,7 +543,7 @@
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "f14b089f1d7505a1d91daf4a7b7c3a9aee10c560a7f706eba016b90e5fdae04e"
+            "provenance": "6026f56505df2b870b39667b81cf754b8c48e0bb322865d909361c176414de4d"
           },
           "known_acceptance": {
             "mean": 0.0,
@@ -575,7 +571,7 @@
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "b6f04282bdd2ca9f046f7eb7edc978aab8a1265739574dd651412ab7ad2ef1d0"
+            "provenance": "015db3672d52d4b7220b07652cbc9c8aa15175a7c5cef153df3bf7c21344c99d"
           },
           "known_acceptance": {
             "mean": 1.0,
@@ -606,7 +602,7 @@
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "db7876d6cfbde529c3ea2edd52c3fb76868a1d3f7e312213a78d7a6b02460c25"
+            "provenance": "c5c3b630cc22632eca925b9bf260c3b827f39d61027b7604f78e6c192c9e8bcc"
           },
           "known_acceptance": {
             "mean": 0.5625,
@@ -639,7 +635,7 @@
         "n_unknown": 0,
         "note": "unknown families are a later B2 stage"
       },
-      "checkpoint_sha256": "13310617a2017c79dcbe678651d474c1a0dab2478ecbb5f11c58745d7e9b1d7d",
+      "checkpoint_sha256": "aa7100eea628c23efb5511d34eaf48ed937f2b866b95c2f852b21ecb993e8e6c",
       "n_parameters": 79177,
       "history": [
         {
@@ -789,13 +785,11 @@
         "positive_class": "planned_carrier_missing",
         "decision_rule": "auxiliary logit > 0",
         "accuracy": {
-          "mean": 1.0,
-          "ci95": [
-            1.0,
-            1.0
-          ],
+          "mean": null,
+          "ci95": null,
           "n_samples": 16,
-          "n_scenarios": 2
+          "n_scenarios": 2,
+          "note": "undefined: only one plan-consistency class present"
         },
         "recall": null,
         "precision": null,
@@ -811,7 +805,7 @@
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "5bc0edca9930482c9d65ab63809861a338aa12b70c05f5e1dae06ed73736d011"
+            "provenance": "1da3d7114e9d1abd08be374ba11bf0570b82e4d978e6cc4141b5a4a332fbd83d"
           },
           "known_acceptance": {
             "mean": 1.0,
@@ -842,7 +836,7 @@
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "04e8f9a67e6d9c2c011a58d994123b578126d8152644ecc155a0640f45b727b3"
+            "provenance": "7bb74283b429a33a3061bcae741819509d4b4886ae7703f829bfbb98263c7636"
           },
           "known_acceptance": {
             "mean": 1.0,
@@ -873,7 +867,7 @@
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "bc844c2bc6dce55e548309f4b271deba79885adbb0f80c640c9a39ed2da08644"
+            "provenance": "b321b3192b664792dbd467f18a0a00f71e4889dd688915884350b2b43d80f552"
           },
           "known_acceptance": {
             "mean": 0.5,
@@ -903,7 +897,7 @@
         "n_unknown": 0,
         "note": "unknown families are a later B2 stage"
       },
-      "checkpoint_sha256": "cd5778e570cd286d7b8ae90c8898b0e449f01e4ade71c68e46fceccb399aecbd",
+      "checkpoint_sha256": "3d59defcb0d06cccdc78328fb109643ed4e8d46e132046cd5a0eaa6463f1a97a",
       "n_parameters": 79377,
       "history": [
         {

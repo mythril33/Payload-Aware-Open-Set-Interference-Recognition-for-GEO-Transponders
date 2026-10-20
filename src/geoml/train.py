@@ -176,7 +176,7 @@ def fit(train: dict, val: dict, cfg: TrainConfig, device: str | None = None, log
     steps = cfg.epochs * -(-len(xt) // cfg.batch)
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=cfg.lr, total_steps=steps)
     gen = torch.Generator().manual_seed(cfg.seed)
-    best, best_state, history = -1.0, None, []
+    best, best_state, best_epoch, history = -1.0, None, None, []
     for epoch in range(cfg.epochs):
         model.train()
         t, loss_sum = time.time(), 0.0
@@ -209,11 +209,13 @@ def fit(train: dict, val: dict, cfg: TrainConfig, device: str | None = None, log
             record["val_plan_accuracy"] = float(np.mean((outputs["plan_logits"][:, 0] > 0) == (pv == 1)))
         history.append(record)
         if f1 > best:
-            best, best_state = f1, {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+            best, best_epoch = f1, epoch
+            best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
         log(f"  epoch {epoch + 1:2d}/{cfg.epochs}  loss {loss_sum / len(xt):.3f}  val macro-F1 {f1:.3f}  "
             f"({time.time() - t:.0f} s)")
     model.load_state_dict(best_state)
     return {"model": model, "config": asdict(cfg), "absolute_ref_db": ref, "history": history,
+            "best_epoch": best_epoch, "best_val_macro_f1": best,
             "n_parameters": n_parameters(model), "device": device}
 
 

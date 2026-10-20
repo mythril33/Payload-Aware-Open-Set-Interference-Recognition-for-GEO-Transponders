@@ -133,5 +133,17 @@ def test_checkpoint_selection_ignores_plan_head(monkeypatch):
     monkeypatch.setattr(tr, "macro_f1", lambda *args, **kwargs: next(values))
     cfg = TrainConfig(labels=LABELS, input_mode="dual_residual", plan_consistency=True, epochs=3, batch=8,
                       width=4, augment=False)
+    snapshots = []
+    original_load = tr.SmallResNet.load_state_dict
+
+    def recording_load(self, state, *args, **kwargs):
+        snapshots.append({k: v.clone() for k, v in state.items()})
+        return original_load(self, state, *args, **kwargs)
+
+    monkeypatch.setattr(tr.SmallResNet, "load_state_dict", recording_load)
     fitted = fit(_data(8, 10), _data(8, 11), cfg, device="cpu", log=lambda *_: None)
     assert [r["val_macro_f1"] for r in fitted["history"]] == [0.2, 0.9, 0.5]
+    assert fitted["best_epoch"] == 1 and fitted["best_val_macro_f1"] == 0.9
+    # The restored weights are the epoch-2 snapshot, not the final epoch's.
+    restored = snapshots[-1]
+    assert all(torch.equal(restored[k], v) for k, v in fitted["model"].state_dict().items())

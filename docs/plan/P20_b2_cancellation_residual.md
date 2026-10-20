@@ -107,17 +107,34 @@ invalidates reuse by design.
   −25 dB under-carrier becomes visible (ΔPSD < 0.3 dB before, > 3 dB after); an unplanned carrier is
   untouched; a missing planned carrier does not raise the in-band residual.
 - [Pilot physics report](../results/b2_feat_pilot.md) on 64 real B2 observations: mean in-band depth
-  12.8–16.5 dB (noise-floor limited at C/N 15–30 dB), out-of-plan gap floor unchanged (−0.02…−0.09 dB),
+  12.8–16.5 dB (bounded by the receiver noise floor at low C/N and by the un-tracked LO phase walk within
+  a snapshot — ≈ 21–25 dB ceiling at the frozen 150 Hz effective linewidth — at high C/N), out-of-plan
+  gap floor unchanged (−0.02…−0.09 dB),
   lower depth for `overdrive` and `cross_pol` (physical), and the paired clean/CuC victim-band ΔPSD
   rising from a median 0.99 dB before to 6.46 dB after cancellation in 8/8 groups.
 - Test suite: see DURUM; all historical identities preserved.
 
 ## 8. Limitations and open items
 
-- Decision-directed cancellation is deliberately simple: no fractional timing refinement, no
-  frequency-offset tracking (the plan frequency is assumed exact), no equalization of IMUX/OMUX ISI,
-  no handling of unknown MODCOD. These limit depth to roughly 35–48 dB at infinite C/N; in the
-  operating range the noise floor dominates.
+- Decision-directed cancellation is deliberately simple: one complex gain per snapshot (no phase
+  tracking inside the 42.7 µs block), no fractional timing refinement, no frequency-offset tracking
+  (the plan frequency is assumed exact), no equalization of IMUX/OMUX ISI, no handling of unknown
+  MODCOD. Without phase noise these limit depth to roughly 35–48 dB; **with the frozen 150 Hz
+  effective linewidth the block-constant gain caps depth at ≈ 21–25 dB regardless of C/N**, so for
+  C/N above ≈ 20 dB the algorithm, not the receiver noise, bounds the residual (reviewer finding,
+  reproduced). A per-segment phase-tracking `obs-cancel/2` would be a separately versioned stage.
+- The simulator places symbol timing exactly on the 288 MHz grid and the monitor warm-up is a multiple
+  of three samples, so the timing quantization step is never exercised with a fractional offset here;
+  real receivers would add that residual. APSK ring start angles in `geosim.waveform.constellation`
+  are still **[VERIFY]** against EN 302 307-1; simulator and canceller share the function, so the
+  pipeline is self-consistent but not yet standard-checked.
+- Channel 5 is estimated from 3072 guarded samples (11 Welch segments) versus 4096 (15 segments) for
+  channel 1: same density scaling, slightly higher per-bin variance. Center-loss centers share the
+  AdamW weight decay (1e-4) of the network rather than Wen et al.'s separate center update; both are
+  frozen conventions of this stage.
+- **K17b training-time plan-shift augmentation (15 % of training samples, Δf ~ U(−0.5, +0.5) MHz) is
+  not implemented yet.** Models trained with the current `b2_experiment` are therefore not the P18
+  main model; the augmentation is the next training-side task.
 - The residual of a `cw` on top of a carrier degrades decisions (minimum depth 4.5 dB in the pilot).
   This is a property of the observation, not an error, and will show up in ablation A4.
 - EDSC baseline (energy detection after cancellation) and the SCF branch (A4b) are not yet

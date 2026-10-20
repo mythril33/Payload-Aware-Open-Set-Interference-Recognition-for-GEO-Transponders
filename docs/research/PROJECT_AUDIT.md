@@ -18,7 +18,7 @@ no representative evidence), **SUPPORTED** (pilot-level evidence only), **ASSUME
 | Size | 168 tracked files; 12.3 k lines of Python (src + tests + scripts) | `wc -l` |
 | Environment | Python 3.13; no venv in the fresh container; PyTorch CPU index blocked by network policy (403), PyPI allowed → torch 2.14.1+cu130 wheel runs on CPU | pip logs; `scripts/setup_cloud.sh` now falls back |
 | Hardware | 4 CPUs, 15 GiB RAM, no GPU, ~31 GB free disk | `nproc`, `free`, `df` |
-| Tests | 707 pass on HEAD; 741 after this slice | pytest output |
+| Tests | 707 pass on HEAD; 743 after this slice and the reviewer fixes | pytest output |
 | Data / runs | None committed (by design); `data/`, `runs/` ignored | `.gitignore` |
 
 ## 2. Implementation matrix
@@ -95,7 +95,9 @@ no representative evidence), **SUPPORTED** (pilot-level evidence only), **ASSUME
 - Jones coupling is unitary and symmetric; no antenna loss, no frequency-dependent XPD, no rain.
 - Phase noise is an effective Wiener model, not a measured mask.
 - Cancellation assumes exact plan frequency and MODCOD knowledge [ASSUMPTION], no equalization of
-  MUX ISI; depth is noise-limited in the frozen C/N range, which hides those algorithm limits.
+  MUX ISI, and one complex gain per snapshot: with the frozen 150 Hz effective linewidth the depth is
+  capped at ≈ 21–25 dB regardless of C/N (reviewer finding, reproduced), so for C/N above ≈ 20 dB
+  the algorithm rather than the noise floor bounds the residual.
 - Overdrive label is IBO-defined and therefore not amplifier-independent (K17a sub-box planned).
 
 ## 8. Source-verification issues (carried from P16)

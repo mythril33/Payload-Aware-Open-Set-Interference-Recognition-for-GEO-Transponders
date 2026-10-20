@@ -79,7 +79,12 @@ def _request(config, roles, limit_groups, groups_per_shard, cancellation=None):
 def _stage(request):
     """Return (protocol, artifact stage, cancellation config or None, array keys) of a request."""
     if "cancellation" in request or "fifth_channel" in request:
-        cancellation = CancellationConfig(**request["cancellation"])
+        if not isinstance(request.get("cancellation"), dict):
+            raise ValueError("B2 feature request lacks its cancellation settings")
+        try:
+            cancellation = CancellationConfig(**request["cancellation"])
+        except TypeError as error:
+            raise ValueError(f"invalid B2 cancellation settings: {error}") from error
         if request.get("fifth_channel") != FIFTH_CHANNEL:
             raise ValueError("B2 feature request has an unexpected fifth-channel contract")
         return FEATURE_PROTOCOL, FEATURE_STAGE, cancellation, FEATURE_ARRAY_KEYS

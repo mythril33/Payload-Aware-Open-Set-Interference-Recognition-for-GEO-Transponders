@@ -39,8 +39,13 @@ Gap-floor shift = residual minus observation in the widest operator-plan gap (sh
 
 By modulation (all labels): QPSK 14.3 dB (n = 72), 8PSK 14.7 (48), 16APSK 14.9 (96), 32APSK 16.2 (80).
 
-Reading: at the frozen link C/N of 15–30 dB the residual reaches the receiver noise floor, so the depth
-is noise-limited rather than algorithm-limited (synthetic tests reach 35–48 dB at infinite C/N).
+Reading: two limits bound the depth. At low C/N the residual reaches the receiver noise floor. At high
+C/N the un-tracked LO phase walk within a 42.7 µs snapshot caps it: `obs-cancel/1` fits one complex gain
+per snapshot, and with the frozen effective linewidth of 150 Hz (satellite 100 Hz + receiver 50 Hz) a
+synthetic 9.6 Mbaud QPSK carrier shows a ceiling of ≈ 24–25 dB at C/N 25 and 40 dB alike (30.7 and
+43.8 dB without phase noise; the independent reviewer measured ≈ 21 dB on another realization). So in the
+upper half of the frozen C/N range the algorithm, not the noise, limits the depth. This is an
+algorithmic limit that a later versioned `obs-cancel/2` with per-segment phase tracking could raise.
 Lower depth for `overdrive` (nonlinear constellation warping, IM floor) and `cross_pol` (−10 dB
 leakage of the other feed's carriers into the co-pol decisions) is physical. A `cw` sitting on a carrier
 degrades its decisions (minimum 4.5 dB). The gap floor is unchanged in every label.

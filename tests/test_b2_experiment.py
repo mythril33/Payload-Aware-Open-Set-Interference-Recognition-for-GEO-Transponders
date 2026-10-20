@@ -110,3 +110,13 @@ def test_dataset_protocol_and_residual_requirements(dataset, tmp_path):
         split.pop("residual")
     with pytest.raises(ValueError, match="stored residual"):
         run_b2_experiment(_config(), data, tmp_path / "r", log=lambda *_: None)
+
+
+def test_plan_consistency_accuracy_is_null_when_one_class_is_absent():
+    groups = np.repeat([3200000, 3200001], 4)
+    logits = np.full((8, 1), -2.0)
+    single = ex._plan_metrics(logits, np.zeros(8, np.int64), groups)
+    assert single["accuracy"]["mean"] is None and single["n_positive"] == 0 and single["recall"] is None
+    both = ex._plan_metrics(logits, np.array([0, 1] * 4), groups)
+    assert both["accuracy"]["mean"] == 0.5 and both["recall"] == 0.0 and both["precision"] is None
+    assert "undefined" in ex._plan_cell(single) and ex._plan_cell(both).startswith("50.0%")

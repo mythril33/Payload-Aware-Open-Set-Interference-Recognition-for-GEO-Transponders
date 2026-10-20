@@ -145,8 +145,13 @@ def _plan_metrics(plan_logits, targets, groups):
     predicted = plan_logits[:, 0] > 0
     actual = targets == 1
     positives = int(actual.sum())
+    both_classes = 0 < positives < len(targets)
+    # A constant head scores 100 % when one class is absent; report null instead (AGENTS.md).
+    accuracy = _rate(predicted == actual, groups) if both_classes else {
+        "mean": None, "ci95": None, "n_samples": int(len(targets)), "n_scenarios": int(len(np.unique(groups))),
+        "note": "undefined: only one plan-consistency class present"}
     return {"positive_class": PLAN_CONSISTENCY[1], "decision_rule": "auxiliary logit > 0",
-            "accuracy": _rate(predicted == actual, groups),
+            "accuracy": accuracy,
             "recall": None if not positives else float(np.mean(predicted[actual])),
             "precision": None if not predicted.any() else float(np.mean(actual[predicted])),
             "n_positive": positives, "n_predicted_positive": int(predicted.sum()), "n_samples": int(len(targets))}
@@ -296,6 +301,14 @@ def _percent(rate):
     return "n/a" if rate is None or rate.get("mean") is None else f"{100 * rate['mean']:.1f}% (n={rate['n_samples']})"
 
 
+def _plan_cell(plan):
+    if plan is None:
+        return "n/a"
+    if plan["accuracy"]["mean"] is None:
+        return f"n/a (positives n={plan['n_positive']} of {plan['n_samples']}; undefined)"
+    return f"{_percent(plan['accuracy'])} (positives n={plan['n_positive']})"
+
+
 def report(result):
     lines = [f"# B2 known-class learning slice ({result['protocol']})", "",
              f"Parent protocol `{result['parent_protocol']}`; eight known labels; benchmark complete: **{result['benchmark_complete']}**.", "",
@@ -308,7 +321,7 @@ def report(result):
         plan = values["plan_consistency"]
         lines.append(f"| {view} | {values['input_channels']} | {_percent(values['accuracy'])} | {values['macro_f1']:.3f} | "
                      f"{values['ece']['ece']:.3f} | {_percent(values['clean_false_alarm'])} | {_percent(values['event_detection'])} | "
-                     f"{'n/a' if plan is None else _percent(plan['accuracy']) + ' (positives n=' + str(plan['n_positive']) + ')'} |")
+                     f"{_plan_cell(plan)} |")
     lines += ["", "| View | Method | Known acceptance at calibrated threshold | Accuracy on accepted | Unknown rejection |",
               "|---|---|---|---|---|"]
     for view, values in result["methods"].items():
