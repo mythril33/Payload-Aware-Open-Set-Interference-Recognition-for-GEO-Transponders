@@ -70,6 +70,22 @@ change. It is not the final eight-class open-set benchmark or proof of a unique
 physical cause. Calibration corrects instrument response while retaining
 propagation leakage. See [physics, data and experiment details](docs/plan/P14_dual_polarization.md).
 
+## Phase noise and received interference
+
+`E1-dev/1` adds common satellite/receiver oscillator phase noise and a paired
+three-class task: clean, carrier-under-carrier uplink interference and received
+adjacent-satellite interference. The downlink event bypasses the wanted payload.
+Both model views share scenario partitions and training budgets.
+
+```bash
+python -m geosim.event_dataset --config configs/interference_events_data.json --out data/events-pilot
+python -m geoml.dual_experiment --config configs/interference_events.json --data data/events-pilot --out runs/events-pilot
+```
+
+The linewidth and power ranges are exploratory engineering assumptions. This
+closed-set task tests simulator causes; PSD alone does not uniquely establish
+satellite origin or authorization. See [physical stages, contracts and reuse](docs/plan/P15_phase_noise_and_events.md).
+
 ## Research dossier (2026-10-20)
 
 This is an evolving research project, **not** a completed dual-polarization, eight-class open-set system.
@@ -84,4 +100,4 @@ This is an evolving research project, **not** a completed dual-polarization, eig
 - [Literature bibliography (BibTeX)](references/references.bib)
 - [Detailed current Stage A status](docs/plan/DURUM.md) and [pilot-only results](docs/results/pilot_A.md)
 
-**Current research boundary:** Stage A is single-polarization/five known classes, with a small pilot. B1-dev/1 implements known-class holdout rejection with MSP and energy; B1-dev/2 adds unknown families, Mahalanobis and ranking metrics. D1-dev/1 adds calibrated dual-polarization observations and a controlled two-class leakage task. Full-data results and the complete Stage B benchmark remain outstanding. The pilots are not evidence of field/deployment performance. The code repository does not currently specify a top-level license; third-party PDF/data licenses and redistribution conditions must be handled separately. Official primary-source links are preserved instead of automatically mirroring restricted documents.
+**Current research boundary:** Stage A is single-polarization/five known classes, with a small pilot. B1-dev/1 implements known-class holdout rejection with MSP and energy; B1-dev/2 adds unknown families, Mahalanobis and ranking metrics. D1-dev/1 adds calibrated dual-polarization observations and a controlled two-class leakage task. E1-dev/1 adds phase noise and two modulated-interference mechanisms in a separate three-class task. Full-data results and the unified eight-class dual-polarization open-set benchmark remain outstanding. The pilots are not evidence of field/deployment performance. The code repository does not currently specify a top-level license; third-party PDF/data licenses and redistribution conditions must be handled separately. Official primary-source links are preserved instead of automatically mirroring restricted documents.

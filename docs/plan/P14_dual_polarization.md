@@ -4,6 +4,9 @@ Date: 2026-10-20. This milestone adds dual-polarization observations and a
 controlled leakage-recognition experiment. Frozen A1 and B1-dev/1–2 remain
 supported. This is not the final eight-known-class open-set benchmark.
 
+Subsequent engine additions are documented in [P15](P15_phase_noise_and_events.md).
+The D1 protocol below retains zero phase noise and no downlink event by default.
+
 ## Physical chain
 
 ```mermaid

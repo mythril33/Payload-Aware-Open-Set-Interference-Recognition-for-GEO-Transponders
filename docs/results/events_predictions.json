@@ -1,0 +1,290 @@
+[
+  {
+    "scenario_id": 2200000,
+    "true_label": "clean",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "event_probability": 0.6346362247080416,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "adjacent_satellite",
+        "event_probability": 0.6636711011415011,
+        "alarm": true
+      }
+    }
+  },
+  {
+    "scenario_id": 2200000,
+    "true_label": "carrier_under_carrier",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "event_probability": 0.6346462739752704,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "adjacent_satellite",
+        "event_probability": 0.663623984055487,
+        "alarm": true
+      }
+    }
+  },
+  {
+    "scenario_id": 2200000,
+    "true_label": "adjacent_satellite",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "event_probability": 0.6346260536368784,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "adjacent_satellite",
+        "event_probability": 0.6633970329342421,
+        "alarm": true
+      }
+    }
+  },
+  {
+    "scenario_id": 2200001,
+    "true_label": "clean",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "event_probability": 0.6345298401020579,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "adjacent_satellite",
+        "event_probability": 0.6635527962386231,
+        "alarm": true
+      }
+    }
+  },
+  {
+    "scenario_id": 2200001,
+    "true_label": "carrier_under_carrier",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "event_probability": 0.6344259229159712,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "adjacent_satellite",
+        "event_probability": 0.6635420372947067,
+        "alarm": true
+      }
+    }
+  },
+  {
+    "scenario_id": 2200001,
+    "true_label": "adjacent_satellite",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "event_probability": 0.6345287139650788,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "adjacent_satellite",
+        "event_probability": 0.663603142068469,
+        "alarm": true
+      }
+    }
+  },
+  {
+    "scenario_id": 2200002,
+    "true_label": "clean",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "event_probability": 0.6342364646100155,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "adjacent_satellite",
+        "event_probability": 0.6621629493054105,
+        "alarm": false
+      }
+    }
+  },
+  {
+    "scenario_id": 2200002,
+    "true_label": "carrier_under_carrier",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "event_probability": 0.6342575330905323,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "adjacent_satellite",
+        "event_probability": 0.6621014600666555,
+        "alarm": false
+      }
+    }
+  },
+  {
+    "scenario_id": 2200002,
+    "true_label": "adjacent_satellite",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "event_probability": 0.6343060180449552,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "adjacent_satellite",
+        "event_probability": 0.6621141056480078,
+        "alarm": false
+      }
+    }
+  },
+  {
+    "scenario_id": 2200003,
+    "true_label": "clean",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "event_probability": 0.6352589047277492,
+        "alarm": true
+      },
+      "dual": {
+        "prediction": "adjacent_satellite",
+        "event_probability": 0.6629301745404184,
+        "alarm": false
+      }
+    }
+  },
+  {
+    "scenario_id": 2200003,
+    "true_label": "carrier_under_carrier",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "event_probability": 0.6351693814660675,
+        "alarm": true
+      },
+      "dual": {
+        "prediction": "adjacent_satellite",
+        "event_probability": 0.6629053061977084,
+        "alarm": false
+      }
+    }
+  },
+  {
+    "scenario_id": 2200003,
+    "true_label": "adjacent_satellite",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "event_probability": 0.6353379711509769,
+        "alarm": true
+      },
+      "dual": {
+        "prediction": "adjacent_satellite",
+        "event_probability": 0.6629160353050413,
+        "alarm": false
+      }
+    }
+  },
+  {
+    "scenario_id": 2200004,
+    "true_label": "clean",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "event_probability": 0.6339572173231769,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "adjacent_satellite",
+        "event_probability": 0.6634928530328531,
+        "alarm": true
+      }
+    }
+  },
+  {
+    "scenario_id": 2200004,
+    "true_label": "carrier_under_carrier",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "event_probability": 0.6339136433418656,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "adjacent_satellite",
+        "event_probability": 0.6635508201715484,
+        "alarm": true
+      }
+    }
+  },
+  {
+    "scenario_id": 2200004,
+    "true_label": "adjacent_satellite",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "event_probability": 0.6343270860472525,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "adjacent_satellite",
+        "event_probability": 0.6636731167687778,
+        "alarm": true
+      }
+    }
+  },
+  {
+    "scenario_id": 2200005,
+    "true_label": "clean",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "event_probability": 0.6334349084903356,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "adjacent_satellite",
+        "event_probability": 0.6635728286765294,
+        "alarm": true
+      }
+    }
+  },
+  {
+    "scenario_id": 2200005,
+    "true_label": "carrier_under_carrier",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "event_probability": 0.633447431159371,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "adjacent_satellite",
+        "event_probability": 0.6636239107628917,
+        "alarm": true
+      }
+    }
+  },
+  {
+    "scenario_id": 2200005,
+    "true_label": "adjacent_satellite",
+    "views": {
+      "co": {
+        "prediction": "clean",
+        "event_probability": 0.6334227370256065,
+        "alarm": false
+      },
+      "dual": {
+        "prediction": "adjacent_satellite",
+        "event_probability": 0.663602320730031,
+        "alarm": true
+      }
+    }
+  }
+]

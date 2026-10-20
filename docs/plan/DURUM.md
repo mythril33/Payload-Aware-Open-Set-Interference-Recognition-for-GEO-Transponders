@@ -13,6 +13,10 @@ Son güncelleme: 2026-10-20 (literatür taraması eki P15; temel deney durumu 20
 
 ## Uygulama eki — 2026-10-20
 
+- **M3 faz gürültüsü ve olay blokları kodlandı:** [P15](P15_phase_noise_and_events.md); ortak uydu/alıcı Wiener faz gürültüsü, uplink taşıyıcı-altı girişim ve alıcı tarafında komşu uydu girişimi eklendi. Uydu girişimi hedef yükün TWTA'sından geçmez. Sıfır linewidth eski sayısal çıktıları korur; A1 değiştirilmedi.
+- Son birleşik doğrulama: **542 test geçti**. `E1-dev/1`, aynı planları, link ayarlarını ve faz süreçlerini paylaşan `clean` / `carrier_under_carrier` / `adjacent_satellite` geliştirme deneyidir. Veri, bağımsız pilot kalibrasyonu, kayıt kimlikleri ve ayrı model-seçimi/eşik-kalibrasyonu grupları denetlenir.
+- E1 fiziksel pilotu: **54 gözlem**, iki giriş görünümü için üçer epok; doğrulanmış veri/model/eşik tekrar kullanımı tamamlandı. İki model de %33,3 doğruluk ve 0,167 macro-F1 verdi. Üç temiz örnekle eşik kurulması ve yüksek test yanlış alarmları nedeniyle sonuçlar çalışma doğrulamasıdır; tanıma avantajı göstermez. [Sonuçlar](../results/events_development.md) ve [18 eşleşmiş senaryonun fiziksel kontrolleri](../results/events_physics_check.json) kaydedildi.
+- Fiziksel olay üreteçleri artık vardır; sekiz bilinen sınıfı tek çift-pol protokolünde birleştirme, çift-pol unknown reddi, tam veri/çok eğitim tohumu ve fiziksel kaynakların gözlemlerle ayırt edilebilirliği üzerindeki çalışma sürmektedir. PSD, komşu uydu kaynağını veya yetkilendirmeyi tek başına benzersiz belirlemez.
 - **M3 çift-pol geliştirme dilimi kodlandı:** [P14](P14_dual_polarization.md); uplink kuplajı → iki ayrı IMUX/TWTA/OMUX yolu → downlink kuplajı → alıcı enstrüman yanıtı ve gürültüsü → bağımsız pilotlarla kalibrasyon. Fiziksel sızıntı kalibrasyonla kaldırılmaz. Ayrı planlar için dört model kanalı ve eşleşmiş co-only karşılaştırması vardır.
 - M3 doğrulaması: **355 test geçti**. 36 çift-pol gözlem üretildi; iki giriş görünümü üçer epok eğitildi ve kayıt/üretim tekrar kullanımı doğrulandı. Her görünümde sınıflandırma doğruluğu %50; küçük koşu yalnız çalışma kanıtıdır. [Sonuçlar ve kalibrasyon kontrolü](../results/dual_development.md) kaydedildi.
 - `D1-dev/1`, `clean`/`cross_pol` için kontrollü iki sınıflı geliştirme protokolüdür; sekiz sınıflı nihai open-set benchmark değildir. Birlikte yüklenmiş iki yolun toplam güç oranı XPD değildir; XPD doğrulaması izole kaynak testleriyle yapılır.
@@ -24,13 +28,13 @@ Son güncelleme: 2026-10-20 (literatür taraması eki P15; temel deney durumu 20
 - `B1-dev/1`, mevcut beş sınıftan bir girişim ailesini dışarıda tutar; `clean` bilinen olarak kalır. Eğitim için doğrulama ve ret eşiği kalibrasyonu ayrı senaryo gruplarıdır. A1 protokolünün fiziksel örnekleme/sınıf/split tanımları değiştirilmedi.
 - Altı tohum × üç kaynak split ile fiziksel üretim ve üç epok eğitim denemesi yapıldı. Küçük koşu yalnız çalışma kanıtıdır; model kalitesi zayıftır ve bilimsel sonuç değildir.
 - Doğrulama: tam test paketi **141 test geçti**; son kaynak-rolü kontrolü sonrası yedi deney testi tekrar geçti. Veri ve checkpoint tekrar kullanımı da gerçek koşuda doğrulandı.
-- Sekiz sınıflı nihai B benchmark'ı henüz uygulanmadı. Yeni unknown üreteçleri, Mahalanobis, AUROC/OSCR ve çift-pol geliştirme hattı artık vardır; tam bilimsel değerlendirme yapılmadı. Faz gürültüsü ve kalan sınıflar uygulanmadı. Aşağıdaki eski faz/eksik tabloları temel Kademe A durumunu tarif eder; bu ek geliştirme dilimlerini kaydeder.
+- Sekiz sınıflı nihai B benchmark'ı henüz uygulanmadı. Unknown üreteçleri, Mahalanobis, AUROC/OSCR, çift-pol geliştirme hattı, faz gürültüsü ve modüle girişim blokları vardır; tam bilimsel değerlendirme yapılmadı. Aşağıdaki eski faz/eksik tabloları temel Kademe A durumunu tarif eder; güncel uygulama durumu bu ektedir.
 
 ## Araştırma eki — 2026-10-20
 
 - **P1 literatür / yakın çalışmalar:** ilk kaynak-tabanlı denetim eklendi: [P1_literatur.md](P1_literatur.md). “GEO'da ilk DL” ve “önceki çalışmaların hepsi idealize” iddiaları **geçersiz**; doğrulanmış yenilik yerine test edilebilir aday katkı önerildi. Kapsamlı sistematik tarama veya bütün yakın makalelerin tam metin analizi henüz yapılmadı.
 - **P8 dış kaynak:** veri temsilleri, SmartSpace araştırma amaçlı kullanım koşulu, GaN PA vs TWTA ve GNSS kayıtlarının görev farkı belgelendi: [P8_dis_veri.md](P8_dis_veri.md). Ham veri indirilip deney yapılmadı.
-- **P9 ve B açık-küme protokolü:** [P9_yol_haritasi.md](P9_yol_haritasi.md) ve [open_set_protocol.md](../research/open_set_protocol.md) yayımlandı. **B fazı hâlâ tasarımdır; kodlanmış/test edilmiş değildir.**
+- **P9 ve B açık-küme protokolü:** [P9_yol_haritasi.md](P9_yol_haritasi.md) ve [open_set_protocol.md](../research/open_set_protocol.md) yayımlandı. Tam B benchmark'ı tasarım aşamasındadır; kodlanan/test edilen geliştirme dilimleri yukarıda ayrı sürümleriyle listelenir.
 - **Kaynakça ve birincil kaynak yolları:** [references.bib](../../references/references.bib) ve [ORIGINALS.md](../../sources/ORIGINALS.md); özgün DOCX'in [Markdown transkripsiyonu](../../sources/original_proposal.md).
 - **S1–S4, B0/B1b/B2/B3/B4/B7 ve tam benchmark** bu araştırma commit'leriyle kapanmadı. Eski pilot rakamları değişmedi.
 

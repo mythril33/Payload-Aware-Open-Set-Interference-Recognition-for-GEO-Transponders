@@ -1,15 +1,19 @@
 """Two polarization paths with explicit physical and instrument mixing.
 
 The symmetric unitary uplink Jones matrix precedes the two IMUX/TWTA/OMUX
-paths. Downlink Jones mixing follows OMUX. An independent receiver response
-then acts on both observed feeds, followed by receiver noise. A separately
+paths. Optional satellite LO phase noise is common to both paths before IMUX.
+Downlink Jones mixing follows OMUX; external downlink interferers are added
+after that mixing, without passing through this satellite's payload. Receiver
+LO phase noise rotates the combined signal before the independent receiver
+response and receiver noise. A separately
 fitted receiver calibration corrects that instrument response only; it does
 not remove the physical uplink or downlink mixing.
 
 Per-feed receiver noise is referenced to that feed's pre-downlink-mixing OMUX
 output, following A1's output-C/N convention. Its power is not renormalized
 after downlink or instrument mixing. These are ideal basis-coupling blocks,
-not a complete lossy antenna or propagation model. Phase noise is not included.
+not a complete lossy antenna or propagation model. LO linewidths describe an
+effective Lorentzian/Wiener model, not a measured oscillator phase-noise mask.
 """
 from __future__ import annotations
 
@@ -22,6 +26,7 @@ from . import FS_SIM
 from . import payload as pl
 from . import sensor as sn
 from .plan import plan_mask_db
+from .phase_noise import rotate_phase, wiener_phase
 from .polarization import ReceiverCalibration, apply_jones, jones_matrix
 from .scenario import Interferer, ScenarioConfig, default_plan
 from .waveform import Carrier, constellation, generate_carrier, samples_per_symbol
@@ -30,7 +35,10 @@ from .waveform import Carrier, constellation, generate_carrier, samples_per_symb
 def _real(value, name: str, *, ideal: bool = False) -> float:
     if isinstance(value, (bool, np.bool_)) or not isinstance(value, Real):
         raise ValueError(f"{name} must be a real number")
-    number = float(value)
+    try:
+        number = float(value)
+    except OverflowError as error:
+        raise ValueError(f"{name} must be representable as a finite real number") from error
     if not np.isfinite(number) and not (ideal and number == np.inf):
         raise ValueError(f"{name} must be finite" + (" or positive infinity" if ideal else ""))
     return number
@@ -105,6 +113,8 @@ class DualScenarioConfig:
     uplink_phase_rad: float = 0.0
     downlink_phase_rad: float = 0.0
     receiver_response: np.ndarray | None = None
+    satellite_linewidth_hz: float = 0.0
+    receiver_linewidth_hz: float = 0.0
 
     def __post_init__(self):
         _validate_path(self.co, "co")
@@ -114,6 +124,11 @@ class DualScenarioConfig:
                 raise ValueError(f"co and cross must have matching {key}")
         jones_matrix(self.uplink_xpd_db, self.uplink_phase_rad)
         jones_matrix(self.downlink_xpd_db, self.downlink_phase_rad)
+        for key in ("satellite_linewidth_hz", "receiver_linewidth_hz"):
+            linewidth = _real(getattr(self, key), key)
+            if linewidth < 0:
+                raise ValueError(f"{key} must be nonnegative")
+            object.__setattr__(self, key, linewidth)
         object.__setattr__(self, "co", replace(self.co))
         object.__setattr__(self, "cross", replace(self.cross))
         object.__setattr__(self, "receiver_response", _response(self.receiver_response))
@@ -125,6 +140,8 @@ class DualScenarioConfig:
                            "downlink_xpd_db": self.downlink_xpd_db,
                            "uplink_phase_rad": self.uplink_phase_rad,
                            "downlink_phase_rad": self.downlink_phase_rad,
+                           "satellite_linewidth_hz": self.satellite_linewidth_hz,
+                           "receiver_linewidth_hz": self.receiver_linewidth_hz,
                            "receiver_response": {"real": self.receiver_response.real.tolist(),
                                                  "imag": self.receiver_response.imag.tolist()}})
 
@@ -162,13 +179,21 @@ def _validate_plan(plan, cfg: ScenarioConfig, name: str) -> list[Carrier]:
 
 def simulate_dual(cfg: DualScenarioConfig, plans: tuple[list[Carrier], list[Carrier]] | None = None,
                   interferers: tuple[Interferer | None, Interferer | None] | None = None,
-                  calibration: ReceiverCalibration | None = None, keep_iq: bool = False) -> DualScenarioResult:
+                  calibration: ReceiverCalibration | None = None, keep_iq: bool = False,
+                  downlink_interferers: tuple[Interferer | None, Interferer | None] | None = None) -> DualScenarioResult:
     """Generate paired complex observations with explicit physical injection sites.
 
     Each polarization uses its own ScenarioConfig seed and the exact A1 stream
     layout. Identity coupling and instrument response therefore reduce to two
     independent A1 runs. Reusing a seed intentionally makes the random streams
     coherent; distinct seeds are required for independent loading.
+
+    Uplink interferers are referenced to unit planned uplink power. Downlink
+    callbacks use the same nominal unit-power convention, then their output
+    is scaled by sqrt(wanted feed power) after physical downlink mixing, before
+    either feed receives an external event. This uses retained simulation
+    samples for the reference and leaves payload/noise powers unchanged.
+    Default-zero linewidths and absent downlink events retain the A1 streams.
     """
     if not isinstance(cfg, DualScenarioConfig):
         raise ValueError("cfg must be a DualScenarioConfig")
@@ -184,6 +209,11 @@ def simulate_dual(cfg: DualScenarioConfig, plans: tuple[list[Carrier], list[Carr
         interferers = (None, None)
     if not isinstance(interferers, (tuple, list)) or len(interferers) != 2 or any(event is not None and not callable(event) for event in interferers):
         raise ValueError("interferers must contain two callables or None entries")
+    if downlink_interferers is None:
+        downlink_interferers = (None, None)
+    if (not isinstance(downlink_interferers, (tuple, list)) or len(downlink_interferers) != 2
+            or any(event is not None and not callable(event) for event in downlink_interferers)):
+        raise ValueError("downlink_interferers must contain two callables or None entries")
     if calibration is not None and not isinstance(calibration, ReceiverCalibration):
         raise ValueError("calibration must be a ReceiverCalibration fitted from independent pilots")
     if not isinstance(keep_iq, (bool, np.bool_)):
@@ -191,6 +221,14 @@ def simulate_dual(cfg: DualScenarioConfig, plans: tuple[list[Carrier], list[Carr
 
     fs, n = FS_SIM, sn.N_SIM
     shape = (cfg.co.n_snap, n)
+    t0 = np.arange(cfg.co.n_snap) * cfg.co.snap_interval
+
+    def lo_phase(values, linewidth, stage):
+        if linewidth == 0:
+            return values
+        rng = np.random.default_rng(np.random.SeedSequence([int(cfg.co.seed), int(cfg.cross.seed), 7051, stage]))
+        return rotate_phase(values, wiener_phase(rng, t0, n, fs, linewidth))
+
     streams, uplinks = [], []
     for path, plan, event in zip(configs, plans, interferers):
         seeds = np.random.SeedSequence(path.seed).spawn(5)
@@ -208,6 +246,7 @@ def simulate_dual(cfg: DualScenarioConfig, plans: tuple[list[Carrier], list[Carr
         x += sn.awgn(np.random.default_rng(seeds[2]), shape, n0_up, fs)
         uplinks.append(x)
     mixed_uplink = _complex64(apply_jones(jones_matrix(cfg.uplink_xpd_db, cfg.uplink_phase_rad), np.stack(uplinks)), "mixed uplink")
+    mixed_uplink = lo_phase(mixed_uplink, cfg.satellite_linewidth_hz, 0)
 
     payload_outputs, path_meta = [], []
     retained = slice(sn.WARMUP_SIM, None)
@@ -231,6 +270,18 @@ def simulate_dual(cfg: DualScenarioConfig, plans: tuple[list[Carrier], list[Carr
                           "zero_drive": drive_power == 0})
         payload_outputs.append(y)
     physical = apply_jones(jones_matrix(cfg.downlink_xpd_db, cfg.downlink_phase_rad), np.stack(payload_outputs))
+    reference_powers = [float(np.mean(np.abs(feed[:, retained]) ** 2)) for feed in physical]
+    if not all(np.isfinite(power) and power >= 0 for power in reference_powers):
+        raise ValueError("downlink mixing produced an invalid wanted-feed power")
+    for pol, event in enumerate(downlink_interferers):
+        if event is not None:
+            rng = np.random.default_rng(np.random.SeedSequence([int(cfg.co.seed), int(cfg.cross.seed), 7052, pol]))
+            generated = np.asarray(event(rng, t0, n, fs))
+            if generated.shape != shape or generated.dtype.kind not in "iufc" or not np.isfinite(generated).all():
+                raise ValueError("downlink interferer must return finite numeric [n_snap, N_SIM] samples")
+            scaled = _complex64(generated * np.sqrt(reference_powers[pol]), "downlink interferer")
+            physical[pol] += scaled
+    physical = lo_phase(physical, cfg.receiver_linewidth_hz, 1)
     measured = _complex64(apply_jones(cfg.receiver_response, physical), "instrument observation")
     for i, (path, seeds) in enumerate(zip(configs, streams)):
         measured[i] += sn.awgn(np.random.default_rng(seeds[3]), shape, path_meta[i]["receiver_noise_psd"], fs)
@@ -242,6 +293,14 @@ def simulate_dual(cfg: DualScenarioConfig, plans: tuple[list[Carrier], list[Carr
     metadata = {"config": cfg.to_dict(), "polarizations": ["co", "cross"],
                 "plans": [[asdict(carrier) for carrier in plan] for plan in plans],
                 "paths": path_meta, "has_interferer": [event is not None for event in interferers],
+                "has_downlink_interferer": [event is not None for event in downlink_interferers],
+                "downlink_interference_reference_power": reference_powers,
+                "downlink_interference_reference": "per-feed wanted power after physical downlink mixing, before external events; retained simulation samples",
+                "phase_noise": {"model": "effective Lorentzian/Wiener; increment variance 2*pi*linewidth_hz*elapsed_seconds",
+                                "common_to_polarizations": True,
+                                "satellite_stage": "after uplink mixing, before IMUX",
+                                "receiver_stage": "after downlink mixing and external events, before instrument response and receiver noise",
+                                "time_reference": "continuous sparse-window walk; first simulated sample phase zero"},
                 "mixing_model": "symmetric unitary ideal basis coupling",
                 "receiver_noise_reference": "per-feed pre-downlink-mixing OMUX power; not renormalized after physical/instrument mixing",
                 "receiver_calibration_applied": calibration is not None,
