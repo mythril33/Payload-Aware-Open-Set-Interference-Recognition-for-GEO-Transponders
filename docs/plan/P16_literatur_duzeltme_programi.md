@@ -72,7 +72,7 @@ Taramadaki her iddia makaleye aynı güvenle girmez.
 | L13 | `P9` §3 yayın yerleri | Üç dergi var; tarama TCCN, OJ-COMS, ICASSP/SPAWC, ICC/GLOBECOM çalıştayları, ASMS/SPSC, ICSSC, IEEE Aerospace/MILCOM ekliyor | P9'a eklendi; uygunluk yine başvuru anında kontrol edilir | ben | kapatıldı |
 | L14 | `src/geosim/payload.py` Saleh katsayıları | Kod yorumu "makaleye karşı kontrol edilmedi"; tarama da DOI'yi "(verify)" diyor | Açık kalır (B-kaynak); Saleh zaten birincil değil, alternatif model | ben | açık, düşük |
 | L15 | Motivasyon istatistikleri | Taramadaki yüzdeler basın/satıcı kaynaklı | §1 kuralı; makale girişinde tek paragraf, açık niteleme | ben | kural yazıldı |
-| L16 | `P15_phase_noise_and_events.md` (E1-dev/1, main'e 2026-10-20'de eklendi) | E1-dev/1 `adjacent_satellite`'ı **alıcı tarafında (downlink) olay** olarak kodluyor; hedef yükün TWTA'sını atlıyor. K5 kararı ise **uplink-ASI** (downlink kullanıcı tarafından veto edildi) | E1-dev/1 kodu ve sonuçları **değiştirilmedi**. B2/1'de `adjacent_satellite` = uplink-ASI; E1'deki downlink olayı ya `adjacent_satellite_downlink` diye ayrı bir geliştirme olayı olarak kalır ya da kaldırılır — **kullanıcı kararı (K16)** | kullanıcı | **açık** |
+| L16 | `P15_phase_noise_and_events.md` (E1-dev/1, main'e 2026-10-20'de eklendi) | E1-dev/1 `adjacent_satellite`'ı **alıcı tarafında (downlink) olay** olarak kodluyor; hedef yükün TWTA'sını atlıyor. K5 kararı ise **uplink-ASI** (downlink kullanıcı tarafından veto edildi) | E1-dev/1 kodu ve sonuçları **değiştirilmedi**. B2/1'de `adjacent_satellite` = uplink-ASI; E1'deki downlink olayı ya `adjacent_satellite_downlink` diye ayrı bir geliştirme olayı olarak kalır ya da kaldırılır — **K16 kararı: ayrı adla tutulur** | ben | karar alındı; kod yeniden adlandırması İP-3'te |
 | L17 | Belge numarası | Bu belge önce P15 olarak yayımlandı; aynı gün main'e ayrı bir P15 (faz gürültüsü ve olaylar) girdi | Bu belge **P16** oldu; B2/1 protokol belgesi **P17** | ben | kapatıldı |
 
 ---
@@ -198,7 +198,7 @@ cyclic dalı kesilmek zorunda kalırsa **iptal artığı + EDSC** kalır ve CuC 
 | K12 | Takvim | **Sabit tarih yok** (ana plan V2 sürer) | §4 tarih sütunu bağlayıcı değil; yalnız **sıra** geçerli. 15 Aralık hedefi düştü |
 | K13 | Lisans | **Şimdilik lisans yok** | Depo herkese açık ama lisanssız: başkaları kodu yasal olarak yeniden kullanamaz. OpenDPD'den türetilen katsayılar Apache-2.0 atıf koşuluyla (kaynak, commit, lisans notu) eklenir. Yayın öncesi yeniden sorulacak |
 | K14 | Vekil unknown | **Yok:** eşikler ve sıcaklıklar yalnız bilinen doğrulamadan | Outlier exposure kapsam dışı; eğitim-zamanı OSR için ARPL/prototip kaybı (vekil gerektirmez) |
-| K16 | E1-dev/1'deki downlink `adjacent_satellite` olayı | **AÇIK — kullanıcıda** (L16) | Seçenekler: ayrı adla geliştirme olayı olarak tutmak, B2/1'de uplink-ASI ile değiştirmek, ya da ikisini alt sınıf yapmak |
+| K16 | E1-dev/1'deki downlink `adjacent_satellite` olayı | **Ayrı adla tutulur:** `adjacent_satellite_downlink` (geliştirme olayı ve ileride unknown adayı); B2/1'deki `adjacent_satellite` = uplink-ASI, yeni üreteçle | Yeniden adlandırma İP-3'te, tam test paketiyle; E1-dev/1 sürüm adı ve geçmiş sonuç dosyaları eski etiketi korur (tarihsel okuma testi) |
 
 **SmartSpace on-board verisi (karar: bulutta işle).** Kullanıcı
 `fnr-smartspace-project.uni.lu` adresini ortamın izinli alanlarına ekleyip

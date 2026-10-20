@@ -5,7 +5,7 @@ Son güncelleme: 2026-10-20 (literatür taraması eki P16; temel deney durumu 20
 ## Literatür taraması eki — 2026-10-20 (P16)
 
 - **Numara notu:** bu ek önce P15 olarak yayımlandı; aynı gün main'e ayrı bir P15 (faz gürültüsü ve olaylar, E1-dev/1) girdi. Literatür programı artık [P16](P16_literatur_duzeltme_programi.md), B2/1 protokolü P17.
-- **Çelişki (L16, K16 açık):** E1-dev/1 `adjacent_satellite`'ı alıcı tarafında, TWTA'yı atlayan downlink olayı olarak kodluyor; kullanıcının K5 kararı uplink-ASI. E1 kodu ve sonuçları değiştirilmedi; karar kullanıcıda.
+- **Çelişki (L16) çözüldü — K16:** E1-dev/1'in alıcı tarafındaki (TWTA'yı atlayan) olayı `adjacent_satellite_downlink` adıyla ayrı tutulacak; B2/1'deki `adjacent_satellite` sınıfı K5 gereği uplink-ASI olarak yeni kodlanacak. Kodda yeniden adlandırma henüz yapılmadı (P16 İP-3, tam test paketiyle).
 
 - Kullanıcının verdiği literatür taraması okundu ve depo belgeleriyle karşılaştırıldı: [P16 düzeltme ve tamamlama programı](P16_literatur_duzeltme_programi.md). Yeni deney veya kod **yok**; yalnız belge, kaynakça ve plan.
 - **Hüküm:** boşluk iddiası ayakta, ama yenilik "birlikte modelleyen ilk" biçiminde daraltılır (K10). Carrier-under-carrier ve ASI↔unauthorized ayırt edilemezlik bulgusu olarak tasarıma girer; gerçekçilik çapası yükselteç ailesi uyumsuzluğu + NPR + ölçülmüş PA olarak üç ayağa çıkar.
@@ -106,7 +106,6 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 | S3 | Dizüstünde süre ölçülmedi | S1'i önce `--limit-seeds 10` ile deneyip süreyi yazın |
 | S4 | Üç varsayılan karar onaysız | Aşırı sürme sınırı (P3 §0-A), tek etiket kuralı (P3 §0-B), doğrusal zincirde aşırı sürme (P5 §0) |
 | S5 | ~~P16 kararları~~ — **2026-10-20 yanıtlandı** (P16 §5): uplink-ASI, iptal artığı + cyclic, aşamalı yenilik cümlesi, OpenDPD ölçüm aralığında, sabit tarih yok, lisans şimdilik yok, vekil unknown yok | — |
-| S7 | K16: E1-dev/1'in downlink `adjacent_satellite` olayı K5 (uplink-ASI) kararıyla çelişiyor | P16 L16'daki seçeneklerden birini seçin |
 | S6 | SmartSpace verisi bulutta işlenecek | Ortam ayarlarında **Network access → Allowed domains**'e `fnr-smartspace-project.uni.lu` ekleyin (paket yöneticileri kutusu işaretli kalsın) ve araştırma-amaçlı, ticari olmayan kullanım koşulunu kabul ettiğinizi yazın |
 
 ### 5.3 Açık — bende, sıradaki işler

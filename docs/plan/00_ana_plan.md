@@ -173,4 +173,4 @@ Her faz = bir (veya birkaç) odaklı planlama oturumu. Çıktısı ayrı bir dos
 | K13 | Depo lisansı — **şimdilik lisans yok**; yayın öncesi yeniden sorulacak | P16 §5 |
 | K14 | ~~Vekil unknown~~ — kapandı: yok, yalnız bilinen doğrulama | P16 §5 ✔ |
 | K15 | SmartSpace on-board — bulutta işlenecek; host izni ve kullanım koşulu teyidi kullanıcıda | P16 §5 |
-| K16 | E1-dev/1 (`P15_phase_noise_and_events.md`) `adjacent_satellite`'ı downlink olayı olarak kodluyor; K5 uplink. Downlink olayına ne olacağı | P16 L16 |
+| K16 | ~~E1-dev/1 downlink ASI olayı~~ — kapandı 2026-10-20: `adjacent_satellite_downlink` adıyla ayrı tutulur; B2/1 `adjacent_satellite` = uplink | P16 §5 ✔ |
