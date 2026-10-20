@@ -46,7 +46,7 @@ diğerleri **[VARSAYIM]**dır.
 | `overdrive` | yük içi | sürüş seviyesi | IBO 1–4 dB (A1 ile aynı) |
 | `cross_pol` | uplink anten | XPD bozulması | uplink XPD 10 dB (arıza değeri, P14) |
 | `adjacent_satellite` | **uplink** (K5) | **yeni:** komşu sistem yer istasyonu yan lobu | Planlı bir taşıyıcıyla kısmen örtüşen modüleli taşıyıcı; örtüşme %20–80, PSD −15…−3 dB, farklı sembol hızı **[VARSAYIM]** |
-| `carrier_under_carrier` | uplink, co-pol | E1 `carrier_under_carrier` | Kurban taşıyıcının bandı içinde; C/I (toplam plana göre) 5–25 dB **[VARSAYIM]**; CID metacarrier'ın −27,5 dB referansı **[DOĞRULANACAK]** ayrı bir alt-kutuda raporlanır |
+| `carrier_under_carrier` | uplink, co-pol | E1 `carrier_under_carrier` | Kurban taşıyıcının bandı içinde; C/I (toplam plana göre) 5–25 dB taslak, **5–30 dB önerilir** ([görünürlük ölçümü](../results/cuc_visibility.md): eşleşmiş ΔPSD ortancası 5 dB'de 5,6 dB, 20 dB'de 0,37 dB, 30 dB'de 0,04 dB); CID metacarrier'ın −27,5 dB referansı **[DOĞRULANACAK]** ayrı bir alt-kutuda raporlanır |
 
 Kurallar:
 - `adjacent_satellite` ile `unauthorized` arasındaki tek tasarımsal fark, ASI'nin planlı bir
