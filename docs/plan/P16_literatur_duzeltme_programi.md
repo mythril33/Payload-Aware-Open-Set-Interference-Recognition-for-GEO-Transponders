@@ -1,4 +1,4 @@
-# P15 — Literatür taraması sonrası düzeltme ve tamamlama programı
+# P16 — Literatür taraması sonrası düzeltme ve tamamlama programı
 
 Durum: **PLAN — UYGULANMADI** · 2026-10-20 · Girdi: kullanıcının verdiği ([depo kopyası](../research/literature_review_2026-10-20.md))
 *"Payload-Aware Open-Set Interference Recognition for GEO Transponders: Literature
@@ -72,6 +72,8 @@ Taramadaki her iddia makaleye aynı güvenle girmez.
 | L13 | `P9` §3 yayın yerleri | Üç dergi var; tarama TCCN, OJ-COMS, ICASSP/SPAWC, ICC/GLOBECOM çalıştayları, ASMS/SPSC, ICSSC, IEEE Aerospace/MILCOM ekliyor | P9'a eklendi; uygunluk yine başvuru anında kontrol edilir | ben | kapatıldı |
 | L14 | `src/geosim/payload.py` Saleh katsayıları | Kod yorumu "makaleye karşı kontrol edilmedi"; tarama da DOI'yi "(verify)" diyor | Açık kalır (B-kaynak); Saleh zaten birincil değil, alternatif model | ben | açık, düşük |
 | L15 | Motivasyon istatistikleri | Taramadaki yüzdeler basın/satıcı kaynaklı | §1 kuralı; makale girişinde tek paragraf, açık niteleme | ben | kural yazıldı |
+| L16 | `P15_phase_noise_and_events.md` (E1-dev/1, main'e 2026-10-20'de eklendi) | E1-dev/1 `adjacent_satellite`'ı **alıcı tarafında (downlink) olay** olarak kodluyor; hedef yükün TWTA'sını atlıyor. K5 kararı ise **uplink-ASI** (downlink kullanıcı tarafından veto edildi) | E1-dev/1 kodu ve sonuçları **değiştirilmedi**. B2/1'de `adjacent_satellite` = uplink-ASI; E1'deki downlink olayı ya `adjacent_satellite_downlink` diye ayrı bir geliştirme olayı olarak kalır ya da kaldırılır — **kullanıcı kararı (K16)** | kullanıcı | **açık** |
+| L17 | Belge numarası | Bu belge önce P15 olarak yayımlandı; aynı gün main'e ayrı bir P15 (faz gürültüsü ve olaylar) girdi | Bu belge **P16** oldu; B2/1 protokol belgesi **P17** | ben | kapatıldı |
 
 ---
 
@@ -82,7 +84,7 @@ test kümeleri ayrı sürüm adlarıyla ve ayrı tohum aralıklarıyla üretilir
 (AGENTS.md kuralı). Önerilen yeni sürümler:
 
 - **R1-eval/1** — yalnızca test: IBO süpürmesi ve yükselteç uyumsuzluğu kümeleri, tohumlar 400000– **[VARSAYIM]** (A1: 100000–340000+, unknown: 900000–, çift-pol: 1000000– ile çakışmaz; kodda çakışma testi zorunlu).
-- **B2/1** — nihai sekiz bilinen sınıflı çift-pol open-set benchmark protokolü; ayrı belge (`P16`), kod yazılmadan önce dondurulur.
+- **B2/1** — nihai sekiz bilinen sınıflı çift-pol open-set benchmark protokolü; ayrı belge (`P17`), kod yazılmadan önce dondurulur.
 
 ### İP-0 — Belge ve kaynak düzeltmeleri (C1–C3 savunması) · öncelik: hemen
 
@@ -119,10 +121,10 @@ Mevcut S1–S4 ve B0–B3 işleri **aynen geçerli**; tarama bunları değiştir
 | Sınıf / blok | Giriş noktası | Tasarım notu | Kapanış ölçütü |
 |---|---|---|---|
 | `cross_pol` | uplink XPD bozulması | D1-dev/1'de var; XPD dağılımı kaynaklandırılacak (L10) | İzole kaynak XPD testi (mevcut) + kaynaklı dağılım |
-| `adjacent_satellite` | **uplink** (K5 kararı) | Komşu sistemin yer istasyonu yan lobu; planlı taşıyıcıyla kısmen örtüşen, farklı sembol hızı/ofsetli modüleli taşıyıcı. Yetkisiz taşıyıcıyla "tasarım gereği karışabilir çift" | Giriş noktası testi: IMUX/TWTA/OMUX'tan geçtiği; örtüşme oranı üst veride |
-| `carrier_under_carrier` | uplink, planlı taşıyıcının üstüne | C/I süpürmesi; CID metacarrier seviyesi (−27,5 dB, **[DOĞRULANACAK]**) bir referans nokta | Spektrumda görünürlük ölçümü (P6 §6'daki CW tepe tablosu gibi) C/I'ye karşı |
+| `adjacent_satellite` | **uplink** (K5 kararı) | Komşu sistemin yer istasyonu yan lobu; planlı taşıyıcıyla kısmen örtüşen, farklı sembol hızı/ofsetli modüleli taşıyıcı. Yetkisiz taşıyıcıyla "tasarım gereği karışabilir çift". E1-dev/1'deki mevcut uygulama downlink'tir (L16) | Giriş noktası testi: IMUX/TWTA/OMUX'tan geçtiği; örtüşme oranı üst veride |
+| `carrier_under_carrier` | uplink, planlı taşıyıcının üstüne | **E1-dev/1'de üreteç var** (kurban taşıyıcının bandı içinde, C/I 5–15 dB keşif aralığı). B2/1 için C/I süpürmesi genişletilir; CID metacarrier seviyesi (−27,5 dB, **[DOĞRULANACAK]**) bir referans nokta | Spektrumda görünürlük ölçümü (P6 §6'daki CW tepe tablosu gibi) C/I'ye karşı |
 | `overdrive_im` | yük içi | A1 `overdrive` ile aynı tanım | — |
-| Faz gürültüsü | LO | DVB-S2 faz gürültüsü maskesi (EN 302 307-1 Annex H) | Ölçülen PSD maskeye tolerans içinde |
+| Faz gürültüsü | LO | **E1-dev/1'de var:** ortak uydu/alıcı Wiener süreci, Lorentz linewidth (100/50 Hz keşif değerleri). Kalan: DVB-S2 faz gürültüsü maskesiyle (EN 302 307-1 Annex H) karşılaştırma veya maske-tabanlı üreteç | Ölçülen PSD maskeye tolerans içinde |
 | PL çerçeve anahtarı | taşıyıcı üretici | P0'da söz verilen SOF+PLS+pilot+karıştırma; cyclic/iptal için ön koşul | Sembol sayıları EN 302 307-1'e karşı test; "tam DVB-S2 çerçeveleme" iddiası yalnız bu testlerden sonra |
 
 ### İP-4 — Ayırt edilebilirlik analizi (C2'nin özgün kısmı) · öncelik: yüksek
@@ -139,7 +141,7 @@ Kapanış ölçütü: her ayırt edilemeyen çift için "hangi gözlem eklenince
 
 | İş | Kapanış ölçütü |
 |---|---|
-| `P16` B2/1 protokolü: 8 bilinen sınıf, 3 unknown ailesi + leave-one-known-out rotasyonu, yakın/uzak OOD gruplaması (L12), kalibrasyon grupları ağırlık seçiminden ayrı | Kod yazılmadan dondurulmuş; P5 kuralı gibi değişiklik günlüğü |
+| `P17` B2/1 protokolü: 8 bilinen sınıf, 3 unknown ailesi + leave-one-known-out rotasyonu, yakın/uzak OOD gruplaması (L12), kalibrasyon grupları ağırlık seçiminden ayrı | Kod yazılmadan dondurulmuş; P5 kuralı gibi değişiklik günlüğü |
 | Eğitim-zamanı open-set yöntemi (ana plan D13): ARPL veya prototip/merkez kaybı; OpenMax ikincil; ODIN opsiyonel (sıcaklık **yalnız bilinen** doğrulamada) | Asıl unknown aileleri eğitim/seçim/kalibrasyona girmez — mevcut sızıntı testleri yeni yöntemlere de uygulanır |
 | Rapor: unknown-pozitif AUROC/AP aile başına ve birleşik, OSCR, FPR@95TPR (TPR'nin hangi popülasyon olduğu yazılı), ECE, sabit Pfa'da Pd (C/I, I/N, IBO'ya göre), kapalı-küme doğruluğu OSCR ile birlikte (Vaze 2022) | Katı JSON, `null`+sayım; senaryo-bootstrap ve eğitim tohumu belirsizliği ayrı |
 
@@ -173,7 +175,7 @@ tahmindir, bağlayıcı değildir; geçerli olan **sıradır**.
 | 1 | 20–26 Eki | İP-0 açık L-maddeleri; İP-1 metrik eklemeleri | S3 → S1 başlat | Belgeler tutarlı; metrikler testli |
 | 2 | 27 Eki–2 Kas | R1-eval/1 kodu (IBO süpürmesi, Rapp, bellek polinomu); tam metin okumaları | S2 tam koşu → sonuç gönder | **Kademe A tam sonuç** |
 | 3 | 3–9 Kas | B0 kararı, B2/B3; NPR kontrolü; OpenDPD türetme betiği | R1-eval/1 tam üretim | C3 IBO-eğrisi + yükselteç uyumsuzluğu |
-| 4–5 | 10–23 Kas | İP-3: ASI, CuC, faz gürültüsü, PL çerçeve; `P16` B2/1 protokolü dondurulur | — | 8 sınıf üreteci testli |
+| 4–5 | 10–23 Kas | İP-3: ASI, CuC, faz gürültüsü, PL çerçeve; `P17` B2/1 protokolü dondurulur | — | 8 sınıf üreteci testli |
 | 6 | 24–30 Kas | İP-4: iptal artığı, plan kısa yolu, ablasyon altyapısı; İP-5 eğitim-zamanı OSR | B2/1 tam üretim | Ayırt edilebilirlik tablosu taslağı |
 | 7 | 1–7 Ara | İP-6 EDSC + XGBoost; analiz | B2/1 tam koşu (3 tohum) | Nihai tablolar |
 | 8 | 8–15 Ara | İP-7 taslak, sınırlar, veri kartı | Okuma/onay | Makale taslağı |
@@ -189,13 +191,14 @@ cyclic dalı kesilmek zorunda kalırsa **iptal artığı + EDSC** kalır ve CuC 
 
 | # | Karar | Sonuç | Uygulamaya etkisi |
 |---|---|---|---|
-| K5 | ASI giriş noktası | **Uplink-ASI.** Downlink önerisi kullanıcı tarafından veto edildi | Komşu sistem yer istasyonunun yan lobu bizim uydunun alıcısına girer; IMUX/TWTA/OMUX'tan geçer, planlı taşıyıcıyla kısmen örtüşür, farklı sembol hızı/ofset. Yetkisiz taşıyıcıyla **tasarım gereği karışabilir çift** olarak raporlanır. Downlink-ASI park listesinde |
+| K5 | ASI giriş noktası | **Uplink-ASI.** Downlink önerisi kullanıcı tarafından veto edildi | Komşu sistem yer istasyonunun yan lobu bizim uydunun alıcısına girer; IMUX/TWTA/OMUX'tan geçer, planlı taşıyıcıyla kısmen örtüşür, farklı sembol hızı/ofset. Yetkisiz taşıyıcıyla **tasarım gereği karışabilir çift** olarak raporlanır. Downlink-ASI park listesinde. E1-dev/1 ile çelişki: L16, K16 |
 | K9 | CuC gözlem kanalı | **İkisi birden:** gözlemden iptal artığı **ve** tam cyclic (SCF) dalı | Sıra: önce iptal artığı (EDSC baseline'ı ile ortak kod), sonra PL çerçeve anahtarı + SCF dalı. Kâhin iptal yalnız etiketli üst sınır |
 | K10 | Yenilik cümlesi | **Aşamalı.** Şimdilik: "Bildiğimiz kadarıyla, çok taşıyıcılı TWTA/IMUX/OMUX zincirini ve taşıyıcı planını birlikte modelleyen ilk açık GEO girişim tanıma benchmark'ı ve nicel yük farkı ölçümü." Çift-pol ve open-set B2/1 tamamlanınca eklenir | README, P0, P1 ve makale özeti bu cümleyi kullanır |
 | K11 | Ölçülmüş PA kullanımı | **Ölçüm aralığında:** OpenDPD APA/DPA ölçümlerine bellek polinomu uydurulur; Rapp ve sentetik bellek polinomu eklenir; yalnız ölçülen genlik aralığındaki nominal IBO'da test; aşırı sürme bölgesinde kullanılmaz | Ön inceleme: [OpenDPD sondası](../results/opendpd_probe.md). Belleğin bant genişliğine ölçeklenmesi **[VARSAYIM]** |
 | K12 | Takvim | **Sabit tarih yok** (ana plan V2 sürer) | §4 tarih sütunu bağlayıcı değil; yalnız **sıra** geçerli. 15 Aralık hedefi düştü |
 | K13 | Lisans | **Şimdilik lisans yok** | Depo herkese açık ama lisanssız: başkaları kodu yasal olarak yeniden kullanamaz. OpenDPD'den türetilen katsayılar Apache-2.0 atıf koşuluyla (kaynak, commit, lisans notu) eklenir. Yayın öncesi yeniden sorulacak |
 | K14 | Vekil unknown | **Yok:** eşikler ve sıcaklıklar yalnız bilinen doğrulamadan | Outlier exposure kapsam dışı; eğitim-zamanı OSR için ARPL/prototip kaybı (vekil gerektirmez) |
+| K16 | E1-dev/1'deki downlink `adjacent_satellite` olayı | **AÇIK — kullanıcıda** (L16) | Seçenekler: ayrı adla geliştirme olayı olarak tutmak, B2/1'de uplink-ASI ile değiştirmek, ya da ikisini alt sınıf yapmak |
 
 **SmartSpace on-board verisi (karar: bulutta işle).** Kullanıcı
 `fnr-smartspace-project.uni.lu` adresini ortamın izinli alanlarına ekleyip
@@ -216,7 +219,7 @@ oturumda erişilemedi).
 |---|---|
 | "Bütün sonuçlar iki simülatör arasındaki fark; gerçek veri yok." | Kabul edilen sınır (ana plan §1.2, DURUM §5.5). Program bunu üç ayakla daraltır: yükselteç ailesi uyumsuzluğu, NPR karşılaştırması, ölçülmüş PA aktarımı. Hiçbiri "operasyonel başarım" iddiası taşımaz. |
 | "Plan maskesi unauthorized sınıfını bedavaya veriyor; model plan okuyucu." | İP-4.4 plan bozma testleri ve "maske var, taşıyıcı taşınmış" ablasyonu. Başarım maskeye bağlıysa sonuç böyle yazılır. |
-| "CuC ve ASI'de kötü sonuç yöntemin başarısızlığıdır." | Önceden kayıtlı ayırt edilebilirlik analizi: hangi gözlem olmadan hangi çiftin ayrılamayacağı **sonuçtan önce** yazılır (İP-4, P16); kâhin üst sınırı ile gözlem-tabanlı yöntem arasındaki fark ayrıca raporlanır. |
+| "CuC ve ASI'de kötü sonuç yöntemin başarısızlığıdır." | Önceden kayıtlı ayırt edilebilirlik analizi: hangi gözlem olmadan hangi çiftin ayrılamayacağı **sonuçtan önce** yazılır (İP-4, P17); kâhin üst sınırı ile gözlem-tabanlı yöntem arasındaki fark ayrıca raporlanır. |
 
 ---
 

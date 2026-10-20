@@ -67,8 +67,8 @@ Kaynak künyeleri: `references/references.bib`; erişim ve telif koşulları: `d
 
 Kaynak: kullanıcının verdiği *"Payload-Aware Open-Set Interference Recognition for
 GEO Transponders: Literature Review"* (2026-10-20). Düzeltme ve iş programı:
-[P15](P15_literatur_duzeltme_programi.md). Aşağıdaki satırlar taramanın
-özetlerine dayanır; **tam metin okuması henüz yapılmadı** (P15 İP-0).
+[P16](P16_literatur_duzeltme_programi.md). Aşağıdaki satırlar taramanın
+özetlerine dayanır; **tam metin okuması henüz yapılmadı** (P16 İP-0).
 
 ### 7.1 En yakın çalışmalara eklenenler
 
@@ -84,7 +84,7 @@ GEO Transponders: Literature Review"* (2026-10-20). Düzeltme ve iş programı:
 ### 7.2 Boşluk matrisi — planlanan ve uygulanan ayrı
 
 ✔ modellendi · ◐ kısmi · ✖ yok. "Uygulanan" sütunu 2026-10-20 depo durumudur;
-tarama son satırı yalnız "planlanan" olarak doldurmuştu (P15 L6).
+tarama son satırı yalnız "planlanan" olarak doldurmuştu (P16 L6).
 
 | | TWTA NL / IBO | IMUX/OMUX | Çok taşıyıcılı IM | Çift-pol / XPD | Taşıyıcı planı | Open-set |
 |---|---|---|---|---|---|---|
@@ -98,4 +98,4 @@ tarama son satırı yalnız "planlanan" olarak doldurmuştu (P15 L6).
 Ana plan P1 kapanış kriteri: "her boşluk iddiası en az 2 kaynakla desteklenmiş
 veya düzeltilmiş; en yakın 5 çalışma ile fark tablosu". Fark tablosu artık
 §2 + §7.1'de; ancak destek kaynakları özet düzeyinde. **P1 tam metin okuması
-(P15 İP-0) bitmeden kapanmış sayılmaz.**
+(P16 İP-0) bitmeden kapanmış sayılmaz.**

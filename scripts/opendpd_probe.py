@@ -1,4 +1,4 @@
-"""Probe OpenDPD measured PA datasets before deriving amplifier models (P15 K11).
+"""Probe OpenDPD measured PA datasets before deriving amplifier models (P16 K11).
 
 For each dataset directory (``train/test_{input,output}.csv`` with I,Q columns)
 fit least-squares models on the train split and report test-split NMSE:

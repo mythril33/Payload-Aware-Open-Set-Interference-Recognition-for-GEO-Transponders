@@ -1,6 +1,6 @@
 # OpenDPD ölçülmüş PA verisi — ön inceleme (sonda)
 
-Tarih 2026-10-20 · Amaç: P15 K11 ("ölçüm aralığında kullan") kararından önce
+Tarih 2026-10-20 · Amaç: P16 K11 ("ölçüm aralığında kullan") kararından önce
 OpenDPD verisinin projeye ne verebileceğini görmek. **Keşif amaçlı bir sondadır;
 bir yükselteç modeli veya deney sonucu değildir.**
 
@@ -46,7 +46,7 @@ En küçük kareler uydurması train bölümünde, NMSE test bölümünde (dB, d
 4. **AM/PM işareti cihaza göre değişiyor** (GaN Doherty −12°, CMOS Doherty +3°). DVB-S2 referans TWTA'sının AM/PM'i ise doyumda onlarca derece (`DURUM` §4). Ölçülmüş PA'lar TWTA'dan **nitelik olarak farklı** bir yükselteç ailesi sağlıyor; "TWTA doğrulaması" diye sunulamaz.
 5. **Bant ve frekans uyumsuzluğu.** Ölçümler 160–200 MHz sinyal, 2,4/3,5 GHz; bizim transponder 36/72 MHz, Ku. Belleği bant genişliğine ölçeklemek **[VARSAYIM]**dır ve türetme belgesinde ayrıca test edilecek.
 
-## Sonraki adım (P15 İP-2)
+## Sonraki adım (P16 İP-2)
 
 `geosim.payload`'a ek seçenek olarak val bölümünde derecesi seçilmiş bellek
 polinomu; katsayılar + kaynak commit + SHA-256 + Apache-2.0 atıf notu ile; A1
