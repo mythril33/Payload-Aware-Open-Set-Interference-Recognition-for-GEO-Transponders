@@ -1,13 +1,13 @@
 # P18 — B2/1: sekiz bilinen sınıflı, çift-pol, açık-küme benchmark protokolü
 
-Durum: **TASLAK — KULLANICI ONAYI BEKLİYOR (K17); B2/1 ÜRETECİ YAZILMADI** · 2026-10-20 ·
-K17 alt kararları (CuC aralığı, rol boyutları, downlink ASI grubu, LOKO tohumu) kullanıcıdan alındı ve aşağıya işlendi;
-protokolün dondurulması hâlâ kullanıcıda. Uplink ASI üreteci `geosim.asi` hazır ve test edildi ·
+Durum: **DONDURULDU — 2026-10-20 (K17, kullanıcı onayı)**; B2/1 veri üreteci yazılmadı ·
+Bütün K17 kararları aşağıya işlendi (§10). Hazır ve test edilmiş üreteçler: uplink ASI `geosim.asi`,
+DVB-CID `geosim.cid` ·
 Girdi: [P3](P3_taksonomi.md), [P5](P5_veri_protokol.md) (A1), [P12](P12_unknown_events.md),
 [P14](P14_dual_polarization.md), [P15](P15_phase_noise_and_events.md), [P16](P16_literatur_duzeltme_programi.md)
 (K5, K9, K14, K16), [P17](P17_r1_robustness_eval.md), [open-set önerisi](../research/open_set_protocol.md).
 
-Bu belge onaylandığında **dondurulur**. Sonrasındaki her değişiklik §10'daki günlüğe gerekçesiyle
+Bu belge **dondurulmuştur**. Sonrasındaki her değişiklik §10'daki günlüğe gerekçesiyle
 yazılır. Test sonuçları görüldükten sonra bölünme, sınıf, eşik ya da yakın/uzak gruplaması değiştirilmez.
 A1, B1-dev, D1-dev, E1-dev ve R1-eval sürümleri değişmeden kalır.
 
@@ -23,14 +23,16 @@ Kapanış kriteri:
   IMUX/TWTA (`dvbs2_nl`)/OMUX yolu → downlink Jones kuplajı → (downlink olayı) → ortak alıcı LO faz
   gürültüsü → enstrüman yanıtı ve gürültü → bağımsız pilotlarla enstrüman kalibrasyonu.
 - **Bant:** 36 MHz.
-- **Model girdisi:** dört kanal, P14 sırasıyla:
+- **Model girdisi:** beş kanal (K17, K9). İlk dördü P14 sırasıyla:
   1. kalibre co-pol spektrum;
   2. kalibre karşı-pol spektrum;
   3. co-pol plan maskesi;
-  4. karşı-pol plan maskesi.
+  4. karşı-pol plan maskesi;
+  5. co-pol iptal artığı (§5).
   Seviye referansı co-pol planlı taşıyıcı seviyesidir. Simülatör gerçeği (XPD, IBO, C/I, linewidth)
   hiçbir zaman girdi olmaz.
 - **Etiket kuralı:** tek etiket, kök neden (A1 karar B). Senaryo başına en fazla bir olay.
+  - Ek olarak bağımsız ikinci çıktı `plan_consistency` vardır (§7a, K17b).
 
 ## 2. Bilinen sınıflar (8)
 
@@ -48,7 +50,7 @@ diğerleri **[VARSAYIM]**dır.
 | `overdrive` | yük içi | sürüş seviyesi | IBO 1–4 dB (A1 ile aynı) |
 | `cross_pol` | uplink anten | XPD bozulması | uplink XPD 10 dB (arıza değeri, P14) |
 | `adjacent_satellite` | **uplink** (K5) | **`geosim.asi.adjacent_satellite_uplink`**: komşu ağ yer istasyonunun eksen dışı ışıması | C/I_psd = Gmax − G(φ) − ΔEIRP (ITU BR uplink yöntemi). Aralık 2,06–2,36° (FCC iki derece); desen ITU-R S.1428-1 (S.580 yan lobu) ya da S.465-6, %50; çap 0,75–2,4 m, işaretleme hatası 0–0,4 θ₃dB, ΔEIRP −3…+6 dB **[VARSAYIM]**. Sonuç: C/I_psd ortanca 20 dB, %10–%90 14–27 dB, kuyruk 2,5–33 dB. Plan örtüşmesi %20–80 (sınıf tanımı); sembol hızı ve konum plandan bağımsız. Ayrıntı ve kaynaklar: [ASI ölçümü](../results/asi_visibility.md) |
-| `carrier_under_carrier` | uplink, co-pol | E1 `carrier_under_carrier` | Kurban taşıyıcının bandı içinde; C/I (toplam plana göre) **5–30 dB (K17, kullanıcı kararı)**; kutular 5–15, 15–25, 25–30 dB ([görünürlük ölçümü](../results/cuc_visibility.md): eşleşmiş ΔPSD ortancası 5 dB'de 5,6 dB, 20 dB'de 0,37 dB, 30 dB'de 0,04 dB); CID metacarrier'ın −27,5 dB referansı **[DOĞRULANACAK]** ayrı bir alt-kutuda raporlanır |
+| `carrier_under_carrier` | uplink, co-pol | E1 `carrier_under_carrier` | Kurban taşıyıcının bandı içinde; C/I (toplam plana göre) **5–30 dB (K17, kullanıcı kararı)**; kutular 5–15, 15–25, 25–30 dB ([görünürlük ölçümü](../results/cuc_visibility.md): eşleşmiş ΔPSD ortancası 5 dB'de 5,6 dB, 20 dB'de 0,37 dB, 30 dB'de 0,04 dB); CID seviyesi **doğrulandı** (ETSI TS 103 129 V1.1.2 Tablo 6; ITU-R S.2062-0 Tablo 3). Gerçek DVB-CID, ayrı yalnız-test ailesi `cid_overlay` olarak üretilir (§3) |
 
 Kurallar:
 - `adjacent_satellite` ile `unauthorized` arasındaki yerleşim farkı, ASI'nin planlı bir taşıyıcıyla
@@ -73,6 +75,7 @@ Kurallar:
 | `pulsed` | U1-dev/1 | **yakın** | Bilinen `cw` dalga biçimi, yalnız zaman kapılı |
 | `intermittent_bursts` | U1-dev/1 | **yakın** | Bilinen `cw` dalga biçimi, uzun ve düzensiz kapılı |
 | `adjacent_satellite_downlink` | E1-dev/1 olayı (K16) | **yakın (K17, kullanıcı kararı)** | Bilinen `adjacent_satellite` ile aynı dalga biçimi; yalnız giriş noktası farklı (TWTA'dan geçmez). C/I_psd, bilinen uplink ASI ile **aynı dağılımdan** çekilir (seviye sabit, geometri değil; **K17d**, §7a) |
+| `cid_overlay` | `geosim.cid` (ETSI TS 103 129) | **meşru — beklenen karar `clean`** | Bütün planlı taşıyıcıların altında yasal DVB-CID [VARSAYIM: hepsinde]. Girişim değildir; birleşik open-set sayısına girmez. Raporlananlar: `clean` kabulü, `carrier_under_carrier` deme oranı ve temizde yanlış alarm (CuC dedektörünün meşru taşıyıcı altı sinyale yanlış alarmı) |
 | `wideband_noise` | U1-dev/1 | **eşdeğerlik-sınırlı** | Yükseltilmiş uplink gürültü tabanıyla gözlemsel olarak eşdeğer olabilir (P12); ayrı raporlanır, birleşik sayıya ağırlıklı katılmaz |
 
 Gruplama bu tabloda **sonuçtan önce** sabitlenir. "Uzak" bir aile yoktur: bu bir bulgudur, yani GEO'daki
@@ -85,7 +88,7 @@ olası bilinmeyenlerin çoğu bilinen bir mekanizmanın varyantıdır.
 | train | 1500 (K17, kullanıcı kararı) | 3 000 000 | Ağırlık optimizasyonu; Mahalanobis istatistikleri |
 | val-select | 150 | 3 100 000 | Yalnız checkpoint seçimi |
 | val-calib | 150 | 3 150 000 | Yalnız ret eşiği ve alarm eşiği kalibrasyonu (yalnız bilinen sınıflar, K14) |
-| test | 500 | 3 200 000 | Bilinen test + aynı gruplarda bilinmeyen aileler |
+| test | 500 | 3 200 000 | Bilinen test + aynı gruplarda bilinmeyen aileler ve `cid_overlay` |
 | test-matched | 150 | 3 300 000 | Yalnız seviye eşleşmiş ASI ↔ `unauthorized` kümesi (K17c, §7a); yalnız bu iki sınıf ve `clean` |
 
 - Bir senaryo grubunun bütün sınıf varyantları (aynı planlar, link, kuplaj, faz gürültüsü ve gürültü akışları)
@@ -93,17 +96,26 @@ olası bilinmeyenlerin çoğu bilinen bir mekanizmanın varyantıdır.
 - Tohum aralıkları A1, R1, U1 (900000–), D1 (1000000–) ve E1 (2000000–) aralıklarıyla çakışmaz. Bu kodda
   testle denetlenir.
 - Bilinmeyen aile örnekleri yalnız test gruplarında üretilir; ayrı RNG ad alanı kullanılır.
-- Boyut ve süre: 2300 grup × (8 + 4) varyant ≈ 27 600 çift-pol örnek. Örnek başına ≈ 2,5–3 s **[TAHMİN]**
-  ile ≈ 20 çekirdek-saat. Kullanıcı makinesinde koşar.
+- **Boyut:**
+  - 2300 grup × 8 bilinen varyant;
+  - test gruplarında + 5 test-yalnız varyant (4 bilinmeyen + `cid_overlay`);
+  - 150 eşleşmiş grup × 3 varyant.
+  - Toplam ≈ 21 300 çift-pol örnek, artı seviye eşleşmiş küme.
+- **Süre:** örnek başına ≈ 2,5–3 s **[TAHMİN]**, yani ≈ 15–20 çekirdek-saat.
+- **Çalıştırma (K17):** üretim bulutta (bu kap, parçalı ve doğrulanarak sürdürülebilir), eğitim kullanıcının
+  GPU makinesinde. Veri Git dışında kalır; aktarım parmak iziyle doğrulanır.
 
 ## 5. Modeller ve yöntemler
 
-- **Ana model:** küçük ResNet, dört kanal; `co` görünümü eşleşmiş ablasyon olarak (iki kanal).
+- **Ana model:** küçük ResNet, beş kanal (§1); `co` görünümü eşleşmiş ablasyon olarak.
 - **Sonradan skorlama:** MSP, energy, Mahalanobis (yalnız train embedding'leri).
-- **Eğitim zamanı (D13):** ARPL ya da prototip/merkez kaybı. Vekil bilinmeyen kullanılmaz (K14).
-- **Ek gözlem kanalı (K9):**
-  1. gözlemden hesaplanan iptal artığı (planın sembol hızıyla karar yönlü yeniden modülasyon);
-  2. ardından SCF dalı.
+- **Eğitim zamanı (D13, K17):** softmax çapraz entropi + prototip/merkez kaybı. ARPL kullanılmaz.
+  - Merkez kaybı ağırlığı P6 ayarlarıyla sabit; arama yok.
+  - Vekil bilinmeyen kullanılmaz (K14).
+- **Ek gözlem kanalı (K9, K17):**
+  1. Gözlemden hesaplanan iptal artığı (planın sembol hızıyla karar yönlü yeniden modülasyon). **Ana modelin
+     girdisidir.**
+  2. SCF dalı yalnız ablasyon A4b'dir.
   Kâhin iptal yalnız etiketli üst sınırdır.
 - **Baseline'lar:** CA-CFAR (planlı ve plansız), EDSC (iptal sonrası ED; aynı iptal kodu), uzman
   öznitelik + XGBoost.
@@ -210,7 +222,7 @@ Bu bölüm sonuçlardan **önce** yazıldı. Dilim sınırları test sonuçları
 
 1. **A0** co-only; **A1** + plan; **A2** + çift-pol (ana model).
 2. **A3** doğrusal zincirle eğit, doğrusal olmayanda test (C3).
-3. **A4** + iptal artığı; **A4b** + SCF.
+3. **A4** ana model − iptal artığı (dört kanal); **A4b** ana model + SCF.
 4. **A5** plan bozma (bayat, kaydırılmış, eksik). Değerlendirme aracı A1 için hazır: `geoml.plan_shortcut` (bozmalar `shift_plus/minus`, `drop_one`, `phantom`, `authorize_intruder`); B2/1'e çift-pol maskelerle genişletilecek.
    - [A1 pilotu](../results/plan_shortcut_pilot.md): 0,5 MHz bayat plan temizde yanlış alarmı %3 → %93'e çıkarıyor.
    - B2/1 eğitiminde plan sapması: kaydırma etiketi koruyan artırımdır; eksik/fazla taşıyıcı ayrı ele alınır
@@ -227,13 +239,14 @@ Veri, eğitim bütçesi, eşik seçimi ve tohum protokolü bütün ablasyonlarda
 |---|---|
 | "ASI ve unauthorized aynı şey; sekiz sınıf yapay." | Kabul edilen sınır, ön kayıtlı (§6). Sonuç "plan örtüşmesi dışında ayırt edilemez" çıkarsa böyle raporlanır; birleşik etiketle ikinci bir değerlendirme (7 sınıf) ek tablo olarak verilir. |
 | "Bilinmeyenler bilinenlerin varyantı; open-set kolaylaştırılmış ya da zorlaştırılmış." | Gruplama sonuçtan önce sabit; aile başına rapor; ayrıca leave-one-known-out rotasyonu, aile seçiminden bağımsız bir ölçüt verir. |
-| "Bütün sayılar simülatör varsayımlarına (XPD, linewidth, C/I aralıkları) bağlı." | Kabul. Yer istasyonu XPD'si için kaynak var, diğerleri [VARSAYIM]. Duyarlılık için R1 benzeri yalnız-test kayma kümeleri (XPD, linewidth, C/I) ayrı bir sürümde. Gerçek veri yok (DURUM §5.5). |
+| "Bütün sayılar simülatör varsayımlarına (XPD, linewidth, C/I aralıkları) bağlı." | Kabul. Yer istasyonu XPD'si için kaynak var, diğerleri [VARSAYIM]. Duyarlılık kümeleri ayrı yalnız-test sürümü **R2-eval/1**'dedir (K17). B2/1 değişmez. Önerilen varyasyonlar (değerler R2-eval/1 kendi protokolüyle dondurulurken kesinleşir): uplink XPD (20, 25, 35 dB), uydu/alıcı linewidth (×0,1, ×10), CuC ve CW C/I kaydırması (±5 dB), ASI ΔEIRP = 0 dB ve işaretleme hatası = 0. Gerçek veri yok (DURUM §5.5). |
 
 ## 10. Değişiklik günlüğü
 
 | Tarih | Değişiklik | Gerekçe |
 |---|---|---|
 | 2026-10-20 | Taslak | — |
+| 2026-10-20 | **Donduruldu (K17).** Son kararlar: prototip/merkez kaybı; iptal artığı ana girdide (SCF yalnız A4b); CID için gerçek DVB-CID üreteci ve yalnız-test `cid_overlay` ailesi (beklenen `clean`); ASI dağılımları olduğu gibi + R2-eval/1 duyarlılığı; üretim bulutta, eğitim kullanıcıda | Kullanıcı yanıtları; CID seviyesi ETSI TS 103 129 Tablo 6 ile doğrulandı |
 | 2026-10-20 | K17 alt kararları işlendi: CuC 5–30 dB; roller 1500/150/150/500; downlink ASI yakın; LOKO 3 tohum | Kullanıcı yanıtları (dondurma öncesi) |
 | 2026-10-20 | K17a–d kararları §7a'ya yazıldı: gözlemde nominal aşırı sürme alt kutusu; kaydırma artırımı (%15, sürekli ±0,5 MHz); fazla taşıyıcı = `unauthorized` (gözlemsel olarak aynı); eksik taşıyıcı için ikinci çıktı `plan_consistency` ve sabit kazanç (onaylandı); seviye eşleşmiş ASI/unauthorized kümesi; downlink ASI'de seviye sabit | Kullanıcı yanıtları; ana dağılımda 7–10 dB ASI sayısı ≈ 12/500 |
 | 2026-10-20 | Aşırı sürme etiketi açık konusu ve A5 plan sapması artırımı önerisi eklendi | [R1 pilotu](../results/r1_pilot.md), [A5 pilotu](../results/plan_shortcut_pilot.md) |
