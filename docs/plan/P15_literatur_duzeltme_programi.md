@@ -58,7 +58,7 @@ Taramadaki her iddia makaleye aynı güvenle girmez.
 | # | Yer | Sorun | Düzeltme | Sahip | Durum |
 |---|---|---|---|---|---|
 | L1 | `P8` DARCY/Highway 2 | Tarama Highway 2, LC-lab ve Jammertest 2025'i **CC BY-SA 4.0** diyor; P8 Highway 2'yi Zenodo kartından **CC BY-NC-SA 4.0** olarak kaydetmiş | Daha kısıtlayıcı olan (NC) geçerli sayılır; üç kaydın lisansı Zenodo kartından yeniden okunur ve P8'e kayıt bazında yazılır | ben | **açık** |
-| L2 | `00_ana_plan` §0, `P8` OpenDPD | Tarama `DPA_200MHz`, ana plan `APA_200MHz` diyor | OpenDPD veri belgesinden kayıt adları ve PA teknolojisi okunur; ikisi de varsa rolleri ayrılır | ben | **açık** |
+| L2 | `00_ana_plan` §0, `P8` OpenDPD | Tarama `DPA_200MHz`, ana plan `APA_200MHz` diyor | **İkisi de var** (OpenDPD commit `cb4c5ea`): DPA_160/200MHz = 40 nm CMOS dijital Doherty verici, 2,4 GHz; APA_200MHz(_b) = Ampleon GaN Doherty PA, 3,5 GHz, 41,5 dBm. [Sonda](../results/opendpd_probe.md) | ben | **kapatıldı** |
 | L3 | Tarama "WBSig53 pre-trained detector" baseline | P8: güncel TorchSig'de hazır WidebandSig53 seti yok; artık üretici | WBSig53 baseline'ı **koşullu**: TorchSig sürümüyle üretilip ön eğitilirse yapılır; aksi halde düşer. Önceliği en alt (§3 İP-6) | ben | düzeltme bu belgede |
 | L4 | Tarama "Validate realism against OpenDPD and the SnT data" | SnT verisinde yük etkisi yok; yük gerçekçiliğini doğrulayamaz. OpenDPD TWTA değildir | Doğru ifade: SnT = **görev/format karşılaştırılabilirliği** (V6 kipi); OpenDPD = **ölçülmüş, bellekli PA'ya aktarım**. "Gerçekçilik doğrulaması" ifadesi kullanılmaz | ben | düzeltme bu belgede |
 | L5 | Tarama §9 ipucu 1: IM3 "yaklaşık 3:1 dB eğim" | 3:1 küçük-sinyal kuralıdır (C/IM'de 2 dB/dB). Bizim çalışma aralığında ölçülen C/IM eğimi **1,25 dB/dB** (`DURUM` §4, `P2` §10) | Ayırt edilebilirlik ipucu kendi ölçtüğümüz eğriyle yazılır; 3:1 kuralı yalnız küçük-sinyal sınırı olarak anılır | ben | düzeltme bu belgede |
@@ -119,7 +119,7 @@ Mevcut S1–S4 ve B0–B3 işleri **aynen geçerli**; tarama bunları değiştir
 | Sınıf / blok | Giriş noktası | Tasarım notu | Kapanış ölçütü |
 |---|---|---|---|
 | `cross_pol` | uplink XPD bozulması | D1-dev/1'de var; XPD dağılımı kaynaklandırılacak (L10) | İzole kaynak XPD testi (mevcut) + kaynaklı dağılım |
-| `adjacent_satellite` | **K5 kararı**: önerim downlink-ASI (TWTA'dan geçmez) **[VARSAYIM]** | Uplink-unauthorized ile mekanizma farkı (yük süzgeci/IM yok) test edilebilir bir ayırt edilebilirlik sorusu verir; yine de "tasarım gereği karışabilir çift" olarak raporlanır | Giriş noktası testi: OMUX şekillendirmesi yok |
+| `adjacent_satellite` | **uplink** (K5 kararı) | Komşu sistemin yer istasyonu yan lobu; planlı taşıyıcıyla kısmen örtüşen, farklı sembol hızı/ofsetli modüleli taşıyıcı. Yetkisiz taşıyıcıyla "tasarım gereği karışabilir çift" | Giriş noktası testi: IMUX/TWTA/OMUX'tan geçtiği; örtüşme oranı üst veride |
 | `carrier_under_carrier` | uplink, planlı taşıyıcının üstüne | C/I süpürmesi; CID metacarrier seviyesi (−27,5 dB, **[DOĞRULANACAK]**) bir referans nokta | Spektrumda görünürlük ölçümü (P6 §6'daki CW tepe tablosu gibi) C/I'ye karşı |
 | `overdrive_im` | yük içi | A1 `overdrive` ile aynı tanım | — |
 | Faz gürültüsü | LO | DVB-S2 faz gürültüsü maskesi (EN 302 307-1 Annex H) | Ölçülen PSD maskeye tolerans içinde |
@@ -163,10 +163,10 @@ Kapanış ölçütü: her ayırt edilemeyen çift için "hangi gözlem eklenince
 
 ---
 
-## 4. Takvim önerisi
+## 4. İş sırası
 
-**[VARSAYIM]**: P9'daki 15 Aralık 2026 makale hedefi korunursa (onaysız, K12).
-Bugün 2026-10-20; sekiz hafta.
+**K12 kararı: sabit tarih yok.** Aşağıdaki tarih sütunu yalnız ilk taslaktaki
+tahmindir, bağlayıcı değildir; geçerli olan **sıradır**.
 
 | Hafta | Tarih | Ben | Siz | Kilometre taşı |
 |---|---|---|---|---|
@@ -178,24 +178,35 @@ Bugün 2026-10-20; sekiz hafta.
 | 7 | 1–7 Ara | İP-6 EDSC + XGBoost; analiz | B2/1 tam koşu (3 tohum) | Nihai tablolar |
 | 8 | 8–15 Ara | İP-7 taslak, sınırlar, veri kartı | Okuma/onay | Makale taslağı |
 
-**Kesme sırası** (süre yetmezse, proje kuralı korunarak): cyclic dalı →
-transformer karşılaştırması → ek unknown aileleri. Cyclic dalı kesilirse CuC
-için **iptal artığı + EDSC** tutulur (daha ucuz) ve CuC sonucu "PSD-tek gözlemde
-tanımlanamaz, C/I eşiği şu" biçiminde raporlanır (K9).
+**Kesme sırası** (kapsam sıkışırsa, proje kuralı korunarak): cyclic dalı →
+transformer karşılaştırması → ek unknown aileleri. K9 iki kanalı da istiyor;
+cyclic dalı kesilmek zorunda kalırsa **iptal artığı + EDSC** kalır ve CuC sonucu
+"PSD-tek gözlemde tanımlanamaz, C/I eşiği şu" biçiminde raporlanır.
 
 ---
 
-## 5. Yeni ve güncellenen açık kararlar
+## 5. Kararlar (kullanıcı yanıtları, 2026-10-20)
 
-| # | Karar | Önerim | Kimde |
+| # | Karar | Sonuç | Uygulamaya etkisi |
 |---|---|---|---|
-| K5 | ASI giriş noktası | Downlink-ASI **[VARSAYIM]**; uplink-ASI park listesinde | siz (veto) |
-| K9 | CuC gözlem kanalı | Gözlemden iptal artığı + oracle üst sınır (etiketli); tam cyclic dalı kesme listesinde ilk | siz (veto) |
-| K10 | Yenilik cümlesi | "Bildiğimiz kadarıyla, GEO transponder downlink izlemesinde çok taşıyıcılı TWTA/IMUX/OMUX zincirini, taşıyıcı planı koşullamasını, çift polarizasyonu ve görülmemiş girişim reddini **birlikte** modelleyen ilk açık benchmark ve nicel yük farkı ölçümü" — çift-pol ve open-set kısımları ancak B2/1 tamamlanınca | siz |
-| K11 | Yükselteç uyumsuzluk kümesi | Rapp + bellek polinomu + OpenDPD-öğrenilmiş (L2 sonrası) | siz (veto) |
-| K12 | Takvim | 15 Aralık 2026 hedefi (P9) | siz |
-| K13 | Depo lisansı ve veri yayımı | Kod için izin verici lisans önerilir; karar sizde | siz |
-| K14 | Vekil (surrogate) unknown doğrulama | Şimdilik **yok** (yalnız bilinen kalibrasyon, mevcut kural); ODIN/OE kullanılırsa ayrı tanımlı vekil aile, asıl unknown'larla çakışmaz | siz (veto) |
+| K5 | ASI giriş noktası | **Uplink-ASI.** Downlink önerisi kullanıcı tarafından veto edildi | Komşu sistem yer istasyonunun yan lobu bizim uydunun alıcısına girer; IMUX/TWTA/OMUX'tan geçer, planlı taşıyıcıyla kısmen örtüşür, farklı sembol hızı/ofset. Yetkisiz taşıyıcıyla **tasarım gereği karışabilir çift** olarak raporlanır. Downlink-ASI park listesinde |
+| K9 | CuC gözlem kanalı | **İkisi birden:** gözlemden iptal artığı **ve** tam cyclic (SCF) dalı | Sıra: önce iptal artığı (EDSC baseline'ı ile ortak kod), sonra PL çerçeve anahtarı + SCF dalı. Kâhin iptal yalnız etiketli üst sınır |
+| K10 | Yenilik cümlesi | **Aşamalı.** Şimdilik: "Bildiğimiz kadarıyla, çok taşıyıcılı TWTA/IMUX/OMUX zincirini ve taşıyıcı planını birlikte modelleyen ilk açık GEO girişim tanıma benchmark'ı ve nicel yük farkı ölçümü." Çift-pol ve open-set B2/1 tamamlanınca eklenir | README, P0, P1 ve makale özeti bu cümleyi kullanır |
+| K11 | Ölçülmüş PA kullanımı | **Ölçüm aralığında:** OpenDPD APA/DPA ölçümlerine bellek polinomu uydurulur; Rapp ve sentetik bellek polinomu eklenir; yalnız ölçülen genlik aralığındaki nominal IBO'da test; aşırı sürme bölgesinde kullanılmaz | Ön inceleme: [OpenDPD sondası](../results/opendpd_probe.md). Belleğin bant genişliğine ölçeklenmesi **[VARSAYIM]** |
+| K12 | Takvim | **Sabit tarih yok** (ana plan V2 sürer) | §4 tarih sütunu bağlayıcı değil; yalnız **sıra** geçerli. 15 Aralık hedefi düştü |
+| K13 | Lisans | **Şimdilik lisans yok** | Depo herkese açık ama lisanssız: başkaları kodu yasal olarak yeniden kullanamaz. OpenDPD'den türetilen katsayılar Apache-2.0 atıf koşuluyla (kaynak, commit, lisans notu) eklenir. Yayın öncesi yeniden sorulacak |
+| K14 | Vekil unknown | **Yok:** eşikler ve sıcaklıklar yalnız bilinen doğrulamadan | Outlier exposure kapsam dışı; eğitim-zamanı OSR için ARPL/prototip kaybı (vekil gerektirmez) |
+
+**SmartSpace on-board verisi (karar: bulutta işle).** Kullanıcı
+`fnr-smartspace-project.uni.lu` adresini ortamın izinli alanlarına ekleyip
+araştırma-amaçlı/ticari olmayan kullanım koşulunu kabul ettiğini teyit edince:
+indir → yerelde SHA-256 → `data/external/smartspace_onboard/metadata.json` (P8
+alanları) → Daoud ve ark. görevinin (6 sınıf: temiz + 5 alt bant) yeniden
+üretimi ve bizim ResNet'in aynı görevde karşılaştırılması (V6 kipi). Depoya
+yalnız betik, hash ve özet metrik girer; ham veri girmez. Bu karşılaştırma
+**görev/format karşılaştırılabilirliğidir**, yük gerçekçiliği doğrulaması değildir
+(L4). İndirme yolu ve kayıt formu gerekip gerekmediği **[DOĞRULANACAK]** (site bu
+oturumda erişilemedi).
 
 ---
 
@@ -211,7 +222,7 @@ tanımlanamaz, C/I eşiği şu" biçiminde raporlanır (K9).
 
 ## 7. Park listesi
 
-- Uplink-ASI alt mekanizması (K5 sonrası)
+- Downlink-ASI alt mekanizması (K5'te veto edildi)
 - Çok etiketli / frekans konumlu çıktı (K4: Kademe B sonrası)
 - Chalmers RF WebLab ölçümü (P8 koşullu)
 - LLM tabanlı karakterizasyon, VAE ayrıştırma (GNSS literatüründen; kapsam dışı)

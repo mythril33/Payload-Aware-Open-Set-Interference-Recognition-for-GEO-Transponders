@@ -8,7 +8,8 @@ Son güncelleme: 2026-10-20 (literatür taraması eki P15; temel deney durumu 20
 - **Hüküm:** boşluk iddiası ayakta, ama yenilik "birlikte modelleyen ilk" biçiminde daraltılır (K10). Carrier-under-carrier ve ASI↔unauthorized ayırt edilemezlik bulgusu olarak tasarıma girer; gerçekçilik çapası yükselteç ailesi uyumsuzluğu + NPR + ölçülmüş PA olarak üç ayağa çıkar.
 - Bu oturumda kapanan: P1'e tarama v2 eki ve planlanan/uygulanan boşluk matrisi; `open_set_protocol.md` CuC satırı; P9 yayın yeri adayları; `references.bib`'e 19 girdi (doğrulanmamışlar `note = {verify}`); aşağıdaki faz tablosu.
 - Açık kalan çelişkiler (P15 §2): L1 Highway 2 lisansı (CC BY-SA mı BY-NC-SA mı), L2 OpenDPD kayıt adı (APA/DPA), L7 Daoud başlığı ve TR 102 376-2 başlığı, L10 XPD değerlerinin kaynağı, L12 yakın/uzak OOD gruplaması.
-- Yeni iş paketleri İP-0…İP-7 ve sekiz haftalık takvim önerisi P15 §3–§4'te; yeni sürüm adları **R1-eval/1** (yalnız test: IBO süpürmesi, yükselteç uyumsuzluğu) ve **B2/1** (nihai sekiz sınıflı benchmark). A1 değişmedi.
+- **Kararlar alındı (2026-10-20):** K5 uplink-ASI (downlink veto), K9 iptal artığı + cyclic, K10 aşamalı cümle, K11 OpenDPD ölçüm aralığında, K12 sabit tarih yok, K13 şimdilik lisans yok, K14 vekil unknown yok. L2 kapandı: OpenDPD'de APA (GaN Doherty, 3,5 GHz) ve DPA (CMOS Doherty, 2,4 GHz) ikisi de var; [ön sonda](../results/opendpd_probe.md) sıkışmanın zayıf (p99'da ≤ 0,8 dB), belleğin belirgin olduğunu gösterdi. SmartSpace sitesi bu bulut ortamında ağ politikasınca engelli (S6).
+- Yeni iş paketleri İP-0…İP-7 ve iş sırası P15 §3–§4'te; yeni sürüm adları **R1-eval/1** (yalnız test: IBO süpürmesi, yükselteç uyumsuzluğu) ve **B2/1** (nihai sekiz sınıflı benchmark). A1 değişmedi.
 
 ## Uygulama eki — 2026-10-20
 
@@ -97,7 +98,8 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 | S2 | Tam sonuç yok | `python -m geoml.pipeline --data data/stageA --out runs/stageA --epochs 30 --seeds 0 1 2`, sonra `runs/stageA/results.md` dosyasını bana gönderin |
 | S3 | Dizüstünde süre ölçülmedi | S1'i önce `--limit-seeds 10` ile deneyip süreyi yazın |
 | S4 | Üç varsayılan karar onaysız | Aşırı sürme sınırı (P3 §0-A), tek etiket kuralı (P3 §0-B), doğrusal zincirde aşırı sürme (P5 §0) |
-| S5 | P15 kararları | K5 (ASI giriş noktası), K9 (CuC gözlem kanalı), K10 (yenilik cümlesi), K11 (yükselteç kümesi), K12 (15 Aralık hedefi), K13 (lisans), K14 (vekil unknown) — P15 §5 |
+| S5 | ~~P15 kararları~~ — **2026-10-20 yanıtlandı** (P15 §5): uplink-ASI, iptal artığı + cyclic, aşamalı yenilik cümlesi, OpenDPD ölçüm aralığında, sabit tarih yok, lisans şimdilik yok, vekil unknown yok | — |
+| S6 | SmartSpace verisi bulutta işlenecek | Ortam ayarlarında **Network access → Allowed domains**'e `fnr-smartspace-project.uni.lu` ekleyin (paket yöneticileri kutusu işaretli kalsın) ve araştırma-amaçlı, ticari olmayan kullanım koşulunu kabul ettiğinizi yazın |
 
 ### 5.3 Açık — bende, sıradaki işler
 

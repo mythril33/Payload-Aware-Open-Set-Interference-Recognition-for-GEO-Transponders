@@ -165,10 +165,11 @@ Her faz = bir (veya birkaç) odaklı planlama oturumu. Çıktısı ayrı bir dos
 | K6 | Aşırı sürme: IBO 0–5 dB; nominal 8–14 dB; arası üretilmez (`P3_taksonomi.md` §3) | P3-A ✔ |
 | K7 | DVB-S2 dalga biçimi: kendi üretici mi, hazır kütüphane mi | P4 |
 | K8 | ~~Gerçeklik çapası~~ — kapandı: yalnızca (c) ölçülmüş PA verisi, Kademe B. **2026-10-20 ek (P15):** (c)'ye yükselteç ailesi uyumsuzluğu (Rapp, bellek polinomu) ve NPR kontrolü eklenmesi önerildi → K11 | P0 ✔ |
-| K5 güncel | ASI giriş noktası: öneri downlink-ASI [VARSAYIM] | P15 §5 |
-| K9 | Carrier-under-carrier gözlem kanalı: gözlemden iptal artığı + etiketli kâhin üst sınır; tam cyclic dalı kesme listesinde ilk | P15 §5 |
-| K10 | Yenilik cümlesi: "birlikte modelleyen ilk" biçimi | P15 §5 |
-| K11 | Yükselteç uyumsuzluk kümesi: Rapp + bellek polinomu + OpenDPD-öğrenilmiş | P15 §5 |
-| K12 | Takvim: 15 Aralık 2026 makale hedefi | P15 §4 |
-| K13 | Depo lisansı ve veri yayımı | P15 §5 |
-| K14 | Vekil (surrogate) unknown doğrulama: şimdilik yok | P15 §5 |
+| K5 | ~~ASI giriş noktası~~ — **kapandı 2026-10-20: uplink-ASI** (downlink önerisi kullanıcı tarafından veto edildi) | P15 §5 ✔ |
+| K9 | ~~CuC gözlem kanalı~~ — kapandı: iptal artığı **ve** cyclic (SCF) dalı; önce iptal artığı | P15 §5 ✔ |
+| K10 | ~~Yenilik cümlesi~~ — kapandı: aşamalı cümle; çift-pol/open-set B2/1 sonrası eklenir | P15 §5 ✔ |
+| K11 | ~~Ölçülmüş PA kullanımı~~ — kapandı: OpenDPD yalnız ölçüm aralığında, nominal IBO; + Rapp, sentetik bellek polinomu | P15 §5 ✔ |
+| K12 | ~~Takvim~~ — kapandı: sabit tarih yok (V2 sürer) | P15 §4 ✔ |
+| K13 | Depo lisansı — **şimdilik lisans yok**; yayın öncesi yeniden sorulacak | P15 §5 |
+| K14 | ~~Vekil unknown~~ — kapandı: yok, yalnız bilinen doğrulama | P15 §5 ✔ |
+| K15 | SmartSpace on-board — bulutta işlenecek; host izni ve kullanım koşulu teyidi kullanıcıda | P15 §5 |
