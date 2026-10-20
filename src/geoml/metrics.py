@@ -36,3 +36,30 @@ def cluster_ci(values: np.ndarray, groups: np.ndarray, n_boot: int = 2000, seed:
 def threshold_at_pfa(clean_scores: np.ndarray, pfa: float) -> float:
     """Score threshold exceeded by a fraction `pfa` of the given clean (validation) scores."""
     return float(np.quantile(clean_scores, 1 - pfa))
+
+
+def expected_calibration_error(probs: np.ndarray, labels: np.ndarray, n_bins: int = 15) -> dict:
+    """Top-label ECE with equal-width confidence bins (Guo et al., 2017).
+
+    Bin b covers (lo, hi]; the first bin also includes 0. ECE is the
+    sample-weighted mean of |accuracy - mean confidence| over nonempty bins.
+    Empty bins report null accuracy and confidence with a zero count.
+    """
+    probs, labels = np.asarray(probs, float), np.asarray(labels)
+    if probs.ndim != 2 or not len(probs) or labels.shape != (len(probs),) or not np.isfinite(probs).all():
+        raise ValueError("probs must be a finite nonempty (N, K) array with one label per row")
+    if isinstance(n_bins, bool) or not isinstance(n_bins, int) or n_bins < 1:
+        raise ValueError("n_bins must be a positive integer")
+    confidence, correct = probs.max(1), probs.argmax(1) == labels
+    edges = np.linspace(0.0, 1.0, n_bins + 1)
+    index = np.clip(np.searchsorted(edges, confidence, side="left") - 1, 0, n_bins - 1)
+    bins, ece = [], 0.0
+    for b in range(n_bins):
+        sel = index == b
+        n = int(sel.sum())
+        acc = float(correct[sel].mean()) if n else None
+        conf = float(confidence[sel].mean()) if n else None
+        if n:
+            ece += n / len(probs) * abs(acc - conf)
+        bins.append({"lo": float(edges[b]), "hi": float(edges[b + 1]), "n": n, "accuracy": acc, "confidence": conf})
+    return {"ece": float(ece), "n_bins": n_bins, "n_samples": int(len(probs)), "bins": bins}

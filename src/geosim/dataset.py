@@ -2,6 +2,10 @@
 
     python -m geosim.dataset --out data/stageA --workers 4            # everything
     python -m geosim.dataset --out data/pilot --limit-seeds 10        # quick pilot
+    python -m geosim.dataset --protocol R1-eval/1 --out data/r1       # test-only robustness splits
+
+A1 is frozen. R1-eval/1 (docs/plan/P17_r1_robustness_eval.md) adds test-only
+splits with their own seed ranges and protocol name; it does not change A1.
 
 Each split is a directory of shards: part-XXXXX.npz (spec, mask, label, seed) and
 meta-XXXXX.jsonl (one JSON object per sample), plus manifest.json. Finished shards are skipped
@@ -60,6 +64,16 @@ SPLITS = {s.name: s for s in (
     Split("test_amp_lin", 330_000, 300, amplifier="dvbs2_lin"),
     Split("test_amp_saleh", 340_000, 300, amplifier="saleh"),
 )}
+
+# Test-only robustness splits. Each changes one condition against test_id_nl.
+R1_PROTOCOL = "R1-eval/1"
+R1_SPLITS = {s.name: s for s in (
+    Split("r1_ibo_sweep", 400_000, 300, ibo_nominal=((5.0, 14.0),), ibo_overdrive=((0.0, 5.0),)),
+    Split("r1_amp_rapp", 410_000, 300, amplifier="rapp_p2"),
+    Split("r1_amp_opendpd_apa", 420_000, 300, amplifier="opendpd_apa", labels=NO_OVERDRIVE),
+    Split("r1_amp_opendpd_dpa", 430_000, 300, amplifier="opendpd_dpa", labels=NO_OVERDRIVE),
+)}
+PROTOCOLS = {PROTOCOL: SPLITS, R1_PROTOCOL: R1_SPLITS}
 
 
 def _pick(rng: np.random.Generator, intervals: tuple) -> tuple:
@@ -120,8 +134,8 @@ def _generator_provenance() -> dict:
     return {str(p.relative_to(root)): _file_hash(p) for p in files if p.is_file()}
 
 
-def _request(split: Split, seeds: list[int]) -> dict:
-    return json.loads(_canonical({"protocol": PROTOCOL, "split": asdict(split),
+def _request(split: Split, seeds: list[int], protocol: str = PROTOCOL) -> dict:
+    return json.loads(_canonical({"protocol": protocol, "split": asdict(split),
                                  "labels": list(LABELS), "seeds": seeds,
                                  "seeds_per_shard": SEEDS_PER_SHARD,
                                  "generator": _generator_provenance(),
@@ -240,19 +254,23 @@ def _check_names(directory: Path, n_shards: int, *, complete: bool) -> None:
             raise ValueError(f"Unexpected or missing dataset files in {directory}: {pattern}")
 
 
-def generate(out_dir: str, names=None, workers: int = 1, limit_seeds: int | None = None) -> None:
+def generate(out_dir: str, names=None, workers: int = 1, limit_seeds: int | None = None,
+             protocol: str = PROTOCOL) -> None:
     if not isinstance(workers, int) or isinstance(workers, bool) or workers < 1:
         raise ValueError("workers must be a positive integer")
     if limit_seeds is not None and (not isinstance(limit_seeds, int) or isinstance(limit_seeds, bool)
                                     or limit_seeds < 1):
         raise ValueError("limit_seeds must be a positive integer or None")
-    names = list(SPLITS) if names is None else list(names)
-    if not names or len(set(names)) != len(names) or any(n not in SPLITS for n in names):
-        raise ValueError("names must be nonempty, unique, recognized split names")
+    if protocol not in PROTOCOLS:
+        raise ValueError(f"protocol must be one of {list(PROTOCOLS)}")
+    splits = PROTOCOLS[protocol]
+    names = list(splits) if names is None else list(names)
+    if not names or len(set(names)) != len(names) or any(n not in splits for n in names):
+        raise ValueError(f"names must be nonempty, unique split names of {protocol}")
     for name in names:
-        split = SPLITS[name]
+        split = splits[name]
         seeds = list(split.seeds)[:limit_seeds]
-        request = _request(split, seeds)
+        request = _request(split, seeds, protocol)
         directory = Path(out_dir) / name
         request_path = directory / "request.json"
         if request_path.exists():
@@ -283,7 +301,7 @@ def generate(out_dir: str, names=None, workers: int = 1, limit_seeds: int | None
         for i, descriptor in enumerate(done):
             labels.extend(_verify_shard(directory, descriptor, request, i)["label"].tolist())
         counts = {lab: labels.count(i) for i, lab in enumerate(LABELS) if lab in split.labels}
-        manifest = {"artifact_version": ARTIFACT_VERSION, "protocol": PROTOCOL, "commit": _commit(),
+        manifest = {"artifact_version": ARTIFACT_VERSION, "protocol": protocol, "commit": _commit(),
                     "split": request["split"], "n_seeds": len(seeds), "scenario_seeds": seeds,
                     "n_samples": len(labels), "per_label": counts, "labels": list(LABELS),
                     "complete": len(seeds) == split.n_seeds,
@@ -296,14 +314,16 @@ def _inspect_split(path: Path, *, collect: bool):
     try:
         manifest = json.loads((path / "manifest.json").read_text())
         split = manifest["split"]
-        if manifest["protocol"] != PROTOCOL or manifest["labels"] != list(LABELS):
+        protocol = manifest["protocol"]
+        if protocol not in PROTOCOLS or manifest["labels"] != list(LABELS):
             raise ValueError("unsupported protocol or label order")
-        if split["name"] not in SPLITS or split != json.loads(_canonical(asdict(SPLITS[split["name"]]))):
-            raise ValueError("split configuration does not match frozen A1")
+        splits = PROTOCOLS[protocol]
+        if split["name"] not in splits or split != json.loads(_canonical(asdict(splits[split["name"]]))):
+            raise ValueError(f"split configuration does not match {protocol}")
         n_seeds = manifest["n_seeds"]
         if not isinstance(n_seeds, int) or isinstance(n_seeds, bool) or not 1 <= n_seeds <= split["n_seeds"]:
             raise ValueError("invalid scenario seed count")
-        seeds = list(SPLITS[split["name"]].seeds)[:n_seeds]
+        seeds = list(splits[split["name"]].seeds)[:n_seeds]
         n_shards = -(-n_seeds // SEEDS_PER_SHARD)
         arrays = {k: [] for k in ARRAY_KEYS}
         meta, labels, content_hashes = [], [], {}
@@ -312,7 +332,7 @@ def _inspect_split(path: Path, *, collect: bool):
             raise ValueError("unsupported artifact version")
         if version == ARTIFACT_VERSION:
             request = manifest["request"]
-            if (request["protocol"] != PROTOCOL or request["split"] != split or request["seeds"] != seeds
+            if (request["protocol"] != protocol or request["split"] != split or request["seeds"] != seeds
                     or request["labels"] != list(LABELS) or request["seeds_per_shard"] != SEEDS_PER_SHARD
                     or manifest["request_fingerprint"] != _fingerprint(request)
                     or json.loads((path / "request.json").read_text()) != request
@@ -323,6 +343,8 @@ def _inspect_split(path: Path, *, collect: bool):
             _check_names(path, n_shards, complete=True)
         else:
             # Legacy data have no historical checksums. Validate their contents but never resume them.
+            if protocol != PROTOCOL:
+                raise ValueError("legacy artifacts exist only for A1")
             if not isinstance(manifest["complete"], bool) or (manifest["complete"] and n_seeds != split["n_seeds"]):
                 raise ValueError("invalid legacy completeness flag")
             for pattern, template in (("part-*.npz", "part-{i:05d}.npz"), ("meta-*.jsonl", "meta-{i:05d}.jsonl")):
@@ -371,8 +393,9 @@ def load_split(path: str | Path) -> dict:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--out", required=True)
-    ap.add_argument("--splits", nargs="*", choices=list(SPLITS))
+    ap.add_argument("--protocol", choices=list(PROTOCOLS), default=PROTOCOL)
+    ap.add_argument("--splits", nargs="*", choices=[name for splits in PROTOCOLS.values() for name in splits])
     ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--limit-seeds", type=int)
     a = ap.parse_args()
-    generate(a.out, a.splits, a.workers, a.limit_seeds)
+    generate(a.out, a.splits, a.workers, a.limit_seeds, a.protocol)

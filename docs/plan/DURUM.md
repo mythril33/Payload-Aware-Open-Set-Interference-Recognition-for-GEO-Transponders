@@ -4,7 +4,7 @@ Son güncelleme: 2026-10-20 (literatür taraması eki P16; temel deney durumu 20
 
 ## Literatür taraması eki — 2026-10-20 (P16)
 
-- **Numara notu:** bu ek önce P15 olarak yayımlandı; aynı gün main'e ayrı bir P15 (faz gürültüsü ve olaylar, E1-dev/1) girdi. Literatür programı artık [P16](P16_literatur_duzeltme_programi.md), B2/1 protokolü P17.
+- **Numara notu:** bu ek önce P15 olarak yayımlandı; aynı gün main'e ayrı bir P15 (faz gürültüsü ve olaylar, E1-dev/1) girdi. Literatür programı artık [P16](P16_literatur_duzeltme_programi.md); R1-eval/1 [P17](P17_r1_robustness_eval.md); B2/1 protokolü P18.
 - **Çelişki (L16) çözüldü — K16:** E1-dev/1'in alıcı tarafındaki (TWTA'yı atlayan) olayı `adjacent_satellite_downlink` adıyla ayrı tutulacak; B2/1'deki `adjacent_satellite` sınıfı K5 gereği uplink-ASI olarak yeni kodlanacak. Kodda yeniden adlandırma henüz yapılmadı (P16 İP-3, tam test paketiyle).
 
 - Kullanıcının verdiği literatür taraması okundu ve depo belgeleriyle karşılaştırıldı: [P16 düzeltme ve tamamlama programı](P16_literatur_duzeltme_programi.md). Yeni deney veya kod **yok**; yalnız belge, kaynakça ve plan.
@@ -15,6 +15,26 @@ Son güncelleme: 2026-10-20 (literatür taraması eki P16; temel deney durumu 20
 - Yeni iş paketleri İP-0…İP-7 ve iş sırası P16 §3–§4'te; yeni sürüm adları **R1-eval/1** (yalnız test: IBO süpürmesi, yükselteç uyumsuzluğu) ve **B2/1** (nihai sekiz sınıflı benchmark). A1 değişmedi.
 
 ## Uygulama eki — 2026-10-20
+
+- **R1-eval/1 kodlandı ([P17](P17_r1_robustness_eval.md)):** A1'i değiştirmeyen, ayrı protokol adlı ve ayrı tohumlu (400000–430299) **yalnız-test** bölünmeler:
+  - `r1_ibo_sweep`: nominal IBO 5–14 dB, aşırı sürme 0–5 dB;
+  - `r1_amp_rapp`: Rapp SSPA, p = 2 [VARSAYIM];
+  - `r1_amp_opendpd_apa` ve `r1_amp_opendpd_dpa`: OpenDPD ölçümlerinden türetilmiş bellek polinomları; yalnız ölçüm aralığında, aşırı sürme yok (K11).
+- Değerlendirici `geoml.robustness` Kademe A checkpoint'lerini yeniden eğitmeden yükler. Raporladıkları:
+  - IBO kutularına göre yük farkı (M-nl4 − M-lin, eşleşmiş);
+  - ECE ve FPR@95TPR;
+  - eşikli algılama;
+  - ölçüm aralığı dışındaki giriş oranı.
+- `ranking_metrics` artık `unknown_fpr_at_95_tpr` da veriyor.
+- **Doğrulama:** baseline HEAD'de 544, bu dilimden sonra **569 test geçti**. A1 regresyonu: 17 A1 örneğinin spektrum, maske ve metadata anahtarları önceki kodla birebir aynı.
+- **Küçük fiziksel koşu:**
+  - A1 6 tohum, R1 4 × 6 tohum;
+  - 3 epok eğitim ve uçtan uca değerlendirme; veri tekrar kullanımı doğrulandı.
+  - Modeller 30 örnekle dejenere; yalnız çalışma kanıtıdır: [sonuçlar](../results/r1_smoke.md).
+- OpenDPD katsayıları yalnız val bölümünde seçildi:
+  - APA: K = 5, M = 3; test NMSE −30,6 dB.
+  - DPA: K = 5, M = 16; test NMSE −33,9 dB. Seçim ızgara kenarında, daha uzun bellek denenmedi.
+- **Uyarı:** bu dilim `geosim/` kaynaklarını değiştirdi. Eski kodla başlamış yarım bir üretim yeni kodla sürdürülemez; tamamlanmış veri okunur.
 
 - **M3 faz gürültüsü ve olay blokları kodlandı:** [P15](P15_phase_noise_and_events.md); ortak uydu/alıcı Wiener faz gürültüsü, uplink taşıyıcı-altı girişim ve alıcı tarafında komşu uydu girişimi eklendi. Uydu girişimi hedef yükün TWTA'sından geçmez. Sıfır linewidth eski sayısal çıktıları korur; A1 değiştirilmedi.
 - Son birleşik doğrulama: **542 test geçti**. `E1-dev/1`, aynı planları, link ayarlarını ve faz süreçlerini paylaşan `clean` / `carrier_under_carrier` / `adjacent_satellite` geliştirme deneyidir. Veri, bağımsız pilot kalibrasyonu, kayıt kimlikleri ve ayrı model-seçimi/eşik-kalibrasyonu grupları denetlenir.
@@ -59,8 +79,10 @@ Kademe A'nın (ders projesi) bütün zinciri kodlandı ve uçtan uca çalışıy
 | P1 | Literatür ve yenilik | Tarama v2 eklendi; **tam metin okuması yok, kapanmadı** | `P1_literatur.md` §7 |
 | P8 | Dış veri denetimi | Kaynak sayfaları denetlendi; veri indirilmedi; L1/L2 açık | `P8_dis_veri.md` |
 | P9 | Yol haritası, hedef yayın | Öneri; takvim P16 §4'te, onaysız (K12) | `P9_yol_haritasi.md` |
+| P15 | Faz gürültüsü ve olaylar (E1-dev/1) | Geliştirme dilimi | `P15_phase_noise_and_events.md` |
 | P16 | Literatür sonrası düzeltme programı | Plan; İP-0…İP-7 | `P16_literatur_duzeltme_programi.md` |
-| Kademe B | Çift pol, 8 sınıf, open-set | Geliştirme dilimleri var (B1-dev/1–2, D1-dev/1); nihai B2/1 benchmark yok | `P11`–`P14` |
+| P17 | R1-eval/1 sağlamlık değerlendirmesi | Kodlandı, küçük koşu; tam sonuç yok | `P17_r1_robustness_eval.md` |
+| Kademe B | Çift pol, 8 sınıf, open-set | Geliştirme dilimleri var (B1-dev/1–2, D1-dev/1, E1-dev/1); nihai B2/1 benchmark yok | `P11`–`P14` |
 
 ## 3. Elde ne var
 
@@ -106,6 +128,7 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 | S3 | Dizüstünde süre ölçülmedi | S1'i önce `--limit-seeds 10` ile deneyip süreyi yazın |
 | S4 | Üç varsayılan karar onaysız | Aşırı sürme sınırı (P3 §0-A), tek etiket kuralı (P3 §0-B), doğrusal zincirde aşırı sürme (P5 §0) |
 | S5 | ~~P16 kararları~~ — **2026-10-20 yanıtlandı** (P16 §5): uplink-ASI, iptal artığı + cyclic, aşamalı yenilik cümlesi, OpenDPD ölçüm aralığında, sabit tarih yok, lisans şimdilik yok, vekil unknown yok | — |
+| S8 | R1-eval/1 tam koşu (S2'den sonra) | `python -m geosim.dataset --protocol R1-eval/1 --out data/r1 --workers 4` (≈ 2,6 çekirdek-saat, ayrı dizin) ve `python -m geoml.robustness --data data/stageA --runs runs/stageA --r1 data/r1 --out runs/r1`; `runs/r1/results.md` dosyasını gönderin |
 | S6 | SmartSpace verisi bulutta işlenecek | Ortam ayarlarında **Network access → Allowed domains**'e `fnr-smartspace-project.uni.lu` ekleyin (paket yöneticileri kutusu işaretli kalsın) ve araştırma-amaçlı, ticari olmayan kullanım koşulunu kabul ettiğinizi yazın |
 
 ### 5.3 Açık — bende, sıradaki işler
@@ -118,15 +141,15 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 | B2 | Sonuç şekilleri (ROC, C/I eğrileri, karışıklık matrisi) | Orta | Tam sonuç gelince |
 | B3 | Mutlak seviye ablasyonu | Orta | `--level absolute`; tam veriyle |
 | B4 | Parametre aralıklarının hiçbiri kaynaklı değil (C/N, C/I, taşıyıcı sayısı) | Orta | B1 ile birlikte literatürden dayanak aranacak |
-| B5 | Dış veri denetiminin kalanı: RF WebLab, OpenDPD'nin yükselteç teknolojisi, DARCY dosya biçimi | Düşük (Kademe B) | |
+| B5 | Dış veri denetiminin kalanı: RF WebLab, DARCY dosya biçimi, Jammertest 2025 lisansı | Düşük (Kademe B) | OpenDPD teknolojisi kapandı (APA GaN Doherty, DPA CMOS Doherty); Highway 2 = CC BY-NC-SA 4.0, LC-lab = CC BY-SA 4.0 (Zenodo) |
 | B6 | Proje talimat belgesi hâlâ ilk hâlinde (zincir tarifi, veri kaynağı rolleri hatalı; "Roadmap, risks and venues" boş) | Orta | P9 ile birlikte düzeltilmiş metin önerilecek |
 | B7 | Gerçek sinyalle akıl sağlığı denetimi (Zenodo'daki Intelsat 37e kaydı) | Düşük | |
 | B8 | Proje skill'leri eski (faz sırası, Saleh'in birincil model olduğu varsayımı) | Düşük | Güncelleme önerisi sunuldu |
-| B9 | P16 İP-0: en yakın 6 çalışmanın tam metin okuması; L1, L2, L7, L10 | Yüksek | P1 kapanışının ön koşulu |
-| B10 | P16 İP-1: FPR@95TPR, ECE, gecikme metrikleri; C3'ün IBO-eğrisi (R1-eval/1) | Yüksek | Kod + test; tam üretim sizde |
-| B11 | P16 İP-2: Rapp ve bellek polinomu yükselteçleri, OpenDPD türetmesi, NPR kontrolü | Yüksek | A1 regresyon testi zorunlu |
+| B9 | P16 İP-0: en yakın 6 çalışmanın tam metin okuması | Yüksek | P1 kapanışının ön koşulu. L2, L7 (a–c) kapandı; L1 Jammertest lisansı ve L10 uydu anteni XPD'si açık |
+| B10 | P16 İP-1: C3'ün IBO eğrisi, ECE, FPR@95TPR | Yüksek | **Kodlandı (P17)**; tam üretim ve değerlendirme sizde (S8) |
+| B11 | P16 İP-2: NPR kontrolü, sentetik bellek polinomu, OpenDPD eşleme duyarlılığı (R1-eval/2) | Yüksek | Rapp ve OpenDPD bellek polinomları kodlandı (P17); bunlar kaldı |
 | B12 | P16 İP-3/4: ASI, CuC, faz gürültüsü, PL çerçeve; iptal artığı, plan bozma testleri | Yüksek | K5, K9 kararlarına bağlı |
-| B13 | P16 İP-5/6: B2/1 protokolü (`P16`), eğitim-zamanı OSR, EDSC ve XGBoost baseline'ları | Orta | B2/1 kod yazılmadan dondurulur |
+| B13 | P16 İP-5/6: B2/1 protokolü (`P18`), eğitim-zamanı OSR, EDSC ve XGBoost baseline'ları | Orta | B2/1 kod yazılmadan dondurulur |
 
 ### 5.4 Bilinçli olarak ertelenenler (Kademe B)
 
