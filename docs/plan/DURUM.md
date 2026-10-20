@@ -2,6 +2,15 @@
 
 Son güncelleme: 2026-10-20 (araştırma eki; temel deney durumu 2026-10-10) · Bu dosya "şu an neredeyiz, ne eksik" sorusunun tek yanıtıdır; her oturum sonunda güncellenir.
 
+## Uygulama eki — 2026-10-20
+
+- [P10 uygulama yapısı](P10_implementation_structure.md) ve [P11 geliştirme protokolü](P11_openset_development.md) eklendi.
+- **M0 + ilk M1 dilimi kodlandı:** veri/çekirdek kayıtlarının kimlik ve bütünlük kontrolü, senaryo bazlı ayrım, bilinen doğrulama verisiyle MSP/energy eşikleri ve `known/unknown` tahmin/rapor hattı.
+- `B1-dev/1`, mevcut beş sınıftan bir girişim ailesini dışarıda tutar; `clean` bilinen olarak kalır. Eğitim için doğrulama ve ret eşiği kalibrasyonu ayrı senaryo gruplarıdır. A1 protokolünün fiziksel örnekleme/sınıf/split tanımları değiştirilmedi.
+- Altı tohum × üç kaynak split ile fiziksel üretim ve üç epok eğitim denemesi yapıldı. Küçük koşu yalnız çalışma kanıtıdır; model kalitesi zayıftır ve bilimsel sonuç değildir.
+- Doğrulama: tam test paketi **141 test geçti**; son kaynak-rolü kontrolü sonrası yedi deney testi tekrar geçti. Veri ve checkpoint tekrar kullanımı da gerçek koşuda doğrulandı.
+- Sekiz sınıflı nihai B benchmark'ı, yeni unknown üreteçleri, Mahalanobis, AUROC/OSCR ve çift pol henüz uygulanmadı. Aşağıdaki eski faz/eksik tabloları temel Kademe A durumunu tarif eder; bu ek yalnız ilk geliştirme dilimini kapatır.
+
 ## Araştırma eki — 2026-10-20
 
 - **P1 literatür / yakın çalışmalar:** ilk kaynak-tabanlı denetim eklendi: [P1_literatur.md](P1_literatur.md). “GEO'da ilk DL” ve “önceki çalışmaların hepsi idealize” iddiaları **geçersiz**; doğrulanmış yenilik yerine test edilebilir aday katkı önerildi. Kapsamlı sistematik tarama veya bütün yakın makalelerin tam metin analizi henüz yapılmadı.

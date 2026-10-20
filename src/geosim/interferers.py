@@ -11,6 +11,10 @@ from .plan import SYMBOL_RATES
 from .waveform import MODULATIONS, ROLLOFFS, Carrier, generate_carrier
 
 
+class InfeasibleCarrierError(ValueError):
+    """A sampled carrier cannot fit the physical scene; not a simulator failure."""
+
+
 def _tone(rng, inst_freq, fs, power):
     """Constant-envelope signal with the given per-sample instantaneous frequency (n_snap, n)."""
     phase = 2 * np.pi * np.cumsum(inst_freq, axis=-1) / fs + rng.uniform(0, 2 * np.pi, (inst_freq.shape[0], 1))
@@ -72,7 +76,7 @@ def random_unauthorized(rng: np.random.Generator, plan: list[Carrier], bandwidth
                         psd_offset_db: float) -> Carrier:
     """Draw a carrier that fits a free gap; its PSD is psd_offset_db relative to the plan's mean PSD.
 
-    Raises ValueError when no gap can hold even the narrowest carrier.
+    Raises InfeasibleCarrierError when no gap can hold even the narrowest carrier.
     """
     options = []
     for lo, hi in free_gaps(plan, bandwidth):
@@ -82,7 +86,7 @@ def random_unauthorized(rng: np.random.Generator, plan: list[Carrier], bandwidth
                 if need <= hi - lo:
                     options.append((lo, hi, rs, a, need))
     if not options:
-        raise ValueError("no free gap wide enough for an unauthorized carrier")
+        raise InfeasibleCarrierError("no free gap wide enough for an unauthorized carrier")
     lo, hi, rs, a, need = options[rng.integers(len(options))]
     f0 = rng.uniform(lo + need / 2, hi - need / 2)
     mean_psd = sum(c.power for c in plan) / sum(c.symbol_rate for c in plan)

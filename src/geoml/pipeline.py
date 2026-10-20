@@ -7,15 +7,17 @@ Writes <out>/results.json and <out>/results.md. Definitions: docs/plan/P7_degerl
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import time
+from dataclasses import asdict
 from pathlib import Path
 
 import numpy as np
 import torch
 
 from geosim.classes import LABELS
-from geosim.dataset import load_split
+from geosim.dataset import load_split, read_manifest, split_fingerprint
 from geosim.plan import monitor_freqs
 
 from . import cfar
@@ -36,6 +38,15 @@ def _mean_ci(correct, seeds):
     """Mean over training seeds and samples, with a 95 % interval over scenario seeds."""
     per_sample = np.mean(correct, axis=0)
     return {"mean": float(per_sample.mean()), "ci": cluster_ci(per_sample, seeds)}
+
+
+def _binned_detection(hits, selected, ci_db, edges):
+    """Detection rates and support per C/I bin; empty bins are missing, not NaN."""
+    masks = [selected & (ci_db >= a) & (ci_db < b) for a, b in zip(edges[:-1], edges[1:])]
+    counts = [int(mask.sum()) for mask in masks]
+    rates = {name: [float(np.mean(np.mean(runs, axis=0)[mask])) if count else None
+                    for mask, count in zip(masks, counts)] for name, runs in hits.items()}
+    return rates, counts
 
 
 def _classification(probs, d, n):
@@ -65,13 +76,25 @@ def _detection(score_runs, val_runs, d, val, labels):
 def main(data: str, out: str, epochs: int, seeds: list, level: str, time_pool: int = 2, reuse: bool = False,
          log=print) -> dict:
     data, out = Path(data), Path(out)
+    if not seeds or any(isinstance(seed, bool) or not isinstance(seed, int) or seed < 0 for seed in seeds):
+        raise ValueError("seeds must contain at least one nonnegative integer")
     out.mkdir(parents=True, exist_ok=True)
     S = {p.name: load_split(p) for p in sorted(data.iterdir()) if (p / "manifest.json").exists()}
     need = {"train_nl", "train_lin", "val_nl", "val_lin", "test_id_nl", "test_id_lin"}
-    assert need <= set(S), f"missing splits: {need - set(S)}"
+    if not need <= set(S):
+        raise ValueError(f"missing splits: {need - set(S)}")
+    manifests = {name: read_manifest(data / name) for name in S}
+    protocols = {manifest["protocol"] for manifest in manifests.values()}
+    if len(protocols) != 1:
+        raise ValueError("dataset splits use different protocols")
+    data_ids = {name: split_fingerprint(data / name) for name in S}
+    implementation = {name: hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
+                      for name in ("model.py", "train.py", "data.py")}
     res = {"level": level, "epochs": epochs, "train_seeds": seeds, "pfa_target": PFA, "time_pool": time_pool,
-           "protocol": json.loads((data / "train_nl" / "manifest.json").read_text())["protocol"],
-           "sizes": {k: int(len(v["label"])) for k, v in S.items()}}
+           "protocol": manifests["train_nl"]["protocol"],
+           "sizes": {k: int(len(v["label"])) for k, v in S.items()},
+           "data_fingerprints": data_ids, "implementation": implementation,
+           "complete_data": all(manifest["complete"] for manifest in manifests.values())}
     models = {"M-lin": ("train_lin", "val_lin", FOUR), "M-nl4": ("train_nl", "val_nl", FOUR),
               "M-nl5": ("train_nl", "val_nl", LABELS)}
     fitted = {}
@@ -79,15 +102,19 @@ def main(data: str, out: str, epochs: int, seeds: list, level: str, time_pool: i
         fitted[name] = []
         for seed in seeds:
             path = out / f"{name}_seed{seed}.pt"
+            cfg = TrainConfig(labels=labels, level=level, epochs=epochs, seed=seed, time_pool=time_pool)
+            provenance = {"protocol": res["protocol"], "train": data_ids[tr], "validation": data_ids[va],
+                          "implementation": implementation}
             if reuse and path.exists():
                 log(f"{name}, training seed {seed}: reusing {path.name}")
-                fitted[name].append(load(path))
+                fitted[name].append(load(path, expected_config=asdict(cfg), expected_provenance=provenance))
                 continue
             log(f"{name}, training seed {seed}")
             t = time.time()
             f = fit(select(S[tr], labels, LABELS), select(S[va], labels, LABELS),
-                    TrainConfig(labels=labels, level=level, epochs=epochs, seed=seed, time_pool=time_pool), log=log)
+                    cfg, log=log)
             f["train_seconds"] = time.time() - t
+            f["provenance"] = provenance
             save(f, path)
             fitted[name].append(f)
     res["model"] = {"parameters": fitted["M-nl5"][0]["n_parameters"],
@@ -140,13 +167,13 @@ def main(data: str, out: str, epochs: int, seeds: list, level: str, time_pool: i
     res["detection"] = det
     ci_db = np.array([m["interferer"].get("c_over_i_db", np.nan) for m in test["meta"]])
     edges = [5, 15, 25, 35]
-    res["pd_vs_ci"] = {"edges_db": edges, "classes": {}}
+    res["pd_vs_ci"] = {"edges_db": edges, "classes": {}, "counts": {}}
     for lab in ("cw", "swept_cw"):
         sel = test["label"] == LABELS.index(lab)
-        res["pd_vs_ci"]["classes"][lab] = {
-            k: [float(np.mean(np.mean(h, axis=0)[sel & (ci_db >= a) & (ci_db < b)])) for a, b in zip(edges[:-1], edges[1:])]
-            for k, h in hits.items()}
-    (out / "results.json").write_text(json.dumps(res, indent=1))
+        rates, counts = _binned_detection(hits, sel, ci_db, edges)
+        res["pd_vs_ci"]["classes"][lab] = rates
+        res["pd_vs_ci"]["counts"][lab] = counts
+    (out / "results.json").write_text(json.dumps(res, indent=1, allow_nan=False))
     (out / "results.md").write_text(report(res))
     log(f"wrote {out / 'results.md'}")
     return res
@@ -188,7 +215,10 @@ def report(r: dict) -> str:
     L += ["", "Algılama olasılığı, C/I aralığına göre:", "",
           "| Sınıf | Dedektör | " + " | ".join(f"{a}–{b} dB" for a, b in zip(e[:-1], e[1:])) + " |", "|---|---|" + "---|" * (len(e) - 1)]
     for lab, v in r["pd_vs_ci"]["classes"].items():
-        L += [f"| {lab} | {k} | " + " | ".join(f"%{100 * x:.0f}" for x in vals) + " |" for k, vals in v.items()]
+        L += [f"| {lab} | {k} | " + " | ".join("—" if x is None else f"%{100 * x:.0f}" for x in vals) + " |"
+              for k, vals in v.items()]
+        if "counts" in r["pd_vs_ci"]:
+            L.append(f"| {lab} | n | " + " | ".join(str(n) for n in r["pd_vs_ci"]["counts"][lab]) + " |")
     m = r["model"]
     L += ["", "## 4. Model maliyeti", "",
           f"- Parametre: {m['parameters']:,}".replace(",", " "),
