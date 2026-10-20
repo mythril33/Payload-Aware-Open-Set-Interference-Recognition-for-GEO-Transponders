@@ -1,0 +1,226 @@
+# P15 — Literatür taraması sonrası düzeltme ve tamamlama programı
+
+Durum: **PLAN — UYGULANMADI** · 2026-10-20 · Girdi: kullanıcının verdiği ([depo kopyası](../research/literature_review_2026-10-20.md))
+*"Payload-Aware Open-Set Interference Recognition for GEO Transponders: Literature
+Review"* (PDF 20 sayfa + aynı içerikte Markdown, 2026-10-20; bundan sonra
+**"tarama"**), `DURUM.md`, `00_ana_plan.md`, `P1`, `P3`, `P5`–`P9`, `P11`–`P14`,
+`docs/research/open_set_protocol.md`, `references/references.bib`, `src/`.
+
+Bu belge üç soruya yanıt verir: (1) tarama projede neyi değiştiriyor, (2) tarama
+ile depo arasında hangi çelişkiler var ve nasıl düzeltilecek, (3) çalışmayı
+tamamlamak için hangi işler hangi sırayla yapılacak. Burada yeni deney sonucu
+**yoktur**; bütün sayılar taramadan, depodaki ölçümlerden alınmıştır ya da
+**[VARSAYIM]** / **[DOĞRULANACAK]** olarak etiketlidir.
+
+**Kapanış kriteri:** §2'deki her düzeltme ya kapatılmış ya da sahibi ve
+doğrulama yolu yazılı; §3'teki her iş paketinin kapanış ölçütü, sahibi ve
+bağımlılığı belli; §5'teki kararlar kullanıcıya sunulmuş.
+
+---
+
+## 0. Hüküm: tarama ne söylüyor, bize ne yapmamızı söylüyor
+
+| Tarama bulgusu | Projeye etkisi | Kanıt seviyesi |
+|---|---|---|
+| 2018–2026 arasında transponder zincirini (TWTA/IMUX/OMUX/çok taşıyıcılı IM), çift polarizasyonu, taşıyıcı planını veya open-set reddini modelleyen GEO girişim tanıma makalesi bulunamadı | Boşluk iddiası **ayakta**, ama "ilk" yerine "**birlikte modelleyen ilk**" ifadesi kullanılmalı | Sistematik olmayan tarama; CNKI ve IEEE tam metinleri kısmen bakıldı (taramanın kendi uyarısı) |
+| En yakın işler: SnT (Daoud 2023; Saifaldawla 2023/2024), Fudan Agon (arXiv 2026), CTTC/Eutelsat (Henarejos 2019, Vázquez 2019/2021), KTH (Pellaco 2019), Politis 2016/2017 | P1 yakın-çalışma tablosu bu listeye genişletilmeli; Agon "en güçlü yeni rakip" | Özet/OA PDF; Agon hakemsiz ön baskı |
+| Open-set yalnızca genel karıştırma (jamming), radar ve GNSS'de yayımlanmış | C2'nin open-set ekseni en net boş eksen | Özet düzeyi |
+| Carrier-under-carrier PSD'de görünmez; ticari araçlar taşıyıcı **iptali** ile bulur | Spektrogram-tek model için CuC'de şans düzeyi beklenmeli → bu bir **ayırt edilebilirlik sonucudur**, hata değil | Satıcı sayfaları + ticari basın; bağımsız ölçüm değil |
+| Plan maskesi "unauthorized" sınıfını kısa yoldan ele verebilir | Plan bozma (bayat/kaydırılmış plan) testi zorunlu | Metodolojik uyarı |
+| Değerlendirme: OSCR, FPR@95TPR, unknown başına AUROC, ECE, sabit Pfa'da Pd (C/I ve IBO'ya göre), gecikme | Mevcut metrik setine FPR@95TPR, ECE, gecikme ve "yakın/uzak OOD" ayrımı eklenmeli | Standart yöntem kaynakları |
+| Gerçeklik: yükselteç uyumsuzluğu testi (eğitim tablo-TWTA, test Rapp / bellek polinomu / OpenDPD'den öğrenilmiş model), NPR literatürü | C3'ün "sim-to-sim" eleştirisine karşı ana savunma | Yöntem önerisi; OpenDPD GaN PA'dır, TWTA değildir |
+| C3 tek sayı değil, **eğitimden IBO uzaklığının fonksiyonu** olarak raporlanmalı | P7 İ1–İ4 raporlarına IBO-eğrisi eklenir | Öneri |
+
+**Özet karar:** Projenin yönü değişmiyor. Değişen üç şey var: (a) yenilik
+ifadesi daraltılır, (b) CuC ve ASI/unauthorized çiftleri "ayırt edilemezlik"
+bulgusu olarak tasarıma girer, (c) gerçekçilik çapası "ölçülmüş PA" tek
+ayağından "yükselteç ailesi uyumsuzluğu + NPR kontrolü + ölçülmüş PA" üç
+ayağına çıkar.
+
+---
+
+## 1. Taramadaki iddiaların kullanım durumu
+
+Taramadaki her iddia makaleye aynı güvenle girmez.
+
+| Sınıf | Örnekler | Kural |
+|---|---|---|
+| **Doğrudan kullanılabilir (birincil kaynak açık erişimli, künye tutarlı)** | Saifaldawla TMLCN 2024 (DOI 10.1109/TMLCN.2024.3418933); Henarejos 2019 (arXiv 1906.03012); OSR temel makaleleri (MSP, ODIN, energy, Mahalanobis, OSCR, Vaze 2022, ARPL); OpenDPD ISCAS 2024 | Tam metin okunduktan sonra sayfa/tablo numarasıyla alıntılanır (P1 §6) |
+| **Ön baskı** | Agon arXiv 2606.14147; 2026 tarihli arXiv GNSS işleri (2607.03411, 2607.28404) | "preprint" diye etiketlenir; sürüm numarası kaydedilir |
+| **Taramada "(verify)" işaretli künyeler** | Saleh 1981 DOI, Morello & Mignone DOI, Gardner 1991 DOI, Mehr & Dovis DOI, van der Merwe DOI, Ott ICL-GNSS 2024 erişimi | **[DOĞRULANACAK]**: yayıncı sayfasından BibTeX alınmadan `references.bib`'e kesin künye olarak girmez |
+| **Ticari basın / satıcı iddiası** | SUIRG %34 "unknown", Intelsat %33 cross-pol ve %47 unauthorized, IRG VSAT %40, SIRG %93 anketi, Integrasys "200 taşıyıcı/s", Kratos İran kaynaklı karıştırma (2026) | Yalnızca **motivasyon** cümlesinde, "sektör kaynaklarına göre" kalıbıyla; hiçbir deney tasarım parametresi bunlardan türetilmez |
+| **Standart içeriğine dair iddia** | TR 102 376-2'nin altı taşıyıcılı/tek TWTA senaryosu içerdiği ve çapraz-pol/eş-kanal katkısını ihmal ettiği; CID metacarrier'ın taşıyıcı spektral yoğunluğuna göre −27,5 dB olduğu | **[DOĞRULANACAK]**: madde/şekil numarasıyla birincil kaynaktan (ETSI PDF, ITU-R S.2062, ETSI CID standardı) teyit; Via Satellite ikincil kaynaktır |
+
+---
+
+## 2. Tarama ↔ depo çelişkileri ve düzeltmeler
+
+| # | Yer | Sorun | Düzeltme | Sahip | Durum |
+|---|---|---|---|---|---|
+| L1 | `P8` DARCY/Highway 2 | Tarama Highway 2, LC-lab ve Jammertest 2025'i **CC BY-SA 4.0** diyor; P8 Highway 2'yi Zenodo kartından **CC BY-NC-SA 4.0** olarak kaydetmiş | Daha kısıtlayıcı olan (NC) geçerli sayılır; üç kaydın lisansı Zenodo kartından yeniden okunur ve P8'e kayıt bazında yazılır | ben | **açık** |
+| L2 | `00_ana_plan` §0, `P8` OpenDPD | Tarama `DPA_200MHz`, ana plan `APA_200MHz` diyor | OpenDPD veri belgesinden kayıt adları ve PA teknolojisi okunur; ikisi de varsa rolleri ayrılır | ben | **açık** |
+| L3 | Tarama "WBSig53 pre-trained detector" baseline | P8: güncel TorchSig'de hazır WidebandSig53 seti yok; artık üretici | WBSig53 baseline'ı **koşullu**: TorchSig sürümüyle üretilip ön eğitilirse yapılır; aksi halde düşer. Önceliği en alt (§3 İP-6) | ben | düzeltme bu belgede |
+| L4 | Tarama "Validate realism against OpenDPD and the SnT data" | SnT verisinde yük etkisi yok; yük gerçekçiliğini doğrulayamaz. OpenDPD TWTA değildir | Doğru ifade: SnT = **görev/format karşılaştırılabilirliği** (V6 kipi); OpenDPD = **ölçülmüş, bellekli PA'ya aktarım**. "Gerçekçilik doğrulaması" ifadesi kullanılmaz | ben | düzeltme bu belgede |
+| L5 | Tarama §9 ipucu 1: IM3 "yaklaşık 3:1 dB eğim" | 3:1 küçük-sinyal kuralıdır (C/IM'de 2 dB/dB). Bizim çalışma aralığında ölçülen C/IM eğimi **1,25 dB/dB** (`DURUM` §4, `P2` §10) | Ayırt edilebilirlik ipucu kendi ölçtüğümüz eğriyle yazılır; 3:1 kuralı yalnız küçük-sinyal sınırı olarak anılır | ben | düzeltme bu belgede |
+| L6 | Tarama "Gap Matrix" son satırı (bütün sütunlar ✔) | Depo gerçeği: TWTA/IMUX/OMUX/çok taşıyıcılı IM ✔; plan maskesi ✔; çift-pol yalnız iki sınıflı geliştirme (D1-dev/1); open-set yalnız geliştirme (B1-dev/1–2); 8 sınıf, faz gürültüsü, PL çerçeve **yok** | Makalede ve P1'de **planlanan** ve **uygulanan** ayrı sütun olarak gösterilir (P1 §7) | ben | P1'de kapatıldı |
+| L7 | `references.bib` | (a) Daoud 2023 başlığı taramadakiyle farklı; (b) `etsi2021dvbs2guide` başlığı "DVB-S2 Implementation Guidelines" — TR 102 376-2'nin S2X (Bölüm 2) kılavuzu olması muhtemel; (c) Heublein: depoda arXiv 2409.15114, taramada 2503.23775 (iki ayrı iş); (d) taramadaki en yakın işlerin çoğu eksik | (a)(b) yayıncı/ETSI sayfasından teyit **[DOĞRULANACAK]**; (c) ikisi de ayrı girdi; (d) eksik girdiler `note = {verify}` ile eklendi | ben | kısmen kapatıldı |
+| L8 | `P1` §2 | Agon, Pellaco, Vázquez, Politis ve open-set karıştırma işleri yok (ikinci Henarejos satırı bilerek bırakılmış tam metin kontrol satırıdır); ana plan P1 kapanış kriteri "her boşluk iddiası ≥ 2 kaynak" karşılanmamış | P1'e §7 (tarama v2) eklendi; tam metin okuması İP-0'da | ben | kısmen kapatıldı |
+| L9 | `DURUM` §2 faz tablosu | P1/P9/Kademe B "Başlanmadı" yazıyor; araştırma ve uygulama ekleriyle çelişiyor | Tablo güncellendi | ben | kapatıldı |
+| L10 | `P14` XPD değerleri (uplink 30/10 dB, downlink 35 dB, enstrüman 25 dB) | "Geliştirme seçimi" olarak işaretli; kaynak yok. Tarama, DVB-S2X kılavuzunun XPD'yi ihmal ettiğini söylüyor → çift-pol uzantısı referans kanalın dışında | XPD dağılımı XPD ölçüm literatüründen (tarama kaynak 52, 53) dayandırılır; B4 kapsamına alınır | ben | **açık** |
+| L11 | `open_set_protocol.md` §1 CuC satırı | "döngüsel istatistik faydalı olabilir" — tarama "PSD ile beklenemez, iptal artığı veya cyclic gerekli" diyor | Satır "PSD-tek gözlemde düşük C/I'de **tanımlanamaz beklenir**; iptal artığı veya cyclic özellik gerekli" olarak güncellenir; karar K9 | ben | kapatıldı |
+| L12 | `P12` unknown aileleri | Tarama: `wideband_noise` ≈ overdrive spektral yeniden büyümesi, `pulsed` ≈ `intermittent_bursts` → yakın-OOD | U1-dev/1 üreteci değişmez; raporlarda aileler **yakın/uzak OOD** diye önceden gruplanır (gruplama test sonucundan önce dondurulur) | ben | **açık** (İP-5) |
+| L13 | `P9` §3 yayın yerleri | Üç dergi var; tarama TCCN, OJ-COMS, ICASSP/SPAWC, ICC/GLOBECOM çalıştayları, ASMS/SPSC, ICSSC, IEEE Aerospace/MILCOM ekliyor | P9'a eklendi; uygunluk yine başvuru anında kontrol edilir | ben | kapatıldı |
+| L14 | `src/geosim/payload.py` Saleh katsayıları | Kod yorumu "makaleye karşı kontrol edilmedi"; tarama da DOI'yi "(verify)" diyor | Açık kalır (B-kaynak); Saleh zaten birincil değil, alternatif model | ben | açık, düşük |
+| L15 | Motivasyon istatistikleri | Taramadaki yüzdeler basın/satıcı kaynaklı | §1 kuralı; makale girişinde tek paragraf, açık niteleme | ben | kural yazıldı |
+
+---
+
+## 3. Tamamlama programı — iş paketleri
+
+Her iş paketi (İP) bir katkıya bağlıdır. **A1 donmuş protokolü değişmez**; yeni
+test kümeleri ayrı sürüm adlarıyla ve ayrı tohum aralıklarıyla üretilir
+(AGENTS.md kuralı). Önerilen yeni sürümler:
+
+- **R1-eval/1** — yalnızca test: IBO süpürmesi ve yükselteç uyumsuzluğu kümeleri, tohumlar 400000– **[VARSAYIM]** (A1: 100000–340000+, unknown: 900000–, çift-pol: 1000000– ile çakışmaz; kodda çakışma testi zorunlu).
+- **B2/1** — nihai sekiz bilinen sınıflı çift-pol open-set benchmark protokolü; ayrı belge (`P16`), kod yazılmadan önce dondurulur.
+
+### İP-0 — Belge ve kaynak düzeltmeleri (C1–C3 savunması) · öncelik: hemen
+
+| İş | Kapanış ölçütü |
+|---|---|
+| §2'deki açık L-maddeleri (L1, L2, L7a/b, L10) | Her biri birincil kaynakla kapatılmış veya **[DOĞRULANACAK]** olarak sahibiyle kayıtlı |
+| En yakın 6 çalışmanın tam metin okuması: Saifaldawla TMLCN 2024, Agon 2026, Daoud 2023, Henarejos 2019, Vázquez 2021, Politis 2017 | Her biri için: gözlem noktası, sinyal kaynağı, doğrusalsızlık, plan bilgisi, polarizasyon, unknown testi, metrik, veri — sayfa/tablo numarasıyla P1 §7 tablosunda |
+| Yenilik cümlesinin dondurulması (K10) | README, P0, P1 ve makale özetinde aynı cümle |
+
+### İP-1 — Kademe A'yı bitir (C3 ana bulgu) · öncelik: kritik yol
+
+Mevcut S1–S4 ve B0–B3 işleri **aynen geçerli**; tarama bunları değiştirmiyor, yalnızca raporu genişletiyor.
+
+| İş | Sahip | Kapanış ölçütü |
+|---|---|---|
+| S3 → S1 → S2 tam veri ve tam koşu (`DURUM` §5.2'deki komutlar) | **siz** | `runs/stageA/results.md` + `results.json` gönderildi |
+| Metrik eklemeleri: FPR@95TPR (pozitif sınıf ve payda açıkça), ECE (kapalı küme, 15 kutu **[VARSAYIM]**), CPU ms/çerçeve, parametre sayısı | ben | Birim testleri; `null` + sayım kuralı (katı JSON); mevcut 355 test bozulmadan |
+| C3'ü IBO uzaklığına göre raporla: `test_id_nl`, `test_ibo` + R1-eval/1 IBO süpürmesi (0–14 dB, 1 dB adım; 5–8 dB "belirsiz bölge" ayrı) | ben (kod) / siz (tam üretim) | Doğruluk, makro-F1, temizde yanlış alarm ve İ3 payları IBO'ya karşı, senaryo-bootstrap %95 aralıklı |
+| B0: ana iddianın biçimi — tam veriyle, nominal IBO'da fark yoksa iddia yanlış alarm/yanlış etiket ve IBO eğrisi üzerinden kurulur | ben | Karar `P7` değişiklik notunda, sonuçlar görülmeden önce yazılmış ölçütle |
+| B2 şekiller, B3 mutlak seviye ablasyonu | ben | Şekiller `docs/figures/`, özet `docs/results/` |
+
+### İP-2 — Gerçekçilik çapası (C1, C3) · öncelik: yüksek
+
+| İş | Kapanış ölçütü |
+|---|---|
+| Yükselteç ailesi uyumsuzluğu: `rapp` (SSPA, p parametreli) ve `memory_poly` (bellekli) amplifikatörleri `geosim.payload`'a **ek seçenek** olarak; R1-eval/1'de `test_amp_rapp`, `test_amp_mp` | Her model için AM/AM–AM/PM birim testleri; doyum/IBO tanımı mevcut `drive_gain` ile tutarlı; A1 çıktısı bit-düzeyinde değişmemiş (regresyon testi) |
+| OpenDPD'den öğrenilmiş PA modeli → `test_amp_opendpd` (L2 sonrası). Ham veri depoya girmez, yalnız türetilmiş katsayılar + betik + `metadata.json` (P8 §Doğrulama alanları) | Kaynak hash'i yerelde hesaplanmış; model hatası (NMSE) raporlanmış; "TWTA doğrulaması" ifadesi yok |
+| NPR kontrolü: DVB-S2 tablo-TWTA'da gürültü yüklemeli NPR – IBO eğrisi; literatürdeki TWTA NPR aralığıyla nitel karşılaştırma (tarama kaynak 49) | Eğri + karşılaştırma tablosu; kaynak değerleri **[DOĞRULANACAK]** okunmadan sayı yazılmaz |
+| Alan rastgeleleştirme (domain randomization) eğitimi: TWTA ailesi, IMUX/OMUX derecesi, (çift-pol'de) XPD dağılımı — **yalnız B2/1 sürümünde**, ayrı model | A1 modelleriyle aynı test kümelerinde karşılaştırma; ayrı eğitim bütçesi eşit |
+| B7: Intelsat 37e SigMF kaydıyla "clean" akıl sağlığı kontrolü (P8 beklemede) | İçerik/izin doğrulandıktan sonra PSD şekli karşılaştırması; nicel iddia yok |
+
+### İP-3 — Bilinen sınıfları sekize tamamla (C1, C2) · öncelik: yüksek
+
+| Sınıf / blok | Giriş noktası | Tasarım notu | Kapanış ölçütü |
+|---|---|---|---|
+| `cross_pol` | uplink XPD bozulması | D1-dev/1'de var; XPD dağılımı kaynaklandırılacak (L10) | İzole kaynak XPD testi (mevcut) + kaynaklı dağılım |
+| `adjacent_satellite` | **K5 kararı**: önerim downlink-ASI (TWTA'dan geçmez) **[VARSAYIM]** | Uplink-unauthorized ile mekanizma farkı (yük süzgeci/IM yok) test edilebilir bir ayırt edilebilirlik sorusu verir; yine de "tasarım gereği karışabilir çift" olarak raporlanır | Giriş noktası testi: OMUX şekillendirmesi yok |
+| `carrier_under_carrier` | uplink, planlı taşıyıcının üstüne | C/I süpürmesi; CID metacarrier seviyesi (−27,5 dB, **[DOĞRULANACAK]**) bir referans nokta | Spektrumda görünürlük ölçümü (P6 §6'daki CW tepe tablosu gibi) C/I'ye karşı |
+| `overdrive_im` | yük içi | A1 `overdrive` ile aynı tanım | — |
+| Faz gürültüsü | LO | DVB-S2 faz gürültüsü maskesi (EN 302 307-1 Annex H) | Ölçülen PSD maskeye tolerans içinde |
+| PL çerçeve anahtarı | taşıyıcı üretici | P0'da söz verilen SOF+PLS+pilot+karıştırma; cyclic/iptal için ön koşul | Sembol sayıları EN 302 307-1'e karşı test; "tam DVB-S2 çerçeveleme" iddiası yalnız bu testlerden sonra |
+
+### İP-4 — Ayırt edilebilirlik analizi (C2'nin özgün kısmı) · öncelik: yüksek
+
+1. **Sınıf × gözlemlenebilir tablosu** (co-pol PSD, cross-pol PSD, plan, IBO tepkisi, cyclic/iptal artığı) — `open_set_protocol.md` §1 tablosu genişletilir; her hücre bir ablasyonla desteklenir (A0–A8).
+2. **Dört fiziksel ipucu** (taramanın §9'u, L5 düzeltmesiyle): (i) IM ↔ dış taşıyıcı: plan + IBO süpürmesi; (ii) cross-pol ↔ eş-pol plansız taşıyıcı: karşı polarizasyon kanalı; (iii) CuC: cyclic veya iptal artığı; (iv) ASI ↔ unauthorized: gözlenebilirlerin dışında (plan/geolokasyon/CID) → **karışabilir çift olarak raporla**.
+3. **CuC için gözlem kanalı (K9):** iptal artığı **yalnız gözlemden** hesaplanmalı (planın sembol hızı + karar-yönlü yeniden modülasyon). Simülatörün bildiği taşıyıcı dalga biçimiyle "kâhin iptal" (oracle) yalnız **üst sınır** olarak, açıkça etiketli raporlanır; model girdisi olamaz (AGENTS.md: model girdisi simülatör gerçeğinden ayrı).
+4. **Plan kısa yolu testi:** bayat plan, ±kaydırılmış taşıyıcı, eksik/fazla taşıyıcı; maske var ama taşıyıcılar taşınmış ablasyonu. Unauthorized başarımı maskeden okunuyorsa bu görünür olmalı.
+5. **FiLM koşullaması** (Perez ve ark. 2018) maske kanalına alternatif; eşit parametre/eğitim bütçesiyle tek ablasyon.
+
+Kapanış ölçütü: her ayırt edilemeyen çift için "hangi gözlem eklenince ayrılıyor" sorusuna ölçülmüş yanıt veya açık sınır cümlesi.
+
+### İP-5 — Kademe B open-set benchmark (C2) · öncelik: orta-yüksek
+
+| İş | Kapanış ölçütü |
+|---|---|
+| `P16` B2/1 protokolü: 8 bilinen sınıf, 3 unknown ailesi + leave-one-known-out rotasyonu, yakın/uzak OOD gruplaması (L12), kalibrasyon grupları ağırlık seçiminden ayrı | Kod yazılmadan dondurulmuş; P5 kuralı gibi değişiklik günlüğü |
+| Eğitim-zamanı open-set yöntemi (ana plan D13): ARPL veya prototip/merkez kaybı; OpenMax ikincil; ODIN opsiyonel (sıcaklık **yalnız bilinen** doğrulamada) | Asıl unknown aileleri eğitim/seçim/kalibrasyona girmez — mevcut sızıntı testleri yeni yöntemlere de uygulanır |
+| Rapor: unknown-pozitif AUROC/AP aile başına ve birleşik, OSCR, FPR@95TPR (TPR'nin hangi popülasyon olduğu yazılı), ECE, sabit Pfa'da Pd (C/I, I/N, IBO'ya göre), kapalı-küme doğruluğu OSCR ile birlikte (Vaze 2022) | Katı JSON, `null`+sayım; senaryo-bootstrap ve eğitim tohumu belirsizliği ayrı |
+
+### İP-6 — Baseline genişletmesi (C2, C3) · öncelik: orta
+
+Öncelik sırasıyla:
+
+1. **EDSC** (Politis 2016/2017 tarzı iptal sonrası enerji dedektörü) — CuC için operatör araçlarına en yakın klasik baseline; İP-4.3 ile aynı iptal kodunu kullanır.
+2. **Uzman özellik + gradyan artırma** (XGBoost) — P6 §5'te Kademe B'ye bırakılmıştı; taramanın hibrit DL+uzman önerisi (arXiv 2302.03749) ile birleştirilir.
+3. **Yeniden yapılandırma dedektörü** (Saifaldawla tarzı CAE) — yalnız temiz eğitim, ikili algılama karşılaştırması.
+4. **SnT formatında karşılaştırma** (V6 kipi: tek FFT, genlik) — araştırma-amaçlı lisans (P8); yük gerçekçiliği iddiası yok (L4).
+5. **TorchSig ön eğitimli dedektör** — koşullu (L3).
+
+### İP-7 — Yayın paketi (C1) · öncelik: son
+
+| İş | Kapanış ölçütü |
+|---|---|
+| Veri kartı (dataset card) + sabit benchmark bölünmesi + üretici sürüm/hash | S-ICDF ve Fraunhofer sürümleri örnek alınır; üretilen veri Git'e girmez, komut + hash girer |
+| Depo lisansı (README: üst düzey lisans yok) — **K13** | Kullanıcı kararı; üçüncü taraf türetilmiş veriler (ETSI tabloları) için ayrı not |
+| Makale taslağı: ilgili çalışmalar = P1 §7 boşluk matrisi (uygulanan sütunuyla), sınırlar bölümü = DURUM §5.5 + bu belgenin §6'sı | Her sayı bir `results.json` alanına bağlı |
+
+---
+
+## 4. Takvim önerisi
+
+**[VARSAYIM]**: P9'daki 15 Aralık 2026 makale hedefi korunursa (onaysız, K12).
+Bugün 2026-10-20; sekiz hafta.
+
+| Hafta | Tarih | Ben | Siz | Kilometre taşı |
+|---|---|---|---|---|
+| 1 | 20–26 Eki | İP-0 açık L-maddeleri; İP-1 metrik eklemeleri | S3 → S1 başlat | Belgeler tutarlı; metrikler testli |
+| 2 | 27 Eki–2 Kas | R1-eval/1 kodu (IBO süpürmesi, Rapp, bellek polinomu); tam metin okumaları | S2 tam koşu → sonuç gönder | **Kademe A tam sonuç** |
+| 3 | 3–9 Kas | B0 kararı, B2/B3; NPR kontrolü; OpenDPD türetme betiği | R1-eval/1 tam üretim | C3 IBO-eğrisi + yükselteç uyumsuzluğu |
+| 4–5 | 10–23 Kas | İP-3: ASI, CuC, faz gürültüsü, PL çerçeve; `P16` B2/1 protokolü dondurulur | — | 8 sınıf üreteci testli |
+| 6 | 24–30 Kas | İP-4: iptal artığı, plan kısa yolu, ablasyon altyapısı; İP-5 eğitim-zamanı OSR | B2/1 tam üretim | Ayırt edilebilirlik tablosu taslağı |
+| 7 | 1–7 Ara | İP-6 EDSC + XGBoost; analiz | B2/1 tam koşu (3 tohum) | Nihai tablolar |
+| 8 | 8–15 Ara | İP-7 taslak, sınırlar, veri kartı | Okuma/onay | Makale taslağı |
+
+**Kesme sırası** (süre yetmezse, proje kuralı korunarak): cyclic dalı →
+transformer karşılaştırması → ek unknown aileleri. Cyclic dalı kesilirse CuC
+için **iptal artığı + EDSC** tutulur (daha ucuz) ve CuC sonucu "PSD-tek gözlemde
+tanımlanamaz, C/I eşiği şu" biçiminde raporlanır (K9).
+
+---
+
+## 5. Yeni ve güncellenen açık kararlar
+
+| # | Karar | Önerim | Kimde |
+|---|---|---|---|
+| K5 | ASI giriş noktası | Downlink-ASI **[VARSAYIM]**; uplink-ASI park listesinde | siz (veto) |
+| K9 | CuC gözlem kanalı | Gözlemden iptal artığı + oracle üst sınır (etiketli); tam cyclic dalı kesme listesinde ilk | siz (veto) |
+| K10 | Yenilik cümlesi | "Bildiğimiz kadarıyla, GEO transponder downlink izlemesinde çok taşıyıcılı TWTA/IMUX/OMUX zincirini, taşıyıcı planı koşullamasını, çift polarizasyonu ve görülmemiş girişim reddini **birlikte** modelleyen ilk açık benchmark ve nicel yük farkı ölçümü" — çift-pol ve open-set kısımları ancak B2/1 tamamlanınca | siz |
+| K11 | Yükselteç uyumsuzluk kümesi | Rapp + bellek polinomu + OpenDPD-öğrenilmiş (L2 sonrası) | siz (veto) |
+| K12 | Takvim | 15 Aralık 2026 hedefi (P9) | siz |
+| K13 | Depo lisansı ve veri yayımı | Kod için izin verici lisans önerilir; karar sizde | siz |
+| K14 | Vekil (surrogate) unknown doğrulama | Şimdilik **yok** (yalnız bilinen kalibrasyon, mevcut kural); ODIN/OE kullanılırsa ayrı tanımlı vekil aile, asıl unknown'larla çakışmaz | siz (veto) |
+
+---
+
+## 6. Hakem itirazları (bu programın en zayıf üç noktası)
+
+| İtiraz | Yanıt / sınır |
+|---|---|
+| "Bütün sonuçlar iki simülatör arasındaki fark; gerçek veri yok." | Kabul edilen sınır (ana plan §1.2, DURUM §5.5). Program bunu üç ayakla daraltır: yükselteç ailesi uyumsuzluğu, NPR karşılaştırması, ölçülmüş PA aktarımı. Hiçbiri "operasyonel başarım" iddiası taşımaz. |
+| "Plan maskesi unauthorized sınıfını bedavaya veriyor; model plan okuyucu." | İP-4.4 plan bozma testleri ve "maske var, taşıyıcı taşınmış" ablasyonu. Başarım maskeye bağlıysa sonuç böyle yazılır. |
+| "CuC ve ASI'de kötü sonuç yöntemin başarısızlığıdır." | Önceden kayıtlı ayırt edilebilirlik analizi: hangi gözlem olmadan hangi çiftin ayrılamayacağı **sonuçtan önce** yazılır (İP-4, P16); kâhin üst sınırı ile gözlem-tabanlı yöntem arasındaki fark ayrıca raporlanır. |
+
+---
+
+## 7. Park listesi
+
+- Uplink-ASI alt mekanizması (K5 sonrası)
+- Çok etiketli / frekans konumlu çıktı (K4: Kademe B sonrası)
+- Chalmers RF WebLab ölçümü (P8 koşullu)
+- LLM tabanlı karakterizasyon, VAE ayrıştırma (GNSS literatüründen; kapsam dışı)
+- ALC (otomatik seviye kontrolü), komşu transponderler
+- Düşük bit derinliği/nicemleme etkisi (Electronics 2025)
+
+## 8. Bu belgenin bıraktığı açık durum
+
+İP-0'ın kalan L-maddeleri ve İP-1 metrik kodu sırada bende; S1–S2 tam koşusu ve
+§5'teki kararlar sizde. Uygulama başlayınca her İP kendi P-belgesini veya
+mevcut belgedeki değişiklik notunu alır; bu plan yalnızca sırayı ve kapanış
+ölçütlerini tutar.
