@@ -6,6 +6,10 @@ frozen A1 observations without changing A1 classes, sampling ranges or split
 definitions. It is separate from the final eight-class proposal in
 [open_set_protocol.md](../research/open_set_protocol.md).
 
+Update: the next development slice is implemented in [P13](P13_extended_openset.md),
+including new unknown families, Mahalanobis and AUROC/AP/OSCR. This document
+continues to specify the original B1-dev/1 workflow.
+
 ## What is implemented
 
 The pipeline now executes:

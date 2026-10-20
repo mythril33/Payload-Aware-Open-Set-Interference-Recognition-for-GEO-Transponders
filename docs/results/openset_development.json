@@ -1,0 +1,311 @@
+{
+  "protocol": "B1-dev/1",
+  "source_protocol": "A1, frozen 2026-10-09",
+  "holdout_label": "swept_cw",
+  "known_labels": [
+    "clean",
+    "cw",
+    "unauthorized",
+    "overdrive"
+  ],
+  "config": {
+    "protocol": "B1-dev/1",
+    "holdout_label": "swept_cw",
+    "calibration_fraction": 0.5,
+    "split_seed": 0,
+    "target_acceptance": 0.95,
+    "temperature": 1.0,
+    "training": {
+      "level": "carrier",
+      "time_pool": 2,
+      "width": 16,
+      "epochs": 3,
+      "batch": 16,
+      "lr": 0.001,
+      "augment": true,
+      "weight_decay": 0.0001,
+      "seed": 0
+    }
+  },
+  "partitions": {
+    "train": {
+      "n_samples": 24,
+      "scenario_ids": [
+        100000,
+        100001,
+        100002,
+        100003,
+        100004,
+        100005
+      ],
+      "per_class": [
+        6,
+        6,
+        6,
+        6
+      ]
+    },
+    "validation": {
+      "n_samples": 12,
+      "scenario_ids": [
+        200000,
+        200001,
+        200004
+      ],
+      "per_class": [
+        3,
+        3,
+        3,
+        3
+      ]
+    },
+    "calibration": {
+      "n_samples": 12,
+      "scenario_ids": [
+        200002,
+        200003,
+        200005
+      ],
+      "per_class": [
+        3,
+        3,
+        3,
+        3
+      ]
+    },
+    "known_test": {
+      "n_samples": 24,
+      "scenario_ids": [
+        300000,
+        300001,
+        300002,
+        300003,
+        300004,
+        300005
+      ],
+      "per_class": [
+        6,
+        6,
+        6,
+        6
+      ]
+    },
+    "unknown_test": {
+      "n_samples": 6,
+      "scenario_ids": [
+        300000,
+        300001,
+        300002,
+        300003,
+        300004,
+        300005
+      ],
+      "per_class": [
+        6
+      ]
+    }
+  },
+  "methods": {
+    "msp": {
+      "threshold": 0.7361517481723889,
+      "target_known_acceptance": 0.95,
+      "known_acceptance": {
+        "mean": 0.875,
+        "ci95": [
+          0.625,
+          1.0
+        ],
+        "n_samples": 24,
+        "n_scenarios": 6
+      },
+      "known_closed_accuracy": {
+        "mean": 0.25,
+        "ci95": [
+          0.25,
+          0.25
+        ],
+        "n_samples": 24,
+        "n_scenarios": 6
+      },
+      "accepted_known_accuracy": {
+        "mean": 0.23809523809523808,
+        "ci95": [
+          0.2,
+          0.25
+        ],
+        "n_samples": 21,
+        "n_scenarios": 6
+      },
+      "known_correct_acceptance": {
+        "mean": 0.20833333333333334,
+        "ci95": [
+          0.125,
+          0.25
+        ],
+        "n_samples": 24,
+        "n_scenarios": 6
+      },
+      "known_macro_f1_before_rejection": 0.1,
+      "known_macro_f1_after_rejection": 0.09259259259259259,
+      "unknown_rejection": {
+        "mean": 0.16666666666666666,
+        "ci95": [
+          0.0,
+          0.5
+        ],
+        "n_samples": 6,
+        "n_scenarios": 6
+      },
+      "false_alarm_on_clean": {
+        "mean": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ],
+        "n_samples": 6,
+        "n_scenarios": 6
+      },
+      "calibration_acceptance": 1.0
+    },
+    "energy": {
+      "threshold": -1.4145664518037773,
+      "target_known_acceptance": 0.95,
+      "known_acceptance": {
+        "mean": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ],
+        "n_samples": 24,
+        "n_scenarios": 6
+      },
+      "known_closed_accuracy": {
+        "mean": 0.25,
+        "ci95": [
+          0.25,
+          0.25
+        ],
+        "n_samples": 24,
+        "n_scenarios": 6
+      },
+      "accepted_known_accuracy": {
+        "mean": 0.25,
+        "ci95": [
+          0.25,
+          0.25
+        ],
+        "n_samples": 24,
+        "n_scenarios": 6
+      },
+      "known_correct_acceptance": {
+        "mean": 0.25,
+        "ci95": [
+          0.25,
+          0.25
+        ],
+        "n_samples": 24,
+        "n_scenarios": 6
+      },
+      "known_macro_f1_before_rejection": 0.1,
+      "known_macro_f1_after_rejection": 0.1,
+      "unknown_rejection": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "n_samples": 6,
+        "n_scenarios": 6
+      },
+      "false_alarm_on_clean": {
+        "mean": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ],
+        "n_samples": 6,
+        "n_scenarios": 6
+      },
+      "calibration_acceptance": 1.0
+    }
+  },
+  "source_data_complete": false,
+  "data_fingerprints": {
+    "train_nl": "4b0457abcd18d6f7a278d3afe9f8de56410199646d78c907b28e3e059b3e0178",
+    "val_nl": "fddfb0be806384884b6765160599f847a55541da1d6a8e7586ddb71771a6802f",
+    "test_id_nl": "198d0fa3f5e0bfb9c1016f87f20e44c2886b06e0bea323a092f59d4297981bc0"
+  },
+  "source": {
+    "revision": "284006372195c6e792e96cec6e04e34d6a664c3b",
+    "files_sha256": {
+      "geoml/__init__.py": "36d9afb2c93bdf7bf87734caae8a96946e6b41aab5000c2402909589e14095a9",
+      "geoml/artifacts.py": "642bc0ec1d0155460be5c609a08e0d2775705ff393e5d1a9064168d011055477",
+      "geoml/calibration.py": "dfc4bc7848fdf5603b95816489ff3070f7e7518e91d0aa3284ebdcbd50b47315",
+      "geoml/cfar.py": "7278de278fd1b29fb04ac5fabaf009a4f4e5ee4e9cb3ebe462dc8e22eb567c8d",
+      "geoml/data.py": "2be145e12ace0875eaa0bd340e602e91857dcb194d36725501bf9a209df6c684",
+      "geoml/evaluation.py": "38ba9f79fea870af10b0fe6f219caa1e20d3affcf412a0901e489625dd1d3691",
+      "geoml/experiment.py": "16cbe006ec915992aa2f96c21a5dcbd7283ed7f38e3270911e091bbb965e2c60",
+      "geoml/metrics.py": "2d287df07ff2c442bba94e744cd3c205525eca9409212c65060ecbe89287deed",
+      "geoml/model.py": "2b3c021491af5c58d4b8461e05728810dbcd0b97351b3bde7e3c19cf7f49f247",
+      "geoml/openset.py": "a1aabb59eacbe1e343f41176c3ebd2d7c284d7ffce5e3b5336c27456e2d7f38a",
+      "geoml/pipeline.py": "e9c2dfa34d69d029644c09fb69a00427fbbdb9c4b13285f6d1e91faed7945f0c",
+      "geoml/train.py": "09f7a488602e726a79a39365562213847f936263fe1fb35f28d80bb730b0ea5a",
+      "geosim/__init__.py": "fed3f675bdd0ce44073fec6a170ec73f752e5225927215dc460de04dab6da007",
+      "geosim/classes.py": "0c28a077afe3e9da49718aed04588cc519febc19b96e85352007f8b094a36c7b",
+      "geosim/dataset.py": "5d034445009ee67066cfe187d4a47552af76f934cae1319ef848d600f84f35bf",
+      "geosim/interferers.py": "eb2d20c999b4a1f744e93f8aec062576e519c8df7be935012e371a671efa0383",
+      "geosim/payload.py": "85fa68fe3e06117d35211a5af279edebe3bb821a98d73ac2f5060526fafc846c",
+      "geosim/plan.py": "470bd9aef9729940d510fc9c883ee9df50bcff6800738bea13902e8f8edd14b2",
+      "geosim/protocol.py": "815c8861eaf33f2d78239c0cbb676770f0c40d43b496f48c3f86b4d6f822c16f",
+      "geosim/scenario.py": "63b38d9acfa038f53caa45bdf68a17fd6bbcfa18f919b9167ed3e660264d2060",
+      "geosim/sensor.py": "e78151a893e617b7eaa3af8016b4e47ee25a61e15eb30e37093bbf84971c3226",
+      "geosim/waveform.py": "308641f19a573b7ee5897d7cac11d0d87e28e1200e0c53c61ddff09fd9abdf90",
+      "geosim/data/dvbs2_twta.json": "0da3a624f9e94058ed100d6c06b62aff08f49f3a5a93df3ddc23f4b3f082c4f1",
+      "geosim/data/mux_fir.npz": "58b78bdaf6b749f9f45e8c1f0541674ad0d81f9bd6f17762e667965cd8ba11e8"
+    }
+  },
+  "experiment_fingerprint": "d69e1e7461a6d37008b3813efc5afa85665e1ed60d7dcef691e1e1d5fc74e2cd",
+  "checkpoint_sha256": "ec51666dda8d73fb89f9220f11988f1a0f6f512b3971970f7bda76470f47ae81",
+  "calibrators": {
+    "msp": {
+      "method": "msp",
+      "threshold": 0.7361517481723889,
+      "target_acceptance": 0.95,
+      "n_calibration": 12,
+      "temperature": 1.0,
+      "provenance": "af00e16a67053f62e07cddf0786ff6853d63edd99a8ba19d3c452dd48f5ea658"
+    },
+    "energy": {
+      "method": "energy",
+      "threshold": -1.4145664518037773,
+      "target_acceptance": 0.95,
+      "n_calibration": 12,
+      "temperature": 1.0,
+      "provenance": "148a55c2f1fffe296811413240f7415b706d2a5ea5c117269de38509466dc6e4"
+    }
+  },
+  "n_parameters": 309220,
+  "training_history": [
+    {
+      "epoch": 0,
+      "train_loss": 1.6120471954345703,
+      "val_macro_f1": 0.1
+    },
+    {
+      "epoch": 1,
+      "train_loss": 1.600547472635905,
+      "val_macro_f1": 0.1
+    },
+    {
+      "epoch": 2,
+      "train_loss": 1.385844310124715,
+      "val_macro_f1": 0.1
+    }
+  ],
+  "runtime": {
+    "python": "3.12.14",
+    "numpy": "2.5.4",
+    "torch": "2.14.1+cpu",
+    "device": "cpu"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "protocol": "B1-dev/2",
+  "holdout_label": "swept_cw",
+  "calibration_fraction": 0.5,
+  "split_seed": 0,
+  "target_acceptance": 0.95,
+  "temperature": 1.0,
+  "methods": ["msp", "energy", "mahalanobis"],
+  "mahalanobis_regularization": 0.1,
+  "training": {
+    "epochs": 3,
+    "batch": 16,
+    "width": 16,
+    "time_pool": 2,
+    "level": "carrier",
+    "seed": 0
+  }
+}

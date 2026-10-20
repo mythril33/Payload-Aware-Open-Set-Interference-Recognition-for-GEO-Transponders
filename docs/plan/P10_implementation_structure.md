@@ -4,6 +4,7 @@ Date: 2026-10-20. Status: proposed architecture, not an implementation-completio
 
 Implementation update: M0 and the first M1 slice are now implemented; see
 [P11](P11_openset_development.md) for scope, commands, validation and limitations.
+The M2 development extension is now implemented in [P13](P13_extended_openset.md).
 
 This plan combines the supplied project proposal with the actual code and the
 open-set protocol on GitHub main (`2840063`). The local source baseline is

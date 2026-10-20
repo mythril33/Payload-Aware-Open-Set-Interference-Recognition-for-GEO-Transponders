@@ -5,7 +5,7 @@ from dataclasses import FrozenInstanceError
 import numpy as np
 import pytest
 
-from geoml.calibration import RejectionCalibration, calibrate
+from geoml.calibration import RejectionCalibration, calibrate, calibrate_scores
 from geoml.openset import unknown_scores
 
 
@@ -98,3 +98,21 @@ def test_accept_rejects_invalid_or_mismatched_score_arrays():
     for scores in ([np.nan], [[0.1]], ["0.1"], [-0.1], [1.1]):
         with pytest.raises(ValueError):
             c.accept(scores)
+
+
+def test_precomputed_distances_calibrate_without_logit_or_unknown_inputs(tmp_path):
+    calibration = calibrate_scores(np.array([1., 3., 2., 4.]), "mahalanobis", 0.5, provenance="known-calibration")
+    assert calibration.threshold == 3
+    np.testing.assert_array_equal(calibration.accept(np.array([0., 3., 10.])), [True, True, False])
+    calibration.save(tmp_path / "distance.json")
+    assert RejectionCalibration.load(tmp_path / "distance.json") == calibration
+    with pytest.raises(ValueError, match="temperature"):
+        calibrate_scores(np.array([1., 2.]), "mahalanobis", temperature=2)
+    with pytest.raises(ValueError, match="nonnegative"):
+        calibrate_scores(np.array([-1., 2.]), "mahalanobis")
+
+
+@pytest.mark.parametrize("scores", [[], [np.nan], [[1.]], ["1"]])
+def test_invalid_precomputed_calibration_scores_fail(scores):
+    with pytest.raises(ValueError, match="scores"):
+        calibrate_scores(scores, "energy")

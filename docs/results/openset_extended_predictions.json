@@ -1,0 +1,1106 @@
+[
+  {
+    "scenario_id": 300000,
+    "role": "known_test",
+    "true_family": "clean",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7352579166100615,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4171512034260665,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1060.2731722572146,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300000,
+    "role": "known_test",
+    "true_family": "cw",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7352556603017751,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4171462123718384,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1061.9135377364944,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300000,
+    "role": "known_test",
+    "true_family": "unauthorized",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7353525040008448,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4172587156790133,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1005.3152292397685,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300000,
+    "role": "known_test",
+    "true_family": "overdrive",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.735419913059915,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.417032004233122,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 964.0831586320576,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300001,
+    "role": "known_test",
+    "true_family": "clean",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7352042622345798,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4152320181056413,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 2020.7076215304273,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300001,
+    "role": "known_test",
+    "true_family": "cw",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7351616447443542,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4151900198997236,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1712.2922113071515,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300001,
+    "role": "known_test",
+    "true_family": "unauthorized",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7355912207841682,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4146167132054257,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 2185.021234600375,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300001,
+    "role": "known_test",
+    "true_family": "overdrive",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7354421484644074,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.415116975389396,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1836.098266559009,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300002,
+    "role": "known_test",
+    "true_family": "clean",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7349354083491448,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.415064666461683,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1961.7166824520245,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300002,
+    "role": "known_test",
+    "true_family": "cw",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7351813557466238,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.414845003873004,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1755.8580648846018,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300002,
+    "role": "known_test",
+    "true_family": "unauthorized",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7351817181154181,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4146597202946956,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 2000.7185991672159,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300002,
+    "role": "known_test",
+    "true_family": "overdrive",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7351612401365473,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4154760473052166,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1362.3950640052567,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300003,
+    "role": "known_test",
+    "true_family": "clean",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7362164443844403,
+        "accepted": false,
+        "prediction": "unknown"
+      },
+      "energy": {
+        "unknown_score": -1.4185635195737258,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 3019.5152532099605,
+        "accepted": false,
+        "prediction": "unknown"
+      }
+    }
+  },
+  {
+    "scenario_id": 300003,
+    "role": "known_test",
+    "true_family": "cw",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7361002874689551,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4189076195775188,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 3120.9341771390564,
+        "accepted": false,
+        "prediction": "unknown"
+      }
+    }
+  },
+  {
+    "scenario_id": 300003,
+    "role": "known_test",
+    "true_family": "unauthorized",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7363248444411887,
+        "accepted": false,
+        "prediction": "unknown"
+      },
+      "energy": {
+        "unknown_score": -1.4184612916314001,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 2983.4481412154664,
+        "accepted": false,
+        "prediction": "unknown"
+      }
+    }
+  },
+  {
+    "scenario_id": 300003,
+    "role": "known_test",
+    "true_family": "overdrive",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7363964427138786,
+        "accepted": false,
+        "prediction": "unknown"
+      },
+      "energy": {
+        "unknown_score": -1.419115403364765,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 3054.5528828806914,
+        "accepted": false,
+        "prediction": "unknown"
+      }
+    }
+  },
+  {
+    "scenario_id": 300004,
+    "role": "known_test",
+    "true_family": "clean",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7354380159288563,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.416797651011234,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1968.4671945821585,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300004,
+    "role": "known_test",
+    "true_family": "cw",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7354688256046773,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4168135601726095,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 2009.533078818436,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300004,
+    "role": "known_test",
+    "true_family": "unauthorized",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7358508263750759,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.416727010402734,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 2214.8183711365264,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300004,
+    "role": "known_test",
+    "true_family": "overdrive",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7358484064971897,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4166952890589877,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 2152.5148510234394,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300005,
+    "role": "known_test",
+    "true_family": "clean",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7357497283965694,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.41687405947781,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1531.0584645996528,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300005,
+    "role": "known_test",
+    "true_family": "cw",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.73574518505745,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4168710224101113,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1535.0453372421034,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300005,
+    "role": "known_test",
+    "true_family": "unauthorized",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7359650372911524,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.416959383903699,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 2152.8080239547157,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300005,
+    "role": "known_test",
+    "true_family": "overdrive",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7359101858740065,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4167372381481034,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1853.6025569077128,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300000,
+    "role": "unknown_test",
+    "true_family": "swept_cw",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7352675931958638,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4172082590839872,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1098.1393147228282,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300001,
+    "role": "unknown_test",
+    "true_family": "swept_cw",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7352416554141357,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.414962105325683,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1765.0243140376142,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300002,
+    "role": "unknown_test",
+    "true_family": "swept_cw",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7350455509455218,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4156805555818537,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1708.933534196197,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300003,
+    "role": "unknown_test",
+    "true_family": "swept_cw",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7365838924774314,
+        "accepted": false,
+        "prediction": "unknown"
+      },
+      "energy": {
+        "unknown_score": -1.4189467805288989,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 4815.968929902734,
+        "accepted": false,
+        "prediction": "unknown"
+      }
+    }
+  },
+  {
+    "scenario_id": 300004,
+    "role": "unknown_test",
+    "true_family": "swept_cw",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7354665678065726,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.416530560628269,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 2049.5970602883453,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 300005,
+    "role": "unknown_test",
+    "true_family": "swept_cw",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7358569849911143,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4171558159898607,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 2434.1291551737168,
+        "accepted": false,
+        "prediction": "unknown"
+      }
+    }
+  },
+  {
+    "scenario_id": 900000,
+    "role": "unknown_test",
+    "true_family": "pulsed",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7360313434276597,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4169005082315909,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1683.7280156790976,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 900000,
+    "role": "unknown_test",
+    "true_family": "wideband_noise",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7360187858342213,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4169137338109492,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1680.3047412322685,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 900000,
+    "role": "unknown_test",
+    "true_family": "intermittent_bursts",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7360259621807739,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.416891447390635,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1677.2437396986352,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 900001,
+    "role": "unknown_test",
+    "true_family": "pulsed",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7353326462624589,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.415541374691496,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1298.1108401078066,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 900001,
+    "role": "unknown_test",
+    "true_family": "wideband_noise",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7356081850147489,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4153423741668256,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1010.2826858180451,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 900001,
+    "role": "unknown_test",
+    "true_family": "intermittent_bursts",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7353980761259188,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4155202880611013,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1285.6072577321224,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 900002,
+    "role": "unknown_test",
+    "true_family": "pulsed",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.735597394795041,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4167876414301988,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1806.5910729903667,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 900002,
+    "role": "unknown_test",
+    "true_family": "wideband_noise",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7356502866403989,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4167203327359565,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1827.7881702449336,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 900002,
+    "role": "unknown_test",
+    "true_family": "intermittent_bursts",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.735617474238164,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4167515153632408,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1852.71412506436,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 900003,
+    "role": "unknown_test",
+    "true_family": "pulsed",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7355150977119926,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4158868836164684,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1040.1622797442387,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 900003,
+    "role": "unknown_test",
+    "true_family": "wideband_noise",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7355116993998161,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4158989719977007,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1043.4402205796043,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 900003,
+    "role": "unknown_test",
+    "true_family": "intermittent_bursts",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7355135561111,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4158981614750406,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1042.6865991023774,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 900004,
+    "role": "unknown_test",
+    "true_family": "pulsed",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7358980130462476,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4163388226402984,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1654.05944933,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 900004,
+    "role": "unknown_test",
+    "true_family": "wideband_noise",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7361134046620628,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4158868672624534,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 2075.1687446912806,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 900004,
+    "role": "unknown_test",
+    "true_family": "intermittent_bursts",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7359028655349245,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4163303891610735,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 1634.7094440144365,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 900005,
+    "role": "unknown_test",
+    "true_family": "pulsed",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7347001947857315,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.415195859335435,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 2318.7643280043076,
+        "accepted": false,
+        "prediction": "unknown"
+      }
+    }
+  },
+  {
+    "scenario_id": 900005,
+    "role": "unknown_test",
+    "true_family": "wideband_noise",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7347630167689047,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.4147657522948687,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 2263.124088823706,
+        "accepted": true,
+        "prediction": "overdrive"
+      }
+    }
+  },
+  {
+    "scenario_id": 900005,
+    "role": "unknown_test",
+    "true_family": "intermittent_bursts",
+    "known_prediction": "overdrive",
+    "methods": {
+      "msp": {
+        "unknown_score": 0.7347033851294369,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "energy": {
+        "unknown_score": -1.415233045446415,
+        "accepted": true,
+        "prediction": "overdrive"
+      },
+      "mahalanobis": {
+        "unknown_score": 2309.2881207138685,
+        "accepted": false,
+        "prediction": "unknown"
+      }
+    }
+  }
+]

@@ -35,6 +35,24 @@ This tiny run validates execution, not recognition quality. It does not implemen
 the final eight-class/dual-polarization benchmark. See the [implementation plan](docs/plan/P10_implementation_structure.md)
 and [development protocol and commands](docs/plan/P11_openset_development.md).
 
+## Extended unknown-family experiment
+
+`B1-dev/2` adds test-only pulsed, wideband-noise and intermittent-burst sources,
+training-only regularized Mahalanobis scoring, and unknown-positive AUROC/AP plus
+OSCR curves. It reports each family separately and pooled, using the same frozen
+known-only calibration for all test families.
+
+```bash
+python -m geosim.dataset --out data/openset-v2 --splits train_nl val_nl test_id_nl --limit-seeds 6 --workers 1
+python -m geosim.unknowns --out data/unknowns-v1 --n-seeds 6
+python -m geoml.experiment --config configs/stage_b_unknowns.json --data data/openset-v2 --unknown-data data/unknowns-v1 --out runs/openset-v2
+```
+
+See [unknown-source definitions](docs/plan/P12_unknown_events.md) and
+[extended protocol, metric conventions and reuse](docs/plan/P13_extended_openset.md).
+Reusable coding-agent briefs are versioned in [.agents/](.agents/README.md), with
+repository instructions in [AGENTS.md](AGENTS.md).
+
 ## Research dossier (2026-10-20)
 
 This is an evolving research project, **not** a completed dual-polarization, eight-class open-set system.
@@ -48,4 +66,4 @@ This is an evolving research project, **not** a completed dual-polarization, eig
 - [Literature bibliography (BibTeX)](references/references.bib)
 - [Detailed current Stage A status](docs/plan/DURUM.md) and [pilot-only results](docs/results/pilot_A.md)
 
-**Current research boundary:** Stage A is single-polarization/five known classes, with a small pilot. The B1-dev/1 extension implements known-class holdout rejection with MSP and energy; full-data results and the complete Stage B benchmark remain outstanding. The pilot is not evidence of field/deployment performance. The code repository does not currently specify a top-level license; third-party PDF/data licenses and redistribution conditions must be handled separately. Official primary-source links are preserved instead of automatically mirroring restricted documents.
+**Current research boundary:** Stage A is single-polarization/five known classes, with a small pilot. B1-dev/1 implements known-class holdout rejection with MSP and energy; B1-dev/2 adds unknown families, Mahalanobis and ranking metrics. Full-data results and the complete Stage B benchmark remain outstanding. The pilot is not evidence of field/deployment performance. The code repository does not currently specify a top-level license; third-party PDF/data licenses and redistribution conditions must be handled separately. Official primary-source links are preserved instead of automatically mirroring restricted documents.

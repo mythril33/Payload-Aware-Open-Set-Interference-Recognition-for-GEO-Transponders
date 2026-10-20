@@ -4,12 +4,15 @@ Son güncelleme: 2026-10-20 (araştırma eki; temel deney durumu 2026-10-10) · 
 
 ## Uygulama eki — 2026-10-20
 
+- **M2 geliştirme dilimi kodlandı:** [P12 unknown üreteçleri](P12_unknown_events.md), [P13 genişletilmiş deney](P13_extended_openset.md); periyodik darbeli CW, geniş bant gürültü ve aralıklı uzun burst aileleri test için üretilebilir. Mahalanobis yalnız eğitim embedding'leriyle uydurulur. AUROC/AP ve OSCR aile bazında ve birleşik raporlanır; eşikler yine ayrı bilinen kalibrasyon verisinden alınır.
+- M2 doğrulaması: **226 test geçti**. Toplam 108 fiziksel simülasyon gözlemi üretildi; üç epok eğitim, yalnız 24 eğitim örneğinden Mahalanobis ve ayrı 12 bilinen örnekten eşik kalibrasyonu tamamlandı. Kayıtlı sonuç, eğitilmiş model ve üretim tekrar kullanımı doğrulandı. [Küçük koşu sonuçları](../results/openset_extended.md) zayıftır; bilimsel veya operasyonel başarı kanıtı değildir.
+- Ajan görev tanımları `.agents/` ve depo geliştirme kuralları `AGENTS.md` altında sürümlendi. M0/M1 kaynak, test, kurulum ve ajan belgeleri GitHub'a `dcdc023` ile gönderildi.
 - [P10 uygulama yapısı](P10_implementation_structure.md) ve [P11 geliştirme protokolü](P11_openset_development.md) eklendi.
 - **M0 + ilk M1 dilimi kodlandı:** veri/çekirdek kayıtlarının kimlik ve bütünlük kontrolü, senaryo bazlı ayrım, bilinen doğrulama verisiyle MSP/energy eşikleri ve `known/unknown` tahmin/rapor hattı.
 - `B1-dev/1`, mevcut beş sınıftan bir girişim ailesini dışarıda tutar; `clean` bilinen olarak kalır. Eğitim için doğrulama ve ret eşiği kalibrasyonu ayrı senaryo gruplarıdır. A1 protokolünün fiziksel örnekleme/sınıf/split tanımları değiştirilmedi.
 - Altı tohum × üç kaynak split ile fiziksel üretim ve üç epok eğitim denemesi yapıldı. Küçük koşu yalnız çalışma kanıtıdır; model kalitesi zayıftır ve bilimsel sonuç değildir.
 - Doğrulama: tam test paketi **141 test geçti**; son kaynak-rolü kontrolü sonrası yedi deney testi tekrar geçti. Veri ve checkpoint tekrar kullanımı da gerçek koşuda doğrulandı.
-- Sekiz sınıflı nihai B benchmark'ı, yeni unknown üreteçleri, Mahalanobis, AUROC/OSCR ve çift pol henüz uygulanmadı. Aşağıdaki eski faz/eksik tabloları temel Kademe A durumunu tarif eder; bu ek yalnız ilk geliştirme dilimini kapatır.
+- Sekiz sınıflı nihai B benchmark'ı ve çift pol henüz uygulanmadı. Yeni unknown üreteçleri, Mahalanobis ve AUROC/OSCR artık geliştirme hattında vardır; tam bilimsel değerlendirme yapılmadı. Aşağıdaki eski faz/eksik tabloları temel Kademe A durumunu tarif eder; bu ek geliştirme dilimlerini kaydeder.
 
 ## Araştırma eki — 2026-10-20
 

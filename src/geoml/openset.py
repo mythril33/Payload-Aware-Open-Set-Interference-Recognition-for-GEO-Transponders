@@ -2,7 +2,8 @@
 
 Larger values always mean more unknown-like. These scores do not establish that
 an event has a new physical cause; a separate known-validation calibrator sets
-the acceptance threshold. Mahalanobis and training-time methods are later work.
+the acceptance threshold. Embedding-based Mahalanobis scoring lives in the
+separate ``mahalanobis`` module; training-time open-set methods remain future work.
 """
 from __future__ import annotations
 
