@@ -9,6 +9,8 @@ The project already contained the working Stage A simulator and pilot report; th
 | Reuse licenses, actual representations and scope of outside data | [P8 outside-data audit](../plan/P8_dis_veri.md) |
 | Proposed dual-pol and open-set B-stage evaluation | [Open-set protocol](open_set_protocol.md) |
 | Risks, release and publication roadmap | [P9 roadmap](../plan/P9_yol_haritasi.md) |
+| User-supplied literature review (unverified items flagged) | [Literature review, 2026-10-20](literature_review_2026-10-20.md) |
+| What that review changes, corrections and work programme | [P15 programme](../plan/P15_literatur_duzeltme_programi.md) |
 | Source original formats/official URLs | [Source register](../../sources/ORIGINALS.md) |
 | Project's uploaded original written brief | [Text transcription](../../sources/original_proposal.md) |
 | BibTeX entries | [References](../../references/references.bib) |

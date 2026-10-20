@@ -77,6 +77,7 @@ This is an evolving research project, **not** a completed dual-polarization, eig
 - [P1 literature review and novelty audit](docs/plan/P1_literatur.md)
 - [P8 external dataset/source and license audit](docs/plan/P8_dis_veri.md)
 - [P9 roadmap and risks](docs/plan/P9_yol_haritasi.md)
+- [P15 post-literature-review correction and completion programme](docs/plan/P15_literatur_duzeltme_programi.md)
 - [Proposed open-set benchmark and identifiability protocol](docs/research/open_set_protocol.md)
 - [Primary/original source URLs and provenance](sources/ORIGINALS.md)
 - [Original user-supplied project brief — text transcription](sources/original_proposal.md)

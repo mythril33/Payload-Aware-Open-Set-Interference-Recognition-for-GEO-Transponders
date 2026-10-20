@@ -62,3 +62,40 @@ Son satır ayrı yayın sayılmaz; tam metin okuma için kontrol satırıdır. S
 - Tarama sistematik değildir; “literatürde hiç yok” türünde negatif iddiaları, arama kapsamı belgelenmeden kullanma.
 
 Kaynak künyeleri: `references/references.bib`; erişim ve telif koşulları: `docs/plan/P8_dis_veri.md`, `sources/ORIGINALS.md`.
+
+## 7. Tarama v2 eki (2026-10-20)
+
+Kaynak: kullanıcının verdiği *"Payload-Aware Open-Set Interference Recognition for
+GEO Transponders: Literature Review"* (2026-10-20). Düzeltme ve iş programı:
+[P15](P15_literatur_duzeltme_programi.md). Aşağıdaki satırlar taramanın
+özetlerine dayanır; **tam metin okuması henüz yapılmadı** (P15 İP-0).
+
+### 7.1 En yakın çalışmalara eklenenler
+
+| Çalışma | Görev / gözlem | Bu projeden fark (taramaya göre) | Kanıt |
+|---|---|---|---|
+| Agon — Yang ve ark., arXiv 2606.14147 (2026) | Yarı denetimli ikili girişim tespiti; MAE ön eğitimli çift dikkatli transformer; çapraz veri/OOD dayanıklılık | Doğrusal süperpozisyon; ikili görev; OOD = kovaryat kayması, bilinmeyen sınıf reddi değil | **Ön baskı** |
+| Pellaco, Singh & Jaldén, ICSSC 2019 (arXiv 1912.04716) | LSTM ile spektrum tahmini, sapmadan alarm; gerçek alınan spektrumlar | Yük modeli, plan, polarizasyon, open-set yok | OA PDF |
+| Vázquez ve ark., IEEE Commun. Mag. 2021; SSC Newsletter 2019 (arXiv 2007.10110) | Operatör iş akışında ML; otoenkoder dedektörü, sabit eşik | Sınıfları adlandırıyor (yanlış yönlenmiş anten, yanlış yapılandırılmış ekipman), modellemiyor; "gerçek veri" ayrıntısı **[DOĞRULANACAK]** | OA (Zenodo, arXiv) |
+| Politis ve ark., SPAWC 2016 / ICASSP 2017 | Uyduda istenen sinyali iptal edip artıkta enerji dedektörü (EDSC) | Uydu üstü (TWTA öncesi) gözlem; sınıflandırma yok; **baseline adayı** | ICASSP 2017 OA |
+| Pérez-Neira ve ark., arXiv 1802.03958 | HTS sinyal işleme derlemesi | Yer tabanlı tespitin transponder bozulmasından etkilendiğini not ediyor → C3 motivasyonu | OA |
+| Açık-küme karıştırma tanıma (Appl. Sci. 12(9):4380, 2022; Remote Sens. 14(24):6220, 2022; IET RSN 2024; IET Commun. 2026) | Genel / radar karıştırma sinyallerinde OSR | Uydu transponderi yok; en yakın OSR-girişim öncülü Appl. Sci. 2022 | Özet / OA |
+
+### 7.2 Boşluk matrisi — planlanan ve uygulanan ayrı
+
+✔ modellendi · ◐ kısmi · ✖ yok. "Uygulanan" sütunu 2026-10-20 depo durumudur;
+tarama son satırı yalnız "planlanan" olarak doldurmuştu (P15 L6).
+
+| | TWTA NL / IBO | IMUX/OMUX | Çok taşıyıcılı IM | Çift-pol / XPD | Taşıyıcı planı | Open-set |
+|---|---|---|---|---|---|---|
+| En yakın GEO işleri (SnT, Agon, CTTC, KTH) | ✖ (Agon: yalnız testbed ◐) | ✖ | ✖ | ✖ | ✖ (Daoud: alt-bant ızgarası ◐) | ✖ |
+| DVB-S2X kılavuzu (referans kanal) | ✔ | ✔ | ✔ | ✖ (ihmal edildiği söyleniyor, **[DOĞRULANACAK]**) | ◐ | — |
+| **Bu proje — planlanan** | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |
+| **Bu proje — uygulanan** | ✔ (A1) | ✔ (A1) | ✔ (A1) | ◐ (D1-dev/1, iki sınıf) | ✔ (maske) | ◐ (B1-dev/1–2, geliştirme) |
+
+### 7.3 P1 kapanış kriterine göre durum
+
+Ana plan P1 kapanış kriteri: "her boşluk iddiası en az 2 kaynakla desteklenmiş
+veya düzeltilmiş; en yakın 5 çalışma ile fark tablosu". Fark tablosu artık
+§2 + §7.1'de; ancak destek kaynakları özet düzeyinde. **P1 tam metin okuması
+(P15 İP-0) bitmeden kapanmış sayılmaz.**
