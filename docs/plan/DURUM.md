@@ -1,6 +1,14 @@
 # Proje durumu ve eksik kaydı
 
-Son güncelleme: 2026-10-20 (literatür taraması eki P16; temel deney durumu 2026-10-10) · Bu dosya "şu an neredeyiz, ne eksik" sorusunun tek yanıtıdır; her oturum sonunda güncellenir.
+Son güncelleme: 2026-10-21 (B2 fiziksel gözlem aşaması; temel deney durumu 2026-10-10) · Bu dosya "şu an neredeyiz, ne eksik" sorusunun tek yanıtıdır; her oturum sonunda güncellenir.
+
+## Uygulama eki — 2026-10-21
+
+- **B2'nin bilinen fiziksel gözlem aşaması kodlandı:** [P19](P19_b2_base_observations.md), `B2-base/1`. Sekiz bilinen sınıf tek çift-pol zincirde ve ayrı train / val-select / val-calib / test rollerinde üretilir. Dondurulmuş B2/1, üst protokoldür; kayıtlar `benchmark_complete: false` taşır.
+- Operatör planı ve gerçek yayınlar ayrıldı. Taşıyıcı düşerken plan maskesi, nominal kazanç ve kalan taşıyıcıların RNG akışı korunur. `plan_consistency` ayrı hedeftir. Kaynaklı ASI uplink'tedir; tarihsel E1 kayıtları değiştirilmedi.
+- Bağımsız pilot kalibrasyonu, atomik shard/metadata kayıtları, checksum, doğrulanmış tekrar kullanım ve sınırlı bellekli shard okuma bağlandı. Gerçek iptal artığı, beşinci kanal, iki çıktılı/merkez kayıplı model, nihai unknown/CID ve seviye eşleşmiş test üretimi sıradaki paketlerdir.
+- **Doğrulama: 707 test geçti.** 64 fiziksel gözlem (dört rol × iki grup × sekiz sınıf), doğrulanmış üretim tekrarı ve ana veriye katılmayan sekiz kontrollü taşıyıcı-düşmesi ikizi tamamlandı. Önceki motorla varsayılan IQ/PSD/maske ve metadata birebir eşleşti. [Pilot sonucu](../results/b2_base_pilot.md) ve [makinece okunur kayıt](../results/b2_base_pilot.json).
+- Pilot üretim 109,55 saniye sürdü; üreticinin tepe belleği 545,52 MiB, kayıtlar 16,49 MiB. Model eğitilmedi; bu paket fiziksel/veri bağlantısını doğrular. Tam B2 benchmark ve bilimsel tanıma sonucu değildir.
 
 ## Literatür taraması eki — 2026-10-20 (P16)
 
@@ -54,7 +62,7 @@ Son güncelleme: 2026-10-20 (literatür taraması eki P16; temel deney durumu 20
   - Plan içi kısım kâhin ikizle bile neredeyse görünmez (ΔPSD ortancası ≤ 0,18 dB).
   - Plan dışı kısım C/I_psd < 20 dB'de her olayda 1 dB'nin üstünde.
   - Sonuç: ASI ile `unauthorized` ayrımı plan örtüşmesinden çok seviyeden gelir (yan lob ve ana lob farkı). P18 §6'ya seviye eşleşmiş alt kutu önerisi eklendi.
-- **K17 alt kararları P18'e işlendi:** CuC C/I 5–30 dB; roller 1500/150/150/500; `adjacent_satellite_downlink` yakın-OOD bilinmeyen; LOKO 3 eğitim tohumu (21 ek eğitim). P18'in dondurulması hâlâ kullanıcıda (S9).
+- **K17 alt kararları P18'e işlendi:** CuC C/I 5–30 dB; roller 1500/150/150/500; `adjacent_satellite_downlink` yakın-OOD bilinmeyen; LOKO 3 eğitim tohumu (21 ek eğitim). P18, 2026-10-20'de donduruldu (S9 kapandı).
 
 - **Plan maskesi kısa yolu testi (A5, P16 İP-4.4) kodlandı:** `geoml.plan_shortcut`.
   - Kademe A checkpoint'lerini kimlik denetimiyle yükler ve yalnız plan maskesini bozulmuş bir operatör planından yeniden kurar.
@@ -134,7 +142,8 @@ Kademe A'nın (ders projesi) bütün zinciri kodlandı ve uçtan uca çalışıy
 | P15 | Faz gürültüsü ve olaylar (E1-dev/1) | Geliştirme dilimi | `P15_phase_noise_and_events.md` |
 | P16 | Literatür sonrası düzeltme programı | Plan; İP-0…İP-7 | `P16_literatur_duzeltme_programi.md` |
 | P17 | R1-eval/1 sağlamlık değerlendirmesi | Kodlandı, küçük koşu; tam sonuç yok | `P17_r1_robustness_eval.md` |
-| P18 | B2/1 sekiz sınıflı çift-pol açık-küme protokolü | **Donduruldu 2026-10-20 (K17)**; uplink ASI ve DVB-CID üreteçleri hazır; B2/1 veri üreteci yok | `P18_b2_protocol.md` |
+| P18 | B2/1 sekiz sınıflı çift-pol açık-küme protokolü | **Donduruldu 2026-10-20 (K17)**; bilinen fiziksel aşama P19'da; nihai model ve yalnız-test aileleri bekliyor | `P18_b2_protocol.md` |
+| P19 | B2 bilinen fiziksel gözlemleri | `B2-base/1` üretici, aktif yayın ayrımı, bağımsız kalibrasyon ve veri bütünlüğü | `P19_b2_base_observations.md` |
 | Kademe B | Çift pol, 8 sınıf, open-set | Geliştirme dilimleri var (B1-dev/1–2, D1-dev/1, E1-dev/1); nihai B2/1 benchmark yok | `P11`–`P14` |
 
 ## 3. Elde ne var
@@ -202,8 +211,8 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 | B9 | P16 İP-0: L1 Jammertest lisansı; L10 uydu anteni XPD'si; isteğe bağlı sistematik tarama (CNKI/IEEE) | Düşük | En yakın 7 GEO/uydu çalışması ve bir açık-küme karşılaştırması tam metin okundu ([P1 §8](P1_literatur.md)): hiçbir uydu çalışması transponder zinciri, plan, çift-pol veya bilinmeyen sınıf reddi içermiyor; L2, L7 (a–c) kapandı |
 | B10 | P16 İP-1: C3'ün IBO eğrisi, ECE, FPR@95TPR | Yüksek | **Kodlandı (P17)**; tam üretim ve değerlendirme sizde (S8) |
 | B11 | P16 İP-2: sentetik bellek polinomu, OpenDPD eşleme duyarlılığı (R1-eval/2), NPR'nin literatürle sayısal karşılaştırması | Yüksek | Rapp ve OpenDPD bellek polinomları (P17) ve [NPR kontrolü](../results/npr_check.md) yapıldı |
-| B12 | P16 İP-3/4: ASI, CuC, faz gürültüsü, PL çerçeve; iptal artığı, plan bozma testleri | Yüksek | Uplink ASI üreteci (`geosim.asi`) ve plan bozma aracı (`geoml.plan_shortcut`) hazır; kalan: B2/1'e bağlama, K16 yeniden adlandırması, iptal artığı, PL çerçeve |
-| B13 | P16 İP-5/6: B2/1 protokolü (`P18`), eğitim-zamanı OSR, EDSC ve XGBoost baseline'ları | Orta | B2/1 kod yazılmadan dondurulur |
+| B12 | P16 İP-3/4: B2 gözlemleri, iptal artığı, PL çerçeve/SCF ve plan bozma | Yüksek | Sekiz bilinen sınıf P19'da bağlandı; kalan: gözlemden iptal, PL çerçeve/SCF ve B2 plan-bozma değerlendirmesi |
+| B13 | P16 İP-5/6: B2/1 nihai test üretimi, eğitim-zamanı OSR, EDSC ve XGBoost | Orta | P18 donduruldu; unknown/CID/matched-test adaptörleri ve beş kanallı/iki çıktılı model henüz yok |
 
 ### 5.4 Bilinçli olarak ertelenenler (Kademe B)
 

@@ -1,6 +1,7 @@
 # P18 — B2/1: sekiz bilinen sınıflı, çift-pol, açık-küme benchmark protokolü
 
-Durum: **DONDURULDU — 2026-10-20 (K17, kullanıcı onayı)**; B2/1 veri üreteci yazılmadı ·
+Durum: **DONDURULDU — 2026-10-20 (K17, kullanıcı onayı)**; bilinen fiziksel gözlem aşaması
+`B2-base/1` [P19](P19_b2_base_observations.md)'da uygulanıyor; nihai B2/1 hattı tamamlanmadı ·
 Bütün K17 kararları aşağıya işlendi (§10). Hazır ve test edilmiş üreteçler: uplink ASI `geosim.asi`,
 DVB-CID `geosim.cid` ·
 Girdi: [P3](P3_taksonomi.md), [P5](P5_veri_protokol.md) (A1), [P12](P12_unknown_events.md),
@@ -245,6 +246,7 @@ Veri, eğitim bütçesi, eşik seçimi ve tohum protokolü bütün ablasyonlarda
 
 | Tarih | Değişiklik | Gerekçe |
 |---|---|---|
+| 2026-10-21 | Bilinen fiziksel gözlem aşaması `B2-base/1` olarak ayrıldı; iptal/unknown/model tamamlanmadan B2/1 tamamlandı denmez. K17b'nin %10–20 aralığı içinde taşıyıcı düşmesi Bernoulli olasılığı %15 seçildi; iki feed'den tek taşıyıcı, tek kalan co taşıyıcı hariç; CuC kurbanı aktif olmalı. Bütün sınıflar için ortak plan yalnız açık yerleşim olanaksızlığında en çok 64 çekilişle yenilenir; koşullama metadata'ya yazılır | Dondurulmuş fiziksel olayları tam eşleşmiş sekizli sahnelere bağlamak; nominal kazancı ve tarihsel sürümleri korumak. Sayısal uygulama seçimleri fiziksel pilot sonuçlarından önce kaydedildi |
 | 2026-10-20 | Taslak | — |
 | 2026-10-20 | **Donduruldu (K17).** Son kararlar: prototip/merkez kaybı; iptal artığı ana girdide (SCF yalnız A4b); CID için gerçek DVB-CID üreteci ve yalnız-test `cid_overlay` ailesi (beklenen `clean`); ASI dağılımları olduğu gibi + R2-eval/1 duyarlılığı; üretim bulutta, eğitim kullanıcıda | Kullanıcı yanıtları; CID seviyesi ETSI TS 103 129 Tablo 6 ile doğrulandı |
 | 2026-10-20 | K17 alt kararları işlendi: CuC 5–30 dB; roller 1500/150/150/500; downlink ASI yakın; LOKO 3 tohum | Kullanıcı yanıtları (dondurma öncesi) |

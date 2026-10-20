@@ -102,6 +102,21 @@ python -m geoml.robustness --data data/stageA --runs runs/stageA --r1 data/r1 --
 The OpenDPD devices are not TWTAs; the measured-RMS-to-back-off mapping and memory-tap
 scaling are assumptions. See [protocol, assumptions and validation](docs/plan/P17_r1_robustness_eval.md).
 
+## B2 known physical observations
+
+The frozen B2/1 roles and eight known classes are connected in the preliminary
+`B2-base/1` artifact stage. Operator plans remain intact when a planned carrier
+is absent, with fixed nominal gain and preserved waveform RNG streams.
+
+```bash
+python -m geosim.b2_dataset --config configs/b2_base.json --out data/b2-base-pilot --limit-groups 2 --groups-per-shard 1
+```
+
+This stage emits paired spectra, operator masks and a separate plan-consistency
+target. Its manifest marks the benchmark incomplete. Cancellation, the fifth
+input channel, unknown/CID tests and the final B2 model follow. See [contracts,
+sampling assumptions and reuse](docs/plan/P19_b2_base_observations.md).
+
 ## Research dossier (2026-10-20)
 
 This is an evolving research project, **not** a completed dual-polarization, eight-class open-set system.

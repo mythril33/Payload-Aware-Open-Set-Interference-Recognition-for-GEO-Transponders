@@ -1,0 +1,437 @@
+{
+  "protocol": "B2-base/1",
+  "parent_protocol": "B2/1",
+  "benchmark_complete": false,
+  "data_fingerprint": "5a44abc1f7d56d94f67e8d0cd112b2f46463e1d94b0fb99c5027d9d7ce106a15",
+  "generator_source_matches_current": true,
+  "roles": {
+    "train": {
+      "n_samples": 16,
+      "n_scenarios": 2,
+      "per_label": {
+        "clean": 2,
+        "cw": 2,
+        "swept_cw": 2,
+        "unauthorized": 2,
+        "overdrive": 2,
+        "cross_pol": 2,
+        "adjacent_satellite": 2,
+        "carrier_under_carrier": 2
+      }
+    },
+    "val-select": {
+      "n_samples": 16,
+      "n_scenarios": 2,
+      "per_label": {
+        "clean": 2,
+        "cw": 2,
+        "swept_cw": 2,
+        "unauthorized": 2,
+        "overdrive": 2,
+        "cross_pol": 2,
+        "adjacent_satellite": 2,
+        "carrier_under_carrier": 2
+      }
+    },
+    "val-calib": {
+      "n_samples": 16,
+      "n_scenarios": 2,
+      "per_label": {
+        "clean": 2,
+        "cw": 2,
+        "swept_cw": 2,
+        "unauthorized": 2,
+        "overdrive": 2,
+        "cross_pol": 2,
+        "adjacent_satellite": 2,
+        "carrier_under_carrier": 2
+      }
+    },
+    "test": {
+      "n_samples": 16,
+      "n_scenarios": 2,
+      "per_label": {
+        "clean": 2,
+        "cw": 2,
+        "swept_cw": 2,
+        "unauthorized": 2,
+        "overdrive": 2,
+        "cross_pol": 2,
+        "adjacent_satellite": 2,
+        "carrier_under_carrier": 2
+      }
+    }
+  },
+  "calibration": {
+    "artifact_version": 1,
+    "n_pilots": 64,
+    "max_condition": 1000000.0,
+    "reference_condition": 1.089754978435277,
+    "response_condition": 1.3331916981006362,
+    "residual_rms": 0.001035888180774543,
+    "provenance": "B2-base/1:3c71400ca6b3966247d1a950f6f189442a049951dc3ca0fd1b8979f1e1c51d79:independent_pilots",
+    "response_real": [
+      [
+        1.1628200007300793,
+        0.05853304529990329
+      ],
+      [
+        -0.038299902357417696,
+        0.8197217739040142
+      ]
+    ],
+    "response_imag": [
+      [
+        0.23567165596538642,
+        0.03208864167887926
+      ],
+      [
+        0.03216811095634134,
+        -0.3464913499034665
+      ]
+    ],
+    "parameter_sha256": "64da3d4859be6ab44631265ef7271b74b3221dfe80a997c6fc7b9cdad6792c06",
+    "artifact_sha256": "77dd0b49ff1e662d43e5895695c16528d16e0e9ba26fd0dfb0a24a2bb53f4d20"
+  },
+  "n_observations": 64,
+  "n_scenario_groups": 8,
+  "n_missing_carrier_observations": 0,
+  "artifact_bytes": 17289133,
+  "recognition_metrics": null,
+  "scope": "Known physical observations; no classifier training or recognition-quality claim.",
+  "reserved_group_missing_inventory": {
+    "train": {
+      "n_groups": 1500,
+      "n_missing": 217
+    },
+    "val-select": {
+      "n_groups": 150,
+      "n_missing": 14
+    },
+    "val-calib": {
+      "n_groups": 150,
+      "n_missing": 23
+    },
+    "test": {
+      "n_groups": 500,
+      "n_missing": 78
+    }
+  },
+  "forced_missing_diagnostics": {
+    "n_observations": 8,
+    "part_of_dataset": false,
+    "elapsed_seconds": 13.140948971005855,
+    "rows": [
+      {
+        "label": "clean",
+        "scenario_id": 3000000,
+        "dropped_carrier": {
+          "polarization": 0,
+          "index": 2
+        },
+        "operator_plan_unchanged": true,
+        "nominal_gain_unchanged": true,
+        "active_planned_power_before": [
+          1.0,
+          1.0
+        ],
+        "active_planned_power_after": [
+          0.9606526095059059,
+          1.0
+        ],
+        "actual_ibo_db_before": [
+          11.684431779627602,
+          12.907484726516259
+        ],
+        "actual_ibo_db_after": [
+          11.863168858391537,
+          12.9073030278811
+        ],
+        "event_parameters_match_reference": true
+      },
+      {
+        "label": "cw",
+        "scenario_id": 3000000,
+        "dropped_carrier": {
+          "polarization": 0,
+          "index": 2
+        },
+        "operator_plan_unchanged": true,
+        "nominal_gain_unchanged": true,
+        "active_planned_power_before": [
+          1.0,
+          1.0
+        ],
+        "active_planned_power_after": [
+          0.9606526095059059,
+          1.0
+        ],
+        "actual_ibo_db_before": [
+          11.604821048975072,
+          12.907406358172626
+        ],
+        "actual_ibo_db_after": [
+          11.780249455202082,
+          12.907225294786793
+        ],
+        "event_parameters_match_reference": true
+      },
+      {
+        "label": "swept_cw",
+        "scenario_id": 3000000,
+        "dropped_carrier": {
+          "polarization": 0,
+          "index": 2
+        },
+        "operator_plan_unchanged": true,
+        "nominal_gain_unchanged": true,
+        "active_planned_power_before": [
+          1.0,
+          1.0
+        ],
+        "active_planned_power_after": [
+          0.9606526095059059,
+          1.0
+        ],
+        "actual_ibo_db_before": [
+          11.65299625698234,
+          12.907417734134768
+        ],
+        "actual_ibo_db_after": [
+          11.83082100982933,
+          12.907236986260864
+        ],
+        "event_parameters_match_reference": true
+      },
+      {
+        "label": "unauthorized",
+        "scenario_id": 3000000,
+        "dropped_carrier": {
+          "polarization": 0,
+          "index": 2
+        },
+        "operator_plan_unchanged": true,
+        "nominal_gain_unchanged": true,
+        "active_planned_power_before": [
+          1.0,
+          1.0
+        ],
+        "active_planned_power_after": [
+          0.9606526095059059,
+          1.0
+        ],
+        "actual_ibo_db_before": [
+          11.298466720697471,
+          12.907101430291902
+        ],
+        "actual_ibo_db_after": [
+          11.4616915101359,
+          12.906920063655061
+        ],
+        "event_parameters_match_reference": true
+      },
+      {
+        "label": "overdrive",
+        "scenario_id": 3000000,
+        "dropped_carrier": {
+          "polarization": 0,
+          "index": 2
+        },
+        "operator_plan_unchanged": true,
+        "nominal_gain_unchanged": true,
+        "active_planned_power_before": [
+          1.0,
+          1.0
+        ],
+        "active_planned_power_after": [
+          0.9606526095059059,
+          1.0
+        ],
+        "actual_ibo_db_before": [
+          2.7682952269238745,
+          12.907484726516259
+        ],
+        "actual_ibo_db_after": [
+          2.9470323052326437,
+          12.9073030278811
+        ],
+        "event_parameters_match_reference": true
+      },
+      {
+        "label": "cross_pol",
+        "scenario_id": 3000000,
+        "dropped_carrier": {
+          "polarization": 0,
+          "index": 2
+        },
+        "operator_plan_unchanged": true,
+        "nominal_gain_unchanged": true,
+        "active_planned_power_before": [
+          1.0,
+          1.0
+        ],
+        "active_planned_power_after": [
+          0.9606526095059059,
+          1.0
+        ],
+        "actual_ibo_db_before": [
+          11.67878050441064,
+          12.91298383626126
+        ],
+        "actual_ibo_db_after": [
+          11.84397979865204,
+          12.925276767793797
+        ],
+        "event_parameters_match_reference": true
+      },
+      {
+        "label": "adjacent_satellite",
+        "scenario_id": 3000000,
+        "dropped_carrier": {
+          "polarization": 0,
+          "index": 2
+        },
+        "operator_plan_unchanged": true,
+        "nominal_gain_unchanged": true,
+        "active_planned_power_before": [
+          1.0,
+          1.0
+        ],
+        "active_planned_power_after": [
+          0.9606526095059059,
+          1.0
+        ],
+        "actual_ibo_db_before": [
+          11.675122868965243,
+          12.907474614392456
+        ],
+        "actual_ibo_db_after": [
+          11.853464813803193,
+          12.907292916180355
+        ],
+        "event_parameters_match_reference": false
+      },
+      {
+        "label": "carrier_under_carrier",
+        "scenario_id": 3000000,
+        "dropped_carrier": {
+          "polarization": 0,
+          "index": 2
+        },
+        "operator_plan_unchanged": true,
+        "nominal_gain_unchanged": true,
+        "active_planned_power_before": [
+          1.0,
+          1.0
+        ],
+        "active_planned_power_after": [
+          0.9606526095059059,
+          1.0
+        ],
+        "actual_ibo_db_before": [
+          11.678310928386097,
+          12.907458498243809
+        ],
+        "actual_ibo_db_after": [
+          11.856157931838398,
+          12.907310295680555
+        ],
+        "event_parameters_match_reference": false
+      }
+    ]
+  },
+  "generation_resource_measurement": {
+    "wall_seconds": 109.54569113499747,
+    "user_cpu_seconds": 120.58263,
+    "system_cpu_seconds": 11.410486,
+    "peak_rss_kib": 558608,
+    "notes": "Single producer, OMP/BLAS threads=2; full test suite ran concurrently for part of this pilot."
+  },
+  "config": {
+    "bandwidth": 36000000.0,
+    "n_snap": 128,
+    "snap_interval": 0.01,
+    "nominal_xpd_db": 30.0,
+    "downlink_xpd_db": 35.0,
+    "satellite_linewidth_hz": 100.0,
+    "receiver_linewidth_hz": 50.0,
+    "receiver_xpd_db": 25.0,
+    "receiver_gain_db": [
+      1.5,
+      -1.0
+    ],
+    "receiver_phase_rad": [
+      0.2,
+      -0.4
+    ],
+    "receiver_coupling_phase_rad": 0.3,
+    "calibration_seed": 424242,
+    "calibration_samples": 64,
+    "calibration_noise_std": 0.001,
+    "drop_probability": 0.15
+  },
+  "request_fingerprint": "3c71400ca6b3966247d1a950f6f189442a049951dc3ca0fd1b8979f1e1c51d79",
+  "generator_source_sha256": {
+    "__init__.py": "fed3f675bdd0ce44073fec6a170ec73f752e5225927215dc460de04dab6da007",
+    "asi.py": "fc1455121799a84e435bdbb92febc75987796c89479cf2197d445fc132fab0e6",
+    "b2_dataset.py": "9d87d68c8d630fec3468c056a5a4ca01c8429e3c712784926ccf57980f905b88",
+    "b2_protocol.py": "609af92fe5ece41ad2f956844cf8b3d976e84541cf17e42154baf8468d5f44cf",
+    "b2_scenarios.py": "7aaf02f498d11b1485dd07ff6b4ebc58ad23c1c1d6f1ad11c4b117d03b164e5c",
+    "cid.py": "9e209c40824eff8e0fbdd396760b43f0d87e84d8adc88ef3b80e447fe3b6d280",
+    "classes.py": "0c28a077afe3e9da49718aed04588cc519febc19b96e85352007f8b094a36c7b",
+    "dataset.py": "4f743e89428a76dd79b2234edbac7d2364a71d75fe113e94ef452ebcf2e5faea",
+    "dual.py": "20f3652a458fd9fbdabaf23b612880414c5e869302ddf8feb5e57f99eec14d18",
+    "dual_dataset.py": "6160eeeee3fe8292c340f4df0adf2757871fa827b57fd416486527118e2fa280",
+    "event_dataset.py": "aa0a5c9d7e648b25d3ed8b63b3c157ebeb13df045e1458dae7cc04d12cb0cc78",
+    "events.py": "7b56ff6d8d8657d7e9863eedafc0ec11eb6a038f55d2175b558feec954e98f92",
+    "interferers.py": "eb2d20c999b4a1f744e93f8aec062576e519c8df7be935012e371a671efa0383",
+    "payload.py": "01e364122bc6742ac3613a1ae2db28aa196ad33f60351d936ba36258d13a19aa",
+    "phase_noise.py": "529493b773f81df9e0e51b020b74a0bd52fdb4d4e5effc2cb741a18165142a96",
+    "plan.py": "470bd9aef9729940d510fc9c883ee9df50bcff6800738bea13902e8f8edd14b2",
+    "polarization.py": "0d8c4c20a5d38b1e02287bbb74e81ad86172437b4d2b3d10beefaeedcf7ca7f7",
+    "protocol.py": "815c8861eaf33f2d78239c0cbb676770f0c40d43b496f48c3f86b4d6f822c16f",
+    "scenario.py": "ac15f57154c9af1c5d0c5cc79420dfff58884ac9def95eef0fbec8e64d2d592d",
+    "sensor.py": "e78151a893e617b7eaa3af8016b4e47ee25a61e15eb30e37093bbf84971c3226",
+    "unknowns.py": "5c5219b52c6133f0168f2eecd47880f71f8f21326cd15a641b99971db19fef23",
+    "waveform.py": "308641f19a573b7ee5897d7cac11d0d87e28e1200e0c53c61ddff09fd9abdf90",
+    "data/dvbs2_twta.json": "0da3a624f9e94058ed100d6c06b62aff08f49f3a5a93df3ddc23f4b3f082c4f1",
+    "data/mux_fir.npz": "58b78bdaf6b749f9f45e8c1f0541674ad0d81f9bd6f17762e667965cd8ba11e8",
+    "data/opendpd_mp.json": "4ff38b21739fa93d4c232603dbf469e439f6dc4c2dd67ff78ceee23fe11c7dce"
+  },
+  "git_revision_at_generation": "1ef8e9d1beb90e83b471b7474c278dfc66ced8b0",
+  "source_binding": "Actual working-tree files are bound by generator_source_sha256; the recorded Git revision preceded this implementation commit.",
+  "verified_generation_resume": true,
+  "legacy_regression": {
+    "baseline_revision": "1ef8e9d1beb90e83b471b7474c278dfc66ced8b0",
+    "cases": [
+      {
+        "bandwidth_hz": 36000000,
+        "satellite_linewidth_hz": 0,
+        "receiver_linewidth_hz": 0
+      },
+      {
+        "bandwidth_hz": 72000000,
+        "satellite_linewidth_hz": 100,
+        "receiver_linewidth_hz": 50
+      }
+    ],
+    "common": {
+      "n_snap": 3,
+      "co_seed": 103,
+      "cross_seed": 107,
+      "co_ibo_db": 10,
+      "cross_ibo_db": 11,
+      "co_cn_up_db": 20,
+      "co_cn_dn_db": 22,
+      "cross_cn_up_db": 21,
+      "cross_cn_dn_db": 23,
+      "uplink_xpd_db": 30,
+      "downlink_xpd_db": 35,
+      "co_cw_hz": 4000000,
+      "cw_c_over_i_db": 15
+    },
+    "iq_psd_mask_bit_exact": true,
+    "default_metadata_equal": true,
+    "method": "Loaded the previous dual.py source alongside the implementation; compared arrays with assert_array_equal and full metadata equality."
+  }
+}

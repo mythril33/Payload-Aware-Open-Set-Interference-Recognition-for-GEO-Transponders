@@ -1,0 +1,23 @@
+{
+  "bandwidth": 36000000.0,
+  "n_snap": 128,
+  "snap_interval": 0.01,
+  "nominal_xpd_db": 30.0,
+  "downlink_xpd_db": 35.0,
+  "satellite_linewidth_hz": 100.0,
+  "receiver_linewidth_hz": 50.0,
+  "receiver_xpd_db": 25.0,
+  "receiver_gain_db": [
+    1.5,
+    -1.0
+  ],
+  "receiver_phase_rad": [
+    0.2,
+    -0.4
+  ],
+  "receiver_coupling_phase_rad": 0.3,
+  "calibration_seed": 424242,
+  "calibration_samples": 64,
+  "calibration_noise_std": 0.001,
+  "drop_probability": 0.15
+}

@@ -180,7 +180,8 @@ def _validate_plan(plan, cfg: ScenarioConfig, name: str) -> list[Carrier]:
 def simulate_dual(cfg: DualScenarioConfig, plans: tuple[list[Carrier], list[Carrier]] | None = None,
                   interferers: tuple[Interferer | None, Interferer | None] | None = None,
                   calibration: ReceiverCalibration | None = None, keep_iq: bool = False,
-                  downlink_interferers: tuple[Interferer | None, Interferer | None] | None = None) -> DualScenarioResult:
+                  downlink_interferers: tuple[Interferer | None, Interferer | None] | None = None,
+                  active_carriers: tuple[list[bool], list[bool]] | None = None) -> DualScenarioResult:
     """Generate paired complex observations with explicit physical injection sites.
 
     Each polarization uses its own ScenarioConfig seed and the exact A1 stream
@@ -194,6 +195,14 @@ def simulate_dual(cfg: DualScenarioConfig, plans: tuple[list[Carrier], list[Carr
     either feed receives an external event. This uses retained simulation
     samples for the reference and leaves payload/noise powers unchanged.
     Default-zero linewidths and absent downlink events retain the A1 streams.
+
+    ``plans`` remain the full nominal operator plans. Optional strict boolean
+    masks ``active_carriers`` select which planned waveforms are transmitted;
+    each mask matches its feed's plan. Inactive carriers still consume their
+    original waveform RNG draws, preserving the other carriers' realizations.
+    Carrier powers are never renormalized, the gain stays referenced to unit
+    nominal loading, and the operator-plan masks remain unchanged. Activity
+    metadata is included only when these masks are explicitly supplied.
     """
     if not isinstance(cfg, DualScenarioConfig):
         raise ValueError("cfg must be a DualScenarioConfig")
@@ -205,6 +214,19 @@ def simulate_dual(cfg: DualScenarioConfig, plans: tuple[list[Carrier], list[Carr
     if not isinstance(plans, (tuple, list)) or len(plans) != 2:
         raise ValueError("plans must contain one carrier plan per polarization")
     plans = tuple(_validate_plan(plan, path, name) for plan, path, name in zip(plans, configs, ("co", "cross")))
+    explicit_activity = active_carriers is not None
+    if active_carriers is None:
+        active = tuple(np.ones(len(plan), dtype=bool) for plan in plans)
+    else:
+        if not isinstance(active_carriers, (tuple, list)) or len(active_carriers) != 2:
+            raise ValueError("active_carriers must contain two boolean masks aligned with the operator plans")
+        active = []
+        for mask, plan in zip(active_carriers, plans):
+            values = np.asarray(mask)
+            if values.dtype.kind != "b" or values.shape != (len(plan),):
+                raise ValueError("active_carriers masks must contain one strict boolean per planned carrier")
+            active.append(values.copy())
+        active = tuple(active)
     if interferers is None:
         interferers = (None, None)
     if not isinstance(interferers, (tuple, list)) or len(interferers) != 2 or any(event is not None and not callable(event) for event in interferers):
@@ -230,13 +252,15 @@ def simulate_dual(cfg: DualScenarioConfig, plans: tuple[list[Carrier], list[Carr
         return rotate_phase(values, wiener_phase(rng, t0, n, fs, linewidth))
 
     streams, uplinks = [], []
-    for path, plan, event in zip(configs, plans, interferers):
+    for path, plan, event, enabled in zip(configs, plans, interferers, active):
         seeds = np.random.SeedSequence(path.seed).spawn(5)
         streams.append(seeds)
         rng = np.random.default_rng(seeds[1])
         x = np.zeros(shape, np.complex64)
-        for carrier in plan:
-            x += generate_carrier(rng, carrier, path.n_snap, n, fs)
+        for carrier, transmit in zip(plan, enabled):
+            waveform = generate_carrier(rng, carrier, path.n_snap, n, fs)
+            if transmit:
+                x += waveform
         if event is not None:
             generated = np.asarray(event(np.random.default_rng(seeds[4]), np.arange(path.n_snap) * path.snap_interval, n, fs))
             if generated.shape != shape or generated.dtype.kind not in "iufc" or not np.isfinite(generated).all():
@@ -305,5 +329,10 @@ def simulate_dual(cfg: DualScenarioConfig, plans: tuple[list[Carrier], list[Carr
                 "receiver_noise_reference": "per-feed pre-downlink-mixing OMUX power; not renormalized after physical/instrument mixing",
                 "receiver_calibration_applied": calibration is not None,
                 "receiver_calibration": calibration.to_dict() if calibration is not None else None}
+    if explicit_activity:
+        metadata.update(active_carriers=[mask.tolist() for mask in active],
+                        active_planned_power=[float(sum(carrier.power for carrier, enabled in zip(plan, mask) if enabled))
+                                              for plan, mask in zip(plans, active)],
+                        nominal_planned_power=[1.0, 1.0], gain_mode="fixed_nominal_planned_power")
     return DualScenarioResult(sn.spectrogram_db(iq), np.stack([plan_mask_db(plan) for plan in plans]),
                               _json_safe(metadata), iq if keep_iq else None)
