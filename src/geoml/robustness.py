@@ -157,8 +157,8 @@ def _implementation() -> dict:
             for name in ("model.py", "train.py", "data.py")}
 
 
-def main(data: str, runs: str, r1: str, out: str, log=print) -> dict:
-    data, runs, r1, out = Path(data), Path(runs), Path(r1), Path(out)
+def load_stage_a(data: Path, runs: Path) -> tuple[dict, dict, dict, dict]:
+    """Stage A checkpoints, reloaded only if their configuration, data and source identity match."""
     stage_a = json.loads((runs / "results.json").read_text())
     data_ids = {name: split_fingerprint(data / name) for name in ("train_nl", "train_lin", "val_nl", "val_lin")}
     for name, identity in data_ids.items():
@@ -175,6 +175,12 @@ def main(data: str, runs: str, r1: str, out: str, log=print) -> dict:
                           "implementation": implementation}
             fitted[name].append(load(runs / f"{name}_seed{seed}.pt", expected_config=asdict(cfg),
                                      expected_provenance=provenance))
+    return stage_a, data_ids, implementation, fitted
+
+
+def main(data: str, runs: str, r1: str, out: str, log=print) -> dict:
+    data, runs, r1, out = Path(data), Path(runs), Path(r1), Path(out)
+    stage_a, data_ids, implementation, fitted = load_stage_a(data, runs)
     val = load_split(data / "val_nl")
     val_scores = [1 - run(f, val)[:, 0][val["label"] == 0] for f in fitted["M-nl5"]]
     names = [p.name for p in sorted(r1.iterdir()) if (p / "manifest.json").exists()]

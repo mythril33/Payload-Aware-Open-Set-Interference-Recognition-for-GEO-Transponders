@@ -16,6 +16,53 @@ Son güncelleme: 2026-10-20 (literatür taraması eki P16; temel deney durumu 20
 
 ## Uygulama eki — 2026-10-20
 
+- **P18 (B2/1) donduruldu (K17, 2026-10-20).** Son kararlar:
+  - eğitim zamanı açık-küme yöntemi prototip/merkez kaybı;
+  - iptal artığı ana modelin beşinci kanalı; SCF yalnız ablasyon A4b;
+  - CuC'nin CID referansı birincil kaynakla doğrulandı (ETSI TS 103 129 V1.1.2 Tablo 6: −27,5…−17,5 dB, ana taşıyıcının sembol hızına bağlı);
+  - gerçek DVB-CID üreteci ve yalnız-test `cid_overlay` ailesi (meşru sinyal, beklenen karar `clean`);
+  - ASI dağılımları olduğu gibi; duyarlılık kümeleri ayrı yalnız-test sürümü R2-eval/1;
+  - üretim bulutta, eğitim kullanıcının GPU makinesinde.
+- **DVB-CID üreteci kodlandı:** `geosim.cid`.
+  - Standarda göre: çerçeve (UW, CRC-8, BCH(111,69)), karıştırma, 4× tekrar, diferansiyel kodlama, 4096 çip/bit LFSR, BPSK, RRC α = 0,35, 224/112 kHz, +220 Hz, Tablo 6 seviyesi.
+  - Standart test vektörleri tutuyor: CRC-8 kontrol hanesi 0x75; ilk 32 çip 0x5091E364; BCH üreteci x¹²⁷+1'i bölüyor.
+  - Dalga biçimi analitik RRC toplamından %0,5 rms sapıyor. Ölçülen PSD Tablo 6'nın +0,23 dB içinde (standart ±0,5 dB).
+  - Karıştırıcının test vektörü yok [DOĞRULANACAK]. Faz gürültüsü maskesi modellenmedi.
+  - 7 test geçti; tam paket **601 test geçti**.
+
+- **R1 ve A5 pilotu koşuldu.** A1'den 120/60/30, R1'den 4 × 60 senaryo tohumu; 30 epok; tek eğitim tohumu; CPU'da ≈ 52 dk. Pilottur, iddia taşımaz: [R1 pilotu](../results/r1_pilot.md), [A5 pilotu](../results/plan_shortcut_pilot.md).
+  - Dağılım içi M-nl5 %85,2.
+  - Rapp %66,1: aşırı sürme → `clean`. IBO'yla tanımlı etiket yükselteçten bağımsız değil; NPR bunu açıklıyor.
+  - OpenDPD %77–80.
+  - Dağılım içi %5 eşiği kaymada %18–27 yanlış alarm veriyor.
+  - Yük farkı IBO süpürmesinde yanlış alarmda görünüyor (M-lin %23,3, M-nl4 %1,7). Bu, B0'daki "iddia yanlış alarm üzerinden kurulur" yönünü destekliyor.
+  - **A5:** model planı istenen anlamda kullanıyor (eksik taşıyıcı → `unauthorized`, yetkili sayılan intruder → `clean`). Ama 0,5 MHz bayat plan temizde yanlış alarmı %3 → %93'e çıkarıyor.
+  - P18'e iki açık konu eklendi: aşırı sürme etiketi ve plan sapması artırımı. Kullanıcı yanıtladı; K17a–d olarak P18 §7a'ya yazıldı.
+  - A5 çıktısına karışıklık matrisleri eklendi.
+
+- **Uplink ASI üreteci (K5, P18 `adjacent_satellite`) kaynaklı geometriyle kodlandı:** `geosim.asi`.
+  - Komşu ağ yer istasyonunun eksen dışı ışıması bizim uydunun alıcısına girer ve IMUX/TWTA/OMUX'tan geçer.
+  - C/I_psd = Gmax − G(φ) − ΔEIRP (ITU BR uplink C/I yöntemi).
+  - Desenler: ITU-R S.1428-1 tam desen (S.580 yan lobu) ya da S.465-6 zarfı.
+  - Uydu aralığı 2,06–2,36°, FCC iki derece aralığından topo-merkezli açıya çevrildi.
+  - θ₃dB = 69,3 λ/D (ITU-R F.699-6).
+  - Çap, işaretleme hatası ve ΔEIRP dağılımları **[VARSAYIM]**; plan örtüşmesi %20–80 sınıf tanımıdır.
+  - E1 `events.py` değişmedi; doğrulama yardımcıları yeniden kullanıldı.
+  - 18 yeni test geçti; tam paket **594 test geçti**.
+- **[ASI ölçümü](../results/asi_visibility.md)** (120 senaryo, A1 zinciri):
+  - C/I_psd ortancası 20,3 dB (%10–%90: 14,4–26,6 dB), çapla monoton.
+  - Plan içi kısım kâhin ikizle bile neredeyse görünmez (ΔPSD ortancası ≤ 0,18 dB).
+  - Plan dışı kısım C/I_psd < 20 dB'de her olayda 1 dB'nin üstünde.
+  - Sonuç: ASI ile `unauthorized` ayrımı plan örtüşmesinden çok seviyeden gelir (yan lob ve ana lob farkı). P18 §6'ya seviye eşleşmiş alt kutu önerisi eklendi.
+- **K17 alt kararları P18'e işlendi:** CuC C/I 5–30 dB; roller 1500/150/150/500; `adjacent_satellite_downlink` yakın-OOD bilinmeyen; LOKO 3 eğitim tohumu (21 ek eğitim). P18'in dondurulması hâlâ kullanıcıda (S9).
+
+- **Plan maskesi kısa yolu testi (A5, P16 İP-4.4) kodlandı:** `geoml.plan_shortcut`.
+  - Kademe A checkpoint'lerini kimlik denetimiyle yükler ve yalnız plan maskesini bozulmuş bir operatör planından yeniden kurar.
+  - Bozmalar: plan 0,5 MHz kaymış; bir taşıyıcı plandan düşmüş; yayınlanmayan hayalet taşıyıcı; yetkisiz taşıyıcı plana "yetkili" eklenmiş.
+  - Spektrumlar değişmez; yeniden eğitim ve kalibrasyon yok.
+  - Gerçek veride kaydedilmiş maskeler metadata planından en çok 0,0135 dB farkla yeniden kuruluyor (float16).
+  - 3 test geçti.
+
 - **R1-eval/1 kodlandı ([P17](P17_r1_robustness_eval.md)):** A1'i değiştirmeyen, ayrı protokol adlı ve ayrı tohumlu (400000–430299) **yalnız-test** bölünmeler:
   - `r1_ibo_sweep`: nominal IBO 5–14 dB, aşırı sürme 0–5 dB;
   - `r1_amp_rapp`: Rapp SSPA, p = 2 [VARSAYIM];
@@ -87,7 +134,7 @@ Kademe A'nın (ders projesi) bütün zinciri kodlandı ve uçtan uca çalışıy
 | P15 | Faz gürültüsü ve olaylar (E1-dev/1) | Geliştirme dilimi | `P15_phase_noise_and_events.md` |
 | P16 | Literatür sonrası düzeltme programı | Plan; İP-0…İP-7 | `P16_literatur_duzeltme_programi.md` |
 | P17 | R1-eval/1 sağlamlık değerlendirmesi | Kodlandı, küçük koşu; tam sonuç yok | `P17_r1_robustness_eval.md` |
-| P18 | B2/1 sekiz sınıflı çift-pol açık-küme protokolü | **Taslak, onay bekliyor (K17)**; kod yok | `P18_b2_protocol.md` |
+| P18 | B2/1 sekiz sınıflı çift-pol açık-küme protokolü | **Donduruldu 2026-10-20 (K17)**; uplink ASI ve DVB-CID üreteçleri hazır; B2/1 veri üreteci yok | `P18_b2_protocol.md` |
 | Kademe B | Çift pol, 8 sınıf, open-set | Geliştirme dilimleri var (B1-dev/1–2, D1-dev/1, E1-dev/1); nihai B2/1 benchmark yok | `P11`–`P14` |
 
 ## 3. Elde ne var
@@ -134,7 +181,7 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 | S3 | Dizüstünde süre ölçülmedi | S1'i önce `--limit-seeds 10` ile deneyip süreyi yazın |
 | S4 | Üç varsayılan karar onaysız | Aşırı sürme sınırı (P3 §0-A), tek etiket kuralı (P3 §0-B), doğrusal zincirde aşırı sürme (P5 §0) |
 | S5 | ~~P16 kararları~~ — **2026-10-20 yanıtlandı** (P16 §5): uplink-ASI, iptal artığı + cyclic, aşamalı yenilik cümlesi, OpenDPD ölçüm aralığında, sabit tarih yok, lisans şimdilik yok, vekil unknown yok | — |
-| S9 | K17: P18 B2/1 protokol taslağını onaylayın veya değiştirin | Özellikle: `adjacent_satellite` parametreleri, CuC C/I aralığı (ölçüme göre 5–30 dB öneriliyor, [CuC görünürlüğü](../results/cuc_visibility.md)), rol boyutları (1500/150/150/500), `adjacent_satellite_downlink`'in yakın-OOD bilinmeyen olması, leave-one-known-out için tek eğitim tohumu |
+| S9 | ~~K17: P18 dondurma~~ — **2026-10-20 donduruldu** | — |
 | S8 | R1-eval/1 tam koşu (S2'den sonra) | `python -m geosim.dataset --protocol R1-eval/1 --out data/r1 --workers 4` (≈ 2,6 çekirdek-saat, ayrı dizin) ve `python -m geoml.robustness --data data/stageA --runs runs/stageA --r1 data/r1 --out runs/r1`; `runs/r1/results.md` dosyasını gönderin |
 | S6 | SmartSpace verisi bulutta işlenecek | Ortam ayarlarında **Network access → Allowed domains**'e `fnr-smartspace-project.uni.lu` ekleyin (paket yöneticileri kutusu işaretli kalsın) ve araştırma-amaçlı, ticari olmayan kullanım koşulunu kabul ettiğinizi yazın |
 
@@ -142,7 +189,7 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 
 | # | Eksik | Önem | Not |
 |---|---|---|---|
-| B0 | **Ana iddianın biçimi.** Pilotta yük farkı doğrulukta görünmedi | Yüksek | Tam veriyle teyit; gerekirse iddia yanlış alarm ve yanlış etiketleme üzerinden kurulur veya daha düşük geri çekilme eklenir (protokol değişikliği, günlüğe yazılır) |
+| B0 | **Ana iddianın biçimi.** Pilotta yük farkı doğrulukta görünmedi | Yüksek | Tam veriyle teyit; gerekirse iddia yanlış alarm ve yanlış etiketleme üzerinden kurulur veya daha düşük geri çekilme eklenir (protokol değişikliği, günlüğe yazılır). R1 pilotu bu yönü destekliyor: IBO süpürmesinde temizde yanlış alarm M-lin %23,3, M-nl4 %1,7 ([r1_pilot](../results/r1_pilot.md)) |
 | B1 | **Literatür ve yenilik denetimi (P1)** başlandı, bitmedi | Yüksek | Aday çalışmalar listelendi (SnT ICASSP 2023, Henarejos ve ark. 2019, GNSS ve radar open-set çalışmaları); hiçbiri okunup karşılaştırılmadı |
 | B1b | Model dar bantlı girişimde (CW) zayıf | Orta | Tam veriyle yeniden bakılacak; gerekirse zaman ortalamalı spektrum ek kanal olarak verilir |
 | B2 | Sonuç şekilleri (ROC, C/I eğrileri, karışıklık matrisi) | Orta | Tam sonuç gelince |
@@ -155,7 +202,7 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 | B9 | P16 İP-0: L1 Jammertest lisansı; L10 uydu anteni XPD'si; isteğe bağlı sistematik tarama (CNKI/IEEE) | Düşük | En yakın 7 GEO/uydu çalışması ve bir açık-küme karşılaştırması tam metin okundu ([P1 §8](P1_literatur.md)): hiçbir uydu çalışması transponder zinciri, plan, çift-pol veya bilinmeyen sınıf reddi içermiyor; L2, L7 (a–c) kapandı |
 | B10 | P16 İP-1: C3'ün IBO eğrisi, ECE, FPR@95TPR | Yüksek | **Kodlandı (P17)**; tam üretim ve değerlendirme sizde (S8) |
 | B11 | P16 İP-2: sentetik bellek polinomu, OpenDPD eşleme duyarlılığı (R1-eval/2), NPR'nin literatürle sayısal karşılaştırması | Yüksek | Rapp ve OpenDPD bellek polinomları (P17) ve [NPR kontrolü](../results/npr_check.md) yapıldı |
-| B12 | P16 İP-3/4: ASI, CuC, faz gürültüsü, PL çerçeve; iptal artığı, plan bozma testleri | Yüksek | K5, K9 kararlarına bağlı |
+| B12 | P16 İP-3/4: ASI, CuC, faz gürültüsü, PL çerçeve; iptal artığı, plan bozma testleri | Yüksek | Uplink ASI üreteci (`geosim.asi`) ve plan bozma aracı (`geoml.plan_shortcut`) hazır; kalan: B2/1'e bağlama, K16 yeniden adlandırması, iptal artığı, PL çerçeve |
 | B13 | P16 İP-5/6: B2/1 protokolü (`P18`), eğitim-zamanı OSR, EDSC ve XGBoost baseline'ları | Orta | B2/1 kod yazılmadan dondurulur |
 
 ### 5.4 Bilinçli olarak ertelenenler (Kademe B)
