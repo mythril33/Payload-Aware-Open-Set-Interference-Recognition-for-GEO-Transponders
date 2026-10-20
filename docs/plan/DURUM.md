@@ -31,6 +31,11 @@ Son güncelleme: 2026-10-20 (literatür taraması eki P16; temel deney durumu 20
   - A1 6 tohum, R1 4 × 6 tohum;
   - 3 epok eğitim ve uçtan uca değerlendirme; veri tekrar kullanımı doğrulandı.
   - Modeller 30 örnekle dejenere; yalnız çalışma kanıtıdır: [sonuçlar](../results/r1_smoke.md).
+- **NPR kontrolü** ([sonuç](../results/npr_check.md)):
+  - `dvbs2_nl` NPR eğimi IBO 10–14 dB'de 1,25 dB/dB; P2 §10'daki çok taşıyıcılı C/IM eğimiyle aynı.
+  - Rapp p = 2'nin eğimi beşinci derece asimptotuna (4 dB/dB) doğru artıyor.
+  - `dvbs2_lin` bir bozulma tabanı gösteriyor.
+  - OpenDPD modelleri IBO ≤ 6 dB'de ölçüm aralığı dışına taşıyor; bu, K11'i doğruluyor.
 - OpenDPD katsayıları yalnız val bölümünde seçildi:
   - APA: K = 5, M = 3; test NMSE −30,6 dB.
   - DPA: K = 5, M = 16; test NMSE −33,9 dB. Seçim ızgara kenarında, daha uzun bellek denenmedi.
@@ -145,9 +150,9 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 | B6 | Proje talimat belgesi hâlâ ilk hâlinde (zincir tarifi, veri kaynağı rolleri hatalı; "Roadmap, risks and venues" boş) | Orta | P9 ile birlikte düzeltilmiş metin önerilecek |
 | B7 | Gerçek sinyalle akıl sağlığı denetimi (Zenodo'daki Intelsat 37e kaydı) | Düşük | |
 | B8 | Proje skill'leri eski (faz sırası, Saleh'in birincil model olduğu varsayımı) | Düşük | Güncelleme önerisi sunuldu |
-| B9 | P16 İP-0: en yakın 6 çalışmanın tam metin okuması | Yüksek | P1 kapanışının ön koşulu. L2, L7 (a–c) kapandı; L1 Jammertest lisansı ve L10 uydu anteni XPD'si açık |
+| B9 | P16 İP-0: Agon tam metni + bir ek bağımsız kaynak; L1 Jammertest lisansı; L10 uydu anteni XPD'si | Yüksek | 6 en yakın çalışma tam metin okundu ([P1 §8](P1_literatur.md)); L2, L7 (a–c) kapandı |
 | B10 | P16 İP-1: C3'ün IBO eğrisi, ECE, FPR@95TPR | Yüksek | **Kodlandı (P17)**; tam üretim ve değerlendirme sizde (S8) |
-| B11 | P16 İP-2: NPR kontrolü, sentetik bellek polinomu, OpenDPD eşleme duyarlılığı (R1-eval/2) | Yüksek | Rapp ve OpenDPD bellek polinomları kodlandı (P17); bunlar kaldı |
+| B11 | P16 İP-2: sentetik bellek polinomu, OpenDPD eşleme duyarlılığı (R1-eval/2), NPR'nin literatürle sayısal karşılaştırması | Yüksek | Rapp ve OpenDPD bellek polinomları (P17) ve [NPR kontrolü](../results/npr_check.md) yapıldı |
 | B12 | P16 İP-3/4: ASI, CuC, faz gürültüsü, PL çerçeve; iptal artığı, plan bozma testleri | Yüksek | K5, K9 kararlarına bağlı |
 | B13 | P16 İP-5/6: B2/1 protokolü (`P18`), eğitim-zamanı OSR, EDSC ve XGBoost baseline'ları | Orta | B2/1 kod yazılmadan dondurulur |
 
@@ -163,7 +168,7 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 ### 5.5 Çözülemeyecek sınırlar
 
 - **Gerçek veri yok.** Çalışma bir simülasyon çalışmasıdır; yük farkı iki simülatör arasındaki farktır. Ölçüm imkânı olmadığı için bu, makalede açıkça yazılacak bir sınırdır.
-- **Doğrusallaştırılmış TWTA eğrisi seyrek** (dB başına bir nokta, basamaklı faz); bu modeldeki ayrıntılara güvenilmemeli.
+- **Doğrusallaştırılmış TWTA eğrisi seyrek** (dB başına bir nokta, basamaklı faz); bu modeldeki ayrıntılara güvenilmemeli. NPR kontrolü bunu nicelleştirdi: `dvbs2_lin`'in NPR'si IBO 12 dB'de ≈ 23,8 dB ile tepe yapıp geri çekilme arttıkça düşüyor, yani yapay bir bozulma tabanı var ([NPR kontrolü](../results/npr_check.md)); `test_amp_lin` yorumlanırken dikkate alınmalı.
 - **ETSI ham dosyaları depoda değil**; yeniden üretmek isteyen kendisi indirmeli.
 
 ## 6. Önerilen sıra

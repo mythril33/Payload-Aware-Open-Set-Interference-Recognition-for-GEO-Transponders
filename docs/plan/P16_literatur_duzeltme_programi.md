@@ -116,7 +116,7 @@ Mevcut S1–S4 ve B0–B3 işleri **aynen geçerli**; tarama bunları değiştir
 | Alan rastgeleleştirme (domain randomization) eğitimi: TWTA ailesi, IMUX/OMUX derecesi, (çift-pol'de) XPD dağılımı — **yalnız B2/1 sürümünde**, ayrı model | A1 modelleriyle aynı test kümelerinde karşılaştırma; ayrı eğitim bütçesi eşit |
 | B7: Intelsat 37e SigMF kaydıyla "clean" akıl sağlığı kontrolü (P8 beklemede) | İçerik/izin doğrulandıktan sonra PSD şekli karşılaştırması; nicel iddia yok |
 
-**Uygulama durumu (2026-10-20):** İP-1'in metrik ve IBO eğrisi kısmı ile İP-2'nin Rapp ve OpenDPD bellek polinomu kısmı [P17](P17_r1_robustness_eval.md) (R1-eval/1) olarak kodlandı ve test edildi; tam koşu kullanıcıda. NPR kontrolü, sentetik bellek polinomu ve OpenDPD eşleme duyarlılığı açık.
+**Uygulama durumu (2026-10-20):** İP-1'in metrik ve IBO eğrisi kısmı ile İP-2'nin Rapp ve OpenDPD bellek polinomu kısmı [P17](P17_r1_robustness_eval.md) (R1-eval/1) olarak kodlandı ve test edildi; tam koşu kullanıcıda. [NPR kontrolü](../results/npr_check.md) yapıldı; literatürle sayısal karşılaştırması, sentetik bellek polinomu ve OpenDPD eşleme duyarlılığı açık.
 
 ### İP-3 — Bilinen sınıfları sekize tamamla (C1, C2) · öncelik: yüksek
 
