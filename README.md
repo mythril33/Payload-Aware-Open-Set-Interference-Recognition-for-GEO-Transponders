@@ -86,6 +86,22 @@ The linewidth and power ranges are exploratory engineering assumptions. This
 closed-set task tests simulator causes; PSD alone does not uniquely establish
 satellite origin or authorization. See [physical stages, contracts and reuse](docs/plan/P15_phase_noise_and_events.md).
 
+## Robustness evaluation (R1-eval/1)
+
+Test-only splits with their own protocol name and seeds: a back-off sweep (nominal
+5–14 dB, overdrive 0–5 dB), a Rapp SSPA and two memory polynomials fitted to OpenDPD
+solid-state Doherty PA measurements (nominal back-off only). The evaluator reloads
+Stage A checkpoints without retraining and reports the payload gap per 1 dB back-off
+bin, ECE, FPR@95TPR and thresholded detection. Keep R1 data in its own directory.
+
+```bash
+python -m geosim.dataset --protocol R1-eval/1 --out data/r1 --workers 4
+python -m geoml.robustness --data data/stageA --runs runs/stageA --r1 data/r1 --out runs/r1
+```
+
+The OpenDPD devices are not TWTAs; the measured-RMS-to-back-off mapping and memory-tap
+scaling are assumptions. See [protocol, assumptions and validation](docs/plan/P17_r1_robustness_eval.md).
+
 ## Research dossier (2026-10-20)
 
 This is an evolving research project, **not** a completed dual-polarization, eight-class open-set system.

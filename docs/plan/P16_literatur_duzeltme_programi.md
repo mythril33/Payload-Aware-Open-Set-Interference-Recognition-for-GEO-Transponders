@@ -57,23 +57,23 @@ Taramadaki her iddia makaleye aynı güvenle girmez.
 
 | # | Yer | Sorun | Düzeltme | Sahip | Durum |
 |---|---|---|---|---|---|
-| L1 | `P8` DARCY/Highway 2 | Tarama Highway 2, LC-lab ve Jammertest 2025'i **CC BY-SA 4.0** diyor; P8 Highway 2'yi Zenodo kartından **CC BY-NC-SA 4.0** olarak kaydetmiş | Daha kısıtlayıcı olan (NC) geçerli sayılır; üç kaydın lisansı Zenodo kartından yeniden okunur ve P8'e kayıt bazında yazılır | ben | **açık** |
+| L1 | `P8` DARCY/Highway 2 | Tarama Highway 2, LC-lab ve Jammertest 2025'i **CC BY-SA 4.0** diyor; P8 Highway 2'yi **CC BY-NC-SA 4.0** olarak kaydetmiş | **2026-10-20 Zenodo kayıtlarından okundu:** Highway 2 (10.5281/zenodo.21336653) = **CC BY-NC-SA 4.0** (tarama yanlış); LC Laboratory (zenodo 21333335) = **CC BY-SA 4.0**; Jammertest 2025 (zenodo 21332689) lisansı okunan sayfa metninde görünmedi **[DOĞRULANACAK]** | ben | Highway 2 ve LC kapandı; Jammertest açık |
 | L2 | `00_ana_plan` §0, `P8` OpenDPD | Tarama `DPA_200MHz`, ana plan `APA_200MHz` diyor | **İkisi de var** (OpenDPD commit `cb4c5ea`): DPA_160/200MHz = 40 nm CMOS dijital Doherty verici, 2,4 GHz; APA_200MHz(_b) = Ampleon GaN Doherty PA, 3,5 GHz, 41,5 dBm. [Sonda](../results/opendpd_probe.md) | ben | **kapatıldı** |
 | L3 | Tarama "WBSig53 pre-trained detector" baseline | P8: güncel TorchSig'de hazır WidebandSig53 seti yok; artık üretici | WBSig53 baseline'ı **koşullu**: TorchSig sürümüyle üretilip ön eğitilirse yapılır; aksi halde düşer. Önceliği en alt (§3 İP-6) | ben | düzeltme bu belgede |
 | L4 | Tarama "Validate realism against OpenDPD and the SnT data" | SnT verisinde yük etkisi yok; yük gerçekçiliğini doğrulayamaz. OpenDPD TWTA değildir | Doğru ifade: SnT = **görev/format karşılaştırılabilirliği** (V6 kipi); OpenDPD = **ölçülmüş, bellekli PA'ya aktarım**. "Gerçekçilik doğrulaması" ifadesi kullanılmaz | ben | düzeltme bu belgede |
 | L5 | Tarama §9 ipucu 1: IM3 "yaklaşık 3:1 dB eğim" | 3:1 küçük-sinyal kuralıdır (C/IM'de 2 dB/dB). Bizim çalışma aralığında ölçülen C/IM eğimi **1,25 dB/dB** (`DURUM` §4, `P2` §10) | Ayırt edilebilirlik ipucu kendi ölçtüğümüz eğriyle yazılır; 3:1 kuralı yalnız küçük-sinyal sınırı olarak anılır | ben | düzeltme bu belgede |
 | L6 | Tarama "Gap Matrix" son satırı (bütün sütunlar ✔) | Depo gerçeği: TWTA/IMUX/OMUX/çok taşıyıcılı IM ✔; plan maskesi ✔; çift-pol yalnız iki sınıflı geliştirme (D1-dev/1); open-set yalnız geliştirme (B1-dev/1–2); 8 sınıf, faz gürültüsü, PL çerçeve **yok** | Makalede ve P1'de **planlanan** ve **uygulanan** ayrı sütun olarak gösterilir (P1 §7) | ben | P1'de kapatıldı |
-| L7 | `references.bib` | (a) Daoud 2023 başlığı taramadakiyle farklı; (b) `etsi2021dvbs2guide` başlığı "DVB-S2 Implementation Guidelines" — TR 102 376-2'nin S2X (Bölüm 2) kılavuzu olması muhtemel; (c) Heublein: depoda arXiv 2409.15114, taramada 2503.23775 (iki ayrı iş); (d) taramadaki en yakın işlerin çoğu eksik | (a)(b) yayıncı/ETSI sayfasından teyit **[DOĞRULANACAK]**; (c) ikisi de ayrı girdi; (d) eksik girdiler `note = {verify}` ile eklendi | ben | kısmen kapatıldı |
+| L7 | `references.bib` | (a) Daoud 2023 başlığı farklı; (b) `etsi2021dvbs2guide` başlığı yanlış; (c) Heublein iki ayrı iş; (d) en yakın işler eksik | (a) **kapandı:** yayımlanmış başlık "CNN-Based on-Board Interference Detection in Satellite Systems: An Analysis of Dataset Impact on Performance", **ICASSP Workshops** 2023, doi:10.1109/ICASSPW59220.2023.10193395; SmartSpace sayfası eski başlığı veriyor. (b) **kapandı:** ETSI PDF başlığı "… Part 2: S2 Extensions (DVB-S2X)", V1.2.1 (2021-01). (c) **kapandı:** iki girdi; 2503.23775 = ION GNSS+ 2024, pp. 1260–1293, doi:10.33012/2024.19887 (Zenodo kaydındaki atıf). (d) eklendi, `verify` notlu olanlar açık | ben | (a)–(c) kapandı |
 | L8 | `P1` §2 | Agon, Pellaco, Vázquez, Politis ve open-set karıştırma işleri yok (ikinci Henarejos satırı bilerek bırakılmış tam metin kontrol satırıdır); ana plan P1 kapanış kriteri "her boşluk iddiası ≥ 2 kaynak" karşılanmamış | P1'e §7 (tarama v2) eklendi; tam metin okuması İP-0'da | ben | kısmen kapatıldı |
 | L9 | `DURUM` §2 faz tablosu | P1/P9/Kademe B "Başlanmadı" yazıyor; araştırma ve uygulama ekleriyle çelişiyor | Tablo güncellendi | ben | kapatıldı |
-| L10 | `P14` XPD değerleri (uplink 30/10 dB, downlink 35 dB, enstrüman 25 dB) | "Geliştirme seçimi" olarak işaretli; kaynak yok. Tarama, DVB-S2X kılavuzunun XPD'yi ihmal ettiğini söylüyor → çift-pol uzantısı referans kanalın dışında | XPD dağılımı XPD ölçüm literatüründen (tarama kaynak 52, 53) dayandırılır; B4 kapsamına alınır | ben | **açık** |
+| L10 | `P14` XPD değerleri (uplink 30/10 dB, downlink 35 dB, enstrüman 25 dB) | Kaynaksız geliştirme seçimi | **Kısmen kapandı (yer istasyonu standartları):** Eutelsat EESS 502 doğrusal polarizasyonda referans çapraz-pol ayrımı **35 dB**, koşullu en düşük **25 dB**; Intelsat IESS-207 (Rev. 4) doğrusal Standard A/B/F-3 için **≥ 30,0 dB**, yağmurda izolasyon yılın %0,01'inde **12 dB**'nin altına iniyorsa kompanzasyon öneriyor. Nominal 30 / 35 dB bu aralıkta; `cross_pol` sınıfının 10 dB'si izinli en düşük değerin ve yağmur eşiğinin altında bir **arıza** senaryosudur. Açık: uydu anteni XPD'si ve sınıf içi dağılım **[VARSAYIM]** | ben | kısmen kapandı |
 | L11 | `open_set_protocol.md` §1 CuC satırı | "döngüsel istatistik faydalı olabilir" — tarama "PSD ile beklenemez, iptal artığı veya cyclic gerekli" diyor | Satır "PSD-tek gözlemde düşük C/I'de **tanımlanamaz beklenir**; iptal artığı veya cyclic özellik gerekli" olarak güncellenir; karar K9 | ben | kapatıldı |
 | L12 | `P12` unknown aileleri | Tarama: `wideband_noise` ≈ overdrive spektral yeniden büyümesi, `pulsed` ≈ `intermittent_bursts` → yakın-OOD | U1-dev/1 üreteci değişmez; raporlarda aileler **yakın/uzak OOD** diye önceden gruplanır (gruplama test sonucundan önce dondurulur) | ben | **açık** (İP-5) |
 | L13 | `P9` §3 yayın yerleri | Üç dergi var; tarama TCCN, OJ-COMS, ICASSP/SPAWC, ICC/GLOBECOM çalıştayları, ASMS/SPSC, ICSSC, IEEE Aerospace/MILCOM ekliyor | P9'a eklendi; uygunluk yine başvuru anında kontrol edilir | ben | kapatıldı |
 | L14 | `src/geosim/payload.py` Saleh katsayıları | Kod yorumu "makaleye karşı kontrol edilmedi"; tarama da DOI'yi "(verify)" diyor | Açık kalır (B-kaynak); Saleh zaten birincil değil, alternatif model | ben | açık, düşük |
 | L15 | Motivasyon istatistikleri | Taramadaki yüzdeler basın/satıcı kaynaklı | §1 kuralı; makale girişinde tek paragraf, açık niteleme | ben | kural yazıldı |
 | L16 | `P15_phase_noise_and_events.md` (E1-dev/1, main'e 2026-10-20'de eklendi) | E1-dev/1 `adjacent_satellite`'ı **alıcı tarafında (downlink) olay** olarak kodluyor; hedef yükün TWTA'sını atlıyor. K5 kararı ise **uplink-ASI** (downlink kullanıcı tarafından veto edildi) | E1-dev/1 kodu ve sonuçları **değiştirilmedi**. B2/1'de `adjacent_satellite` = uplink-ASI; E1'deki downlink olayı ya `adjacent_satellite_downlink` diye ayrı bir geliştirme olayı olarak kalır ya da kaldırılır — **K16 kararı: ayrı adla tutulur** | ben | karar alındı; kod yeniden adlandırması İP-3'te |
-| L17 | Belge numarası | Bu belge önce P15 olarak yayımlandı; aynı gün main'e ayrı bir P15 (faz gürültüsü ve olaylar) girdi | Bu belge **P16** oldu; B2/1 protokol belgesi **P17** | ben | kapatıldı |
+| L17 | Belge numarası | Bu belge önce P15 olarak yayımlandı; aynı gün main'e ayrı bir P15 (faz gürültüsü ve olaylar) girdi | Bu belge **P16** oldu; R1-eval/1 **P17** ([belge](P17_r1_robustness_eval.md)); B2/1 protokol belgesi **P18** | ben | kapatıldı |
 
 ---
 
@@ -84,7 +84,7 @@ test kümeleri ayrı sürüm adlarıyla ve ayrı tohum aralıklarıyla üretilir
 (AGENTS.md kuralı). Önerilen yeni sürümler:
 
 - **R1-eval/1** — yalnızca test: IBO süpürmesi ve yükselteç uyumsuzluğu kümeleri, tohumlar 400000– **[VARSAYIM]** (A1: 100000–340000+, unknown: 900000–, çift-pol: 1000000– ile çakışmaz; kodda çakışma testi zorunlu).
-- **B2/1** — nihai sekiz bilinen sınıflı çift-pol open-set benchmark protokolü; ayrı belge (`P17`), kod yazılmadan önce dondurulur.
+- **B2/1** — nihai sekiz bilinen sınıflı çift-pol open-set benchmark protokolü; ayrı belge (`P18`), kod yazılmadan önce dondurulur.
 
 ### İP-0 — Belge ve kaynak düzeltmeleri (C1–C3 savunması) · öncelik: hemen
 
@@ -116,6 +116,8 @@ Mevcut S1–S4 ve B0–B3 işleri **aynen geçerli**; tarama bunları değiştir
 | Alan rastgeleleştirme (domain randomization) eğitimi: TWTA ailesi, IMUX/OMUX derecesi, (çift-pol'de) XPD dağılımı — **yalnız B2/1 sürümünde**, ayrı model | A1 modelleriyle aynı test kümelerinde karşılaştırma; ayrı eğitim bütçesi eşit |
 | B7: Intelsat 37e SigMF kaydıyla "clean" akıl sağlığı kontrolü (P8 beklemede) | İçerik/izin doğrulandıktan sonra PSD şekli karşılaştırması; nicel iddia yok |
 
+**Uygulama durumu (2026-10-20):** İP-1'in metrik ve IBO eğrisi kısmı ile İP-2'nin Rapp ve OpenDPD bellek polinomu kısmı [P17](P17_r1_robustness_eval.md) (R1-eval/1) olarak kodlandı ve test edildi; tam koşu kullanıcıda. [NPR kontrolü](../results/npr_check.md) yapıldı; literatürle sayısal karşılaştırması, sentetik bellek polinomu ve OpenDPD eşleme duyarlılığı açık.
+
 ### İP-3 — Bilinen sınıfları sekize tamamla (C1, C2) · öncelik: yüksek
 
 | Sınıf / blok | Giriş noktası | Tasarım notu | Kapanış ölçütü |
@@ -141,7 +143,7 @@ Kapanış ölçütü: her ayırt edilemeyen çift için "hangi gözlem eklenince
 
 | İş | Kapanış ölçütü |
 |---|---|
-| `P17` B2/1 protokolü: 8 bilinen sınıf, 3 unknown ailesi + leave-one-known-out rotasyonu, yakın/uzak OOD gruplaması (L12), kalibrasyon grupları ağırlık seçiminden ayrı | Kod yazılmadan dondurulmuş; P5 kuralı gibi değişiklik günlüğü |
+| [`P18`](P18_b2_protocol.md) B2/1 protokolü (**taslak yazıldı, onay bekliyor**): 8 bilinen sınıf, 3 unknown ailesi + leave-one-known-out rotasyonu, yakın/uzak OOD gruplaması (L12), kalibrasyon grupları ağırlık seçiminden ayrı | Kod yazılmadan dondurulmuş; P5 kuralı gibi değişiklik günlüğü |
 | Eğitim-zamanı open-set yöntemi (ana plan D13): ARPL veya prototip/merkez kaybı; OpenMax ikincil; ODIN opsiyonel (sıcaklık **yalnız bilinen** doğrulamada) | Asıl unknown aileleri eğitim/seçim/kalibrasyona girmez — mevcut sızıntı testleri yeni yöntemlere de uygulanır |
 | Rapor: unknown-pozitif AUROC/AP aile başına ve birleşik, OSCR, FPR@95TPR (TPR'nin hangi popülasyon olduğu yazılı), ECE, sabit Pfa'da Pd (C/I, I/N, IBO'ya göre), kapalı-küme doğruluğu OSCR ile birlikte (Vaze 2022) | Katı JSON, `null`+sayım; senaryo-bootstrap ve eğitim tohumu belirsizliği ayrı |
 
@@ -175,7 +177,7 @@ tahmindir, bağlayıcı değildir; geçerli olan **sıradır**.
 | 1 | 20–26 Eki | İP-0 açık L-maddeleri; İP-1 metrik eklemeleri | S3 → S1 başlat | Belgeler tutarlı; metrikler testli |
 | 2 | 27 Eki–2 Kas | R1-eval/1 kodu (IBO süpürmesi, Rapp, bellek polinomu); tam metin okumaları | S2 tam koşu → sonuç gönder | **Kademe A tam sonuç** |
 | 3 | 3–9 Kas | B0 kararı, B2/B3; NPR kontrolü; OpenDPD türetme betiği | R1-eval/1 tam üretim | C3 IBO-eğrisi + yükselteç uyumsuzluğu |
-| 4–5 | 10–23 Kas | İP-3: ASI, CuC, faz gürültüsü, PL çerçeve; `P17` B2/1 protokolü dondurulur | — | 8 sınıf üreteci testli |
+| 4–5 | 10–23 Kas | İP-3: ASI, CuC, faz gürültüsü, PL çerçeve; `P18` B2/1 protokolü dondurulur | — | 8 sınıf üreteci testli |
 | 6 | 24–30 Kas | İP-4: iptal artığı, plan kısa yolu, ablasyon altyapısı; İP-5 eğitim-zamanı OSR | B2/1 tam üretim | Ayırt edilebilirlik tablosu taslağı |
 | 7 | 1–7 Ara | İP-6 EDSC + XGBoost; analiz | B2/1 tam koşu (3 tohum) | Nihai tablolar |
 | 8 | 8–15 Ara | İP-7 taslak, sınırlar, veri kartı | Okuma/onay | Makale taslağı |
@@ -219,7 +221,7 @@ oturumda erişilemedi).
 |---|---|
 | "Bütün sonuçlar iki simülatör arasındaki fark; gerçek veri yok." | Kabul edilen sınır (ana plan §1.2, DURUM §5.5). Program bunu üç ayakla daraltır: yükselteç ailesi uyumsuzluğu, NPR karşılaştırması, ölçülmüş PA aktarımı. Hiçbiri "operasyonel başarım" iddiası taşımaz. |
 | "Plan maskesi unauthorized sınıfını bedavaya veriyor; model plan okuyucu." | İP-4.4 plan bozma testleri ve "maske var, taşıyıcı taşınmış" ablasyonu. Başarım maskeye bağlıysa sonuç böyle yazılır. |
-| "CuC ve ASI'de kötü sonuç yöntemin başarısızlığıdır." | Önceden kayıtlı ayırt edilebilirlik analizi: hangi gözlem olmadan hangi çiftin ayrılamayacağı **sonuçtan önce** yazılır (İP-4, P17); kâhin üst sınırı ile gözlem-tabanlı yöntem arasındaki fark ayrıca raporlanır. |
+| "CuC ve ASI'de kötü sonuç yöntemin başarısızlığıdır." | Önceden kayıtlı ayırt edilebilirlik analizi: hangi gözlem olmadan hangi çiftin ayrılamayacağı **sonuçtan önce** yazılır (İP-4, P18); kâhin üst sınırı ile gözlem-tabanlı yöntem arasındaki fark ayrıca raporlanır. |
 
 ---
 

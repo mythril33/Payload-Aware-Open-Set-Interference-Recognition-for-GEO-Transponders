@@ -78,4 +78,6 @@ def simulate(cfg: ScenarioConfig, plan: list[Carrier] | None = None,
     z = sn.to_monitor(y)
     meta = {"config": asdict(cfg), "plan": [asdict(c) for c in plan],
             "actual_ibo_db": float(drive_ibo), "obo_db": obo, "has_interferer": interferer is not None}
+    if hasattr(amp, "out_of_range_fraction") and not cfg.linear:
+        meta["amplifier_input_beyond_measured"] = amp.out_of_range_fraction(x[:, w])
     return ScenarioResult(sn.spectrogram_db(z), plan_mask_db(plan), meta, z if keep_iq else None)

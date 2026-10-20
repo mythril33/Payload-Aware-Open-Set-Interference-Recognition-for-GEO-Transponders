@@ -96,6 +96,7 @@ Her faz = bir (veya birkaç) odaklı planlama oturumu. Çıktısı ayrı bir dos
 | **P7** | Değerlendirme ve ablasyon protokolü | `P7_degerlendirme.md` | Her iddia ↔ deney ↔ metrik ↔ tablo/şekil eşlemesi; istatistik (tohum sayısı, güven aralığı) | openset-rf-eval-protocol |
 | **P8** | Dış veri denetimi | `P8_dis_veri.md` | Her kaynak: erişilebilirlik, lisans, format, bant/fs, projedeki kesin rolü, "kullan / kullanma" kararı | veri denetçisi agent |
 | **P9** | Yol haritası, riskler, hedef yayın | `P9_yol_haritasi.md` | Haftalık kilometre taşları, risk kaydı (olasılık/etki/önlem), 2–3 hedef dergi + yedek | proje skill'i + kırmızı takım agent |
+| **P17** | R1-eval/1: geri çekilme eğrisi ve yükselteç uyumsuzluğu | `P17_r1_robustness_eval.md` | A1 değişmeden yalnız-test protokolü, testli yükselteç aileleri, yeniden eğitimsiz değerlendirici, küçük fiziksel koşu | — |
 | **P16** | Literatür taraması sonrası düzeltme ve tamamlama programı | `P16_literatur_duzeltme_programi.md` | Her tarama↔depo çelişkisi kapatılmış veya sahipli; her iş paketinin kapanış ölçütü yazılı | proje skill'i |
 
 **Sıra (v0.4, hızlı yol):** P0 ✔ → P2-A → P4-A + kod → P3-A + kod → P5-A → P6-A/P7-A → [Kademe B: P1 ∥ P8 → P2–P7 B dilimleri → P9]. Ayrıntı `P0_kapsam.md` §5. Eski sıra: P0 → P1 ∥ P8 → P2 → P3 → P4 → P5 → P6 → P7 → P9. (P1 ve P8 web araştırması gerektirir, paralel yürür; P3'ün sonucu P5–P7'yi değiştirebilir, bu yüzden önce gelir.)
@@ -173,4 +174,5 @@ Her faz = bir (veya birkaç) odaklı planlama oturumu. Çıktısı ayrı bir dos
 | K13 | Depo lisansı — **şimdilik lisans yok**; yayın öncesi yeniden sorulacak | P16 §5 |
 | K14 | ~~Vekil unknown~~ — kapandı: yok, yalnız bilinen doğrulama | P16 §5 ✔ |
 | K15 | SmartSpace on-board — bulutta işlenecek; host izni ve kullanım koşulu teyidi kullanıcıda | P16 §5 |
+| K17 | P18 B2/1 protokol taslağının dondurulması | P18 (kullanıcıda) |
 | K16 | ~~E1-dev/1 downlink ASI olayı~~ — kapandı 2026-10-20: `adjacent_satellite_downlink` adıyla ayrı tutulur; B2/1 `adjacent_satellite` = uplink | P16 §5 ✔ |

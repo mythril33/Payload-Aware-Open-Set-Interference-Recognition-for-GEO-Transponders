@@ -156,3 +156,15 @@ The independent 64-pilot synthetic calibration had relative matrix error
 `0.0010122`. This checks the simulated instrument estimator against its known
 generating response; it is not a measurement of physical propagation XPD or
 validation with real hardware.
+
+## Source note on XPD values (2026-10-20, P16 L10)
+
+Earth-station antenna standards bracket the nominal values but do not supply a
+distribution. Eutelsat EESS 502 gives a reference cross-polarization
+discrimination of 35 dB for linear polarization and allows operation down to
+25 dB under EIRP-density conditions. Intelsat IESS-207 (Rev. 4) requires at least
+30.0 dB for linearly polarized Standard A/B/F-3 stations and recommends
+compensation where rain depolarization brings isolation below 12 dB for 0.01 %
+of the year. The nominal 30 dB uplink and 35 dB downlink values lie in this range.
+The 10 dB `cross_pol` value is a fault condition below both limits, not a
+measured statistic. Satellite-antenna XPD remains unsourced.

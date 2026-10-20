@@ -1,0 +1,2852 @@
+{
+ "protocol": "R1-eval/1",
+ "stage_a_protocol": "A1, frozen 2026-10-09",
+ "train_seeds": [
+  0
+ ],
+ "level": "carrier",
+ "time_pool": 2,
+ "epochs": 3,
+ "stage_a_complete_data": false,
+ "stage_a_data_fingerprints": {
+  "train_nl": "6f36ae5f100883b3b22b23c4130e3a9f606e6716dd92532a66f04a63c8dbf5e4",
+  "train_lin": "8b61dba47fb30fb85bb95aa118f5aa2dd4a5908bb9c3d903ae849d676a779ff1",
+  "val_nl": "d45232c914cb8817c1671299c60d93826e3521ce258dc9089205542ec66dce0c",
+  "val_lin": "ee62ea12937299512cddc704fac5379c1b8d1477b79f13f72f9ab206f4f72a1e"
+ },
+ "implementation": {
+  "model.py": "43a538e9cd3761bd0f2efbf0500aadeb252c60ac9acc82ebde7a4d674f8fb45c",
+  "train.py": "9a12be947ce421ee00e6d7e884f9408a863558cf08089e8d165898a2d228295e",
+  "data.py": "a5d0562ecd00c89bb451156f621cc388737d04edcc83bc52343e422ed13a368a"
+ },
+ "assumptions": {
+  "opendpd_ibo_ref_db": 11.0,
+  "opendpd_reference_bandwidth_hz": 36000000.0,
+  "rapp_p": 2.0,
+  "nominal_train_ibo_db": [
+   9.0,
+   13.0
+  ],
+  "overdrive_train_ibo_db": [
+   1.0,
+   4.0
+  ],
+  "gap_ibo_db": [
+   5.0,
+   8.0
+  ]
+ },
+ "splits": {
+  "r1_amp_opendpd_apa": {
+   "n_samples": 24,
+   "n_scenarios": 6,
+   "per_label": {
+    "clean": 6,
+    "cw": 6,
+    "swept_cw": 6,
+    "unauthorized": 6
+   },
+   "five_class": {
+    "n": 24,
+    "accuracy": {
+     "mean": 0.0,
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "n_samples": 24,
+     "n_scenarios": 6
+    },
+    "macro_f1": {
+     "mean": 0.0,
+     "std": 0.0,
+     "per_training_seed": [
+      0.0
+     ]
+    },
+    "ece": {
+     "mean": 0.21026227250695229,
+     "std": 0.0,
+     "per_training_seed": [
+      0.21026227250695229
+     ],
+     "definition": "top-label, 15 equal-width bins"
+    },
+    "recall": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     null
+    ],
+    "confusion": [
+     [
+      0,
+      0,
+      0,
+      0,
+      6
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      6
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      6
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      6
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    ]
+   },
+   "four_class": {
+    "M-lin": {
+     "n": 24,
+     "accuracy": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 24,
+      "n_scenarios": 6
+     },
+     "macro_f1": {
+      "mean": 0.1,
+      "std": 0.0,
+      "per_training_seed": [
+       0.1
+      ]
+     },
+     "ece": {
+      "mean": 0.013541401674350084,
+      "std": 0.0,
+      "per_training_seed": [
+       0.013541401674350084
+      ],
+      "definition": "top-label, 15 equal-width bins"
+     },
+     "recall": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "confusion": [
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ]
+     ],
+     "false_alarm_on_clean": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     }
+    },
+    "M-nl4": {
+     "n": 24,
+     "accuracy": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 24,
+      "n_scenarios": 6
+     },
+     "macro_f1": {
+      "mean": 0.1,
+      "std": 0.0,
+      "per_training_seed": [
+       0.1
+      ]
+     },
+     "ece": {
+      "mean": 0.013358918329079927,
+      "std": 0.0,
+      "per_training_seed": [
+       0.013358918329079927
+      ],
+      "definition": "top-label, 15 equal-width bins"
+     },
+     "recall": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "confusion": [
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ]
+     ],
+     "false_alarm_on_clean": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     }
+    }
+   },
+   "overdrive_as": null,
+   "detection": {
+    "pfa_target": 0.05,
+    "threshold_source": "val_nl clean samples, per training seed",
+    "pfa": {
+     "mean": 0.0,
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "n_samples": 6,
+     "n_scenarios": 6
+    },
+    "pd": {
+     "cw": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     },
+     "swept_cw": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     },
+     "unauthorized": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     }
+    },
+    "ranking": {
+     "positive_population": "any non-clean label",
+     "negative_population": "clean",
+     "auroc": 0.37962962962962965,
+     "fpr_at_95_tpr": 1.0,
+     "per_training_seed": [
+      {
+       "auroc": 0.37962962962962965,
+       "fpr_at_95_tpr": 1.0,
+       "n_negative": 6,
+       "n_positive": 18
+      }
+     ]
+    }
+   },
+   "amplifier_input_beyond_measured": {
+    "mean": 2.6226043701171875e-06,
+    "max": 3.4968058268229164e-05,
+    "n_samples": 24
+   },
+   "ibo_region_counts": {
+    "train": 24
+   },
+   "ibo_bins": [
+    {
+     "ibo_lo_db": 9.0,
+     "ibo_hi_db": 10.0,
+     "regions": [
+      "train"
+     ],
+     "n_samples": 4,
+     "per_label": {
+      "clean": 1,
+      "cw": 1,
+      "swept_cw": 1,
+      "unauthorized": 1
+     },
+     "M-nl5_accuracy": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-lin_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-nl4_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "payload_gap_accuracy_four": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     }
+    },
+    {
+     "ibo_lo_db": 10.0,
+     "ibo_hi_db": 11.0,
+     "regions": [
+      "train"
+     ],
+     "n_samples": 4,
+     "per_label": {
+      "clean": 1,
+      "cw": 1,
+      "swept_cw": 1,
+      "unauthorized": 1
+     },
+     "M-nl5_accuracy": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-lin_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-nl4_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "payload_gap_accuracy_four": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     }
+    },
+    {
+     "ibo_lo_db": 11.0,
+     "ibo_hi_db": 12.0,
+     "regions": [
+      "train"
+     ],
+     "n_samples": 8,
+     "per_label": {
+      "clean": 2,
+      "cw": 2,
+      "swept_cw": 2,
+      "unauthorized": 2
+     },
+     "M-nl5_accuracy": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 2,
+      "n_scenarios": 2
+     },
+     "M-lin_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "M-nl4_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "payload_gap_accuracy_four": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 2,
+      "n_scenarios": 2
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 2,
+      "n_scenarios": 2
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     }
+    },
+    {
+     "ibo_lo_db": 12.0,
+     "ibo_hi_db": 13.0,
+     "regions": [
+      "train"
+     ],
+     "n_samples": 8,
+     "per_label": {
+      "clean": 2,
+      "cw": 2,
+      "swept_cw": 2,
+      "unauthorized": 2
+     },
+     "M-nl5_accuracy": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 2,
+      "n_scenarios": 2
+     },
+     "M-lin_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "M-nl4_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "payload_gap_accuracy_four": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 2,
+      "n_scenarios": 2
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 2,
+      "n_scenarios": 2
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     }
+    }
+   ],
+   "amplifier": "opendpd_apa",
+   "complete": false,
+   "data_fingerprint": "d55b62a06f77cf888e593996f44b3c4a58260163a673bd60018e5a45abdd0f43"
+  },
+  "r1_amp_opendpd_dpa": {
+   "n_samples": 24,
+   "n_scenarios": 6,
+   "per_label": {
+    "clean": 6,
+    "cw": 6,
+    "swept_cw": 6,
+    "unauthorized": 6
+   },
+   "five_class": {
+    "n": 24,
+    "accuracy": {
+     "mean": 0.0,
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "n_samples": 24,
+     "n_scenarios": 6
+    },
+    "macro_f1": {
+     "mean": 0.0,
+     "std": 0.0,
+     "per_training_seed": [
+      0.0
+     ]
+    },
+    "ece": {
+     "mean": 0.21011442070206007,
+     "std": 0.0,
+     "per_training_seed": [
+      0.21011442070206007
+     ],
+     "definition": "top-label, 15 equal-width bins"
+    },
+    "recall": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     null
+    ],
+    "confusion": [
+     [
+      0,
+      0,
+      0,
+      0,
+      6
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      6
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      6
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      6
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    ]
+   },
+   "four_class": {
+    "M-lin": {
+     "n": 24,
+     "accuracy": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 24,
+      "n_scenarios": 6
+     },
+     "macro_f1": {
+      "mean": 0.1,
+      "std": 0.0,
+      "per_training_seed": [
+       0.1
+      ]
+     },
+     "ece": {
+      "mean": 0.013516192634900392,
+      "std": 0.0,
+      "per_training_seed": [
+       0.013516192634900392
+      ],
+      "definition": "top-label, 15 equal-width bins"
+     },
+     "recall": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "confusion": [
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ]
+     ],
+     "false_alarm_on_clean": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     }
+    },
+    "M-nl4": {
+     "n": 24,
+     "accuracy": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 24,
+      "n_scenarios": 6
+     },
+     "macro_f1": {
+      "mean": 0.1,
+      "std": 0.0,
+      "per_training_seed": [
+       0.1
+      ]
+     },
+     "ece": {
+      "mean": 0.013343997299671173,
+      "std": 0.0,
+      "per_training_seed": [
+       0.013343997299671173
+      ],
+      "definition": "top-label, 15 equal-width bins"
+     },
+     "recall": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "confusion": [
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ]
+     ],
+     "false_alarm_on_clean": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     }
+    }
+   },
+   "overdrive_as": null,
+   "detection": {
+    "pfa_target": 0.05,
+    "threshold_source": "val_nl clean samples, per training seed",
+    "pfa": {
+     "mean": 0.0,
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "n_samples": 6,
+     "n_scenarios": 6
+    },
+    "pd": {
+     "cw": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     },
+     "swept_cw": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     },
+     "unauthorized": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     }
+    },
+    "ranking": {
+     "positive_population": "any non-clean label",
+     "negative_population": "clean",
+     "auroc": 0.37962962962962965,
+     "fpr_at_95_tpr": 1.0,
+     "per_training_seed": [
+      {
+       "auroc": 0.37962962962962965,
+       "fpr_at_95_tpr": 1.0,
+       "n_negative": 6,
+       "n_positive": 18
+      }
+     ]
+    }
+   },
+   "amplifier_input_beyond_measured": {
+    "mean": 5.120701260036893e-05,
+    "max": 0.0008742014567057291,
+    "n_samples": 24
+   },
+   "ibo_region_counts": {
+    "train": 24
+   },
+   "ibo_bins": [
+    {
+     "ibo_lo_db": 10.0,
+     "ibo_hi_db": 11.0,
+     "regions": [
+      "train"
+     ],
+     "n_samples": 4,
+     "per_label": {
+      "clean": 1,
+      "cw": 1,
+      "swept_cw": 1,
+      "unauthorized": 1
+     },
+     "M-nl5_accuracy": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-lin_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-nl4_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "payload_gap_accuracy_four": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     }
+    },
+    {
+     "ibo_lo_db": 11.0,
+     "ibo_hi_db": 12.0,
+     "regions": [
+      "train"
+     ],
+     "n_samples": 12,
+     "per_label": {
+      "clean": 3,
+      "cw": 3,
+      "swept_cw": 3,
+      "unauthorized": 3
+     },
+     "M-nl5_accuracy": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 12,
+      "n_scenarios": 3
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 3,
+      "n_scenarios": 3
+     },
+     "M-lin_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 12,
+      "n_scenarios": 3
+     },
+     "M-nl4_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 12,
+      "n_scenarios": 3
+     },
+     "payload_gap_accuracy_four": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 12,
+      "n_scenarios": 3
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 3,
+      "n_scenarios": 3
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 3,
+      "n_scenarios": 3
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     }
+    },
+    {
+     "ibo_lo_db": 12.0,
+     "ibo_hi_db": 13.0,
+     "regions": [
+      "train"
+     ],
+     "n_samples": 8,
+     "per_label": {
+      "clean": 2,
+      "cw": 2,
+      "swept_cw": 2,
+      "unauthorized": 2
+     },
+     "M-nl5_accuracy": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 2,
+      "n_scenarios": 2
+     },
+     "M-lin_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "M-nl4_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "payload_gap_accuracy_four": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 2,
+      "n_scenarios": 2
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 2,
+      "n_scenarios": 2
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     }
+    }
+   ],
+   "amplifier": "opendpd_dpa",
+   "complete": false,
+   "data_fingerprint": "abe9aa2fb163b919dd719db6c2a9c1a406e897dc67b73a0ed53968a8c7a09fdc"
+  },
+  "r1_amp_rapp": {
+   "n_samples": 30,
+   "n_scenarios": 6,
+   "per_label": {
+    "clean": 6,
+    "cw": 6,
+    "swept_cw": 6,
+    "unauthorized": 6,
+    "overdrive": 6
+   },
+   "five_class": {
+    "n": 30,
+    "accuracy": {
+     "mean": 0.2,
+     "ci95": [
+      0.2,
+      0.2
+     ],
+     "n_samples": 30,
+     "n_scenarios": 6
+    },
+    "macro_f1": {
+     "mean": 0.06666666666666667,
+     "std": 0.0,
+     "per_training_seed": [
+      0.06666666666666667
+     ]
+    },
+    "ece": {
+     "mean": 0.01018591473499933,
+     "std": 0.0,
+     "per_training_seed": [
+      0.01018591473499933
+     ],
+     "definition": "top-label, 15 equal-width bins"
+    },
+    "recall": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ],
+    "confusion": [
+     [
+      0,
+      0,
+      0,
+      0,
+      6
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      6
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      6
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      6
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      6
+     ]
+    ]
+   },
+   "four_class": {
+    "M-lin": {
+     "n": 24,
+     "accuracy": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 24,
+      "n_scenarios": 6
+     },
+     "macro_f1": {
+      "mean": 0.1,
+      "std": 0.0,
+      "per_training_seed": [
+       0.1
+      ]
+     },
+     "ece": {
+      "mean": 0.01382084315021831,
+      "std": 0.0,
+      "per_training_seed": [
+       0.01382084315021831
+      ],
+      "definition": "top-label, 15 equal-width bins"
+     },
+     "recall": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "confusion": [
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ]
+     ],
+     "false_alarm_on_clean": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     }
+    },
+    "M-nl4": {
+     "n": 24,
+     "accuracy": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 24,
+      "n_scenarios": 6
+     },
+     "macro_f1": {
+      "mean": 0.1,
+      "std": 0.0,
+      "per_training_seed": [
+       0.1
+      ]
+     },
+     "ece": {
+      "mean": 0.013626469920078932,
+      "std": 0.0,
+      "per_training_seed": [
+       0.013626469920078932
+      ],
+      "definition": "top-label, 15 equal-width bins"
+     },
+     "recall": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "confusion": [
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ]
+     ],
+     "false_alarm_on_clean": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     }
+    }
+   },
+   "overdrive_as": {
+    "M-lin": {
+     "clean": 0.0,
+     "cw": 0.0,
+     "swept_cw": 0.0,
+     "unauthorized": 1.0
+    },
+    "M-nl4": {
+     "clean": 0.0,
+     "cw": 0.0,
+     "swept_cw": 0.0,
+     "unauthorized": 1.0
+    }
+   },
+   "detection": {
+    "pfa_target": 0.05,
+    "threshold_source": "val_nl clean samples, per training seed",
+    "pfa": {
+     "mean": 0.16666666666666666,
+     "ci95": [
+      0.0,
+      0.5
+     ],
+     "n_samples": 6,
+     "n_scenarios": 6
+    },
+    "pd": {
+     "cw": {
+      "mean": 0.16666666666666666,
+      "ci95": [
+       0.0,
+       0.5
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     },
+     "swept_cw": {
+      "mean": 0.16666666666666666,
+      "ci95": [
+       0.0,
+       0.5
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     },
+     "unauthorized": {
+      "mean": 0.16666666666666666,
+      "ci95": [
+       0.0,
+       0.5
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     },
+     "overdrive": {
+      "mean": 0.16666666666666666,
+      "ci95": [
+       0.0,
+       0.5
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     }
+    },
+    "ranking": {
+     "positive_population": "any non-clean label",
+     "negative_population": "clean",
+     "auroc": 0.38888888888888895,
+     "fpr_at_95_tpr": 1.0,
+     "per_training_seed": [
+      {
+       "auroc": 0.38888888888888895,
+       "fpr_at_95_tpr": 1.0,
+       "n_negative": 6,
+       "n_positive": 24
+      }
+     ]
+    }
+   },
+   "amplifier_input_beyond_measured": null,
+   "ibo_region_counts": {
+    "train": 30
+   },
+   "ibo_bins": [
+    {
+     "ibo_lo_db": 1.0,
+     "ibo_hi_db": 2.0,
+     "regions": [
+      "train"
+     ],
+     "n_samples": 1,
+     "per_label": {
+      "overdrive": 1
+     },
+     "M-nl5_accuracy": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-lin_accuracy_four": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_accuracy_four": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "payload_gap_accuracy_four": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     }
+    },
+    {
+     "ibo_lo_db": 2.0,
+     "ibo_hi_db": 3.0,
+     "regions": [
+      "train"
+     ],
+     "n_samples": 5,
+     "per_label": {
+      "overdrive": 5
+     },
+     "M-nl5_accuracy": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 5,
+      "n_scenarios": 5
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-lin_accuracy_four": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_accuracy_four": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "payload_gap_accuracy_four": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 5,
+      "n_scenarios": 5
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 5,
+      "n_scenarios": 5
+     }
+    },
+    {
+     "ibo_lo_db": 9.0,
+     "ibo_hi_db": 10.0,
+     "regions": [
+      "train"
+     ],
+     "n_samples": 16,
+     "per_label": {
+      "clean": 4,
+      "cw": 4,
+      "swept_cw": 4,
+      "unauthorized": 4
+     },
+     "M-nl5_accuracy": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 16,
+      "n_scenarios": 4
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 4,
+      "n_scenarios": 4
+     },
+     "M-lin_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 16,
+      "n_scenarios": 4
+     },
+     "M-nl4_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 16,
+      "n_scenarios": 4
+     },
+     "payload_gap_accuracy_four": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 16,
+      "n_scenarios": 4
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 4,
+      "n_scenarios": 4
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 4,
+      "n_scenarios": 4
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     }
+    },
+    {
+     "ibo_lo_db": 11.0,
+     "ibo_hi_db": 12.0,
+     "regions": [
+      "train"
+     ],
+     "n_samples": 4,
+     "per_label": {
+      "clean": 1,
+      "cw": 1,
+      "swept_cw": 1,
+      "unauthorized": 1
+     },
+     "M-nl5_accuracy": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-lin_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-nl4_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "payload_gap_accuracy_four": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     }
+    },
+    {
+     "ibo_lo_db": 12.0,
+     "ibo_hi_db": 13.0,
+     "regions": [
+      "train"
+     ],
+     "n_samples": 4,
+     "per_label": {
+      "clean": 1,
+      "cw": 1,
+      "swept_cw": 1,
+      "unauthorized": 1
+     },
+     "M-nl5_accuracy": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-lin_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-nl4_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "payload_gap_accuracy_four": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     }
+    }
+   ],
+   "amplifier": "rapp_p2",
+   "complete": false,
+   "data_fingerprint": "64092b92d6c64e536e18060f43666e21d8dcbe6f04726dd1c5fec8284b60f1f1"
+  },
+  "r1_ibo_sweep": {
+   "n_samples": 30,
+   "n_scenarios": 6,
+   "per_label": {
+    "clean": 6,
+    "cw": 6,
+    "swept_cw": 6,
+    "unauthorized": 6,
+    "overdrive": 6
+   },
+   "five_class": {
+    "n": 30,
+    "accuracy": {
+     "mean": 0.2,
+     "ci95": [
+      0.2,
+      0.2
+     ],
+     "n_samples": 30,
+     "n_scenarios": 6
+    },
+    "macro_f1": {
+     "mean": 0.06666666666666667,
+     "std": 0.0,
+     "per_training_seed": [
+      0.06666666666666667
+     ]
+    },
+    "ece": {
+     "mean": 0.010221619904041274,
+     "std": 0.0,
+     "per_training_seed": [
+      0.010221619904041274
+     ],
+     "definition": "top-label, 15 equal-width bins"
+    },
+    "recall": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ],
+    "confusion": [
+     [
+      0,
+      0,
+      0,
+      0,
+      6
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      6
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      6
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      6
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      6
+     ]
+    ]
+   },
+   "four_class": {
+    "M-lin": {
+     "n": 24,
+     "accuracy": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 24,
+      "n_scenarios": 6
+     },
+     "macro_f1": {
+      "mean": 0.1,
+      "std": 0.0,
+      "per_training_seed": [
+       0.1
+      ]
+     },
+     "ece": {
+      "mean": 0.013618315259615599,
+      "std": 0.0,
+      "per_training_seed": [
+       0.013618315259615599
+      ],
+      "definition": "top-label, 15 equal-width bins"
+     },
+     "recall": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "confusion": [
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ]
+     ],
+     "false_alarm_on_clean": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     }
+    },
+    "M-nl4": {
+     "n": 24,
+     "accuracy": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 24,
+      "n_scenarios": 6
+     },
+     "macro_f1": {
+      "mean": 0.1,
+      "std": 0.0,
+      "per_training_seed": [
+       0.1
+      ]
+     },
+     "ece": {
+      "mean": 0.013455300281445204,
+      "std": 0.0,
+      "per_training_seed": [
+       0.013455300281445204
+      ],
+      "definition": "top-label, 15 equal-width bins"
+     },
+     "recall": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "confusion": [
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ],
+      [
+       0,
+       0,
+       0,
+       6
+      ]
+     ],
+     "false_alarm_on_clean": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     }
+    }
+   },
+   "overdrive_as": {
+    "M-lin": {
+     "clean": 0.0,
+     "cw": 0.0,
+     "swept_cw": 0.0,
+     "unauthorized": 1.0
+    },
+    "M-nl4": {
+     "clean": 0.0,
+     "cw": 0.0,
+     "swept_cw": 0.0,
+     "unauthorized": 1.0
+    }
+   },
+   "detection": {
+    "pfa_target": 0.05,
+    "threshold_source": "val_nl clean samples, per training seed",
+    "pfa": {
+     "mean": 0.16666666666666666,
+     "ci95": [
+      0.0,
+      0.5
+     ],
+     "n_samples": 6,
+     "n_scenarios": 6
+    },
+    "pd": {
+     "cw": {
+      "mean": 0.16666666666666666,
+      "ci95": [
+       0.0,
+       0.5
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     },
+     "swept_cw": {
+      "mean": 0.16666666666666666,
+      "ci95": [
+       0.0,
+       0.5
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     },
+     "unauthorized": {
+      "mean": 0.16666666666666666,
+      "ci95": [
+       0.0,
+       0.5
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     },
+     "overdrive": {
+      "mean": 0.16666666666666666,
+      "ci95": [
+       0.0,
+       0.5
+      ],
+      "n_samples": 6,
+      "n_scenarios": 6
+     }
+    },
+    "ranking": {
+     "positive_population": "any non-clean label",
+     "negative_population": "clean",
+     "auroc": 0.4097222222222222,
+     "fpr_at_95_tpr": 1.0,
+     "per_training_seed": [
+      {
+       "auroc": 0.4097222222222222,
+       "fpr_at_95_tpr": 1.0,
+       "n_negative": 6,
+       "n_positive": 24
+      }
+     ]
+    }
+   },
+   "amplifier_input_beyond_measured": null,
+   "ibo_region_counts": {
+    "train": 13,
+    "near": 17
+   },
+   "ibo_bins": [
+    {
+     "ibo_lo_db": 0.0,
+     "ibo_hi_db": 1.0,
+     "regions": [
+      "near"
+     ],
+     "n_samples": 3,
+     "per_label": {
+      "overdrive": 3
+     },
+     "M-nl5_accuracy": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 3,
+      "n_scenarios": 3
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-lin_accuracy_four": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_accuracy_four": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "payload_gap_accuracy_four": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 3,
+      "n_scenarios": 3
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 3,
+      "n_scenarios": 3
+     }
+    },
+    {
+     "ibo_lo_db": 3.0,
+     "ibo_hi_db": 4.0,
+     "regions": [
+      "train"
+     ],
+     "n_samples": 1,
+     "per_label": {
+      "overdrive": 1
+     },
+     "M-nl5_accuracy": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-lin_accuracy_four": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_accuracy_four": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "payload_gap_accuracy_four": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     }
+    },
+    {
+     "ibo_lo_db": 4.0,
+     "ibo_hi_db": 5.0,
+     "regions": [
+      "near"
+     ],
+     "n_samples": 2,
+     "per_label": {
+      "overdrive": 2
+     },
+     "M-nl5_accuracy": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 2,
+      "n_scenarios": 2
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-lin_accuracy_four": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_accuracy_four": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "payload_gap_accuracy_four": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 2,
+      "n_scenarios": 2
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 2,
+      "n_scenarios": 2
+     }
+    },
+    {
+     "ibo_lo_db": 8.0,
+     "ibo_hi_db": 9.0,
+     "regions": [
+      "near"
+     ],
+     "n_samples": 8,
+     "per_label": {
+      "clean": 2,
+      "cw": 2,
+      "swept_cw": 2,
+      "unauthorized": 2
+     },
+     "M-nl5_accuracy": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 2,
+      "n_scenarios": 2
+     },
+     "M-lin_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "M-nl4_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "payload_gap_accuracy_four": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 2,
+      "n_scenarios": 2
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 2,
+      "n_scenarios": 2
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     }
+    },
+    {
+     "ibo_lo_db": 10.0,
+     "ibo_hi_db": 11.0,
+     "regions": [
+      "train"
+     ],
+     "n_samples": 4,
+     "per_label": {
+      "clean": 1,
+      "cw": 1,
+      "swept_cw": 1,
+      "unauthorized": 1
+     },
+     "M-nl5_accuracy": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-lin_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-nl4_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "payload_gap_accuracy_four": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     }
+    },
+    {
+     "ibo_lo_db": 12.0,
+     "ibo_hi_db": 13.0,
+     "regions": [
+      "train"
+     ],
+     "n_samples": 8,
+     "per_label": {
+      "clean": 2,
+      "cw": 2,
+      "swept_cw": 2,
+      "unauthorized": 2
+     },
+     "M-nl5_accuracy": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 2,
+      "n_scenarios": 2
+     },
+     "M-lin_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "M-nl4_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "payload_gap_accuracy_four": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 8,
+      "n_scenarios": 2
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 2,
+      "n_scenarios": 2
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 2,
+      "n_scenarios": 2
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     }
+    },
+    {
+     "ibo_lo_db": 13.0,
+     "ibo_hi_db": 14.0,
+     "regions": [
+      "near"
+     ],
+     "n_samples": 4,
+     "per_label": {
+      "clean": 1,
+      "cw": 1,
+      "swept_cw": 1,
+      "unauthorized": 1
+     },
+     "M-nl5_accuracy": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-nl5_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-lin_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-nl4_accuracy_four": {
+      "mean": 0.25,
+      "ci95": [
+       0.25,
+       0.25
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "payload_gap_accuracy_four": {
+      "mean": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "n_samples": 4,
+      "n_scenarios": 1
+     },
+     "M-lin_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-nl4_clean_false_alarm": {
+      "mean": 1.0,
+      "ci95": [
+       1.0,
+       1.0
+      ],
+      "n_samples": 1,
+      "n_scenarios": 1
+     },
+     "M-lin_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     },
+     "M-nl4_overdrive_called_external": {
+      "mean": null,
+      "ci95": null,
+      "n_samples": 0,
+      "n_scenarios": 0
+     }
+    }
+   ],
+   "amplifier": "dvbs2_nl",
+   "complete": false,
+   "data_fingerprint": "5d3f1638ebbf8ecd5e6137ea01440cbb2a55c77b8e54d840cfae166c3491f241"
+  }
+ }
+}

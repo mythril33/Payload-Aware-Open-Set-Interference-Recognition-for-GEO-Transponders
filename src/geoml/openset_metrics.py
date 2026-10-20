@@ -39,6 +39,39 @@ def _trapezoid(y: np.ndarray, x: np.ndarray) -> float:
     return float(np.sum((x[1:] - x[:-1]) * (y[1:] + y[:-1]) * 0.5))
 
 
+def _roc(negative: np.ndarray, positive: np.ndarray) -> tuple:
+    """Grouped-tie ROC from high to low score; positives are the detected population."""
+    scores = np.concatenate((negative, positive))
+    is_positive = np.r_[np.zeros(len(negative), dtype=bool), np.ones(len(positive), dtype=bool)]
+    descending = np.argsort(scores, kind="stable")[::-1]
+    ends = _group_ends(scores[descending])
+    true_positive = np.cumsum(is_positive[descending], dtype=np.int64)[ends]
+    detected = ends + 1
+    false_positive = detected - true_positive
+    return (np.r_[0.0, false_positive / len(negative)], np.r_[0.0, true_positive / len(positive)],
+            true_positive, detected)
+
+
+def _fpr_at_tpr(fpr: np.ndarray, tpr: np.ndarray, target: float) -> float:
+    """FPR of the first grouped threshold whose TPR reaches target (no interpolation)."""
+    return float(fpr[np.argmax(tpr >= target - 1e-12)])
+
+
+def detection_ranking(negative_scores, positive_scores, target_tpr: float = 0.95) -> dict:
+    """AUROC and FPR at a TPR target; higher scores mean more positive-like.
+
+    FPR is the fraction of negatives at or above the first grouped threshold
+    that detects at least ``target_tpr`` of the positives.
+    """
+    negative = _scores(negative_scores, "negative_scores")
+    positive = _scores(positive_scores, "positive_scores")
+    if not 0 < target_tpr <= 1:
+        raise ValueError("target_tpr must be in (0, 1]")
+    fpr, tpr, *_ = _roc(negative, positive)
+    return {"auroc": _trapezoid(tpr, fpr), f"fpr_at_{round(100 * target_tpr)}_tpr": _fpr_at_tpr(fpr, tpr, target_tpr),
+            "n_negative": len(negative), "n_positive": len(positive)}
+
+
 def ranking_metrics(known_scores: np.ndarray, unknown_scores: np.ndarray,
                     known_correct: np.ndarray) -> dict:
     """Return AUROC, average precision, OSCR AUC and their finite curve points.
@@ -61,13 +94,7 @@ def ranking_metrics(known_scores: np.ndarray, unknown_scores: np.ndarray,
     scores = np.concatenate((known, unknown))
     is_unknown = np.r_[np.zeros(nk, dtype=bool), np.ones(nu, dtype=bool)]
 
-    descending = np.argsort(scores, kind="stable")[::-1]
-    ends = _group_ends(scores[descending])
-    true_positive = np.cumsum(is_unknown[descending], dtype=np.int64)[ends]
-    detected = ends + 1
-    false_positive = detected - true_positive
-    fpr = np.r_[0.0, false_positive / nk]
-    tpr = np.r_[0.0, true_positive / nu]
+    fpr, tpr, true_positive, detected = _roc(known, unknown)
     recall = tpr.copy()
     precision = np.r_[1.0, true_positive / detected]
     average_precision = float(np.sum(np.diff(recall) * precision[1:]))
@@ -82,6 +109,7 @@ def ranking_metrics(known_scores: np.ndarray, unknown_scores: np.ndarray,
         "unknown_auroc": _trapezoid(tpr, fpr),
         "unknown_aupr": average_precision,
         "oscr_auc": _trapezoid(correct_acceptance, false_acceptance),
+        "unknown_fpr_at_95_tpr": _fpr_at_tpr(fpr, tpr, 0.95),
         "n_known": nk,
         "n_unknown": nu,
         "known_closed_accuracy": float(np.mean(correct)),
@@ -93,6 +121,7 @@ def ranking_metrics(known_scores: np.ndarray, unknown_scores: np.ndarray,
             "ties": "equal_score_events_enter_together",
             "oscr_interpolation": "linear_between_grouped_tie_endpoints",
             "oscr_known_denominator": "all_known_test_events",
+            "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown",
         },
         "curves": {
             "unknown_roc": {"fpr": fpr.tolist(), "tpr": tpr.tolist()},

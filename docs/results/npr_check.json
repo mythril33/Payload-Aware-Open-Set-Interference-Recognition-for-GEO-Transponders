@@ -1,0 +1,601 @@
+{
+ "bandwidth_hz": 32000000.0,
+ "notch_hz": [
+  2000000.0,
+  3000000.0
+ ],
+ "guard_hz": 500000.0,
+ "n_samples": 524288,
+ "nperseg": 4096,
+ "seed": 0,
+ "ibo_db": [
+  0.0,
+  1.0,
+  2.0,
+  3.0,
+  4.0,
+  5.0,
+  6.0,
+  7.0,
+  8.0,
+  9.0,
+  10.0,
+  11.0,
+  12.0,
+  13.0,
+  14.0
+ ],
+ "amplifiers": {
+  "dvbs2_nl": {
+   "rows": [
+    {
+     "ibo_db": 0.0,
+     "npr_db": 8.515038101668233,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 1.0,
+     "npr_db": 8.985559161072809,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 2.0,
+     "npr_db": 9.505706302597032,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 3.0,
+     "npr_db": 10.075993041429356,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 4.0,
+     "npr_db": 10.69647515341611,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 5.0,
+     "npr_db": 11.369492040787964,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 6.0,
+     "npr_db": 12.09888978651811,
+     "linear_npr_db": 53.63452530742974,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 7.0,
+     "npr_db": 12.891760044580032,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 8.0,
+     "npr_db": 13.755572079911522,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 9.0,
+     "npr_db": 14.69764415877571,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 10.0,
+     "npr_db": 15.723183357269763,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 11.0,
+     "npr_db": 16.836702816725506,
+     "linear_npr_db": 53.63452530742974,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 12.0,
+     "npr_db": 18.038838559678098,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 13.0,
+     "npr_db": 19.329820797822357,
+     "linear_npr_db": 53.63452530742974,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 14.0,
+     "npr_db": 20.714972100992664,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    }
+   ],
+   "slope_db_per_db_ibo_10_14": 1.2476695468542658
+  },
+  "dvbs2_lin": {
+   "rows": [
+    {
+     "ibo_db": 0.0,
+     "npr_db": 8.7917488008707,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 1.0,
+     "npr_db": 9.610111850944483,
+     "linear_npr_db": 53.63452530742974,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 2.0,
+     "npr_db": 10.488241187681675,
+     "linear_npr_db": 53.63452530742974,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 3.0,
+     "npr_db": 11.42540675616572,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 4.0,
+     "npr_db": 12.431432686941175,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 5.0,
+     "npr_db": 13.547457089954486,
+     "linear_npr_db": 53.634525307429755,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 6.0,
+     "npr_db": 14.820514196163181,
+     "linear_npr_db": 53.63452530742974,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 7.0,
+     "npr_db": 16.318546272175535,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 8.0,
+     "npr_db": 18.084345733242234,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 9.0,
+     "npr_db": 20.116909645766377,
+     "linear_npr_db": 53.634525307429755,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 10.0,
+     "npr_db": 22.203948663254746,
+     "linear_npr_db": 53.63452530742974,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 11.0,
+     "npr_db": 23.674342290662263,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 12.0,
+     "npr_db": 23.752229526933974,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 13.0,
+     "npr_db": 22.816645246910806,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 14.0,
+     "npr_db": 21.79188199096423,
+     "linear_npr_db": 53.634525307429755,
+     "input_beyond_measured": null
+    }
+   ],
+   "slope_db_per_db_ibo_10_14": -0.1681830388332479
+  },
+  "saleh": {
+   "rows": [
+    {
+     "ibo_db": 0.0,
+     "npr_db": 9.37770652884621,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 1.0,
+     "npr_db": 10.157164913345234,
+     "linear_npr_db": 53.634525307429755,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 2.0,
+     "npr_db": 10.999824166382865,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 3.0,
+     "npr_db": 11.903716315227662,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 4.0,
+     "npr_db": 12.864096983147588,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 5.0,
+     "npr_db": 13.87282240160318,
+     "linear_npr_db": 53.63452530742974,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 6.0,
+     "npr_db": 14.917972136830976,
+     "linear_npr_db": 53.63452530742974,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 7.0,
+     "npr_db": 15.984098555732762,
+     "linear_npr_db": 53.63452530742974,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 8.0,
+     "npr_db": 17.053580956378433,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 9.0,
+     "npr_db": 18.109396430235837,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 10.0,
+     "npr_db": 19.13900549639799,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 11.0,
+     "npr_db": 20.138139930274875,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 12.0,
+     "npr_db": 21.112769084736804,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 13.0,
+     "npr_db": 22.078135486835656,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 14.0,
+     "npr_db": 23.05525715886443,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    }
+   ],
+   "slope_db_per_db_ibo_10_14": 0.9772498881493662
+  },
+  "rapp_p2": {
+   "rows": [
+    {
+     "ibo_db": 0.0,
+     "npr_db": 14.48034660697777,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 1.0,
+     "npr_db": 15.637217529651927,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 2.0,
+     "npr_db": 16.979644110625358,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 3.0,
+     "npr_db": 18.525037848908852,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 4.0,
+     "npr_db": 20.289586717292863,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 5.0,
+     "npr_db": 22.28731170926902,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 6.0,
+     "npr_db": 24.528440478360643,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 7.0,
+     "npr_db": 27.017048929061104,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 8.0,
+     "npr_db": 29.748275782778446,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 9.0,
+     "npr_db": 32.70548825874603,
+     "linear_npr_db": 53.634525307429755,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 10.0,
+     "npr_db": 35.85699677201291,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 11.0,
+     "npr_db": 39.14969105191286,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 12.0,
+     "npr_db": 42.493674700095134,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 13.0,
+     "npr_db": 45.73214529738655,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": null
+    },
+    {
+     "ibo_db": 14.0,
+     "npr_db": 48.6122876591849,
+     "linear_npr_db": 53.634525307429755,
+     "input_beyond_measured": null
+    }
+   ],
+   "slope_db_per_db_ibo_10_14": 3.2093036019817656
+  },
+  "opendpd_apa": {
+   "rows": [
+    {
+     "ibo_db": 0.0,
+     "npr_db": 24.485061204730517,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.45320892333984375
+    },
+    {
+     "ibo_db": 1.0,
+     "npr_db": 22.746862263044303,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.36954307556152344
+    },
+    {
+     "ibo_db": 2.0,
+     "npr_db": 21.257085058421197,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.2859058380126953
+    },
+    {
+     "ibo_db": 3.0,
+     "npr_db": 20.068503972171175,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.20599746704101562
+    },
+    {
+     "ibo_db": 4.0,
+     "npr_db": 19.243418444297305,
+     "linear_npr_db": 53.63452530742974,
+     "input_beyond_measured": 0.13701629638671875
+    },
+    {
+     "ibo_db": 5.0,
+     "npr_db": 18.82605582583524,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.08179664611816406
+    },
+    {
+     "ibo_db": 6.0,
+     "npr_db": 18.810318779127243,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.04298591613769531
+    },
+    {
+     "ibo_db": 7.0,
+     "npr_db": 19.20585092204306,
+     "linear_npr_db": 53.634525307429726,
+     "input_beyond_measured": 0.0189971923828125
+    },
+    {
+     "ibo_db": 8.0,
+     "npr_db": 19.952002859555748,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.006786346435546875
+    },
+    {
+     "ibo_db": 9.0,
+     "npr_db": 20.968269628561238,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.00189971923828125
+    },
+    {
+     "ibo_db": 10.0,
+     "npr_db": 22.131808567297536,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.000370025634765625
+    },
+    {
+     "ibo_db": 11.0,
+     "npr_db": 23.366011061551426,
+     "linear_npr_db": 53.634525307429755,
+     "input_beyond_measured": 6.4849853515625e-05
+    },
+    {
+     "ibo_db": 12.0,
+     "npr_db": 24.648384637156745,
+     "linear_npr_db": 53.634525307429755,
+     "input_beyond_measured": 1.33514404296875e-05
+    },
+    {
+     "ibo_db": 13.0,
+     "npr_db": 26.03691434791291,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.0
+    },
+    {
+     "ibo_db": 14.0,
+     "npr_db": 27.565772499463257,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.0
+    }
+   ],
+   "slope_db_per_db_ibo_10_14": 1.3538831150692912
+  },
+  "opendpd_dpa": {
+   "rows": [
+    {
+     "ibo_db": 0.0,
+     "npr_db": 26.660324775825927,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.5153102874755859
+    },
+    {
+     "ibo_db": 1.0,
+     "npr_db": 24.88128340093133,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.4342632293701172
+    },
+    {
+     "ibo_db": 2.0,
+     "npr_db": 23.328775415625653,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.3502960205078125
+    },
+    {
+     "ibo_db": 3.0,
+     "npr_db": 22.092509662606417,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.2669353485107422
+    },
+    {
+     "ibo_db": 4.0,
+     "npr_db": 21.25125013799785,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.18913841247558594
+    },
+    {
+     "ibo_db": 5.0,
+     "npr_db": 20.875835328874427,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.12302780151367188
+    },
+    {
+     "ibo_db": 6.0,
+     "npr_db": 21.019032232646847,
+     "linear_npr_db": 53.63452530742974,
+     "input_beyond_measured": 0.07158851623535156
+    },
+    {
+     "ibo_db": 7.0,
+     "npr_db": 21.67260769273147,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.03623390197753906
+    },
+    {
+     "ibo_db": 8.0,
+     "npr_db": 22.885064179369827,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.01534271240234375
+    },
+    {
+     "ibo_db": 9.0,
+     "npr_db": 24.62946363028062,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.005237579345703125
+    },
+    {
+     "ibo_db": 10.0,
+     "npr_db": 26.88239470192755,
+     "linear_npr_db": 53.634525307429755,
+     "input_beyond_measured": 0.0013580322265625
+    },
+    {
+     "ibo_db": 11.0,
+     "npr_db": 29.523894333234594,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.0002288818359375
+    },
+    {
+     "ibo_db": 12.0,
+     "npr_db": 32.35271939829731,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 4.76837158203125e-05
+    },
+    {
+     "ibo_db": 13.0,
+     "npr_db": 35.11808847620764,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 7.62939453125e-06
+    },
+    {
+     "ibo_db": 14.0,
+     "npr_db": 37.8072153901062,
+     "linear_npr_db": 53.63452530742975,
+     "input_beyond_measured": 0.0
+    }
+   ],
+   "slope_db_per_db_ibo_10_14": 2.7443835519330335
+  }
+ },
+ "input_npr_db": 53.63452530742975
+}

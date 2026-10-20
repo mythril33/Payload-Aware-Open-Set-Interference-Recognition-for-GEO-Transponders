@@ -9,6 +9,8 @@ from pathlib import Path
 import numpy as np
 from scipy.signal import cheby1, cheby2, ellip, freqz, oaconvolve, sosfilt, sosfreqz
 
+from . import FS_SIM
+
 DATA = Path(__file__).parent / "data"
 
 # ---------------------------------------------------------------- filters
@@ -128,10 +130,98 @@ def _table_amp(name: str, key: str) -> Amplifier:
     return Amplifier(name, 1.0, 1.0, float(10 ** (gain[0] / 20)), (pin_x, gain_x, ph_x))
 
 
+RAPP_P = 2.0                         # SSPA smoothness [assumption: typical SSPA values are 2-3]
+
+
+def _rapp_amp(name: str, p: float) -> Amplifier:
+    """Rapp SSPA: unit small-signal gain and output saturation, no AM/PM; tabulated on a 0.02 dB grid."""
+    pin = np.arange(-60.0, 30.0 + 1e-9, 0.02)
+    gain = -(10 / p) * np.log10(1 + 10 ** (p * pin / 10))
+    # far above the grid the output stays saturated: gain falls 1 dB per dB of drive
+    pin_x = np.concatenate([[-300.0], pin, [300.0]])
+    gain_x = np.concatenate([[gain[0]], gain, [gain[-1] - (300.0 - pin[-1])]])
+    return Amplifier(name, 1.0, 1.0, 1.0, (pin_x, gain_x, np.zeros_like(pin_x)))
+
+
+def mp_basis(x: np.ndarray, order: int, delays, clip: float = np.inf) -> np.ndarray:
+    """Memory-polynomial regressors x[n-d] min(|x[n-d]|, clip)^k along the last axis.
+
+    Column index is m * order + k for delay delays[m] and k = 0..order-1. Samples
+    before the start of a record are zero (each record starts from a zero state).
+    """
+    x = np.asarray(x)
+    cols = []
+    for d in delays:
+        xd = np.zeros_like(x)
+        xd[..., d:] = x[..., :x.shape[-1] - d]
+        r = np.minimum(np.abs(xd), clip)
+        term = xd.astype(np.complex128)
+        for _ in range(order):
+            cols.append(term)
+            term = term * r
+    return np.stack(cols, axis=-1)
+
+
+@dataclass(frozen=True)
+class MemoryPolynomialAmplifier(Amplifier):
+    """Memory polynomial y[n] = sum_{m,k} c[m,k] x[n-d_m] |x[n-d_m]|^k, applied per record.
+
+    Input amplitudes in the polynomial terms are limited to `clip`, the largest
+    measured input amplitude, so the model is never evaluated beyond its data.
+    Samples above `clip` keep the edge gain; `out_of_range_fraction` reports them.
+    """
+    coefficients: tuple = ()         # complex, shape (memory + 1, order)
+    delays: tuple = (0,)             # simulation-sample delay of each memory tap
+    clip: float = np.inf
+
+    def __call__(self, x: np.ndarray) -> np.ndarray:
+        c = np.asarray(self.coefficients, complex)
+        y = np.zeros(x.shape, np.complex128)
+        for m, d in enumerate(self.delays):
+            xd = np.zeros_like(x)
+            xd[..., d:] = x[..., :x.shape[-1] - d]
+            r = np.minimum(np.abs(xd), self.clip)
+            g = np.zeros(x.shape, np.complex128)
+            for k in reversed(range(c.shape[1])):    # Horner in the clipped amplitude
+                g = g * r + c[m, k]
+            y += xd * g
+        return y.astype(x.dtype)
+
+    def out_of_range_fraction(self, x: np.ndarray) -> float:
+        return float(np.mean(np.abs(x) > self.clip))
+
+
+OPENDPD_IBO_REF_DB = 11.0            # measured input RMS is placed at this back-off [assumption]
+REFERENCE_BANDWIDTH = 36e6           # memory taps are mapped for this transponder width [assumption]
+
+
+def _opendpd_amp(name: str) -> MemoryPolynomialAmplifier:
+    """Memory polynomial fitted to an OpenDPD measurement (scripts/derive_opendpd_mp.py).
+
+    Units: input normalized to the measured RMS input, output to the measured
+    linear gain. The measured RMS is placed at OPENDPD_IBO_REF_DB below a
+    nominal saturation that was not measured. Memory taps keep their spacing
+    relative to the measured occupied bandwidth and are mapped to the
+    simulation rate for a REFERENCE_BANDWIDTH transponder.
+    """
+    d = json.loads((DATA / "opendpd_mp.json").read_text())["models"][name]
+    c = np.array(d["coefficients_re"]) + 1j * np.array(d["coefficients_im"])
+    step = (FS_SIM / REFERENCE_BANDWIDTH) / (d["fs_hz"] / d["occupied_bandwidth_hz"])
+    delays = tuple(int(round(m * step)) for m in range(d["memory"] + 1))
+    if len(set(delays)) != len(delays):
+        raise ValueError(f"{name}: memory taps collapse at the simulation rate")
+    c = c.reshape(d["memory"] + 1, d["order"])
+    r_sat = float(10 ** (OPENDPD_IBO_REF_DB / 20))
+    return MemoryPolynomialAmplifier(name, r_sat, r_sat, float(abs(c[:, 0].sum())), None,
+                                     tuple(map(tuple, c)), delays, float(d["clip_amplitude"]))
+
+
 @lru_cache(maxsize=None)
 def amplifier(name: str = "dvbs2_nl") -> Amplifier:
     """"dvbs2_nl": non-linearized Ka-band TWTA, EN 302 307-1 Figure H.3 (digitized from the PDF).
-    "dvbs2_lin": linearized Ku-band TWTA, Figure H.2. "saleh": classic Saleh coefficients."""
+    "dvbs2_lin": linearized Ku-band TWTA, Figure H.2. "saleh": classic Saleh coefficients.
+    "rapp_p2": Rapp SSPA with p = 2. "opendpd_apa", "opendpd_dpa": memory polynomials
+    fitted to OpenDPD solid-state Doherty PA measurements (not TWTAs)."""
     if name == "saleh":
         r_sat = 1 / np.sqrt(B_A)
         return Amplifier(name, float(r_sat), float(A_A * r_sat / (1 + B_A * r_sat ** 2)), A_A)
@@ -139,4 +229,8 @@ def amplifier(name: str = "dvbs2_nl") -> Amplifier:
         return _table_amp(name, "nonlinearized_ka_twta_fig_h3")
     if name == "dvbs2_lin":
         return _table_amp(name, "linearized_ku_twta_fig_h2")
+    if name == "rapp_p2":
+        return _rapp_amp(name, RAPP_P)
+    if name in ("opendpd_apa", "opendpd_dpa"):
+        return _opendpd_amp(name)
     raise ValueError(f"unknown amplifier {name!r}")
