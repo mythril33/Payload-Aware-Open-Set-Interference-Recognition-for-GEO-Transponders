@@ -1,6 +1,6 @@
 # P17 — R1-eval/1: yük farkının geri çekilme eğrisi ve yükselteç uyumsuzluğu
 
-Durum: **KODLANDI, KÜÇÜK FİZİKSEL KOŞUYLA DOĞRULANDI; TAM VERİ SONUCU YOK** · 2026-10-20 ·
+Durum: **KODLANDI; KÜÇÜK KOŞU VE PİLOT YAPILDI; TAM VERİ SONUCU YOK** · 2026-10-20 ·
 Girdi: [P16](P16_literatur_duzeltme_programi.md) İP-1 ve İP-2, K11 kararı, [OpenDPD sondası](../results/opendpd_probe.md).
 
 Kapanış kriteri: (1) A1 değişmeden, ayrı tohum aralıklı ve yalnız testten oluşan bir
@@ -133,6 +133,14 @@ Tamamlanmış ve doğrulanmış veri kümeleri okunmaya devam eder.
 - Küçük fiziksel koşu: A1'den 6, R1'den 6'şar senaryo tohumu; 3 epok eğitim; uçtan uca değerlendirme;
   veri tekrar kullanımı doğrulandı. Modeller dejenere (30 eğitim örneği). Bu yalnız çalışma kanıtıdır:
   [sonuçlar](../results/r1_smoke.md).
+- **Pilot** (A1'de 120/60/30, R1'de 4 × 60 senaryo tohumu; 30 epok; tek eğitim tohumu): [r1_pilot.md](../results/r1_pilot.md).
+  Yön gösteren bulgular:
+  - Rapp'te M-nl5 %66,1 (dağılım içi %85,2). Neredeyse tamamı aşırı sürme → `clean`.
+    - Rapp'in IBO 2–4 dB'deki NPR'si TWTA'nın nominal değeri kadar.
+    - Bu yüzden IBO'yla tanımlı etiket yükselteçten bağımsız değil (tanımlanabilirlik).
+  - OpenDPD'de %77–80; kayıp CW ↔ temiz karışmasında.
+  - Dağılım içi %5 eşiği bütün R1 bölünmelerinde %18–27 yanlış alarma çıkıyor.
+  - IBO süpürmesinde yük farkı yanlış alarmda görünüyor (dört sınıf: M-lin %23,3, M-nl4 %1,7).
 
 ## 7. Hakem itirazları
 

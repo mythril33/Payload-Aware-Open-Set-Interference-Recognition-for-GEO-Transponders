@@ -76,5 +76,7 @@ def test_shortcut_evaluation_reuses_stage_a_checkpoints(tmp_path, monkeypatch):
     assert perturbations["none"]["changed_vs_unperturbed"]["mean"] == 0.0
     assert perturbations["authorize_intruder"]["n_samples"] == 4          # unauthorized samples only
     assert perturbations["drop_one"]["n_samples"] == perturbations["none"]["n_samples"]
+    confusion = np.array(perturbations["phantom"]["confusion_per_training_seed"][0])
+    assert confusion.shape == (len(ds.LABELS), len(ds.LABELS)) and confusion.sum() == perturbations["phantom"]["n_samples"]
     json.loads((out / "results.json").read_text())
     assert "A5" in (out / "results.md").read_text()

@@ -16,6 +16,16 @@ Son güncelleme: 2026-10-20 (literatür taraması eki P16; temel deney durumu 20
 
 ## Uygulama eki — 2026-10-20
 
+- **R1 ve A5 pilotu koşuldu.** A1'den 120/60/30, R1'den 4 × 60 senaryo tohumu; 30 epok; tek eğitim tohumu; CPU'da ≈ 52 dk. Pilottur, iddia taşımaz: [R1 pilotu](../results/r1_pilot.md), [A5 pilotu](../results/plan_shortcut_pilot.md).
+  - Dağılım içi M-nl5 %85,2.
+  - Rapp %66,1: aşırı sürme → `clean`. IBO'yla tanımlı etiket yükselteçten bağımsız değil; NPR bunu açıklıyor.
+  - OpenDPD %77–80.
+  - Dağılım içi %5 eşiği kaymada %18–27 yanlış alarm veriyor.
+  - Yük farkı IBO süpürmesinde yanlış alarmda görünüyor (M-lin %23,3, M-nl4 %1,7). Bu, B0'daki "iddia yanlış alarm üzerinden kurulur" yönünü destekliyor.
+  - **A5:** model planı istenen anlamda kullanıyor (eksik taşıyıcı → `unauthorized`, yetkili sayılan intruder → `clean`). Ama 0,5 MHz bayat plan temizde yanlış alarmı %3 → %93'e çıkarıyor.
+  - P18'e iki açık konu eklendi: aşırı sürme etiketi ve plan sapması artırımı.
+  - A5 çıktısına karışıklık matrisleri eklendi.
+
 - **Uplink ASI üreteci (K5, P18 `adjacent_satellite`) kaynaklı geometriyle kodlandı:** `geosim.asi`.
   - Komşu ağ yer istasyonunun eksen dışı ışıması bizim uydunun alıcısına girer ve IMUX/TWTA/OMUX'tan geçer.
   - C/I_psd = Gmax − G(φ) − ΔEIRP (ITU BR uplink C/I yöntemi).
@@ -165,7 +175,7 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 
 | # | Eksik | Önem | Not |
 |---|---|---|---|
-| B0 | **Ana iddianın biçimi.** Pilotta yük farkı doğrulukta görünmedi | Yüksek | Tam veriyle teyit; gerekirse iddia yanlış alarm ve yanlış etiketleme üzerinden kurulur veya daha düşük geri çekilme eklenir (protokol değişikliği, günlüğe yazılır) |
+| B0 | **Ana iddianın biçimi.** Pilotta yük farkı doğrulukta görünmedi | Yüksek | Tam veriyle teyit; gerekirse iddia yanlış alarm ve yanlış etiketleme üzerinden kurulur veya daha düşük geri çekilme eklenir (protokol değişikliği, günlüğe yazılır). R1 pilotu bu yönü destekliyor: IBO süpürmesinde temizde yanlış alarm M-lin %23,3, M-nl4 %1,7 ([r1_pilot](../results/r1_pilot.md)) |
 | B1 | **Literatür ve yenilik denetimi (P1)** başlandı, bitmedi | Yüksek | Aday çalışmalar listelendi (SnT ICASSP 2023, Henarejos ve ark. 2019, GNSS ve radar open-set çalışmaları); hiçbiri okunup karşılaştırılmadı |
 | B1b | Model dar bantlı girişimde (CW) zayıf | Orta | Tam veriyle yeniden bakılacak; gerekirse zaman ortalamalı spektrum ek kanal olarak verilir |
 | B2 | Sonuç şekilleri (ROC, C/I eğrileri, karışıklık matrisi) | Orta | Tam sonuç gelince |

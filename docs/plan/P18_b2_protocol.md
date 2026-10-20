@@ -58,6 +58,11 @@ Kurallar:
     (ΔPSD ortancası 0,005–0,18 dB). Görünen, plan dışına taşan kısımdır.
   - İkinci fark seviyedir: `unauthorized` C/I_psd −3…10 dB, ASI ise kaynaklı geometride çoğunlukla 10 dB'nin
     üstünde. Bu fizikseldir (yan lob ve ana lob farkı), ama bir seviye kısa yolu olarak §6'da ayrıca sınanır.
+- **Açık konu — aşırı sürme etiketi yükselteçten bağımsız değil** ([R1 pilotu](../results/r1_pilot.md)):
+  - Rapp p = 2'de IBO 1–4 dB'nin IM düzeyi, TWTA'nın nominal IBO'sundaki kadar.
+  - A1 modelleri bu örneklerin %90–98'ine `clean` diyor.
+  - B2/1 tek TWTA kullandığı için etiket IBO'ya bağlı kalabilir. Ama yükselteç aktarımı (A6) raporlanırken bu
+    örnekler "gözlemde nominal" alt kutusunda ayrıca verilmelidir **[ÖNERİ]**.
 - `carrier_under_carrier` için C/I üst sınırı, P6 §6'daki görünürlük ölçümüne göre PSD'de neredeyse görünmez
   bölgeyi kapsar. Bu bilinçli bir seçimdir: ayırt edilebilirlik sınırını ölçmek için (K9).
 
@@ -135,6 +140,9 @@ Sonuçtan önce yazılan beklentiler. Her biri en az bir ablasyonla sınanır.
 2. **A3** doğrusal zincirle eğit, doğrusal olmayanda test (C3).
 3. **A4** + iptal artığı; **A4b** + SCF.
 4. **A5** plan bozma (bayat, kaydırılmış, eksik). Değerlendirme aracı A1 için hazır: `geoml.plan_shortcut` (bozmalar `shift_plus/minus`, `drop_one`, `phantom`, `authorize_intruder`); B2/1'e çift-pol maskelerle genişletilecek.
+   - [A1 pilotu](../results/plan_shortcut_pilot.md): 0,5 MHz bayat plan temizde yanlış alarmı %3 → %93'e çıkarıyor.
+   - **[ÖNERİ]** B2/1 eğitiminde plan sapması artırımı (±0,5 MHz kaydırma, eksik/fazla taşıyıcı). Ya da A5 ayrı
+     bir değerlendirme kutusu olarak kalır. Karar dondurma öncesi kullanıcıda (K17).
 5. **A6** R1 yükselteçlerine aktarım.
 6. **A7** FiLM koşullaması (maske kanalı yerine).
 7. **A8** unknown aileleri ve leave-one-known-out.
@@ -155,4 +163,5 @@ Veri, eğitim bütçesi, eşik seçimi ve tohum protokolü bütün ablasyonlarda
 |---|---|---|
 | 2026-10-20 | Taslak | — |
 | 2026-10-20 | K17 alt kararları işlendi: CuC 5–30 dB; roller 1500/150/150/500; downlink ASI yakın; LOKO 3 tohum | Kullanıcı yanıtları (dondurma öncesi) |
+| 2026-10-20 | Aşırı sürme etiketi açık konusu ve A5 plan sapması artırımı önerisi eklendi | [R1 pilotu](../results/r1_pilot.md), [A5 pilotu](../results/plan_shortcut_pilot.md) |
 | 2026-10-20 | `adjacent_satellite` parametreleri kaynaklı geometriyle değiştirildi (eski: örtüşme %20–80, PSD −15…−3 dB [VARSAYIM]) | ITU-R S.1428-1/S.580-6/S.465-6, FCC iki derece, ITU BR uplink C/I yöntemi; [ASI ölçümü](../results/asi_visibility.md) |

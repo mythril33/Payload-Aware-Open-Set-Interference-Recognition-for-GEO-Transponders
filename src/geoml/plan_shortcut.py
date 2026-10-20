@@ -119,6 +119,8 @@ def evaluate(d: dict, fitted: list) -> dict:
             "clean_called_unauthorized": _summary(np.mean([q[ck] == LABELS.index("unauthorized") for q in preds], axis=0), gk[ck]),
             "clean_false_alarm": _summary(np.mean([q[ck] != 0 for q in preds], axis=0), gk[ck]),
             "unauthorized_recall": _summary(np.mean([q[uk] == LABELS.index("unauthorized") for q in preds], axis=0), gk[uk]),
+            "confusion_per_training_seed": [[[int(np.sum((yk == t) & (q == c))) for c in range(len(LABELS))]
+                                             for t in range(len(LABELS))] for q in preds],
         }
     return results
 
