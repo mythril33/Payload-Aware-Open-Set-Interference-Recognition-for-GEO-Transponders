@@ -1,8 +1,23 @@
 # Proje durumu ve eksik kaydı
 
-Son güncelleme: 2026-10-21 (B2 fiziksel gözlem aşaması; temel deney durumu 2026-10-10) · Bu dosya "şu an neredeyiz, ne eksik" sorusunun tek yanıtıdır; her oturum sonunda güncellenir.
+Son güncelleme: 2026-10-21 (B2 iptal artığı ve beş kanallı model; temel deney durumu 2026-10-10) · Bu dosya "şu an neredeyiz, ne eksik" sorusunun tek yanıtıdır; her oturum sonunda güncellenir.
 
-## Uygulama eki — 2026-10-21
+## Uygulama eki — 2026-10-21 (ikinci dilim: iptal artığı, beşinci kanal, iki çıktılı model)
+
+- **Gözlemden iptal artığı kodlandı:** `geosim.cancellation` ([P20](P20_b2_cancellation_residual.md)). Girdi yalnız kalibre co-pol monitör IQ'su ve co-pol operatör planı; aktiflik maskesi, gerçek IBO/XPD, etiket, olay parametresi ve sembol **girmez** (imza testle sabitlenir). Karar yönlü yeniden modülasyon: ×3 yeniden örnekleme (tam örnek/sembol), SRRC eşleşmiş süzgeç, Oerder–Meyr zamanlama, simetri sektöründe faz ızgarası + LS karmaşık kazanç, yeniden modülasyon ve çıkarma; kenar koruması 512 örnek. Ayarlar `obs-cancel/1` olarak dondurulur ve isteğe bağlanır. **[VARSAYIM]** operatör planı MODCOD içerir.
+- **Yeni artefakt aşaması `B2-feat/1`:** `b2_dataset --cancellation configs/cancellation.json`. `residual[N,128,512]` float16 eklenir; ham IQ saklanmaz. B2-base/1 istek düzeni ve parmak izleri değişmedi; eski kayıtlar okunur (testle). Çapraz aşama okuma ve bozulma reddedilir.
+- **Beş kanallı model ve bağımsız `plan_consistency` çıktısı:** `preprocess_dual(view="dual_residual")` beşinci kanalı aynı co-pol taşıyıcı referansıyla ekler; `SmallResNet(aux_outputs=1)`; `TrainConfig` `plan_consistency`, `plan_loss_weight`, `center_loss_weight`. Eski checkpoint'ler okunur. Checkpoint seçimi yalnız bilinen sınıf makro-F1 ile.
+- **Dondurulmuş roller üzerinde deney koşucusu:** `geoml.b2_experiment` + `configs/b2_feat.json`: train (ağırlık + Mahalanobis), val-select (checkpoint), val-calib (MSP/energy/Mahalanobis %95 kabul eşiği ve Pfa %5 temiz alarm, yalnız bilinen), test (bir kez). Eşleşmiş `co`/`dual`/`dual_residual`. Bilinmeyen metrikleri `null` + `n_unknown=0`.
+- **K18 adayı (araştırmacı onayı bekler):** merkez kaybı ağırlığı **0,005** ve plan BCE ağırlığı 1,0 eğitimden önce donduruldu (P18 §10'a yazıldı); arama yok. Onaylanmazsa değer P18 günlüğüyle değiştirilir; test sonuçlarına bakılarak seçilmez.
+- **Fizik kanıtı ([pilot](../results/b2_feat_pilot.md), 64 gözlem):** bant içi iptal derinliği ortalama 12,8–16,5 dB. Sınır iki yönlü: düşük C/N'de alıcı gürültü tabanı; yüksek C/N'de pencere içi izlenmeyen LO faz yürüyüşü (150 Hz etkin linewidth'te ≈ 21–25 dB tavan, C/N'den bağımsız; hakem bulgusu, yeniden üretildi). Faz gürültüsüz sentetikte 35–48 dB; plan dışı boşluk tabanı değişmedi (−0,02…−0,09 dB); `overdrive`/`cross_pol`'da derinlik fiziksel olarak düşük. **Eşleşmiş clean/CuC:** kurban bandında ΔPSD ortancası iptal öncesi 0,99 dB → sonrası 6,46 dB; 8/8 grupta artış. K9 ön kaydını fizik düzeyinde destekler.
+- **Öğrenme dilimi pilotu:** 16 eğitim gözlemi, 3 epok; üç görünüm de şans düzeyinde (%12,5), plan-tutarlılık pozitif örneği yok. Yalnız yürütme ve veri akışı kanıtıdır. Checkpoint/skorlayıcı/kalibratör tekrar kullanımı doğrulandı.
+- **Maliyet:** pilot üretim 243,8 s duvar / 285,1 s CPU, tepe RSS 585 MiB, 24,75 MiB kayıt (iptal ≈ 1,3–1,8 s/gözlem). Tam üretim tahmini ≈ 20–25 çekirdek-saat **[TAHMİN]**.
+- **Doğrulama:** HEAD'de 707 test; bu dilimle **743 test geçti** (iptal 16, artefakt 5, ML 10, deney 5; mevcut CLI testi güncellendi; hakem düzeltmeleri dahil). Bağımsız hakem incelemesi: [REVIEWER_RED_TEAM](../research/REVIEWER_RED_TEAM.md).
+- **Harness:** `CLAUDE.md`, `.claude/rules/` (bilimsel değişmezler, artefakt/yeniden kullanım), `.claude/skills/` (physics-check, reproducibility-audit, scientific-review), [depo denetimi](../research/PROJECT_AUDIT.md). `scripts/setup_cloud.sh` PyTorch indeksi engelliyse PyPI'a düşer.
+- **Eksik (hakem):** K17b eğitim-zamanı plan kaydırma artırımı (%15, ±0,5 MHz sürekli) henüz yok; şu anki `b2_experiment` modelleri P18 ana modeli değildir. Faz izlemeli `obs-cancel/2` ayrı sürüm olarak önerildi.
+- **Sıradaki:** K17b plan kaydırma artırımı; yalnız-test aileleri (`pulsed`, `intermittent_bursts`, `adjacent_satellite_downlink`, `cid_overlay`, `wideband_noise`) ve seviye eşleşmiş ASI kümesi için çift-pol B2 adaptörleri; EDSC baseline (aynı iptal kodu); A5 plan bozma çift-pol maskelerle; sonra bulutta tam üretim ve kullanıcı GPU'sunda eğitim.
+
+## Uygulama eki — 2026-10-21 (birinci dilim: fiziksel gözlemler)
 
 - **B2'nin bilinen fiziksel gözlem aşaması kodlandı:** [P19](P19_b2_base_observations.md), `B2-base/1`. Sekiz bilinen sınıf tek çift-pol zincirde ve ayrı train / val-select / val-calib / test rollerinde üretilir. Dondurulmuş B2/1, üst protokoldür; kayıtlar `benchmark_complete: false` taşır.
 - Operatör planı ve gerçek yayınlar ayrıldı. Taşıyıcı düşerken plan maskesi, nominal kazanç ve kalan taşıyıcıların RNG akışı korunur. `plan_consistency` ayrı hedeftir. Kaynaklı ASI uplink'tedir; tarihsel E1 kayıtları değiştirilmedi.
@@ -144,6 +159,7 @@ Kademe A'nın (ders projesi) bütün zinciri kodlandı ve uçtan uca çalışıy
 | P17 | R1-eval/1 sağlamlık değerlendirmesi | Kodlandı, küçük koşu; tam sonuç yok | `P17_r1_robustness_eval.md` |
 | P18 | B2/1 sekiz sınıflı çift-pol açık-küme protokolü | **Donduruldu 2026-10-20 (K17)**; bilinen fiziksel aşama P19'da; nihai model ve yalnız-test aileleri bekliyor | `P18_b2_protocol.md` |
 | P19 | B2 bilinen fiziksel gözlemleri | `B2-base/1` üretici, aktif yayın ayrımı, bağımsız kalibrasyon ve veri bütünlüğü | `P19_b2_base_observations.md` |
+| P20 | B2 iptal artığı ve beş kanallı model | `B2-feat/1` üretici, `geosim.cancellation`, iki çıktılı model, `geoml.b2_experiment`; pilot fizik kanıtı var, tanıma sonucu yok | `P20_b2_cancellation_residual.md` |
 | Kademe B | Çift pol, 8 sınıf, open-set | Geliştirme dilimleri var (B1-dev/1–2, D1-dev/1, E1-dev/1); nihai B2/1 benchmark yok | `P11`–`P14` |
 
 ## 3. Elde ne var
@@ -211,8 +227,9 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 | B9 | P16 İP-0: L1 Jammertest lisansı; L10 uydu anteni XPD'si; isteğe bağlı sistematik tarama (CNKI/IEEE) | Düşük | En yakın 7 GEO/uydu çalışması ve bir açık-küme karşılaştırması tam metin okundu ([P1 §8](P1_literatur.md)): hiçbir uydu çalışması transponder zinciri, plan, çift-pol veya bilinmeyen sınıf reddi içermiyor; L2, L7 (a–c) kapandı |
 | B10 | P16 İP-1: C3'ün IBO eğrisi, ECE, FPR@95TPR | Yüksek | **Kodlandı (P17)**; tam üretim ve değerlendirme sizde (S8) |
 | B11 | P16 İP-2: sentetik bellek polinomu, OpenDPD eşleme duyarlılığı (R1-eval/2), NPR'nin literatürle sayısal karşılaştırması | Yüksek | Rapp ve OpenDPD bellek polinomları (P17) ve [NPR kontrolü](../results/npr_check.md) yapıldı |
-| B12 | P16 İP-3/4: B2 gözlemleri, iptal artığı, PL çerçeve/SCF ve plan bozma | Yüksek | Sekiz bilinen sınıf P19'da bağlandı; kalan: gözlemden iptal, PL çerçeve/SCF ve B2 plan-bozma değerlendirmesi |
-| B13 | P16 İP-5/6: B2/1 nihai test üretimi, eğitim-zamanı OSR, EDSC ve XGBoost | Orta | P18 donduruldu; unknown/CID/matched-test adaptörleri ve beş kanallı/iki çıktılı model henüz yok |
+| B12 | P16 İP-3/4: B2 gözlemleri, iptal artığı, PL çerçeve/SCF ve plan bozma | Yüksek | Sekiz bilinen sınıf P19'da, gözlemden iptal artığı P20'de bağlandı; kalan: PL çerçeve/SCF ve B2 plan-bozma değerlendirmesi |
+| B13 | P16 İP-5/6: B2/1 nihai test üretimi, eğitim-zamanı OSR, EDSC ve XGBoost | Orta | Beş kanallı/iki çıktılı model ve merkez kaybı P20'de var; unknown/CID/matched-test adaptörleri, EDSC ve XGBoost henüz yok |
+| B14 | K18: merkez kaybı 0,005 ve plan BCE 1,0 ön kaydının onayı | Orta | Araştırmacı kararı; onaylanmazsa P18 §10 ile değiştirilir |
 
 ### 5.4 Bilinçli olarak ertelenenler (Kademe B)
 

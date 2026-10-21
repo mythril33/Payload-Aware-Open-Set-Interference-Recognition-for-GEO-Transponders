@@ -1,0 +1,17 @@
+{
+  "protocol": "B2-feat/1",
+  "views": ["co", "dual", "dual_residual"],
+  "plan_consistency": true,
+  "methods": ["msp", "energy", "mahalanobis"],
+  "target_acceptance": 0.95,
+  "pfa": 0.05,
+  "mahalanobis_regularization": 0.1,
+  "training": {
+    "epochs": 3,
+    "batch": 8,
+    "width": 8,
+    "seed": 0,
+    "center_loss_weight": 0.005,
+    "plan_loss_weight": 1.0
+  }
+}

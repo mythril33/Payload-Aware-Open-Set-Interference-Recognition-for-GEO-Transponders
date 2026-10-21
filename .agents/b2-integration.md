@@ -11,6 +11,10 @@ Agree on public APIs and disjoint ownership before editing.
 - Keep hidden event truth separate from observed feature channels and targets.
 - Treat base observations as an incomplete benchmark stage. Do not fabricate
   cancellation features or use simulator waveforms as deployable model inputs.
+- The fifth channel is `geosim.cancellation.cancel_planned_carriers(iq, plan, config)`
+  on the calibrated co-pol IQ and co-pol operator plan only (B2-feat/1, P20). Any
+  new feature channel must keep that signature discipline and its own frozen
+  settings bound into the artifact request.
 - Validate independent calibration, artifacts, source identity and historical
   reads. Run meaningful physics and corruption/reuse tests before scaling.
 - Deliver code, tests and findings to the integrator for combined verification,

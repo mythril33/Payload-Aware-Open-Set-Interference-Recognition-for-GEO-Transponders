@@ -1,0 +1,7 @@
+{
+  "srrc_span_symbols": 10,
+  "phase_grid": 16,
+  "iterations": 3,
+  "edge_guard": 512,
+  "version": "obs-cancel/1"
+}

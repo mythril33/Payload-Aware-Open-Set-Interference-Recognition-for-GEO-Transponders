@@ -117,6 +117,26 @@ target. Its manifest marks the benchmark incomplete. Cancellation, the fifth
 input channel, unknown/CID tests and the final B2 model follow. See [contracts,
 sampling assumptions and reuse](docs/plan/P19_b2_base_observations.md).
 
+## B2 cancellation residual and five-channel model
+
+`B2-feat/1` adds the observation-based co-pol cancellation residual (fifth model
+channel, P18 §5) computed at generation time from the calibrated co-pol monitor IQ
+and the co-pol operator plan only. `geoml.b2_experiment` trains matched
+`co`/`dual`/`dual_residual` models with an independent `plan_consistency` head and a
+pre-registered center-loss weight on the frozen P18 roles.
+
+```bash
+python -m geosim.b2_dataset --config configs/b2_base.json --cancellation configs/cancellation.json --out data/b2-feat-pilot --limit-groups 2 --groups-per-shard 1
+python scripts/check_b2_cancellation.py --data data/b2-feat-pilot --out runs/b2-feat-pilot/cancellation_check.json
+python -m geoml.b2_experiment --config configs/b2_feat.json --data data/b2-feat-pilot --out runs/b2-feat-pilot
+```
+
+The pilot shows the paired clean/under-carrier visibility rising from 1 dB to 6.5 dB
+median after cancellation; the tiny learning run is at chance and proves execution only.
+Unknown families, CID overlays and the matched ASI set are not generated yet. See
+[P20](docs/plan/P20_b2_cancellation_residual.md) and the [pilot report](docs/results/b2_feat_pilot.md).
+Claude Code context lives in [CLAUDE.md](CLAUDE.md), `.claude/rules/` and `.claude/skills/`.
+
 ## Research dossier (2026-10-20)
 
 This is an evolving research project, **not** a completed dual-polarization, eight-class open-set system.
@@ -131,4 +151,4 @@ This is an evolving research project, **not** a completed dual-polarization, eig
 - [Literature bibliography (BibTeX)](references/references.bib)
 - [Detailed current Stage A status](docs/plan/DURUM.md) and [pilot-only results](docs/results/pilot_A.md)
 
-**Current research boundary:** Stage A is single-polarization/five known classes, with a small pilot. B1-dev/1 implements known-class holdout rejection with MSP and energy; B1-dev/2 adds unknown families, Mahalanobis and ranking metrics. D1-dev/1 adds calibrated dual-polarization observations and a controlled two-class leakage task. E1-dev/1 adds phase noise and two modulated-interference mechanisms in a separate three-class task. Full-data results and the unified eight-class dual-polarization open-set benchmark remain outstanding. The pilots are not evidence of field/deployment performance. The code repository does not currently specify a top-level license; third-party PDF/data licenses and redistribution conditions must be handled separately. Official primary-source links are preserved instead of automatically mirroring restricted documents.
+**Current research boundary:** Stage A is single-polarization/five known classes, with a small pilot. B2-base/1 and B2-feat/1 connect the eight frozen known classes, the fifth channel and the two-output model, but no unknown/CID/matched test families or full-scale training exist yet. B1-dev/1 implements known-class holdout rejection with MSP and energy; B1-dev/2 adds unknown families, Mahalanobis and ranking metrics. D1-dev/1 adds calibrated dual-polarization observations and a controlled two-class leakage task. E1-dev/1 adds phase noise and two modulated-interference mechanisms in a separate three-class task. Full-data results and the unified eight-class dual-polarization open-set benchmark remain outstanding. The pilots are not evidence of field/deployment performance. The code repository does not currently specify a top-level license; third-party PDF/data licenses and redistribution conditions must be handled separately. Official primary-source links are preserved instead of automatically mirroring restricted documents.
