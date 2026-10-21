@@ -28,7 +28,7 @@ import numpy as np
 import scipy
 
 from .b2_dataset import (_READ_ERRORS, _activity, _cancellation_record, _file_hash, _fingerprint, _paths,
-                         _positive_int, _residual, _stage, read_b2_manifest)
+                         _positive_int, _residual, _shard_order, _stage, read_b2_manifest)
 from .b2_protocol import (FIFTH_CHANNEL, LABELS, PROTOCOL, B2Config, protocol_contract, receiver_response, scenario_ids)
 from .b2_scenarios import (MATCHED_BIN_NAMES, MATCHED_BINS, MATCHED_CI_RANGE, MATCHED_LABELS, MATCHED_PROTOCOL,
                            NATURAL_CI_PSD_RANGES, matched_bin, sample_matched_scene)
@@ -418,23 +418,28 @@ def _header(root):
     return manifest, config
 
 
-def read_b2_matched_manifest(path) -> dict:
+def read_b2_matched_manifest(path, on_shard=None) -> dict:
+    """Verify every shard; ``on_shard(index, shard)`` sees each verified shard in the same bounded pass."""
     root = Path(path)
     try:
         manifest, config = _header(root)
         for index, descriptor in enumerate(manifest["shards"]):
-            _verify_part(root, manifest["request"], index, descriptor, config, manifest["calibration"])
+            shard = _verify_part(root, manifest["request"], index, descriptor, config, manifest["calibration"])
+            if on_shard is not None:
+                on_shard(index, shard)
         return manifest
     except _READ_ERRORS as error:
         raise ValueError(f"invalid B2 matched dataset {root}: {error}") from error
 
 
-def iter_b2_matched_shards(root):
+def iter_b2_matched_shards(root, indices=None):
+    """Yield verified shards lazily, optionally in a given permutation of shard indices."""
     root = Path(root)
     try:
         manifest, config = _header(root)
-        for index, descriptor in enumerate(manifest["shards"]):
-            yield _verify_part(root, manifest["request"], index, descriptor, config, manifest["calibration"])
+        shards = manifest["shards"]
+        for index in _shard_order(indices, len(shards)):
+            yield _verify_part(root, manifest["request"], index, shards[index], config, manifest["calibration"])
     except _READ_ERRORS as error:
         raise ValueError(f"invalid B2 matched dataset {root}: {error}") from error
 
