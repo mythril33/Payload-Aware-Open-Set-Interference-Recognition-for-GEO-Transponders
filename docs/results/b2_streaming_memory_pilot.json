@@ -1,0 +1,220 @@
+{
+ "measured": true,
+ "fixture": {
+  "kind": "real_artifact"
+ },
+ "dataset": {
+  "protocol": "B2-feat/1",
+  "roles": {
+   "train": {
+    "n_samples": 16,
+    "n_shards": 2,
+    "shard_bytes": [
+     3163688,
+     3163688
+    ]
+   },
+   "val-select": {
+    "n_samples": 16,
+    "n_shards": 2,
+    "shard_bytes": [
+     3163688,
+     3163688
+    ]
+   },
+   "val-calib": {
+    "n_samples": 16,
+    "n_shards": 2,
+    "shard_bytes": [
+     3163688,
+     3163688
+    ]
+   },
+   "test": {
+    "n_samples": 16,
+    "n_shards": 2,
+    "shard_bytes": [
+     3163688,
+     3163688
+    ]
+   }
+  },
+  "artifact_bytes": 25953749
+ },
+ "training": {
+  "input_mode": "dual_residual",
+  "plan_consistency": true,
+  "center_loss_weight": 0.005,
+  "plan_shift_fraction": 0.15,
+  "plan_shift_max_hz": 500000.0,
+  "epochs": 3,
+  "batch": 8,
+  "width": 8,
+  "seed": 0,
+  "augment": true
+ },
+ "bytes_per_observation": {
+  "raw_float16_bytes": 395264,
+  "preprocessed_float32_bytes": 655360
+ },
+ "legacy_resident_estimate_mib": {
+  "note": "pre-E1 flow: every role float16 in memory plus float32 inputs of train and val-select",
+  "train_float16_mib": 6.03125,
+  "train_preprocessed_mib": 10.0
+ },
+ "streaming_resident_bound_mib": {
+  "1": {
+   "note": "window_shards raw shards (float16) + their float32 inputs + one gathered window copy during permutation",
+   "bound_mib": 13.022112001409182
+  },
+  "4": {
+   "note": "window_shards raw shards (float16) + their float32 inputs + one gathered window copy during permutation",
+   "bound_mib": 52.08844800563673
+  }
+ },
+ "runs": [
+  {
+   "mode": "legacy",
+   "window_shards": null,
+   "imports_rss_mib": 548.8671875,
+   "imports_lifetime_peak_mib": 548.65234375,
+   "peak_reset_after_imports": true,
+   "verify_s": 0.19345291599984193,
+   "load_s": 0.16828183500001614,
+   "after_load_rss_mib": 584.17578125,
+   "fit_s": 2.4196982109997407,
+   "infer_train_s": 0.13486257100021248,
+   "n_train": 16,
+   "data_fingerprint": "325317b75dfaea64bd4872d09afd7511ffaf441dfd9e219153217081a9027831",
+   "total_s": 2.916421329000059,
+   "peak_rss_mib": 925.546875,
+   "peak_rss_increment_mib": 376.6796875,
+   "lifetime_peak_rss_mib": 925.546875,
+   "history": [
+    {
+     "epoch": 0,
+     "train_loss": 10.12994909286499,
+     "val_macro_f1": 0.027777777777777776,
+     "val_plan_accuracy": 1.0
+    },
+    {
+     "epoch": 1,
+     "train_loss": 7.7628772258758545,
+     "val_macro_f1": 0.027777777777777776,
+     "val_plan_accuracy": 1.0
+    },
+    {
+     "epoch": 2,
+     "train_loss": 6.27139949798584,
+     "val_macro_f1": 0.027777777777777776,
+     "val_plan_accuracy": 1.0
+    }
+   ],
+   "absolute_ref_db": -77.49177831913943,
+   "state_sha256": "24f7e04b04f1c3be9b122a69a8ac11aafa338c73578be029619898b44be654cc",
+   "train_logits_sha256": "50a988e3f6ad31790959cc7da5f6fe40aedce119ab3ad6327e1270b11dd5551d",
+   "fit_obs_per_s": 19.837184563676626,
+   "infer_obs_per_s": 118.63929243922534
+  },
+  {
+   "mode": "streaming",
+   "window_shards": 1,
+   "imports_rss_mib": 548.85546875,
+   "imports_lifetime_peak_mib": 548.53125,
+   "peak_reset_after_imports": true,
+   "verify_s": 0.167683444999966,
+   "load_s": 0.0,
+   "after_load_rss_mib": 558.39453125,
+   "fit_s": 2.435364522999862,
+   "infer_train_s": 0.13020198399999572,
+   "n_train": 16,
+   "data_fingerprint": "325317b75dfaea64bd4872d09afd7511ffaf441dfd9e219153217081a9027831",
+   "total_s": 2.733399832000032,
+   "peak_rss_mib": 869.33203125,
+   "peak_rss_increment_mib": 320.4765625,
+   "lifetime_peak_rss_mib": 869.33203125,
+   "history": [
+    {
+     "epoch": 0,
+     "train_loss": 10.459670543670654,
+     "val_macro_f1": 0.027777777777777776,
+     "val_plan_accuracy": 1.0
+    },
+    {
+     "epoch": 1,
+     "train_loss": 7.940433025360107,
+     "val_macro_f1": 0.027777777777777776,
+     "val_plan_accuracy": 1.0
+    },
+    {
+     "epoch": 2,
+     "train_loss": 6.432061195373535,
+     "val_macro_f1": 0.027777777777777776,
+     "val_plan_accuracy": 1.0
+    }
+   ],
+   "absolute_ref_db": -77.49177831913943,
+   "state_sha256": "75d1432983c78b4abe5f6c43b50b22dabe079b66532427d746f75af4076a5dc9",
+   "train_logits_sha256": "e556dc13f384082edbf3a7d967c1d7a19374db7c60cd615e6fa103eb1a05880f",
+   "fit_obs_per_s": 19.70957511562745,
+   "infer_obs_per_s": 122.88599227489902,
+   "identical_weights_to_legacy": false,
+   "identical_history_to_legacy": false,
+   "single_window": false
+  },
+  {
+   "mode": "streaming",
+   "window_shards": 4,
+   "imports_rss_mib": 549.04296875,
+   "imports_lifetime_peak_mib": 548.73046875,
+   "peak_reset_after_imports": true,
+   "verify_s": 0.1574029199996403,
+   "load_s": 0.0,
+   "after_load_rss_mib": 558.62890625,
+   "fit_s": 3.825078984999891,
+   "infer_train_s": 0.12370075499984523,
+   "n_train": 16,
+   "data_fingerprint": "325317b75dfaea64bd4872d09afd7511ffaf441dfd9e219153217081a9027831",
+   "total_s": 4.10633166999969,
+   "peak_rss_mib": 884.50390625,
+   "peak_rss_increment_mib": 335.4609375,
+   "lifetime_peak_rss_mib": 884.50390625,
+   "history": [
+    {
+     "epoch": 0,
+     "train_loss": 10.12994909286499,
+     "val_macro_f1": 0.027777777777777776,
+     "val_plan_accuracy": 1.0
+    },
+    {
+     "epoch": 1,
+     "train_loss": 7.7628772258758545,
+     "val_macro_f1": 0.027777777777777776,
+     "val_plan_accuracy": 1.0
+    },
+    {
+     "epoch": 2,
+     "train_loss": 6.27139949798584,
+     "val_macro_f1": 0.027777777777777776,
+     "val_plan_accuracy": 1.0
+    }
+   ],
+   "absolute_ref_db": -77.49177831913943,
+   "state_sha256": "24f7e04b04f1c3be9b122a69a8ac11aafa338c73578be029619898b44be654cc",
+   "train_logits_sha256": "50a988e3f6ad31790959cc7da5f6fe40aedce119ab3ad6327e1270b11dd5551d",
+   "fit_obs_per_s": 12.548760480040484,
+   "infer_obs_per_s": 129.34440052544562,
+   "identical_weights_to_legacy": true,
+   "identical_history_to_legacy": true,
+   "single_window": true
+  }
+ ],
+ "hardware": {
+  "cpu_count": 4,
+  "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+  "python": "3.13.16",
+  "numpy": "2.5.4",
+  "omp_threads": "2"
+ },
+ "scope": "bounded fixture measurement; peak RSS includes the Python/torch import baseline; no production run"
+}

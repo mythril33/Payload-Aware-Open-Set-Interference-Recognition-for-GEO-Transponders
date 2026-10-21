@@ -23,9 +23,10 @@ open-set recognition, C3 payload gap under operating conditions.
 | Honest current status, next step | `docs/plan/DURUM.md` (top appendix = latest) |
 | Frozen final benchmark protocol (B2/1, K17) | `docs/plan/P18_b2_protocol.md` — change only via its §10 log |
 | B2 artifact stages | `docs/plan/P19_b2_base_observations.md` (B2-base/1), `docs/plan/P20_b2_cancellation_residual.md` (B2-feat/1), `docs/plan/P21_b2_test_families.md` (P21a, B2-test/1), `docs/plan/P22_b2_matched_asi.md` (B2-match/1); the parallel observed-receiver stage is `docs/plan/P21_b2_observed_receiver.md` (P21b, B2-features/1) |
+| Production readiness | `docs/plan/P23_b2_production_readiness.md` (gates, work packages), `docs/plan/P24_b2_e1_streaming_loader.md` (E1 streaming data path, `geoml.b2_stream`), `docs/results/b2_streaming_memory.md` |
 | Repository/scientific audit | `docs/research/PROJECT_AUDIT.md` |
 | Simulator | `src/geosim/` (`dual.py` chain, `b2_scenarios.py` known / test-only / matched scenes, `b2_dataset.py` / `b2_test_dataset.py` / `b2_matched_dataset.py` artifacts, `cancellation.py` fifth channel; `observed_receiver.py` + `b2_features.py` are the separate P21b stage) |
-| Learning | `src/geoml/` (`train.py`, `model.py`, `b2_experiment.py`, `openset.py`, `mahalanobis.py`, `calibration.py`) |
+| Learning | `src/geoml/` (`train.py`, `model.py`, `b2_stream.py` streaming sources/trainer, `b2_experiment.py`, `openset.py`, `mahalanobis.py`, `calibration.py`) |
 | Results (small, honest) | `docs/results/*.md` + `.json`; raw data/checkpoints stay out of Git |
 | Agent role briefs | `.agents/*.md`; scoped rules `.claude/rules/`; skills `.claude/skills/` |
 
@@ -61,6 +62,9 @@ All frozen B2/1 data stages exist: B2-feat/1 (known + fifth channel), B2-test/1
 `--unknown-data` / `--matched-data`, reports open-set and matched-pair metrics with
 frozen thresholds. Pilots are at chance. Production cost is profiled
 (`scripts/profile_b2_generation.py`, `docs/results/b2_production_budget.md`).
+E1 (P24): the runner streams verified shards (`geoml.b2_stream`, `window_shards` in the
+experiment config); single-window runs are bit-identical to the former in-memory path
+(`scripts/profile_b2_experiment_memory.py` measures legacy vs streaming).
 Blocked on researcher decisions: K18 loss weights, K17d drift handling,
 OBS-CANCEL/2, compute authorization for full production and GPU training.
 Remaining code work: LOKO (A8), EDSC/XGBoost baselines, A5 dual-pol test corruption.

@@ -179,6 +179,21 @@ See [P22](docs/plan/P22_b2_matched_asi.md), the [matched pilot](docs/results/b2_
 [production budget](docs/results/b2_production_budget.md). Pilots are at chance; full production and
 GPU training wait for the researcher's authorization (K18, K17d, compute).
 
+## B2 streaming data path (E1)
+
+`geoml.b2_experiment` no longer loads whole roles: `geoml.b2_stream` verifies each artifact once, shard
+by shard, keeps only small per-sample arrays resident, trains on windows of `window_shards` verified
+shards (deterministic shard/sample order, exact `ceil(N/batch)` steps per epoch) and infers one shard at a
+time. With a single window the result is bit-identical to the former in-memory path; the memory bound is
+measured on fixtures, not claimed for full scale.
+
+```bash
+python scripts/profile_b2_experiment_memory.py --data data/b2-feat-pilot --window-shards 1 4 --epochs 3 --report runs/profile/e1_pilot.json
+python scripts/profile_b2_experiment_memory.py --synthetic-groups 48 --fixture-dir data/e1-synthetic-48 --window-shards 1 4 --report runs/profile/e1_synthetic_48.json
+```
+
+See [P24](docs/plan/P24_b2_e1_streaming_loader.md) and the [measurements](docs/results/b2_streaming_memory.md).
+
 ## Research dossier (2026-10-20)
 
 This is an evolving research project, **not** a completed dual-polarization, eight-class open-set system.
