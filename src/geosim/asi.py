@@ -196,6 +196,46 @@ def place_carrier(rng: np.random.Generator, plan: list[Carrier], bandwidth: floa
     return float(rs), float(alpha), float(ok[int(rng.integers(ok.size))])
 
 
+def overlap_positions(plan: list[Carrier], bandwidth: float, symbol_rate: float, alpha: float,
+                      overlap: tuple = DEFAULT_RANGES.overlap) -> np.ndarray:
+    """Centre frequencies on the placement grid whose plan overlap lies in ``overlap`` for one (Rs, alpha)."""
+    width = symbol_rate * (1 + alpha)
+    if width > bandwidth:
+        return np.empty(0)
+    f0 = np.linspace(-(bandwidth - width) / 2, (bandwidth - width) / 2, PLACEMENT_GRID)
+    frac = overlap_fraction(f0 - width / 2, f0 + width / 2, plan)
+    return f0[(frac >= overlap[0]) & (frac <= overlap[1])]
+
+
+def adjacent_satellite_uplink_at_level(plan: list[Carrier], bandwidth: float, carrier: Carrier,
+                                       c_over_i_psd_db: float, overlap: tuple = DEFAULT_RANGES.overlap):
+    """Known uplink-ASI event with an **imposed** C/I_psd (K17c matched intervention, P18 §7a).
+
+    No antenna geometry is drawn: the level is set by the matched-set generator so that the
+    paired ``unauthorized`` event shares it exactly. ``carrier`` fixes rate, roll-off, modulation
+    and centre; its power is overwritten with ``mean_psd_plan * Rs * 10**(-C/I_psd/10)``, the same
+    convention as :func:`adjacent_satellite_uplink`. The placement must overlap the plan within
+    ``overlap``; otherwise the event is not an adjacent-satellite event by the class definition.
+    """
+    carriers, bandwidth, _ = _request(np.random.default_rng(0), plan, bandwidth, 0.0)   # validation only; no draw
+    ci_psd = float(c_over_i_psd_db)
+    if not np.isfinite(ci_psd):
+        raise ValueError("c_over_i_psd_db must be finite")
+    mean_psd = sum(c.power for c in carriers) / sum(c.symbol_rate for c in carriers)
+    placed = Carrier(f0=float(carrier.f0), symbol_rate=float(carrier.symbol_rate), alpha=float(carrier.alpha),
+                     mod=carrier.mod, power=float(mean_psd * carrier.symbol_rate * 10 ** (-ci_psd / 10)),
+                     code_rate=carrier.code_rate)
+    metadata = _metadata("adjacent_satellite", "uplink", "total_planned_uplink", placed,
+                         float(-10 * np.log10(placed.power)))
+    fraction = overlap_fraction(metadata["f_lo"], metadata["f_hi"], carriers)
+    if not overlap[0] - 1e-9 <= fraction <= overlap[1] + 1e-9:
+        raise InfeasibleCarrierError("matched ASI placement does not overlap the plan within the class definition")
+    metadata.update(c_over_i_psd_db=ci_psd, geometry=None, level_source="matched_intervention",
+                    overlap_fraction=fraction, overlap_range=list(overlap), sources=list(SOURCES),
+                    identifiability="level imposed by the K17c matched set; not a drawn antenna geometry")
+    return _waveform(placed), metadata
+
+
 def adjacent_satellite_downlink(rng: np.random.Generator, plan: list[Carrier], bandwidth: float,
                                 ranges: AsiRanges = DEFAULT_RANGES):
     """Test-only near-OOD family (P18 §3, K17d): the known uplink-ASI waveform at the receiver.

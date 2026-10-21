@@ -18,7 +18,7 @@ no representative evidence), **SUPPORTED** (pilot-level evidence only), **ASSUME
 | Size | 168 tracked files; 12.3 k lines of Python (src + tests + scripts) | `wc -l` |
 | Environment | Python 3.13; no venv in the fresh container; PyTorch CPU index blocked by network policy (403), PyPI allowed → torch 2.14.1+cu130 wheel runs on CPU | pip logs; `scripts/setup_cloud.sh` now falls back |
 | Hardware | 4 CPUs, 15 GiB RAM, no GPU, ~31 GB free disk | `nproc`, `free`, `df` |
-| Tests | 707 pass on HEAD; 743 after the B2-feat/1 slice; 758 after the B2-test/1 slice and its review fixes | pytest output |
+| Tests | 707 pass on HEAD; 743 after B2-feat/1; 758 after B2-test/1; 938 after merging the P21b stage; 952 after B2-match/1 | pytest output |
 | Data / runs | None committed (by design); `data/`, `runs/` ignored | `.gitignore` |
 
 ## 2. Implementation matrix
@@ -44,7 +44,9 @@ no representative evidence), **SUPPORTED** (pilot-level evidence only), **ASSUME
 | **Test-only B2 families (pulsed, bursts, downlink ASI, `cid_overlay`, wideband noise) in the dual chain** | `geosim.b2_test_dataset`, `b2_scenarios.prepare_test_scene`, `asi.adjacent_satellite_downlink`, `cid.cid_overlay(active)` | VERIFIED (10-obs pilot, binding, resume) | P21, `docs/results/b2_test_pilot.md`, `tests/test_b2_test_dataset.py` |
 | K17b training plan-shift augmentation | `geoml.train` (`plan_shift_fraction`) | VERIFIED (unit) | `tests/test_b2_ml.py` |
 | Open-set evaluation on frozen roles (per-family AUROC/AP/OSCR/FPR@95TPR, benign control) | `geoml.b2_experiment --unknown-data` | VERIFIED (execution on pilot) | `tests/test_b2_experiment.py`; pilot at chance |
-| Matched ASI ↔ unauthorized set (K17c), A5 dual-pol plan corruption at test time, K17a sub-box | — | PLANNED | P18 §7a |
+| **Matched ASI ↔ unauthorized set (K17c)** | `geosim.b2_matched_dataset`, `b2_scenarios.prepare_matched_scene`, `asi.adjacent_satellite_uplink_at_level`, `geoml.b2_experiment --matched-data`, `scripts/check_b2_matched.py` | VERIFIED (6-obs pilot: exact pairing, placement, binding, resume; evaluation path) | P22, `docs/results/b2_matched_pilot.md`, `tests/test_b2_matched.py` |
+| Production cost profile | `scripts/profile_b2_generation.py` | VERIFIED (20-group matched pilot) | `docs/results/b2_production_budget.md` |
+| A5 dual-pol plan corruption at test time, K17a sub-box | — | PLANNED | P18 §7a |
 | EDSC baseline, SCF branch (A4b), expert features + XGBoost, FiLM (A7), LOKO (A8) | — | PLANNED | P18 §5, §8 |
 | Full-scale Stage A, R1 and B2 production/training | — | BLOCKED on compute/approval | DURUM §5.2 (S1–S3, S8); B2 ≈ 20–25 core-hours generation [ESTIMATE] |
 | DVB-S2 PL framing, dual-pol beyond basis coupling | — | PLANNED / deliberately deferred | DURUM §5.4 |

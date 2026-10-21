@@ -1,0 +1,560 @@
+{
+ "n_test_groups": 500,
+ "n_missing_groups": 78,
+ "n_missing_co_feed": 35,
+ "n_missing_cross_feed": 43,
+ "drift_db_co_missing": {
+  "median": 0.7067109143485161,
+  "p90": 2.9268923287876056,
+  "max": 5.912131896846286
+ },
+ "note": "drift = 10log10(1/active co planned power): the realized co feed power scales the downlink event; a cross-feed drop does not change the co reference (uplink coupling at 30 dB XPD ignored, < 0.01 dB)",
+ "rows": [
+  {
+   "group": 3200015,
+   "pol": 1,
+   "dropped_power_fraction": 0.11142630332439038,
+   "co_active_power": 0.9999999999999999,
+   "downlink_drift_db": 4.821637332766436e-16
+  },
+  {
+   "group": 3200017,
+   "pol": 1,
+   "dropped_power_fraction": 0.44785197319096254,
+   "co_active_power": 0.9999999999999999,
+   "downlink_drift_db": 4.821637332766436e-16
+  },
+  {
+   "group": 3200019,
+   "pol": 1,
+   "dropped_power_fraction": 0.1734371410866776,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200026,
+   "pol": 1,
+   "dropped_power_fraction": 0.07440198918446325,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200035,
+   "pol": 0,
+   "dropped_power_fraction": 0.40121892171125006,
+   "co_active_power": 0.5987810782887499,
+   "downlink_drift_db": 2.2273193198399905
+  },
+  {
+   "group": 3200038,
+   "pol": 1,
+   "dropped_power_fraction": 0.3966185745132249,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200055,
+   "pol": 0,
+   "dropped_power_fraction": 0.7436774527425309,
+   "co_active_power": 0.256322547257469,
+   "downlink_drift_db": 5.912131896846286
+  },
+  {
+   "group": 3200057,
+   "pol": 1,
+   "dropped_power_fraction": 0.08533878685201052,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200071,
+   "pol": 1,
+   "dropped_power_fraction": 0.04520180203305891,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200072,
+   "pol": 0,
+   "dropped_power_fraction": 0.19382002221121594,
+   "co_active_power": 0.8061799777887841,
+   "downlink_drift_db": 0.9356799214653302
+  },
+  {
+   "group": 3200073,
+   "pol": 0,
+   "dropped_power_fraction": 0.058646921233484944,
+   "co_active_power": 0.9413530787665151,
+   "downlink_drift_db": 0.2624745266276809
+  },
+  {
+   "group": 3200074,
+   "pol": 1,
+   "dropped_power_fraction": 0.3616129871796291,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200075,
+   "pol": 0,
+   "dropped_power_fraction": 0.05592186223579907,
+   "co_active_power": 0.9440781377642009,
+   "downlink_drift_db": 0.24992059308440906
+  },
+  {
+   "group": 3200081,
+   "pol": 0,
+   "dropped_power_fraction": 0.23651900375848361,
+   "co_active_power": 0.7634809962415164,
+   "downlink_drift_db": 1.1720176847024404
+  },
+  {
+   "group": 3200100,
+   "pol": 1,
+   "dropped_power_fraction": 0.0572890167526745,
+   "co_active_power": 0.9999999999999999,
+   "downlink_drift_db": 4.821637332766436e-16
+  },
+  {
+   "group": 3200110,
+   "pol": 1,
+   "dropped_power_fraction": 0.7535121852610042,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200112,
+   "pol": 0,
+   "dropped_power_fraction": 0.5082442670400726,
+   "co_active_power": 0.49175573295992747,
+   "downlink_drift_db": 3.0825056831081534
+  },
+  {
+   "group": 3200122,
+   "pol": 1,
+   "dropped_power_fraction": 0.07338703454930104,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200133,
+   "pol": 1,
+   "dropped_power_fraction": 0.6943140526463524,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200134,
+   "pol": 1,
+   "dropped_power_fraction": 0.30918790451416495,
+   "co_active_power": 0.9999999999999999,
+   "downlink_drift_db": 4.821637332766436e-16
+  },
+  {
+   "group": 3200141,
+   "pol": 1,
+   "dropped_power_fraction": 0.18499135046598,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200147,
+   "pol": 1,
+   "dropped_power_fraction": 0.07237345101315673,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200153,
+   "pol": 1,
+   "dropped_power_fraction": 0.0990898761419154,
+   "co_active_power": 0.9999999999999999,
+   "downlink_drift_db": 4.821637332766436e-16
+  },
+  {
+   "group": 3200154,
+   "pol": 1,
+   "dropped_power_fraction": 0.2027524007053939,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200155,
+   "pol": 1,
+   "dropped_power_fraction": 0.14894501452668088,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200159,
+   "pol": 0,
+   "dropped_power_fraction": 0.15017616306639442,
+   "co_active_power": 0.8498238369336055,
+   "downlink_drift_db": 0.7067109143485161
+  },
+  {
+   "group": 3200161,
+   "pol": 0,
+   "dropped_power_fraction": 0.2202200717508262,
+   "co_active_power": 0.7797799282491739,
+   "downlink_drift_db": 1.0802794786413286
+  },
+  {
+   "group": 3200162,
+   "pol": 1,
+   "dropped_power_fraction": 0.25168394130759225,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200176,
+   "pol": 0,
+   "dropped_power_fraction": 0.03207407572330854,
+   "co_active_power": 0.9679259242766916,
+   "downlink_drift_db": 0.14157878134644858
+  },
+  {
+   "group": 3200194,
+   "pol": 1,
+   "dropped_power_fraction": 0.1479620079106377,
+   "co_active_power": 0.9999999999999999,
+   "downlink_drift_db": 4.821637332766436e-16
+  },
+  {
+   "group": 3200199,
+   "pol": 1,
+   "dropped_power_fraction": 0.112791461079901,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200211,
+   "pol": 1,
+   "dropped_power_fraction": 0.5979489409051832,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200220,
+   "pol": 1,
+   "dropped_power_fraction": 0.07398208726758902,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200230,
+   "pol": 0,
+   "dropped_power_fraction": 0.44942924828030206,
+   "co_active_power": 0.5505707517196978,
+   "downlink_drift_db": 2.591868636003927
+  },
+  {
+   "group": 3200234,
+   "pol": 1,
+   "dropped_power_fraction": 0.1296599856899886,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200238,
+   "pol": 1,
+   "dropped_power_fraction": 0.05353438174768273,
+   "co_active_power": 0.9999999999999999,
+   "downlink_drift_db": 4.821637332766436e-16
+  },
+  {
+   "group": 3200239,
+   "pol": 0,
+   "dropped_power_fraction": 0.3671873100405163,
+   "co_active_power": 0.6328126899594836,
+   "downlink_drift_db": 1.9872482040146653
+  },
+  {
+   "group": 3200240,
+   "pol": 0,
+   "dropped_power_fraction": 0.13650837455815493,
+   "co_active_power": 0.8634916254418451,
+   "downlink_drift_db": 0.637418700733977
+  },
+  {
+   "group": 3200243,
+   "pol": 1,
+   "dropped_power_fraction": 0.09440883624904563,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200256,
+   "pol": 1,
+   "dropped_power_fraction": 0.10496267015865636,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200257,
+   "pol": 0,
+   "dropped_power_fraction": 0.10186620052017176,
+   "co_active_power": 0.8981337994798283,
+   "downlink_drift_db": 0.4665895949393343
+  },
+  {
+   "group": 3200262,
+   "pol": 0,
+   "dropped_power_fraction": 0.04997944537470931,
+   "co_active_power": 0.9500205546252907,
+   "downlink_drift_db": 0.22266998222972204
+  },
+  {
+   "group": 3200267,
+   "pol": 1,
+   "dropped_power_fraction": 0.17249027906427286,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200278,
+   "pol": 1,
+   "dropped_power_fraction": 1.0,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200279,
+   "pol": 0,
+   "dropped_power_fraction": 0.03709706082319716,
+   "co_active_power": 0.9629029391768029,
+   "downlink_drift_db": 0.16417487646355222
+  },
+  {
+   "group": 3200291,
+   "pol": 1,
+   "dropped_power_fraction": 0.5006137407996009,
+   "co_active_power": 0.9999999999999999,
+   "downlink_drift_db": 4.821637332766436e-16
+  },
+  {
+   "group": 3200295,
+   "pol": 1,
+   "dropped_power_fraction": 0.23802257115237976,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200296,
+   "pol": 0,
+   "dropped_power_fraction": 0.4254822878113329,
+   "co_active_power": 0.574517712188667,
+   "downlink_drift_db": 2.406965776158637
+  },
+  {
+   "group": 3200300,
+   "pol": 0,
+   "dropped_power_fraction": 0.26497548137435284,
+   "co_active_power": 0.7350245186256472,
+   "downlink_drift_db": 1.3369817366924763
+  },
+  {
+   "group": 3200301,
+   "pol": 0,
+   "dropped_power_fraction": 0.525667146040718,
+   "co_active_power": 0.47433285395928193,
+   "downlink_drift_db": 3.239167935453089
+  },
+  {
+   "group": 3200309,
+   "pol": 1,
+   "dropped_power_fraction": 0.2400352564158694,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200314,
+   "pol": 0,
+   "dropped_power_fraction": 0.16598804423431257,
+   "co_active_power": 0.8340119557656874,
+   "downlink_drift_db": 0.7882772359985339
+  },
+  {
+   "group": 3200318,
+   "pol": 0,
+   "dropped_power_fraction": 0.2470132575842096,
+   "co_active_power": 0.7529867424157903,
+   "downlink_drift_db": 1.2321267020879774
+  },
+  {
+   "group": 3200327,
+   "pol": 0,
+   "dropped_power_fraction": 0.09842668716972552,
+   "co_active_power": 0.9015733128302744,
+   "downlink_drift_db": 0.44998952177217105
+  },
+  {
+   "group": 3200330,
+   "pol": 1,
+   "dropped_power_fraction": 0.5080999864102721,
+   "co_active_power": 0.9999999999999999,
+   "downlink_drift_db": 4.821637332766436e-16
+  },
+  {
+   "group": 3200331,
+   "pol": 0,
+   "dropped_power_fraction": 0.07659068963645613,
+   "co_active_power": 0.9234093103635439,
+   "downlink_drift_db": 0.34605750946749675
+  },
+  {
+   "group": 3200333,
+   "pol": 0,
+   "dropped_power_fraction": 0.25550570050895133,
+   "co_active_power": 0.7444942994910486,
+   "downlink_drift_db": 1.2813862324297989
+  },
+  {
+   "group": 3200336,
+   "pol": 1,
+   "dropped_power_fraction": 0.18677317932407136,
+   "co_active_power": 0.9999999999999999,
+   "downlink_drift_db": 4.821637332766436e-16
+  },
+  {
+   "group": 3200352,
+   "pol": 0,
+   "dropped_power_fraction": 0.4621604061743271,
+   "co_active_power": 0.537839593825673,
+   "downlink_drift_db": 2.6934722973067826
+  },
+  {
+   "group": 3200362,
+   "pol": 0,
+   "dropped_power_fraction": 0.41145555120914373,
+   "co_active_power": 0.5885444487908562,
+   "downlink_drift_db": 2.30220732250228
+  },
+  {
+   "group": 3200363,
+   "pol": 0,
+   "dropped_power_fraction": 0.10197185855227446,
+   "co_active_power": 0.8980281414477255,
+   "downlink_drift_db": 0.46710053662358186
+  },
+  {
+   "group": 3200366,
+   "pol": 0,
+   "dropped_power_fraction": 0.7004404743133388,
+   "co_active_power": 0.2995595256866611,
+   "downlink_drift_db": 5.235168657335157
+  },
+  {
+   "group": 3200372,
+   "pol": 0,
+   "dropped_power_fraction": 0.0937508988682638,
+   "co_active_power": 0.9062491011317362,
+   "downlink_drift_db": 0.4275241117815875
+  },
+  {
+   "group": 3200380,
+   "pol": 1,
+   "dropped_power_fraction": 0.20558747260457919,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200384,
+   "pol": 1,
+   "dropped_power_fraction": 0.38576146038825604,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200392,
+   "pol": 1,
+   "dropped_power_fraction": 0.8496791572035102,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200394,
+   "pol": 0,
+   "dropped_power_fraction": 0.0980686356305404,
+   "co_active_power": 0.9019313643694596,
+   "downlink_drift_db": 0.4482651036243952
+  },
+  {
+   "group": 3200404,
+   "pol": 1,
+   "dropped_power_fraction": 0.03862520206335574,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200413,
+   "pol": 0,
+   "dropped_power_fraction": 0.06538002332594034,
+   "co_active_power": 0.9346199766740596,
+   "downlink_drift_db": 0.2936494055267289
+  },
+  {
+   "group": 3200445,
+   "pol": 1,
+   "dropped_power_fraction": 0.5083681758455733,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200447,
+   "pol": 0,
+   "dropped_power_fraction": 0.10719263851358332,
+   "co_active_power": 0.8928073614864167,
+   "downlink_drift_db": 0.49242237492799146
+  },
+  {
+   "group": 3200463,
+   "pol": 1,
+   "dropped_power_fraction": 0.1060093181548273,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200467,
+   "pol": 1,
+   "dropped_power_fraction": 0.35388713154712753,
+   "co_active_power": 0.9999999999999999,
+   "downlink_drift_db": 4.821637332766436e-16
+  },
+  {
+   "group": 3200470,
+   "pol": 0,
+   "dropped_power_fraction": 0.04359514465701,
+   "co_active_power": 0.95640485534299,
+   "downlink_drift_db": 0.19358227784916254
+  },
+  {
+   "group": 3200472,
+   "pol": 0,
+   "dropped_power_fraction": 0.06649423589824756,
+   "co_active_power": 0.9335057641017525,
+   "downlink_drift_db": 0.2988299607606453
+  },
+  {
+   "group": 3200491,
+   "pol": 1,
+   "dropped_power_fraction": 0.23823942491894512,
+   "co_active_power": 0.9999999999999999,
+   "downlink_drift_db": 4.821637332766436e-16
+  },
+  {
+   "group": 3200492,
+   "pol": 1,
+   "dropped_power_fraction": 0.04733093224029479,
+   "co_active_power": 1.0,
+   "downlink_drift_db": -0.0
+  },
+  {
+   "group": 3200498,
+   "pol": 0,
+   "dropped_power_fraction": 0.08478970030260026,
+   "co_active_power": 0.9152102996973998,
+   "downlink_drift_db": 0.3847910101108604
+  }
+ ]
+}

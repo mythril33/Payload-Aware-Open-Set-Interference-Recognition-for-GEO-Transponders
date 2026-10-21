@@ -1,6 +1,17 @@
 # Proje durumu ve eksik kaydı
 
-Son güncelleme: 2026-10-21 (B2 yalnız-test aileleri, K17b artırımı ve ilk açık-küme koşusu; temel deney durumu 2026-10-10) · Bu dosya "şu an neredeyiz, ne eksik" sorusunun tek yanıtıdır; her oturum sonunda güncellenir.
+Son güncelleme: 2026-10-21 (B2-match/1 K17c eşleşmiş küme, maliyet profili, üretim kapısı; temel deney durumu 2026-10-10) · Bu dosya "şu an neredeyiz, ne eksik" sorusunun tek yanıtıdır; her oturum sonunda güncellenir.
+
+## Uygulama eki — 2026-10-21 (dördüncü dilim: K17c eşleşmiş küme, maliyet profili, üretim hazırlığı)
+
+- **Başlangıç:** yerel dal `6b003b8`; uzak dal 3 commit ileriydi (PR #5 birleşmesi, `24feaa6` paralel gözlemli-alıcı geliştirme aşaması `B2-features/1`/`B2-observed-dev/1`, main birleşmesi). Fast-forward alındı (`82d6e7a`), temel paket **938 test geçti**. Belge çakışması: iki P21 dosyası var; bu belgede **P21a** = yalnız-test aileleri, **P21b** = gözlemli alıcı. İki iptal/merkez-kaybı sözleşmesi (P20: 0,005 × toplam; P21b: 0,01 × ortalama) K18 denetiminde karşılaştırıldı.
+- **K17c kodlandı — `B2-match/1`** ([P22](P22_b2_matched_asi.md), `geosim.b2_matched_dataset`, `b2_scenarios.prepare_matched_scene`, `asi.adjacent_satellite_uplink_at_level`): `test-matched` rolü (3 300 000–3 300 149), grup başına `clean`/`adjacent_satellite`/`unauthorized`; ortak C/I_psd ~ U(4, 13), ortak (Rs, α, mod), aynı plan/link/akış/aktiflik/kalibrasyon/iptal; yalnız yerleşim farklı. RNG `[grup, 1840]`; bağlı bilinen artefaktın kalibrasyonu kopyalanır; farklı fizik/iptal reddedilir. Kutular dondurulmuş; 150 grupta 50/54/46; 4 grupta plan yenilendi. Doğal dağılım değil kontrollü müdahale; kayıtlarda `within_natural_range` bayrakları ve sınır notu.
+- **Eşleşme gerçek:** istenen güç birebir (1e-12), referans aynı, oracle enjekte güç iki olay için aynı (+0,04 / +0,17 dB istekten sapma, sonlu sembol istatistiği); gözlenebilir bant içi yükselme yerleşime bağlı farklı (ASI planlı taşıyıcıyla bandı paylaşır), iptal artığında ikisi eşit (13,9 / 15,1 ve 10,1 / 10,0 dB) → kalan ipucu plan maskesi. [Pilot](../results/b2_matched_pilot.md).
+- **Eşleşmiş değerlendirme:** `geoml.b2_experiment --matched-data`: 3×8 ve ret sütunlu 3×9 karışıklık, çift içi 2×2 (temiz/diğer/ret sayılarıyla, payda tam), sınıf başına recall/precision + grup bootstrap, dondurulmuş kutular, doğal test rolüyle kutu karşılaştırması, sabit tohumlu temsilî spektrogram çiftleri (`figures/`). Pilot checkpoint'leri şans düzeyinde; yalnız yürütme kanıtı.
+- **Maliyet profili:** `scripts/profile_b2_generation.py`; 20 grup × 3 = 60 gözlem iptal ile/iptal olmaksızın, yeniden doğrulama süresi; [bütçe](../results/b2_production_budget.md). Ölçülen ve tahmin ayrılmış; tam üretim ve GPU eğitimi başlatılmadı.
+- **Karar denetimleri (P22 §6):** K18 — iki sözleşme D/2 kat farklı (genişlik 8'de 64×); pilot gömüleri çökmüş (rms 0,03–0,06), merkez terimi her iki sözleşmede ihmal edilebilir; öneri: toplam (kare Öklid) sözleşmesi, λ = 0,005 ön kayıt, tam koşuda yalnız train'de merkez/CE günlüğü; **onay bekler**. K17d — 500 test grubunun 78'inde eksik taşıyıcı, 35'i co feed; co-feed düşmelerinde downlink ASI sapması ortanca 0,71 dB, p90 2,93 dB, en çok 5,91 dB (`runs/k17d_drift_audit.json`); eşleşme grupların %93'ünde tam; öneri: K17d sabit kalsın, 35 grup etiketli alt satır (+ duyarlılık satırı), `B2-test/2` yalnız gerekirse. OBS-CANCEL/2 — tavan geçerliliği değil duyarlılığı sınırlar; ölçülebilir kabul ölçütleriyle ayrı sürüm önerisi, uygulanmadı.
+- **Doğrulama:** tam paket **952 test geçti** (`tests/test_b2_matched.py` 12 test: dondurulmuş aralık, üç varyant, paylaşılan parametreler, tam C/I_psd eşitliği, ASI örtüşmesi, boş aralık yerleşimi, eşdeğer (Rs, α, mod), kalibrasyon yeniden kullanımı, eksik taşıyıcı, sızıntı reddi, kanal sırası, iptal kaynağı, deterministik yeniden üretim, resume/bozulma, eski aşamalarla uyumluluk, gerçek zincir; deney koşucusunda 2 yeni test). Bağımsız hakem incelemesi sürüyor; bulgular [REVIEWER_RED_TEAM](../research/REVIEWER_RED_TEAM.md) §B2-match/1 olarak eklenecek.
+- **Sıradaki / kapı:** tam B2/1 üretimi ve çok tohumlu GPU eğitimi için **araştırmacı onayı gerekir**: K18, K17d seçeneği, OBS-CANCEL/2 kararı, bütçe. Kod tarafında kalan: LOKO (A8), EDSC/XGBoost baseline'ları, A5 çift-pol test bozması, K17a alt kutusu.
 
 ## Uygulama eki — 2026-10-21 (üçüncü dilim: yalnız-test aileleri, K17b, açık-küme değerlendirmesi)
 
@@ -171,7 +182,9 @@ Kademe A'nın (ders projesi) bütün zinciri kodlandı ve uçtan uca çalışıy
 | P18 | B2/1 sekiz sınıflı çift-pol açık-küme protokolü | **Donduruldu 2026-10-20 (K17)**; bilinen fiziksel aşama P19'da; nihai model ve yalnız-test aileleri bekliyor | `P18_b2_protocol.md` |
 | P19 | B2 bilinen fiziksel gözlemleri | `B2-base/1` üretici, aktif yayın ayrımı, bağımsız kalibrasyon ve veri bütünlüğü | `P19_b2_base_observations.md` |
 | P20 | B2 iptal artığı ve beş kanallı model | `B2-feat/1` üretici, `geosim.cancellation`, iki çıktılı model, `geoml.b2_experiment`; pilot fizik kanıtı var, tanıma sonucu yok | `P20_b2_cancellation_residual.md` |
-| P21 | B2 yalnız-test aileleri, K17b, açık-küme değerlendirmesi | `B2-test/1` üretici, downlink ASI ve aktif-farkında CID, plan kaydırma artırımı, aile başına açık-küme metrikleri; pilot yürütme kanıtı | `P21_b2_test_families.md` |
+| P21a | B2 yalnız-test aileleri, K17b, açık-küme değerlendirmesi | `B2-test/1` üretici, downlink ASI ve aktif-farkında CID, plan kaydırma artırımı, aile başına açık-küme metrikleri; pilot yürütme kanıtı | `P21_b2_test_families.md` |
+| P21b | Gözlemli alıcı geliştirme aşaması (paralel oturum) | `B2-features/1` / `B2-observed-dev/1`: `observed_receiver`, `b2_features`, iki başlı akışlı eğitim; ayrı sözleşmeler, P20 ile tek değişkenli karşılaştırma değil | `P21_b2_observed_receiver.md` |
+| P22 | K17c eşleşmiş ASI ↔ unauthorized, maliyet profili, karar denetimleri | `B2-match/1` üretici, eşleşmiş değerlendirme, 20 gruplu maliyet, K18/K17d/OBS-CANCEL-2 önerileri; pilot yürütme kanıtı | `P22_b2_matched_asi.md` |
 | Kademe B | Çift pol, 8 sınıf, open-set | Geliştirme dilimleri var (B1-dev/1–2, D1-dev/1, E1-dev/1); nihai B2/1 benchmark yok | `P11`–`P14` |
 
 ## 3. Elde ne var
@@ -241,7 +254,9 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 | B11 | P16 İP-2: sentetik bellek polinomu, OpenDPD eşleme duyarlılığı (R1-eval/2), NPR'nin literatürle sayısal karşılaştırması | Yüksek | Rapp ve OpenDPD bellek polinomları (P17) ve [NPR kontrolü](../results/npr_check.md) yapıldı |
 | B12 | P16 İP-3/4: B2 gözlemleri, iptal artığı, PL çerçeve/SCF ve plan bozma | Yüksek | Sekiz bilinen sınıf P19'da, gözlemden iptal artığı P20'de bağlandı; kalan: PL çerçeve/SCF ve B2 plan-bozma değerlendirmesi |
 | B13 | P16 İP-5/6: B2/1 nihai test üretimi, eğitim-zamanı OSR, EDSC ve XGBoost | Orta | Beş kanallı/iki çıktılı model ve merkez kaybı P20'de; unknown/CID aileleri ve açık-küme değerlendirmesi P21'de var; seviye eşleşmiş test kümesi (K17c), EDSC ve XGBoost henüz yok |
-| B14 | K18: merkez kaybı 0,005 ve plan BCE 1,0 ön kaydının onayı | Orta | Araştırmacı kararı; onaylanmazsa P18 §10 ile değiştirilir |
+| B14 | K18: merkez kaybı 0,005 ve plan BCE 1,0 ön kaydının onayı | Orta | Araştırmacı kararı; onaylanmazsa P18 §10 ile değiştirilir; sözleşme karşılaştırması P22 §6 |
+| B15 | K17d eksik taşıyıcı seviye sapması (35/500 test grubu, en çok 5,9 dB) | Orta | Araştırmacı kararı: etiketli alt satır (öneri) / `B2-test/2` / duyarlılık satırı; P22 §6 |
+| B16 | Tam B2/1 üretimi ve GPU eğitimi bütçe onayı | Yüksek | [Bütçe](../results/b2_production_budget.md); kapı P22 ve DURUM eki |
 
 ### 5.4 Bilinçli olarak ertelenenler (Kademe B)
 

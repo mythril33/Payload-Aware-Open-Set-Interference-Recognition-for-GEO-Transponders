@@ -1,0 +1,179 @@
+{
+  "protocol": "B2-match/1",
+  "benchmark_complete": false,
+  "matched_fingerprint": "cebfb4ab58837127ce503dc74585075909ca3b82c0b9cc044e493d4763a32080",
+  "n_groups": 2,
+  "n_observations": 6,
+  "all_requested_powers_equal": true,
+  "all_masks_identical": true,
+  "per_bin": {
+    "4-7": {
+      "n_groups": 1,
+      "median_delta_psd_asi_db": 13.805751731423129,
+      "median_delta_psd_unauthorized_db": 15.194201242463294,
+      "median_delta_residual_asi_db": 13.947774092182655,
+      "median_delta_residual_unauthorized_db": 15.14744242459885,
+      "median_realized_level_difference_db": 0.06574871515833536
+    },
+    "7-10": {
+      "n_groups": 1,
+      "median_delta_psd_asi_db": 3.4950531016364152,
+      "median_delta_psd_unauthorized_db": 10.07397499130738,
+      "median_delta_residual_asi_db": 10.10212430390898,
+      "median_delta_residual_unauthorized_db": 10.032984013784173,
+      "median_realized_level_difference_db": 2.3554036689499185
+    },
+    "10-13": {
+      "n_groups": 0,
+      "median_delta_psd_asi_db": null,
+      "median_delta_psd_unauthorized_db": null,
+      "median_delta_residual_asi_db": null,
+      "median_delta_residual_unauthorized_db": null,
+      "median_realized_level_difference_db": null
+    }
+  },
+  "rows": [
+    {
+      "scenario_id": 3300000,
+      "pair_id": "B2-match/1:3300000",
+      "bin": "4-7",
+      "target_c_over_i_psd_db": 5.79460065273992,
+      "symbol_rate": 1500000.0,
+      "alpha": 0.2,
+      "mod": "16APSK",
+      "requested_power": 0.02182491791213035,
+      "plan_consistency": 1,
+      "within_natural_range": {
+        "adjacent_satellite": true,
+        "unauthorized": true
+      },
+      "events": {
+        "adjacent_satellite": {
+          "band_hz": [
+            -6295050.0,
+            -4495050.0
+          ],
+          "requested_power": 0.02182491791213035,
+          "delta_psd_in_band_db": 13.805751731423129,
+          "absolute_in_band_psd_db": -84.52911386738315,
+          "plan_overlap_fraction": 0.5085802468255074,
+          "mean_delta_psd_co_db": 0.361602783203125,
+          "masks_identical": true,
+          "delta_residual_in_band_db": 13.947774092182655,
+          "absolute_in_band_residual_db": -86.20452466148423
+        },
+        "unauthorized": {
+          "band_hz": [
+            -8336712.158691207,
+            -6536712.158691207
+          ],
+          "requested_power": 0.02182491791213035,
+          "delta_psd_in_band_db": 15.194201242463294,
+          "absolute_in_band_psd_db": -84.59486258254148,
+          "plan_overlap_fraction": 0.0,
+          "mean_delta_psd_co_db": 0.38469696044921875,
+          "masks_identical": true,
+          "delta_residual_in_band_db": 15.14744242459885,
+          "absolute_in_band_residual_db": -84.61851177546153
+        }
+      },
+      "requested_power_equal": true,
+      "realized_level_difference_asi_minus_unauthorized_db": 0.06574871515833536,
+      "clean_level_difference_in_the_two_bands_db": 1.4541982261984998,
+      "widest_gap_floor_shift_db": {
+        "adjacent_satellite": 8.935960341679689,
+        "unauthorized": 11.361661525941955
+      }
+    },
+    {
+      "scenario_id": 3300001,
+      "pair_id": "B2-match/1:3300001",
+      "bin": "7-10",
+      "target_c_over_i_psd_db": 9.219569395813796,
+      "symbol_rate": 1000000.0,
+      "alpha": 0.35,
+      "mod": "16APSK",
+      "requested_power": 0.005566786950447777,
+      "plan_consistency": 0,
+      "within_natural_range": {
+        "adjacent_satellite": true,
+        "unauthorized": true
+      },
+      "events": {
+        "adjacent_satellite": {
+          "band_hz": [
+            6653475.0,
+            8003475.0
+          ],
+          "requested_power": 0.005566786950447777,
+          "delta_psd_in_band_db": 3.4950531016364152,
+          "absolute_in_band_psd_db": -87.76725989532173,
+          "plan_overlap_fraction": 0.24554380677523713,
+          "mean_delta_psd_co_db": 0.1268157958984375,
+          "masks_identical": true,
+          "delta_residual_in_band_db": 10.10212430390898,
+          "absolute_in_band_residual_db": -89.87421843013168
+        },
+        "unauthorized": {
+          "band_hz": [
+            -12883420.140293172,
+            -11533420.140293172
+          ],
+          "requested_power": 0.005566786950447776,
+          "delta_psd_in_band_db": 10.07397499130738,
+          "absolute_in_band_psd_db": -90.12266356427165,
+          "plan_overlap_fraction": 0.0,
+          "mean_delta_psd_co_db": 0.1530609130859375,
+          "masks_identical": true,
+          "delta_residual_in_band_db": 10.032984013784173,
+          "absolute_in_band_residual_db": -90.13631806896014
+        }
+      },
+      "requested_power_equal": true,
+      "realized_level_difference_asi_minus_unauthorized_db": 2.3554036689499185,
+      "clean_level_difference_in_the_two_bands_db": 8.934325558620884,
+      "widest_gap_floor_shift_db": {
+        "adjacent_satellite": 0.031326413921306084,
+        "unauthorized": 6.132446441089371
+      }
+    }
+  ],
+  "recognition_metrics": null,
+  "interpretation": "Requested power and reference are identical by construction. The observable in-band rise differs because the ASI shares its band with a planned carrier (overlap 20-80 %) while the unauthorized carrier sits on the noise floor of a gap; this placement difference IS the intended intervention. Nonlinear payload interaction adds a smaller, group-dependent term.",
+  "scope": "Physics of the matched set; no classifier claim.",
+  "oracle_diagnostic": {
+    "note": "mean injected uplink power of the event waveform over four snapshots, before IMUX/TWTA; simulator truth, diagnostic only",
+    "rows": [
+      {
+        "scenario_id": 3300000,
+        "events": {
+          "adjacent_satellite": {
+            "requested_power": 0.02182491791213035,
+            "realized_injected_power_before_payload": 0.022035270929336548,
+            "ratio_db": 0.04165775728871905
+          },
+          "unauthorized": {
+            "requested_power": 0.02182491791213035,
+            "realized_injected_power_before_payload": 0.022035270929336548,
+            "ratio_db": 0.04165775728871905
+          }
+        }
+      },
+      {
+        "scenario_id": 3300001,
+        "events": {
+          "adjacent_satellite": {
+            "requested_power": 0.005566786950447777,
+            "realized_injected_power_before_payload": 0.0057832724414765835,
+            "ratio_db": 0.16569051258117415
+          },
+          "unauthorized": {
+            "requested_power": 0.005566786950447776,
+            "realized_injected_power_before_payload": 0.005783271510154009,
+            "ratio_db": 0.16568981320501347
+          }
+        }
+      }
+    ]
+  }
+}

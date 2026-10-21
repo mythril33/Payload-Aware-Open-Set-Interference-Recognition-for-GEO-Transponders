@@ -205,3 +205,88 @@ def test_test_only_artifact_must_be_bound_to_the_same_known_data(unknown_dataset
     unknown["seed"][:] = ROLE_STARTS["test"] + 7
     with pytest.raises(ValueError, match="known test groups"):
         run_b2_experiment(_config(views=("co",)), data, tmp_path / "c", log=lambda *_: None, unknown_data="x")
+
+
+# ---- K17c matched set (B2-match/1) ----
+
+def _matched_split(n_groups, seed):
+    rng = np.random.default_rng(seed)
+    label_index = [0, 6, 3]
+    groups = np.repeat(np.arange(ROLE_STARTS["test-matched"], ROLE_STARTS["test-matched"] + n_groups), 3)
+    labels = np.tile(np.array(label_index), n_groups)
+    n = len(labels)
+    spec = rng.normal(-80, 2, (n, 2, 8, 32)).astype(np.float16)
+    spec[labels == 6, 0, :, 22] += 20
+    spec[labels == 3, 0, :, 13] += 20
+    mask = np.full((n, 2, 32), -60, np.float16)
+    mask[:, :, 8:16] = 0
+    bins = np.repeat(np.arange(n_groups) % 3, 3).astype(np.int8)
+    meta = []
+    for g, l, b in zip(groups, labels, bins):
+        ci = [5.5, 8.5, 11.5][int(b)]
+        meta.append({"scenario_id": int(g), "label": LABELS[int(l)],
+                     "matched": {"pair_id": f"B2-match/1:{int(g)}", "target_c_over_i_psd_db": ci, "bin": int(b)},
+                     "event": {"kind": LABELS[int(l)], "c_over_i_psd_db": ci} if l else {"kind": "clean"}})
+    return {"spec": spec, "mask": mask, "label": labels.astype(np.int8), "seed": groups.astype(np.int64),
+            "plan_consistency": np.zeros(n, np.int8), "matched_bin": bins,
+            "residual": (spec[:, 0].astype(np.float32) - 12).astype(np.float16), "meta": meta,
+            "labels": ["clean", "adjacent_satellite", "unauthorized"]}
+
+
+@pytest.fixture
+def matched_dataset(monkeypatch, dataset):
+    _, manifest, data = dataset
+    matched = _matched_split(4, 7)
+    matched_manifest = {"protocol": "B2-match/1", "config": manifest["config"], "cancellation": manifest["cancellation"],
+                        "request": {"known": {"known_data_fingerprint": "f" * 64}}}
+    monkeypatch.setattr(ex, "read_b2_matched_manifest", lambda path: matched_manifest)
+    monkeypatch.setattr(ex, "load_b2_matched_split", lambda path: matched)
+    monkeypatch.setattr(ex, "b2_matched_fingerprint", lambda path: "d" * 64)
+    return matched, matched_manifest, data
+
+
+def test_matched_set_is_evaluated_with_frozen_thresholds_and_full_denominators(matched_dataset, tmp_path):
+    matched, _, data = matched_dataset
+    result = run_b2_experiment(_config(views=("dual_residual",)), data, tmp_path / "m", log=lambda *_: None,
+                               matched_data=tmp_path / "matched")
+    assert result["matched_protocol"] == "B2-match/1" and result["partitions"]["test_matched"]["n_samples"] == 12
+    assert result["partitions"]["test_matched"]["per_label"] == {"clean": 4, "adjacent_satellite": 4, "unauthorized": 4}
+    m = result["methods"]["dual_residual"]["matched"]
+    assert m["n_samples"] == 12 and m["n_groups"] == 4 and m["per_bin_groups"] == {"4-7": 2, "7-10": 1, "10-13": 1}
+    assert set(m["confusion"]) == {"clean", "unauthorized", "adjacent_satellite"}
+    assert all(sum(row.values()) == 4 for row in m["confusion"].values())
+    for method in ("msp", "energy", "mahalanobis"):
+        by = m["by_method"][method]
+        pair = by["pair"]
+        assert pair["n_samples"] == 8 and pair["denominator"].startswith("all matched")
+        bd = pair["prediction_breakdown"]
+        for name in ("adjacent_satellite", "unauthorized"):
+            assert bd[name]["predicted_clean"] + bd[name]["predicted_other_known"] + bd[name]["predicted_pair_class"] == 4
+            assert bd[name]["n"] == 4
+        assert sum(sum(r.values()) for r in pair["two_by_two"].values()) == sum(v["predicted_pair_class"] for v in bd.values())
+        assert all(sum(row.values()) == 4 for row in by["confusion_with_rejection"].values())
+        assert by["per_bin"]["4-7"]["n_samples"] == 4 and by["per_bin"]["10-13"]["n_samples"] == 2
+        # Thresholds are the val-calib ones (16 known samples), untouched by the matched set.
+        assert result["methods"]["dual_residual"]["rejection"][method]["calibration"]["n_calibration"] == 16
+    assert m["per_class"]["adjacent_satellite"]["n_true"] == 4
+    assert m["natural_comparison"]["classes"]["unauthorized"]["recall_overall"]["n_samples"] == 2
+    assert m["natural_comparison"]["classes"]["unauthorized"]["recall_by_matched_bin"]["7-10"]["n_samples"] == 0
+    reps = m["representatives"]
+    assert reps["rule"].startswith("numpy default_rng([20261021])")
+    assert len(reps["groups"]["4-7"]) == 2 and len(reps["groups"]["7-10"]) == 1
+    assert "figures" in reps and (reps["figures"].get("written") is not None)
+    text = (tmp_path / "m" / "results.md").read_text()
+    assert "K17c level-matched" in text and "7-10" in text
+    summary = json.loads((tmp_path / "m" / "results_summary.json").read_text())
+    assert summary["methods"]["dual_residual"]["matched"]["by_method"]["msp"]["pair"]["pair_accuracy"] is not None
+
+
+def test_matched_artifact_binding_and_role_are_enforced(matched_dataset, tmp_path):
+    matched, matched_manifest, data = matched_dataset
+    matched_manifest["request"]["known"]["known_data_fingerprint"] = "0" * 64
+    with pytest.raises(ValueError, match="different known dataset"):
+        run_b2_experiment(_config(views=("co",)), data, tmp_path / "a", log=lambda *_: None, matched_data="x")
+    matched_manifest["request"]["known"]["known_data_fingerprint"] = "f" * 64
+    matched["seed"][:3] = ROLE_STARTS["test"]
+    with pytest.raises(ValueError, match="test-matched role"):
+        run_b2_experiment(_config(views=("co",)), data, tmp_path / "b", log=lambda *_: None, matched_data="x")
