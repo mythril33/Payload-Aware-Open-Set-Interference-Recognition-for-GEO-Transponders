@@ -2,6 +2,14 @@
 
 Son güncelleme: 2026-10-21 (B2-match/1 K17c eşleşmiş küme, maliyet profili, üretim kapısı; temel deney durumu 2026-10-10) · Bu dosya "şu an neredeyiz, ne eksik" sorusunun tek yanıtıdır; her oturum sonunda güncellenir.
 
+## Planlama eki — 2026-10-21 (B2 Production Readiness planı; uygulanmış sonuç değil)
+
+- Güncel `main` tabanı `ff1418f` (PR #7 birleşti). [P23](P23_b2_production_readiness.md), [Claude Code master prompt](../agent_prompts/B2_PRODUCTION_READINESS_MASTER_PROMPT.md) ve [karar kapıları JSON](b2_readiness_gates_2026-10-21.json) yeni aşamanın **planlama çıktılarıdır**; streaming/LOKO/EDSC/XGBoost/A5 işlerinin tamamlandığını göstermez.
+- Hafif GitHub Actions test iş akışı `.github/workflows/b2-readiness-ci.yml` taslağı eklendi; bu dalda CI sonucu ayrıca doğrulanmalıdır. Önceden raporlanan **955 test** bu düzenlemede yeniden çalıştırılmadı.
+- K18, K17d ve OBS-CANCEL/2 kararları **onay bekliyor**; tam veri üretimi (~23–30 saat, ~8,7 GB tahmin), tam GPU eğitimi, LOKO taraması ve `main` birleşmesi yetkilendirilmiş değildir. `benchmark_complete=false`.
+
+
+
 ## Uygulama eki — 2026-10-21 (dördüncü dilim: K17c eşleşmiş küme, maliyet profili, üretim hazırlığı)
 
 - **Başlangıç:** yerel dal `6b003b8`; uzak dal 3 commit ileriydi (PR #5 birleşmesi, `24feaa6` paralel gözlemli-alıcı geliştirme aşaması `B2-features/1`/`B2-observed-dev/1`, main birleşmesi). Fast-forward alındı (`82d6e7a`), temel paket **938 test geçti**. Belge çakışması: iki P21 dosyası var; bu belgede **P21a** = yalnız-test aileleri, **P21b** = gözlemli alıcı. İki iptal/merkez-kaybı sözleşmesi (P20: 0,005 × toplam; P21b: 0,01 × ortalama) K18 denetiminde karşılaştırıldı.
