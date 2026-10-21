@@ -104,18 +104,17 @@ scaling are assumptions. See [protocol, assumptions and validation](docs/plan/P1
 
 ## B2 known physical observations
 
-The frozen B2/1 roles and eight known classes are connected in the preliminary
-`B2-base/1` artifact stage. Operator plans remain intact when a planned carrier
-is absent, with fixed nominal gain and preserved waveform RNG streams.
+The completed preliminary `B2-base/1` artifact stage connected the frozen B2/1
+roles and eight known classes. Operator plans remain intact when a planned
+carrier is absent, with fixed nominal gain and preserved waveform RNG streams.
 
 ```bash
 python -m geosim.b2_dataset --config configs/b2_base.json --out data/b2-base-pilot --limit-groups 2 --groups-per-shard 1
 ```
 
-This stage emits paired spectra, operator masks and a separate plan-consistency
-target. Its manifest marks the benchmark incomplete. Cancellation, the fifth
-input channel, unknown/CID tests and the final B2 model follow. See [contracts,
-sampling assumptions and reuse](docs/plan/P19_b2_base_observations.md).
+This historical stage emits paired spectra, operator masks and a separate
+plan-consistency target. It has no cancellation channel, and its manifest marks
+the benchmark incomplete. See [contracts, sampling assumptions and reuse](docs/plan/P19_b2_base_observations.md).
 
 ## B2 cancellation residual and five-channel model
 
@@ -170,4 +169,4 @@ This is an evolving research project, **not** a completed dual-polarization, eig
 - [Literature bibliography (BibTeX)](references/references.bib)
 - [Detailed current Stage A status](docs/plan/DURUM.md) and [pilot-only results](docs/results/pilot_A.md)
 
-**Current research boundary:** Stage A is single-polarization/five known classes, with a small pilot. B2-base/1 and B2-feat/1 connect the eight frozen known classes, the fifth channel and the two-output model, but no unknown/CID/matched test families or full-scale training exist yet. B1-dev/1 implements known-class holdout rejection with MSP and energy; B1-dev/2 adds unknown families, Mahalanobis and ranking metrics. D1-dev/1 adds calibrated dual-polarization observations and a controlled two-class leakage task. E1-dev/1 adds phase noise and two modulated-interference mechanisms in a separate three-class task. Full-data results and the unified eight-class dual-polarization open-set benchmark remain outstanding. The pilots are not evidence of field/deployment performance. The code repository does not currently specify a top-level license; third-party PDF/data licenses and redistribution conditions must be handled separately. Official primary-source links are preserved instead of automatically mirroring restricted documents.
+**Current research boundary:** Stage A is single-polarization/five known classes, with a small pilot. B2-base/1 and B2-feat/1 connect the eight frozen known classes, the fifth channel and the two-output model. B2-features/1 and B2-observed-dev/1 provide a separate observed-receiver development stage with distinct artifacts and training conventions. Neither B2 stage includes final unknown/CID/matched test families or full-scale training. B1-dev/1 implements known-class holdout rejection with MSP and energy; B1-dev/2 adds unknown families, Mahalanobis and ranking metrics. D1-dev/1 adds calibrated dual-polarization observations and a controlled two-class leakage task. E1-dev/1 adds phase noise and two modulated-interference mechanisms in a separate three-class task. Full-data results and the unified eight-class dual-polarization open-set benchmark remain outstanding. The pilots are not evidence of field/deployment performance. The code repository does not currently specify a top-level license; third-party PDF/data licenses and redistribution conditions must be handled separately. Official primary-source links are preserved instead of automatically mirroring restricted documents.
