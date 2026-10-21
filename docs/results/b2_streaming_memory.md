@@ -70,7 +70,7 @@ Production layout: 8 groups per shard = 64 observations per shard, 0.406 MB per 
 | Resident data for training | all four roles float16 (≈ 8.4 GB) + float32 inputs of train and val-select (≈ 7.9 + 0.8 GB) + temporaries → does not fit the budgeted hosts | `window_shards` × 63 MiB + one gathered window copy + one batch: ≈ 0.25 GB (window 4), independent of N |
 | Resident for the whole run | – | index arrays and projected metadata O(N) (a few MB at N = 21 350); logits/embeddings/plan logits per role (train: 12 000 × 137 × 4 B ≈ 6.6 MB at width 8) |
 | Fixed | torch state ≈ 0.55 GB imports + ≈ 0.3 GB kernels (CPU build; GPU builds differ) | same |
-| I/O per epoch | none after load | re-read and re-verify the training role: ≈ 4.7 GB per epoch; at the measured ≈ 430 obs/s verification this is ≈ 30 s per epoch on this container's disk (**estimate**) |
+| I/O per epoch | none after load | re-read and re-verify the training role: 188 shards ≈ 4.8 GB, each part read twice (sha256, then `numpy.load`) ≈ 9.5 GB; at the measured 0.18 s per 64-observation shard ≈ 34 s per epoch plus ≈ 4 s for val-select on this container's disk (**estimate**) |
 
 The bound rests on three code facts, each covered by a test: the open pass keeps only small arrays
 (`_small`), training reads shards through a generator and keeps at most `window_shards` of them

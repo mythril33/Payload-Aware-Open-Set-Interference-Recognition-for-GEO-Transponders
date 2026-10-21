@@ -224,8 +224,10 @@ def main():
                   "train_float16_mib": n_train * per_obs["raw_float16_bytes"] / 2**20,
                   "train_preprocessed_mib": n_train * per_obs["preprocessed_float32_bytes"] / 2**20},
               "streaming_resident_bound_mib": {
-                  window: {"note": "window_shards raw shards (float16) + their float32 inputs + one gathered window copy during permutation",
-                           "bound_mib": (max(dataset["roles"]["train"]["shard_bytes"]) * window * (1 + 2 * per_obs["preprocessed_float32_bytes"] / per_obs["raw_float16_bytes"])) / 2**20}
+                  window: {"note": "data part only: window_shards raw float16 shards while the window is preprocessed, then "
+                                   "their float32 inputs plus one raw copy of spec/residual when the K17b plan shift is on; "
+                                   "excludes the fixed torch state and the per-batch activations",
+                           "bound_mib": (max(dataset["roles"]["train"]["shard_bytes"]) * window * (1 + per_obs["preprocessed_float32_bytes"] / per_obs["raw_float16_bytes"])) / 2**20}
                   for window in args.window_shards},
               "runs": runs,
               "hardware": {"cpu_count": os.cpu_count(), "platform": platform.platform(), "python": platform.python_version(),

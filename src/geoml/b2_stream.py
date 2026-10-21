@@ -10,9 +10,13 @@ Memory model. Every artifact is verified once, shard by shard, when it is opened
 (descriptors, checksums, arrays, metadata; ``geosim.b2_dataset.read_b2_manifest``),
 and only small per-sample arrays survive that pass: labels, scenario groups,
 plan-consistency targets, families/bins and a projection of a few metadata
-fields. Training then re-reads verified shards: at most ``window_shards`` raw
-float16 shards plus their preprocessed float32 inputs and one mini-batch are
-resident; inference holds one shard. ``numpy.load`` reads each NPZ member into
+fields. Training then re-reads verified shards window by window: while a window
+is preprocessed its ``window_shards`` raw float16 shards are resident; afterwards
+the raw shards are released and the window holds its float32 inputs, one
+contiguous float16 copy of ``spec``/``residual`` only when the K17b plan shift is
+enabled (it re-preprocesses selected rows), and one mini-batch with its augmented
+copy. Inference holds one raw shard plus one preprocessed batch (two shards
+transiently at the shard boundary). ``numpy.load`` reads each NPZ member into
 memory, so this is bounded reading, *not* memory mapping. Model outputs
 (logits, embeddings, auxiliary logits) are materialized per role:
 O(N × (n_classes + 1 + 16·width)) float32.
@@ -20,11 +24,20 @@ O(N × (n_classes + 1 + 16·width)) float32.
 Scientific contract. ``fit_streaming`` is the same algorithm as ``geoml.train.fit``
 (same model, optimizer, OneCycle schedule, losses, K17b plan shift, mirror/roll
 augmentation, val-select macro-F1 checkpoint selection, training-only absolute
-reference). Only the sample order differs when the data span more than one
-window: whole shards are permuted per epoch, samples are permuted inside each
-window, and mini-batches carry across windows so every epoch has exactly
-``ceil(N / batch)`` optimizer steps. With a single window (``n_shards <=
-window_shards``) the trainer reproduces the in-memory trainer bit for bit.
+reference). With a single window (``n_shards <= window_shards``) it reproduces
+the in-memory trainer bit for bit (weights, training history, reference;
+checkpoint selection identical up to argmax ties on 1e-5-level logit
+differences from inference batch boundaries). With more shards than the window
+the sample order is a **blocked shuffle**: whole shards are permuted per epoch,
+samples are permuted inside each window, and mini-batches carry across windows
+so every epoch has exactly ``ceil(N / batch)`` optimizer steps. Within-batch
+group diversity is then bounded by ``window_shards × groups_per_shard`` and the
+eight paired variants of a group always share a window, so BatchNorm statistics
+and the augmentation RNG stream differ from a uniform permutation: a multi-window
+run is the same algorithm under a different, deterministic sample order, not a
+replication of a legacy run. ``window_shards`` is therefore recorded in the
+experiment fingerprint and in the checkpoint; the default of 4 is a declared
+engineering choice, not a tuned value.
 """
 from __future__ import annotations
 
@@ -154,7 +167,12 @@ class B2Source:
         return out
 
     def shards(self, order=None):
-        order = list(range(self.n_shards)) if order is None else [int(index) for index in order]
+        if order is None:
+            order = list(range(self.n_shards))
+        elif any(isinstance(index, (bool, np.bool_)) or not isinstance(index, (int, np.integer)) for index in order):
+            raise ValueError("shard order must list distinct shard indices")
+        else:
+            order = [int(index) for index in order]
         if len(set(order)) != len(order) or any(not 0 <= index < self.n_shards for index in order):
             raise ValueError("shard order must list distinct shard indices")
         for position, shard in zip(order, self._reader(order)):
@@ -272,11 +290,16 @@ def _concat(parts):
 # streaming training and inference (same algorithm as geoml.train)
 
 
-def _require(source, cfg, name):
+def _require(source, cfg, name, role):
+    """Fitting consumes known-class sources of the expected frozen role only (P18 §4)."""
     if not isinstance(source, B2Source):
         raise ValueError(f"{name} data must be a B2Source")
     if source.kind == "test":
         raise ValueError(f"{name} data must carry known labels, not test-only families")
+    if source.kind != "known":
+        raise ValueError(f"{name} data must come from the known roles, not the {source.kind} evaluation set")
+    if source.role not in (None, role):
+        raise ValueError(f"{name} data must come from the {role!r} role, not {source.role!r}")
     if cfg.input_mode == "dual_residual" and not source.has_residual:
         raise ValueError("input_mode 'dual_residual' requires the stored cancellation residual (B2-feat/1)")
     if cfg.plan_consistency and "plan_consistency" not in source.index:
@@ -328,6 +351,7 @@ def _training_reference(train, cfg):
                 values.append(reference_level(spec, mask))
         except FloatingPointError as error:
             raise ValueError("training reference exceeds supported finite range") from error
+        del shard, spec, mask          # release the raw shard before the generator reads the next one
     ref = float(np.concatenate(values).mean())
     if not np.isfinite(ref):
         raise ValueError("training reference must be finite")
@@ -390,6 +414,7 @@ def _batches(train, cfg, ref, gen, window_shards, with_plans, order):
         if not buffer:
             break
         piece = _window(buffer, cfg, ref, with_plans)
+        buffer.clear()                 # raw shards are no longer needed: plans and (if K17b) one raw copy live in piece
         perm = torch.randperm(len(piece["x"]), generator=gen)
         position = 0
         while position < len(perm):
@@ -416,8 +441,8 @@ def fit_streaming(train, val, cfg: TrainConfig, *, window_shards=DEFAULT_WINDOW_
     if isinstance(window_shards, bool) or not isinstance(window_shards, int) or window_shards < 1:
         raise ValueError("window_shards must be a positive integer")
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-    _require(train, cfg, "training")
-    _require(val, cfg, "validation")
+    _require(train, cfg, "training", "train")
+    _require(val, cfg, "validation", "val-select")
     if np.intersect1d(train.groups, val.groups).size:
         raise ValueError("training and validation scenario groups must be disjoint")
     torch.manual_seed(cfg.seed)
@@ -493,7 +518,8 @@ def infer_streaming(fitted: dict, source, batch: int = 32) -> dict:
     """Logits, embeddings and plan logits in canonical sample order; one raw shard plus one preprocessed batch resident.
 
     The default batch of 32 halves the activation transient of the legacy 64-sample
-    inference batches; eval-mode outputs do not depend on the batch composition.
+    inference batches; eval-mode outputs do not depend on the batch composition
+    beyond 1e-5-level float differences at batch boundaries.
     """
     if isinstance(batch, bool) or not isinstance(batch, int) or batch < 1:
         raise ValueError("batch must be a positive integer")
@@ -512,6 +538,7 @@ def infer_streaming(fitted: dict, source, batch: int = 32) -> dict:
             for key in outputs:
                 if result[key] is not None:
                     outputs[key].append(result[key])
+        del shard, arrays              # release the raw shard before the generator reads the next one
     if not outputs["logits"]:
         raise ValueError("inference requires at least one shard")
     return {"logits": np.concatenate(outputs["logits"]), "embedding": np.concatenate(outputs["embedding"]),

@@ -35,12 +35,15 @@ keep validating. `results.json` gains `runtime.loader` (mode, window, per-role s
 
 ### Memory model (what is and is not bounded)
 
-Resident during training: `window_shards` raw float16 shards (spec, mask, residual, metadata records of
-those shards) + their float32 model inputs + one gathered copy of a window during the in-window
-permutation + one mini-batch and its augmented copy + model/optimizer/center state. For the production
-layout (8 groups = 64 observations per shard) one shard is ≈ 25 MB raw and ≈ 42 MB preprocessed; the
-default window of 4 shards is therefore ≈ 0.3 GB of data per window (plus the fixed torch overhead, ≈ 0.3
-GB on this CPU build), independent of the number of observations. Resident for the whole run: per-sample
+Resident during training: while a window is preprocessed, its `window_shards` raw float16 shards (spec,
+mask, residual, metadata records) plus the float32 inputs being built (preprocessing runs in 16-observation
+chunks, so its temporaries are bounded by the chunk, not the shard); afterwards the raw shards are released
+and the window holds its float32 inputs, one contiguous float16 copy of `spec`/`residual` **only when the
+K17b plan shift is enabled** (it re-preprocesses the selected rows), the per-sample operator plans, one
+mini-batch gathered from the window and its augmented copy, and the model/optimizer/center state. For the
+production layout (8 groups = 64 observations per shard) one shard is ≈ 25 MB raw and ≈ 42 MB preprocessed;
+the default window of 4 shards is therefore ≈ 0.27 GB of data per window (plus the fixed torch overhead,
+≈ 0.3 GB on this CPU build), independent of the number of observations. Resident for the whole run: per-sample
 index arrays and projected metadata (O(N), a few MB at N = 21 350), logits (N × 8), embeddings (N × 16·width)
 and plan logits per role — explicitly materialized because the metrics, Mahalanobis fit and calibration
 need them; at full scale with width 8 this is ≈ 12 000 × 136 × 4 B ≈ 6.5 MB for the training role.
@@ -50,10 +53,14 @@ bounded reading, not memory mapping; the artifact format was not changed to allo
 new stage name under the artifact rules).
 
 Cost of the design: every epoch re-reads and re-verifies the training shards (sha256 of each part file plus
-the per-record metadata validation). On the pilot this is 0.2 s per 16-observation role; at full scale it is
-≈ 7.5 GB of I/O and hashing per epoch for the training role (measured per-shard costs in
-[b2_streaming_memory.md](../results/b2_streaming_memory.md)). A preprocessed cache was deliberately not
-added (it would be a new derived artifact with its own provenance); it is listed as an option, not a gap.
+the per-record metadata validation, then `numpy.load`, i.e. each part is read twice). Measured on the
+synthetic-layout fixture: 0.18 s per 64-observation shard (≈ 430 observations/s). At full scale the
+training role is 188 shards ≈ 4.8 GB on disk, read twice ≈ 9.5 GB per epoch, ≈ 34 s per epoch at the
+measured rate plus ≈ 4 s for val-select (**estimate** from the per-shard measurement; not a full-scale run).
+A preprocessed cache was deliberately not added (it would be a new derived artifact with its own
+provenance); it is listed as an option, not a gap. The `streaming` block saved in the checkpoint
+(window, shard counts, per-epoch shard orders, policy) is informational metadata and is **not** covered by
+the checkpoint metadata fingerprint, which keeps its pre-E1 definition so older checkpoints still verify.
 
 ## 3. Scientific invariants preserved (tests in `tests/test_b2_stream.py`, `tests/test_b2_experiment.py`)
 
@@ -81,10 +88,19 @@ synthetic-layout fixture the gap scales with the dataset while the streaming inc
 
 ## 5. Limitations and honest scope
 
-- The parity claim is exact only for a single window; with several windows the trainer is the same
-  algorithm under a different, deterministic sample order. Full-scale training (30 epochs, 12 000
-  observations) was **not** run; the memory bound is reasoned from the allocation pattern and measured on
-  fixtures up to 384 training observations.
+- The parity claim is exact only for a single window (weights, training history and reference bit for bit;
+  checkpoint selection identical up to argmax ties on 1e-5-level logit differences from inference batch
+  boundaries). With several windows the sample order is a **blocked shuffle**: whole shards are permuted,
+  samples are permuted inside a window, so within-batch group diversity is bounded by
+  `window_shards × groups_per_shard` (32 groups at production layout with the default window) and the eight
+  paired variants of a group always share a window; BatchNorm batch statistics and the augmentation RNG
+  stream differ from a uniform permutation. A multi-window run is the same algorithm under a different,
+  deterministic sample order, **not a replication of a legacy run** (the pilot already shows a different
+  epoch-1 loss under `window_shards=1`). `window_shards` therefore enters the experiment fingerprint and the
+  checkpoint; the default of 4 is a declared engineering choice, not a tuned value, and the production
+  run will be multi-window. Full-scale training (30 epochs, 12 000 observations) was **not** run; the
+  memory bound is reasoned from the allocation pattern and measured on fixtures up to 384 training
+  observations.
 - The memory fixtures use the real writer, validator and layout with a stand-in simulator; they measure
   bytes and I/O, never recognition.
 - Peak RSS includes the fixed Python/torch footprint (≈ 0.55 GB after imports, ≈ 0.3 GB of lazy kernel

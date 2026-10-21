@@ -153,3 +153,53 @@ set; `null` CIs below two groups; reader validations (duplicate (group, label), 
 geometry null, overlap 0.2–0.8, gap guard, foreign roles, atomic writes, calibration equality); known and
 test-only artifacts still verify; K17d audit numbers (78/500, 35 co, median 0.71 dB, p90 2.93 dB, max 5.91 dB)
 and K18 arithmetic (D/2 = 64/128) match the recorded JSON.
+
+# Independent reviewer red team — E1 streaming data path (P24)
+
+Date: 2026-10-21. Reviewed state: working tree of `be485d0`…`d3f72ad` on `feature/b2-e1-streaming-loader`
+(base `main` `0f75dea`), partly before the results note and the DURUM entry were committed. Same role and
+brief as above, read-only; the reviewer ran `tests/test_b2_stream.py` + `tests/test_b2_experiment.py`
+(25 passed), a 343-case brute-force search of `_batches` (every sample once, exactly `ceil(N/batch)` steps,
+at most one short batch at the end; 0 failures), legacy-versus-streaming parity on the real pilot (single
+window identical; `window_shards=1` different, as declared; inference difference 0.0) and the per-shard
+re-verification cost on the synthetic fixture (0.18 s per 64-observation shard). The integrator applied the
+resolutions below in the follow-up commit recorded in DURUM.
+
+## Blockers
+
+One, already moot when reported: the measurement note `docs/results/b2_streaming_memory.md` and the DURUM
+entry were referenced before they were in the tree; both were committed in `d3f72ad` with the JSON records.
+
+## Should fix (all resolved)
+
+| # | Finding | Resolution |
+|---|---|---|
+| 1 | `fit_streaming` ignored the role carried by a `B2Source`: `test`, `val-calib` or a matched source could be passed as train/val (the runner never did; the legacy `fit` had the same gap). | `_require` now demands kind `known` and role `train` / `val-select` (in-memory sources without a role stay allowed); four role-mismatch cases and a matched source are tested. |
+| 2 | Memory model overstated: the raw shard buffer stayed alive through the whole window and, with K17b on, `_window` holds a second contiguous raw copy; docs spoke of a "gathered window copy" that does not exist. | `buffer.clear()` after preprocessing; `del` of the finished shard in `_training_reference` and `infer_streaming`; module docstring, P24 §2 and the profile script's bound formula rewritten to the actual allocation pattern (raw shards during preprocessing, then inputs + one raw copy only when K17b is on). |
+| 3 | Multi-window runs are a blocked (shard-window) shuffle, not merely "a different order": batch diversity ≤ `window_shards × groups_per_shard`, paired variants always co-occur, BatchNorm/augmentation streams differ; the production run will be multi-window. | Stated explicitly in the docstring, P24 §5 and the runner's `runtime.loader.note`; `window_shards` declared a recorded engineering choice (experiment fingerprint + checkpoint), default 4 not tuned. |
+| 4 | DURUM still described streaming as planned. | E1 implementation appendix added (committed with the results note). |
+| 5 | Memory test would crash instead of skip where `/proc/self/clear_refs` is not writable; CLAUDE.md suite time stale. | Subprocess reports `peak_reset`; test skips when the reset failed; CLAUDE.md now says ≈ 5.5 min / 969 tests. |
+
+## Optional (resolved or documented)
+
+- `B2Source.shards` validated indices only after `int()` (booleans slipped through) → type check first; tested.
+- "Inference holds one shard" → "one raw shard plus one preprocessed batch, two shards transiently"; `del` added.
+- "Bit for bit" qualified: weights, history and reference exact; checkpoint selection identical up to argmax
+  ties on 1e-5-level logit differences at inference batch boundaries.
+- Per-epoch I/O restated from the measurement: 188 shards ≈ 4.8 GB read twice ≈ 9.5 GB, ≈ 34 s per epoch
+  (estimate), replacing the earlier "≈ 7.5 GB".
+- The checkpoint's `streaming` block is informational and outside the metadata fingerprint (documented in P24).
+- Added tests: single window with `N % batch != 0`; role refusals. Not changed: fixtures imported by module
+  name from `test_b2_artifacts` (works under pytest's default import mode; a `conftest.py` is a possible
+  follow-up); `_paired_figures` fetches per group (≤ 9 shard reads).
+
+## Verified OK (reviewer, abridged)
+
+No path by which test, val-calib, test-only or matched data reach weights, selection, Mahalanobis statistics
+or thresholds through the runner; `_check_roles`, per-source frozen-range and duplicate checks run before
+training. Single-window parity holds (generator order, model init, per-sample reference values and float32
+mean, `_apply_plan_shift` with batch-local indices, augmentation, scheduler steps, BatchNorm composition).
+Every `shards()`/`fetch()` read re-verifies descriptor, sha256, arrays and metadata and compares against the
+open-time index; tampering, missing files, missing manifest, swapped order, duplicates and foreign stage/role
+fail. No O(N) materialization of spectra remains in the runner. Reader signatures are additive; `window_shards`
+is outside `TrainConfig`, so checkpoint configuration checks are unchanged.

@@ -94,8 +94,9 @@ def test_iter_b2_shards_accepts_orders_and_rejects_bad_indices(artifact):
         with pytest.raises(ValueError, match="shard ind"):
             list(ds.iter_b2_shards(artifact, "train", bad))
     _, _, sources = open_b2_known(artifact)
-    with pytest.raises(ValueError, match="distinct shard indices"):
-        list(sources["train"].shards([0, 0]))
+    for bad in ([0, 0], [True, False], [2]):
+        with pytest.raises(ValueError, match="distinct shard indices"):
+            list(sources["train"].shards(bad))
 
 
 def test_streaming_inference_matches_legacy_inference(artifact):
@@ -144,6 +145,10 @@ def test_batches_cover_every_sample_once_with_exact_batch_sizes_and_carry(artifa
     # Within a one-shard window the first batch holds only that shard's groups (before the carry).
     first = _epoch_batches(train, _cfg(batch=8, plan_shift_fraction=0.0), 1, seed=3)[0]
     assert set(first) <= set(train.index["seed"][:16].tolist())
+    # Window at least as large as the shard count with N % batch != 0: one window, the remainder is the final batch.
+    single = _epoch_batches(train, _cfg(batch=10, plan_shift_fraction=0.0), 2, seed=3)
+    assert [len(batch) for batch in single] == [10, 10, 4]
+    assert sorted(seed for batch in single for seed in batch) == sorted(train.index["seed"].tolist())
 
 
 def test_batch_order_is_reproducible_per_seed_and_recorded(artifact):
@@ -164,8 +169,20 @@ def test_batch_order_is_reproducible_per_seed_and_recorded(artifact):
 def test_fit_refuses_group_leakage_wrong_roles_and_test_only_sources(artifact):
     _, _, sources = open_b2_known(artifact)
     cfg = _cfg(epochs=1)
+    # The source carries its frozen role: only train fits weights, only val-select selects.
+    for bad_train, bad_val, message in ((sources["test"], sources["val-select"], "'train' role"),
+                                        (sources["val-calib"], sources["val-select"], "'train' role"),
+                                        (sources["train"], sources["test"], "'val-select' role"),
+                                        (sources["train"], sources["val-calib"], "'val-select' role")):
+        with pytest.raises(ValueError, match=message):
+            fit_streaming(bad_train, bad_val, cfg, device="cpu", log=lambda *_: None)
     with pytest.raises(ValueError, match="disjoint"):
-        fit_streaming(sources["train"], sources["train"], cfg, device="cpu", log=lambda *_: None)
+        fit_streaming(B2Source.from_arrays(ds.load_b2_split(artifact, "train")),
+                      B2Source.from_arrays(ds.load_b2_split(artifact, "train")), cfg, device="cpu", log=lambda *_: None)
+    from test_b2_experiment import _matched_split
+    matched = B2Source.from_arrays(_matched_split(2, 1), kind="matched", role="test-matched")
+    with pytest.raises(ValueError, match="matched evaluation set"):
+        fit_streaming(matched, sources["val-select"], cfg, device="cpu", log=lambda *_: None)
     train = ds.load_b2_split(artifact, "train")
     with pytest.raises(ValueError, match="outside its frozen"):
         B2Source.from_arrays(train, role="val-select")
@@ -355,7 +372,11 @@ def status(key):
         if line.startswith(key):
             return int(line.split()[1]) / 1024
 baseline = status("VmRSS")
-open("/proc/self/clear_refs", "w").write("5")        # reset the peak-RSS high-water mark after the imports
+try:
+    open("/proc/self/clear_refs", "w").write("5")    # reset the peak-RSS high-water mark after the imports
+    reset = True
+except OSError:
+    reset = False
 t = time.perf_counter()
 if mode == "legacy":
     from geoml import train
@@ -369,7 +390,7 @@ else:
     fitted = fit_streaming(sources["train"], sources["val-select"], cfg, window_shards=1, device="cpu", log=lambda *_: None)
     infer_streaming(fitted, sources["train"])
 json.dump({"mode": mode, "baseline_mib": baseline, "peak_mib": status("VmHWM"), "wall_s": time.perf_counter() - t,
-           "lifetime_peak_mib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024}, open(out, "w"))
+           "peak_reset": reset, "lifetime_peak_mib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024}, open(out, "w"))
 """
 
 
@@ -396,6 +417,8 @@ def test_streaming_peak_memory_stays_below_the_whole_dataset_footprint(tmp_path,
                                    cwd=Path(__file__).parent.parent, capture_output=True, text=True, timeout=600)
         assert completed.returncode == 0, completed.stderr[-2000:]
         results[mode] = json.loads(out.read_text())
+        if not results[mode]["peak_reset"]:
+            pytest.skip("this runner does not allow resetting the peak-RSS counter (/proc/self/clear_refs)")
     preprocessed_train_bytes = 96 * 5 * 64 * 512 * 4
     # Both increments contain the same fixed torch kernel/optimizer overhead (≈300 MiB on CPU builds, independent of
     # the data); only the data-dependent part differs, so the assertion is on the gap, not on an absolute number.

@@ -35,7 +35,7 @@ open-set recognition, C3 payload gap under operating conditions.
 ```bash
 source /workspace/.venvs/geosim/bin/activate   # or: scripts/setup_cloud.sh (PyPI torch if the PyTorch index is blocked)
 export OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2
-python -m pytest -q                            # full suite, ~70 s on 4 CPUs
+python -m pytest -q                            # full suite, ~5.5 min on 4 CPUs (969 tests, 2026-10-21)
 python -m geosim.b2_dataset --config configs/b2_base.json --cancellation configs/cancellation.json \
     --out data/b2-feat-pilot --limit-groups 2 --groups-per-shard 1          # B2-feat/1 pilot, ~4 min
 python scripts/check_b2_cancellation.py --data data/b2-feat-pilot --out runs/b2-feat-pilot/cancellation_check.json

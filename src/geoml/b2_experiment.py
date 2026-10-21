@@ -590,7 +590,9 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
                           "loader": {"mode": "streaming", "window_shards": config.window_shards,
                                      "shard_counts": {role: list(sources[role].shard_counts) for role in ROLES},
                                      "note": "artifacts verified once shard by shard; training holds at most window_shards "
-                                             "raw shards plus their preprocessed inputs; inference holds one shard"}},
+                                             "raw shards while preprocessing a window, then that window's inputs; inference "
+                                             "holds one raw shard and one preprocessed batch; multi-window runs use a blocked "
+                                             "(shard-window) shuffle, not a uniform permutation"}},
               "scope": "Known-class learning slice on frozen B2/1 roles; not the complete open-set benchmark."}
     rows = []
     for index, (label, group, target) in enumerate(zip(labels, groups, test["plan_consistency"])):
