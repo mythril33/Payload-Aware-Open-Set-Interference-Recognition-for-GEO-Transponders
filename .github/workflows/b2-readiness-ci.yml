@@ -1,0 +1,63 @@
+# B2 readiness CI: only dependency, safety-gate and small scientific/unit tests.
+# This job MUST NOT generate the full B2 dataset, train production models, or upload raw data.
+name: B2 readiness CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/b2-readiness-ci.yml"
+      - "src/**"
+      - "tests/**"
+      - "scripts/**"
+      - "configs/**"
+      - "pyproject.toml"
+      - "docs/plan/b2_readiness_gates_2026-10-21.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: b2-readiness-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Python unit and scientific tests (no production runs)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      OMP_NUM_THREADS: "2"
+      OPENBLAS_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
+      PYTHONHASHSEED: "0"
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,ml]"
+      - name: Fail closed if any researcher gate is implicitly approved
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d = json.loads(Path("docs/plan/b2_readiness_gates_2026-10-21.json").read_text())
+          assert d["benchmark_complete"] is False
+          assert d["decisions"]["K18"]["status"] == "PENDING_RESEARCHER"
+          assert d["decisions"]["K17d"]["status"] == "PENDING_RESEARCHER"
+          assert d["decisions"]["OBS-CANCEL-2"]["status"] == "PENDING_RESEARCHER"
+          assert d["decisions"]["full_generation"]["status"] == "NOT_AUTHORIZED"
+          assert d["decisions"]["full_gpu_training"]["status"] == "NOT_AUTHORIZED"
+          assert d["decisions"]["full_loko_sweep"]["status"] == "NOT_AUTHORIZED"
+          PY
+      - name: Compile sources (syntax check)
+        run: python -m compileall -q src tests scripts
+      - name: Run repository tests on bounded CI runner
+        run: python -m pytest -q
