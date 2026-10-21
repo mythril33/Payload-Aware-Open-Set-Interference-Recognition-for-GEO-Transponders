@@ -6,6 +6,7 @@ import pytest
 
 from geoml import b2_experiment as ex
 from geoml.b2_experiment import B2ExperimentConfig, run_b2_experiment
+from geoml.b2_stream import B2Source
 from geosim.b2_protocol import LABELS, ROLE_STARTS
 
 
@@ -32,9 +33,10 @@ def dataset(monkeypatch, tmp_path):
     manifest = {"protocol": "B2-feat/1", "parent_protocol": "B2/1", "labels": list(LABELS), "benchmark_complete": False,
                 "config": {"bandwidth": 36e6}, "cancellation": {"version": "obs-cancel/1"},
                 "calibration": {"n_pilots": 64}}
-    monkeypatch.setattr(ex, "read_b2_manifest", lambda path: manifest)
-    monkeypatch.setattr(ex, "b2_fingerprint", lambda path: "f" * 64)
-    monkeypatch.setattr(ex, "load_b2_split", lambda path, role: splits[role])
+    # The runner opens artifacts through geoml.b2_stream; in-memory splits become single-shard sources
+    # at call time, so tests may mutate the splits before running.
+    monkeypatch.setattr(ex, "open_b2_known", lambda path: (
+        manifest, "f" * 64, {role: B2Source.from_arrays(splits[role], role=role) for role in splits}))
     monkeypatch.setattr(ex, "_source_identity", lambda: {"revision": "test", "files_sha256": {"x.py": "0" * 64}})
     return splits, manifest, tmp_path / "data"
 
@@ -97,9 +99,20 @@ def test_run_reports_roles_rejection_plan_head_and_reuses_artifacts(dataset, tmp
 
 def test_role_leakage_and_out_of_range_groups_are_rejected(dataset, tmp_path):
     splits, _, data = dataset
-    splits["val-calib"]["seed"][:] = splits["test"]["seed"][0]
-    with pytest.raises(ValueError, match="outside its frozen|leakage"):
+    original = splits["val-calib"]["seed"].copy()
+    # Test groups relabelled as val-calib: the source refuses groups outside the role's frozen range.
+    splits["val-calib"]["seed"][:] = splits["test"]["seed"]
+    with pytest.raises(ValueError, match="outside its frozen"):
         run_b2_experiment(_config(), data, tmp_path / "leak", log=lambda *_: None)
+    # Two groups collapsed onto one id: duplicate (group, label) pairs are refused before anything else.
+    splits["val-calib"]["seed"][:] = original[0]
+    with pytest.raises(ValueError, match="duplicate scenario-group/label"):
+        run_b2_experiment(_config(), data, tmp_path / "dup", log=lambda *_: None)
+    # Same group id in two roles (no duplicates inside a role): the role cross-check catches the leakage.
+    splits["val-calib"]["seed"][:] = original
+    splits["val-select"]["seed"][:] = original
+    with pytest.raises(ValueError, match="outside its frozen|leakage"):
+        run_b2_experiment(_config(), data, tmp_path / "leak2", log=lambda *_: None)
 
 
 def test_dataset_protocol_and_residual_requirements(dataset, tmp_path):
@@ -145,9 +158,8 @@ def unknown_dataset(monkeypatch, dataset):
     unknown = _unknown_split(2, 99)
     test_manifest = {"protocol": "B2-test/1", "config": manifest["config"], "cancellation": manifest["cancellation"],
                      "request": {"known": {"known_data_fingerprint": "f" * 64}}}
-    monkeypatch.setattr(ex, "read_b2_test_manifest", lambda path: test_manifest)
-    monkeypatch.setattr(ex, "load_b2_test_split", lambda path: unknown)
-    monkeypatch.setattr(ex, "b2_test_fingerprint", lambda path: "e" * 64)
+    monkeypatch.setattr(ex, "open_b2_test", lambda path: (
+        test_manifest, "e" * 64, B2Source.from_arrays(unknown, kind="test", role="test")))
     return unknown, test_manifest, data
 
 
@@ -202,7 +214,7 @@ def test_test_only_artifact_must_be_bound_to_the_same_known_data(unknown_dataset
     with pytest.raises(ValueError, match="cancellation differ"):
         run_b2_experiment(_config(views=("co",)), data, tmp_path / "b", log=lambda *_: None, unknown_data="x")
     test_manifest["cancellation"] = {"version": "obs-cancel/1"}
-    unknown["seed"][:] = ROLE_STARTS["test"] + 7
+    unknown["seed"] += 7                     # still test-role groups, but not the known test groups in use
     with pytest.raises(ValueError, match="known test groups"):
         run_b2_experiment(_config(views=("co",)), data, tmp_path / "c", log=lambda *_: None, unknown_data="x")
 
@@ -239,9 +251,8 @@ def matched_dataset(monkeypatch, dataset):
     matched = _matched_split(4, 7)
     matched_manifest = {"protocol": "B2-match/1", "config": manifest["config"], "cancellation": manifest["cancellation"],
                         "request": {"known": {"known_data_fingerprint": "f" * 64}}}
-    monkeypatch.setattr(ex, "read_b2_matched_manifest", lambda path: matched_manifest)
-    monkeypatch.setattr(ex, "load_b2_matched_split", lambda path: matched)
-    monkeypatch.setattr(ex, "b2_matched_fingerprint", lambda path: "d" * 64)
+    monkeypatch.setattr(ex, "open_b2_matched", lambda path: (
+        matched_manifest, "d" * 64, B2Source.from_arrays(matched, kind="matched", role="test-matched")))
     return matched, matched_manifest, data
 
 
