@@ -535,24 +535,45 @@ def _header(root):
     return manifest, config
 
 
-def read_b2_manifest(path) -> dict:
-    """Verify every shard and calibration while keeping one shard in memory."""
+def read_b2_manifest(path, on_shard=None) -> dict:
+    """Verify every shard and calibration while keeping one shard in memory.
+
+    ``on_shard(role, index, shard)`` is called with each verified shard before it
+    is discarded, so a caller can build small per-sample indexes in the same
+    bounded pass instead of reading the artifact twice.
+    """
     root = Path(path)
     try:
         manifest, config = _header(root)
         for role, info in manifest["roles"].items():
             for index, descriptor in enumerate(info["shards"]):
-                _verify_part(root, manifest["request"], role, index, descriptor, config, manifest["calibration"])
+                shard = _verify_part(root, manifest["request"], role, index, descriptor, config, manifest["calibration"])
+                if on_shard is not None:
+                    on_shard(role, index, shard)
         return manifest
     except _READ_ERRORS as error:
         raise ValueError(f"invalid B2 base dataset {root}: {error}") from error
 
 
-def iter_b2_shards(root, role: str):
+def _shard_order(indices, count):
+    """Canonical order, or the caller's sequence of distinct shard indices (a permutation or a subset)."""
+    if indices is None:
+        return list(range(count))
+    if any(isinstance(index, (bool, np.bool_)) or not isinstance(index, (int, np.integer)) for index in indices):
+        raise ValueError("shard indices must be integers")
+    order = [int(index) for index in indices]
+    if len(set(order)) != len(order) or any(not 0 <= index < count for index in order):
+        raise ValueError("shard indices must be distinct and within the artifact's shard range")
+    return order
+
+
+def iter_b2_shards(root, role: str, indices=None):
     """Yield verified shards lazily; other roles' arrays are not loaded.
 
     Use read_b2_manifest when all roles must be fully verified up front. Each
     yielded shard checks its descriptor, checksums, arrays and metadata.
+    ``indices`` is an optional permutation of the shard indices (deterministic
+    epoch shuffling by whole shards); every shard is still read exactly once.
     """
     root = Path(root)
     try:
@@ -561,8 +582,9 @@ def iter_b2_shards(root, role: str):
         manifest, config = _header(root)
         if role not in manifest["roles"]:
             raise ValueError(f"role {role!r} was not generated")
-        for index, descriptor in enumerate(manifest["roles"][role]["shards"]):
-            yield _verify_part(root, manifest["request"], role, index, descriptor, config, manifest["calibration"])
+        shards = manifest["roles"][role]["shards"]
+        for index in _shard_order(indices, len(shards)):
+            yield _verify_part(root, manifest["request"], role, index, shards[index], config, manifest["calibration"])
     except _READ_ERRORS as error:
         raise ValueError(f"invalid B2 base dataset {root}: {error}") from error
 

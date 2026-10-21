@@ -15,7 +15,12 @@ same known data, the test-only families are scored with the *same* frozen
 checkpoints, scorers and thresholds: per-family and pre-registered-group AUROC,
 AP, OSCR and FPR@95TPR (unknown positive), thresholded rejection, and the benign
 ``cid_overlay`` control (expected decision ``clean``). Without it those metrics
-are ``null`` with zero counts. The matched ASI set is a later stage.
+are ``null`` with zero counts. ``--matched-data`` adds the K17c matched set.
+
+Data flow (P23 E1): every artifact is verified once, shard by shard, and only
+small per-sample arrays stay resident (``geoml.b2_stream``). Training streams
+windows of ``window_shards`` verified shards; inference holds one shard. No
+role is concatenated into a whole-dataset tensor.
 """
 from __future__ import annotations
 
@@ -28,14 +33,12 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from geosim.b2_dataset import b2_fingerprint, load_b2_split, read_b2_manifest
 from geosim.b2_protocol import (BASE_PROTOCOL, BENIGN_TEST_FAMILIES, EQUIVALENCE_LIMITED_UNKNOWN, FEATURE_PROTOCOL,
                                 LABELS, NEAR_UNKNOWN, PLAN_CONSISTENCY, role_for_group)
-from geosim.b2_matched_dataset import b2_matched_fingerprint, load_b2_matched_split, read_b2_matched_manifest
 from geosim.b2_scenarios import MATCHED_BIN_NAMES, MATCHED_BINS, MATCHED_LABELS
-from geosim.b2_test_dataset import b2_test_fingerprint, load_b2_test_split, read_b2_test_manifest
 
 from .artifacts import fingerprint
+from .b2_stream import DEFAULT_WINDOW_SHARDS, fit_streaming, infer_streaming, open_b2_known, open_b2_matched, open_b2_test
 from .calibration import RejectionCalibration, calibrate_scores
 from .data import VIEW_CHANNELS
 from .experiment import _sha256, _source_identity, _write_json
@@ -43,7 +46,7 @@ from .mahalanobis import MahalanobisScorer, fit_mahalanobis
 from .metrics import cluster_ci, confusion, expected_calibration_error, macro_f1, threshold_at_pfa
 from .openset import unknown_scores
 from .openset_metrics import ranking_metrics
-from .train import TrainConfig, fit, infer, load, save
+from .train import TrainConfig, load, save
 
 ROLES = ("train", "val-select", "val-calib", "test")
 METHODS = ("msp", "energy", "mahalanobis")
@@ -61,8 +64,11 @@ class B2ExperimentConfig:
     mahalanobis_regularization: float = 0.1
     training: dict = field(default_factory=lambda: {"epochs": 3, "batch": 8, "width": 8, "seed": 0,
                                                     "center_loss_weight": 0.005})
+    window_shards: int = DEFAULT_WINDOW_SHARDS   # E1: verified shards resident per training window (sample-order policy)
 
     def __post_init__(self):
+        if isinstance(self.window_shards, bool) or not isinstance(self.window_shards, int) or self.window_shards < 1:
+            raise ValueError("window_shards must be a positive integer")
         if self.protocol not in (BASE_PROTOCOL, FEATURE_PROTOCOL):
             raise ValueError(f"protocol must be {BASE_PROTOCOL} or {FEATURE_PROTOCOL}")
         if (not isinstance(self.views, (list, tuple)) or not self.views
@@ -237,33 +243,31 @@ def _family_metrics(method, calibration, known_test_scores, labels, predictions,
 
 
 def _load_unknown(unknown_data, manifest, identity, config):
-    """Verify the B2-test/1 artifact and its binding to the known data in use."""
-    test_manifest = read_b2_test_manifest(unknown_data)
+    """Verify the B2-test/1 artifact and its binding to the known data in use (streamed, verified once)."""
+    test_manifest, test_identity, source = open_b2_test(unknown_data)
     binding = test_manifest["request"]["known"]
     if binding["known_data_fingerprint"] != identity:
         raise ValueError("the test-only artifact is bound to a different known dataset")
     if test_manifest["config"] != manifest["config"] or test_manifest.get("cancellation") != manifest.get("cancellation"):
         raise ValueError("test-only artifact physics or cancellation differ from the known data")
-    unknown = load_b2_test_split(unknown_data)
-    if config.protocol == FEATURE_PROTOCOL and "residual" not in unknown:
+    if config.protocol == FEATURE_PROTOCOL and not source.has_residual:
         raise ValueError("B2-feat/1 experiments require the stored residual in the test-only artifact")
-    return test_manifest, unknown
+    return test_manifest, test_identity, source
 
 
 def _load_matched(matched_data, manifest, identity, config):
     """Verify the B2-match/1 artifact and its binding to the known data in use (test-matched role only)."""
-    matched_manifest = read_b2_matched_manifest(matched_data)
+    matched_manifest, matched_identity, source = open_b2_matched(matched_data)
     binding = matched_manifest["request"]["known"]
     if binding["known_data_fingerprint"] != identity:
         raise ValueError("the matched artifact is bound to a different known dataset")
     if matched_manifest["config"] != manifest["config"] or matched_manifest.get("cancellation") != manifest.get("cancellation"):
         raise ValueError("matched artifact physics or cancellation differ from the known data")
-    matched = load_b2_matched_split(matched_data)
-    if any(role_for_group(int(seed)) != "test-matched" for seed in np.unique(matched["seed"])):
+    if any(role_for_group(int(seed)) != "test-matched" for seed in source.groups):
         raise ValueError("matched groups must belong to the frozen test-matched role")
-    if config.protocol == FEATURE_PROTOCOL and "residual" not in matched:
+    if config.protocol == FEATURE_PROTOCOL and not source.has_residual:
         raise ValueError("B2-feat/1 experiments require the stored residual in the matched artifact")
-    return matched_manifest, matched
+    return matched_manifest, matched_identity, source
 
 
 def _pair_metrics(predictions, accepted, labels, groups, mask):
@@ -386,8 +390,11 @@ def _select_representatives(matched, seed=20261021, per_bin=3):
             "groups": selected}
 
 
-def _paired_figures(matched, selection, out_dir, view):
-    """Co-pol spectrogram triplets (clean / ASI / unauthorized) and the shared mask for the selected groups."""
+def _paired_figures(matched, fetch, selection, out_dir, view):
+    """Co-pol spectrogram triplets (clean / ASI / unauthorized) and the shared mask for the selected groups.
+
+    ``fetch(indices)`` reads only the rows of the selected groups (``B2Source.fetch``).
+    """
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -399,16 +406,18 @@ def _paired_figures(matched, selection, out_dir, view):
     index = {(int(seed), int(label)): i for i, (seed, label) in enumerate(zip(matched["seed"], matched["label"]))}
     for bin_name, groups in selection["groups"].items():
         for group in groups:
+            positions = [index[(group, LABELS.index(name))] for name in MATCHED_LABELS]
+            rows = fetch(positions)
             fig, axes = plt.subplots(1, 4, figsize=(16, 3.2), constrained_layout=True)
             vmin = vmax = None
-            for ax, name in zip(axes[:3], MATCHED_LABELS):
-                spec = matched["spec"][index[(group, LABELS.index(name))], 0].astype(np.float32)
+            for row, (ax, name) in enumerate(zip(axes[:3], MATCHED_LABELS)):
+                spec = rows["spec"][row, 0].astype(np.float32)
                 if vmin is None:
                     vmin, vmax = float(np.percentile(spec, 1)), float(np.percentile(spec, 99))
                 ax.imshow(spec, aspect="auto", origin="lower", vmin=vmin, vmax=vmax, extent=[-48, 48, 0, spec.shape[0]])
                 ax.set_title(f"{name} (group {group}, bin {bin_name} dB)")
                 ax.set_xlabel("MHz")
-            mask = matched["mask"][index[(group, 0)], 0].astype(np.float32)
+            mask = rows["mask"][0, 0].astype(np.float32)
             axes[3].plot(np.linspace(-48, 48, mask.shape[-1]), mask)
             axes[3].set_title("co-pol operator plan mask (dB)")
             axes[3].set_xlabel("MHz")
@@ -422,30 +431,34 @@ def _paired_figures(matched, selection, out_dir, view):
 def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, device="cpu", log=print,
                       unknown_data=None, matched_data=None):
     data, out = Path(data), Path(out)
-    manifest = read_b2_manifest(data)
+    # One bounded verification pass per artifact; only small per-sample arrays stay resident (E1).
+    manifest, identity, sources = open_b2_known(data)
     if manifest["protocol"] != config.protocol or list(manifest["labels"]) != list(LABELS):
         raise ValueError(f"dataset protocol {manifest['protocol']!r} does not match the experiment {config.protocol!r}")
     if manifest["benchmark_complete"] is not False:
         raise ValueError("B2 artifacts must declare benchmark_complete=false in this stage")
-    identity = b2_fingerprint(data)
-    parts = {role: load_b2_split(data, role) for role in ROLES}
-    if config.protocol == FEATURE_PROTOCOL and any("residual" not in part for part in parts.values()):
+    if set(sources) != set(ROLES):
+        raise ValueError(f"the known artifact must hold exactly the roles {ROLES}")
+    if config.protocol == FEATURE_PROTOCOL and any(not source.has_residual for source in sources.values()):
         raise ValueError("B2-feat/1 splits must carry the stored residual")
+    parts = {role: sources[role].split() for role in ROLES}
     _check_roles(parts)
     summary = _summary(parts)
-    test_manifest = unknown = None
+    test_manifest = test_identity = unknown = unknown_source = None
     if unknown_data is not None:
-        test_manifest, unknown = _load_unknown(unknown_data, manifest, identity, config)
-        if not set(np.unique(unknown["seed"]).tolist()) <= set(summary["test"]["scenario_ids"]):
+        test_manifest, test_identity, unknown_source = _load_unknown(unknown_data, manifest, identity, config)
+        unknown = unknown_source.split()
+        if not set(unknown_source.groups.tolist()) <= set(summary["test"]["scenario_ids"]):
             raise ValueError("test-only families must belong to the known test groups")
         summary["test_only"] = {"n_samples": int(len(unknown["seed"])),
                                 "scenario_ids": [int(s) for s in np.unique(unknown["seed"])],
                                 "per_family": {name: int(np.sum(unknown["family"] == index))
                                                for index, name in enumerate(unknown["families"])},
                                 "n_planned_carrier_missing": int(np.sum(unknown["plan_consistency"] == 1))}
-    matched_manifest = matched = None
+    matched_manifest = matched_identity = matched = matched_source = None
     if matched_data is not None:
-        matched_manifest, matched = _load_matched(matched_data, manifest, identity, config)
+        matched_manifest, matched_identity, matched_source = _load_matched(matched_data, manifest, identity, config)
+        matched = matched_source.split()
         summary["test_matched"] = {"n_samples": int(len(matched["seed"])),
                                    "scenario_ids": [int(s) for s in np.unique(matched["seed"])],
                                    "per_label": {name: int(np.sum(matched["label"] == LABELS.index(name))) for name in MATCHED_LABELS},
@@ -472,17 +485,18 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
             fitted = load(path, device=device, expected_config=cfg, expected_provenance=provenance)
             log(f"reusing compatible {view} checkpoint")
         else:
-            log(f"training {view} model ({VIEW_CHANNELS[view]} channels)")
-            fitted = fit(parts["train"], parts["val-select"], cfg, device=device, log=log)
+            log(f"training {view} model ({VIEW_CHANNELS[view]} channels, streaming {config.window_shards} shard(s) per window)")
+            fitted = fit_streaming(sources["train"], sources["val-select"], cfg, window_shards=config.window_shards,
+                                   device=device, log=log)
             fitted.update(provenance=provenance, source_revision=source["revision"])
             save(fitted, path)
             fitted = load(path, device=device, expected_config=cfg, expected_provenance=provenance)
         checkpoint_sha = _sha256(path)
-        train_out = infer(fitted, parts["train"])
-        calib_out = infer(fitted, parts["val-calib"])
-        test_out = infer(fitted, test)
-        unknown_out = infer(fitted, unknown) if unknown is not None else None
-        matched_out = infer(fitted, matched) if matched is not None else None
+        train_out = infer_streaming(fitted, sources["train"])
+        calib_out = infer_streaming(fitted, sources["val-calib"])
+        test_out = infer_streaming(fitted, sources["test"])
+        unknown_out = infer_streaming(fitted, unknown_source) if unknown_source is not None else None
+        matched_out = infer_streaming(fitted, matched_source) if matched_source is not None else None
         view_calibrations = {}
         scorer_path = out / f"mahalanobis_{view}.npz"
         scorer_provenance = fingerprint({"checkpoint_sha256": checkpoint_sha, "data": identity,
@@ -553,7 +567,8 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
                          "n_parameters": fitted["n_parameters"], "history": fitted["history"]}
         if matched_out is not None:
             selection = _select_representatives(matched)
-            methods[view]["matched"]["representatives"] = {**selection, "figures": _paired_figures(matched, selection, out / "figures", view),
+            methods[view]["matched"]["representatives"] = {**selection,
+                                                            "figures": _paired_figures(matched, matched_source.fetch, selection, out / "figures", view),
                                                             "predictions": {str(g): {LABELS[int(l)]: LABELS[int(p)] for l, p in
                                                                                      zip(matched["label"][matched["seed"] == g], matched_out["logits"].argmax(axis=1)[matched["seed"] == g])}
                                                                             for groups_ in selection["groups"].values() for g in groups_}}
@@ -563,15 +578,21 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
         decisions[view]["plan_logit"] = None if test_out["plan_logits"] is None else test_out["plan_logits"][:, 0]
     result = {"protocol": config.protocol, "parent_protocol": manifest["parent_protocol"], "benchmark_complete": False,
               "test_only_protocol": None if test_manifest is None else test_manifest["protocol"],
-              "test_only_fingerprint": None if unknown_data is None else b2_test_fingerprint(unknown_data),
+              "test_only_fingerprint": test_identity,
               "matched_protocol": None if matched_manifest is None else matched_manifest["protocol"],
-              "matched_fingerprint": None if matched_data is None else b2_matched_fingerprint(matched_data),
+              "matched_fingerprint": matched_identity,
               "labels": list(LABELS), "config": config.resolved(), "experiment_fingerprint": experiment_identity,
               "data_fingerprint": identity, "source": source, "partitions": summary, "methods": methods,
               "generation": manifest["config"], "cancellation": manifest.get("cancellation"),
               "receiver_calibration": manifest["calibration"],
               "runtime": {"python": platform.python_version(), "numpy": np.__version__,
-                          "torch": str(torch.__version__), "device": device},
+                          "torch": str(torch.__version__), "device": device,
+                          "loader": {"mode": "streaming", "window_shards": config.window_shards,
+                                     "shard_counts": {role: list(sources[role].shard_counts) for role in ROLES},
+                                     "note": "artifacts verified once shard by shard; training holds at most window_shards "
+                                             "raw shards while preprocessing a window, then that window's inputs; inference "
+                                             "holds one raw shard and one preprocessed batch; multi-window runs use a blocked "
+                                             "(shard-window) shuffle, not a uniform permutation"}},
               "scope": "Known-class learning slice on frozen B2/1 roles; not the complete open-set benchmark."}
     rows = []
     for index, (label, group, target) in enumerate(zip(labels, groups, test["plan_consistency"])):

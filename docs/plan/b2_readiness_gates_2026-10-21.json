@@ -54,7 +54,9 @@
   },
   "engineering": {
     "streaming_canonical_b2": {
-      "status": "PLANNED"
+      "status": "IMPLEMENTED_IN_DRAFT_PR",
+      "evidence": "docs/plan/P24_b2_e1_streaming_loader.md, docs/results/b2_streaming_memory.md, tests/test_b2_stream.py",
+      "note": "engineering status only; no researcher decision implied"
     },
     "loko_a8": {
       "status": "PLANNED"
