@@ -1,0 +1,42 @@
+{
+  "stage": "matched",
+  "protocol": "B2-match/1",
+  "groups": 20,
+  "groups_per_shard": 4,
+  "n_observations_generated": 0,
+  "n_samples_in_artifact": 60,
+  "resumed_without_generation": true,
+  "wall_s": 0.3110510550000072,
+  "cpu_s": 0.31057437500000007,
+  "startup_and_calibration_s": null,
+  "peak_rss_mib": 105.4921875,
+  "simulate_total_s": 0.0,
+  "cancellation_total_s": 0.0,
+  "cancellation_calls": 0,
+  "shard_write_total_s": 0.0,
+  "shard_writes": 0,
+  "resume_validation_s": 0.31414455799995267,
+  "artifact_bytes": 24362235,
+  "bytes_per_observation": 406037.25,
+  "per_observation": null,
+  "data_fingerprint": "7b5ec4eca21a341b4b96240fd398a0e0eee6fa4a454d7236e273d9adc3bf25ea",
+  "request_fingerprint": "49f41676a4f7c5b1ff776a0b408b511a24e8027a617758c87cb21329c2601e9a",
+  "cancellation": {
+    "srrc_span_symbols": 10,
+    "phase_grid": 16,
+    "iterations": 3,
+    "edge_guard": 512,
+    "version": "obs-cancel/1"
+  },
+  "hardware": {
+    "cpu_count": 4,
+    "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+    "python": "3.13.16",
+    "numpy": "2.5.4",
+    "omp_threads": "2",
+    "openblas_threads": "2"
+  },
+  "commit": "82d6e7a850c37bb16236f54b4aabfe4f734d1641",
+  "measured": true,
+  "note": "single-process pilot measurement; concurrent load on the machine inflates wall time"
+}

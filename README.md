@@ -155,6 +155,27 @@ The pilot run is at chance and proves execution only. The matched ASI set, LOKO 
 full production remain. See [P21](docs/plan/P21_b2_test_families.md) and the
 [pilot report](docs/results/b2_test_pilot.md).
 
+## B2 level-matched ASI versus unauthorized set (K17c)
+
+`B2-match/1` generates the frozen `test-matched` role (groups 3 300 000–3 300 149): per group a
+`clean`, an `adjacent_satellite` and an `unauthorized` variant that share plans, link, streams,
+activity, calibration, cancellation setting, carrier descriptor and one C/I_psd target from
+U(4, 13) dB, differing only in placement (plan overlap versus free gap). It is a controlled
+intervention, not the natural level distribution. `geoml.b2_experiment --matched-data` scores it
+with frozen checkpoints and thresholds (2×2 among the pair with clean/other/rejected counted,
+per-bin metrics, natural comparison, paired spectrogram figures).
+
+```bash
+python -m geosim.b2_matched_dataset --out data/b2-match-pilot --known data/b2-feat-pilot --config configs/b2_base.json --cancellation configs/cancellation.json --limit-groups 2 --groups-per-shard 1
+python scripts/check_b2_matched.py --matched data/b2-match-pilot --out runs/b2-match-pilot/matched_check.json --oracle-groups 2
+python -m geoml.b2_experiment --config configs/b2_feat.json --data data/b2-feat-pilot --unknown-data data/b2-test-pilot --matched-data data/b2-match-pilot --out runs/b2-full-pilot
+python scripts/profile_b2_generation.py --stage matched --known data/b2-feat-pilot --config configs/b2_base.json --cancellation configs/cancellation.json --groups 20 --groups-per-shard 4 --out-data data/b2-match-profile --report runs/profile/matched_20_cancel.json
+```
+
+See [P22](docs/plan/P22_b2_matched_asi.md), the [matched pilot](docs/results/b2_matched_pilot.md) and the
+[production budget](docs/results/b2_production_budget.md). Pilots are at chance; full production and
+GPU training wait for the researcher's authorization (K18, K17d, compute).
+
 ## Research dossier (2026-10-20)
 
 This is an evolving research project, **not** a completed dual-polarization, eight-class open-set system.

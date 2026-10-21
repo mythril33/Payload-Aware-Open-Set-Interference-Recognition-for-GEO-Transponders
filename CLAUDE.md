@@ -19,9 +19,9 @@ open-set recognition, C3 payload gap under operating conditions.
 |---|---|
 | Honest current status, next step | `docs/plan/DURUM.md` (top appendix = latest) |
 | Frozen final benchmark protocol (B2/1, K17) | `docs/plan/P18_b2_protocol.md` — change only via its §10 log |
-| B2 artifact stages | `docs/plan/P19_b2_base_observations.md` (B2-base/1), `docs/plan/P20_b2_cancellation_residual.md` (B2-feat/1), `docs/plan/P21_b2_test_families.md` (B2-test/1) |
+| B2 artifact stages | `docs/plan/P19_b2_base_observations.md` (B2-base/1), `docs/plan/P20_b2_cancellation_residual.md` (B2-feat/1), `docs/plan/P21_b2_test_families.md` (P21a, B2-test/1), `docs/plan/P22_b2_matched_asi.md` (B2-match/1); the parallel observed-receiver stage is `docs/plan/P21_b2_observed_receiver.md` (P21b, B2-features/1) |
 | Repository/scientific audit | `docs/research/PROJECT_AUDIT.md` |
-| Simulator | `src/geosim/` (`dual.py` chain, `b2_scenarios.py` known + test-only scenes, `b2_dataset.py` / `b2_test_dataset.py` artifacts, `cancellation.py` fifth channel) |
+| Simulator | `src/geosim/` (`dual.py` chain, `b2_scenarios.py` known / test-only / matched scenes, `b2_dataset.py` / `b2_test_dataset.py` / `b2_matched_dataset.py` artifacts, `cancellation.py` fifth channel; `observed_receiver.py` + `b2_features.py` are the separate P21b stage) |
 | Learning | `src/geoml/` (`train.py`, `model.py`, `b2_experiment.py`, `openset.py`, `mahalanobis.py`, `calibration.py`) |
 | Results (small, honest) | `docs/results/*.md` + `.json`; raw data/checkpoints stay out of Git |
 | Agent role briefs | `.agents/*.md`; scoped rules `.claude/rules/`; skills `.claude/skills/` |
@@ -50,13 +50,14 @@ python -m geoml.b2_experiment --config configs/b2_feat.json --data data/b2-feat-
 - Unknown score: larger = more unknown-like. State positive class, denominator, n.
 - Strict JSON, `null` + counts for unavailable metrics. Pilots are pilots.
 
-## Current milestone (2026-10-21, third slice)
+## Current milestone (2026-10-21, fourth slice)
 
-B2-feat/1 stores the fifth channel; B2-test/1 adds the five test-only families
-bound to a known artifact; `geoml.b2_experiment` trains matched
-co/dual/dual_residual models (independent `plan_consistency` head, center-loss
-weight 0.005, K17b plan-shift augmentation 15 % / ±0.5 MHz) and, with
-`--unknown-data`, reports per-family open-set metrics. Pilots are at chance.
-Next: the matched ASI ↔ unauthorized set (K17c, `test-matched` generator), LOKO
-(A8), EDSC baseline, then full production in the cloud and training on the
-researcher's GPU. K18 (center-loss weight) awaits researcher confirmation.
+All frozen B2/1 data stages exist: B2-feat/1 (known + fifth channel), B2-test/1
+(test-only families), B2-match/1 (K17c level-matched ASI ↔ unauthorized).
+`geoml.b2_experiment` trains matched co/dual/dual_residual models and, with
+`--unknown-data` / `--matched-data`, reports open-set and matched-pair metrics with
+frozen thresholds. Pilots are at chance. Production cost is profiled
+(`scripts/profile_b2_generation.py`, `docs/results/b2_production_budget.md`).
+Blocked on researcher decisions: K18 loss weights, K17d drift handling,
+OBS-CANCEL/2, compute authorization for full production and GPU training.
+Remaining code work: LOKO (A8), EDSC/XGBoost baselines, A5 dual-pol test corruption.

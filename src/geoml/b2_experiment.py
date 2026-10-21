@@ -31,6 +31,8 @@ import torch
 from geosim.b2_dataset import b2_fingerprint, load_b2_split, read_b2_manifest
 from geosim.b2_protocol import (BASE_PROTOCOL, BENIGN_TEST_FAMILIES, EQUIVALENCE_LIMITED_UNKNOWN, FEATURE_PROTOCOL,
                                 LABELS, NEAR_UNKNOWN, PLAN_CONSISTENCY, role_for_group)
+from geosim.b2_matched_dataset import b2_matched_fingerprint, load_b2_matched_split, read_b2_matched_manifest
+from geosim.b2_scenarios import MATCHED_BIN_NAMES, MATCHED_BINS, MATCHED_LABELS
 from geosim.b2_test_dataset import b2_test_fingerprint, load_b2_test_split, read_b2_test_manifest
 
 from .artifacts import fingerprint
@@ -248,8 +250,177 @@ def _load_unknown(unknown_data, manifest, identity, config):
     return test_manifest, unknown
 
 
+def _load_matched(matched_data, manifest, identity, config):
+    """Verify the B2-match/1 artifact and its binding to the known data in use (test-matched role only)."""
+    matched_manifest = read_b2_matched_manifest(matched_data)
+    binding = matched_manifest["request"]["known"]
+    if binding["known_data_fingerprint"] != identity:
+        raise ValueError("the matched artifact is bound to a different known dataset")
+    if matched_manifest["config"] != manifest["config"] or matched_manifest.get("cancellation") != manifest.get("cancellation"):
+        raise ValueError("matched artifact physics or cancellation differ from the known data")
+    matched = load_b2_matched_split(matched_data)
+    if any(role_for_group(int(seed)) != "test-matched" for seed in np.unique(matched["seed"])):
+        raise ValueError("matched groups must belong to the frozen test-matched role")
+    if config.protocol == FEATURE_PROTOCOL and "residual" not in matched:
+        raise ValueError("B2-feat/1 experiments require the stored residual in the matched artifact")
+    return matched_manifest, matched
+
+
+def _pair_metrics(predictions, accepted, labels, groups, mask):
+    """ASI-versus-unauthorized decisions among matched pair samples; nothing is dropped from the denominator."""
+    asi, unauth = LABELS.index("adjacent_satellite"), LABELS.index("unauthorized")
+    out = {"denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+           "n_samples": int(mask.sum()), "n_scenarios": int(len(np.unique(groups[mask])))}
+    if not mask.any():
+        return {**out, "two_by_two": None, "prediction_breakdown": None, "pair_accuracy": None,
+                "pair_accuracy_among_pair_predictions": None, "pair_accuracy_accepted_only": None,
+                "rejected_fraction": None, "note": "no matched pair samples"}
+    truth, pred, acc, grp = labels[mask], predictions[mask], accepted[mask], groups[mask]
+    two_by_two = {t_name: {p_name: int(np.sum((truth == t) & (pred == p))) for p_name, p in (("adjacent_satellite", asi), ("unauthorized", unauth))}
+                  for t_name, t in (("adjacent_satellite", asi), ("unauthorized", unauth))}
+    breakdown = {t_name: {"predicted_clean": int(np.sum((truth == t) & (pred == 0))),
+                          "predicted_other_known": int(np.sum((truth == t) & (pred != 0) & (pred != asi) & (pred != unauth))),
+                          "predicted_pair_class": int(np.sum((truth == t) & ((pred == asi) | (pred == unauth)))),
+                          "rejected_as_unknown": int(np.sum((truth == t) & ~acc)), "n": int(np.sum(truth == t))}
+                 for t_name, t in (("adjacent_satellite", asi), ("unauthorized", unauth))}
+    within = (pred == asi) | (pred == unauth)
+    return {**out, "two_by_two": two_by_two, "prediction_breakdown": breakdown,
+            "pair_accuracy": _rate(pred == truth, grp),
+            "pair_accuracy_among_pair_predictions": _rate((pred == truth)[within], grp[within]),
+            "pair_accuracy_accepted_only": _rate((pred == truth)[acc], grp[acc]),
+            "rejected_fraction": _rate(~acc, grp)}
+
+
+def _matched_metrics(matched, outputs, calibrations, scorer, alarm_threshold, natural_test, natural_predictions):
+    """Metrics for the K17c matched set with the frozen checkpoint and thresholds of one view."""
+    labels = matched["label"].astype(np.int64)
+    groups = matched["seed"]
+    bins = matched["matched_bin"].astype(np.int64)
+    consistency = np.asarray(matched["plan_consistency"]).astype(np.int64)
+    asi_active = np.array([record.get("matched", {}).get("asi_overlap_fraction_active", np.nan) for record in matched["meta"]], dtype=float)
+    predictions = outputs["logits"].argmax(axis=1)
+    probabilities = _softmax(outputs["logits"])
+    alarm = 1.0 - probabilities[:, 0] > alarm_threshold
+    pair_mask = labels != 0
+    per_method = {}
+    for method, calibration in calibrations.items():
+        scores = scorer.score(outputs["embedding"]) if method == "mahalanobis" else unknown_scores(outputs["logits"], method)
+        accepted = calibration.accept(scores)
+        per_method[method] = {
+            "confusion_with_rejection": {LABELS[t]: {**{LABELS[p]: int(np.sum((labels == t) & (predictions == p) & accepted)) for p in range(len(LABELS))},
+                                                     "rejected": int(np.sum((labels == t) & ~accepted))}
+                                         for t in sorted(set(labels.tolist()))},
+            "pair": _pair_metrics(predictions, accepted, labels, groups, pair_mask),
+            "per_bin": {name: _pair_metrics(predictions, accepted, labels, groups, pair_mask & (bins == index))
+                        for index, name in enumerate(MATCHED_BIN_NAMES)},
+            # P18 §7a K17c intersections: groups with a missing planned carrier, and ASI variants whose band
+            # holds no transmitted carrier (observationally an unauthorized-like carrier under a "planned" mask).
+            "per_plan_consistency": {PLAN_CONSISTENCY[value]: _pair_metrics(predictions, accepted, labels, groups, pair_mask & (consistency == value))
+                                     for value in (0, 1)},
+            "asi_over_absent_carrier": _pair_metrics(predictions, accepted, labels, groups,
+                                                     pair_mask & np.isfinite(asi_active) & (asi_active == 0.0)),
+            "known_acceptance_matched": _rate(accepted, groups)}
+    confusion_full = {LABELS[t]: {LABELS[p]: int(np.sum((labels == t) & (predictions == p))) for p in range(len(LABELS))}
+                      for t in sorted(set(labels.tolist()))}
+    per_class = {}
+    for index in sorted(set(labels.tolist())):
+        name = LABELS[index]
+        true_mask, pred_mask = labels == index, predictions == index
+        per_class[name] = {"recall": _rate(pred_mask[true_mask], groups[true_mask]),
+                           "precision": _rate(true_mask[pred_mask], groups[pred_mask]) if pred_mask.any() else
+                           {"mean": None, "ci95": None, "n_samples": 0, "n_scenarios": 0, "note": "never predicted"},
+                           "n_true": int(true_mask.sum()), "n_predicted": int(pred_mask.sum())}
+    per_bin_unconditional = {}
+    for index, name in enumerate(MATCHED_BIN_NAMES):
+        sel = bins == index
+        per_bin_unconditional[name] = {"n_samples": int(sel.sum()), "n_groups": int(len(np.unique(groups[sel]))),
+                                       "accuracy": _rate((predictions == labels)[sel], groups[sel]),
+                                       "recall": {LABELS[t]: _rate((predictions == labels)[sel & (labels == t)], groups[sel & (labels == t)])
+                                                  for t in sorted(set(labels.tolist()))}}
+    natural = None
+    if natural_test is not None:
+        n_labels, n_groups, n_pred = natural_test["label"].astype(np.int64), natural_test["seed"], natural_predictions
+        natural = {"denominator": "natural test role, same checkpoint; natural carriers are wider (1-28.8 Mbaud) than the matched ones (<= 6 Mbaud)", "classes": {}}
+        for name in ("adjacent_satellite", "unauthorized"):
+            index = LABELS.index(name)
+            ci = np.array([record.get("event", {}).get("c_over_i_psd_db", np.nan) if lab == index else np.nan
+                           for record, lab in zip(natural_test["meta"], n_labels)], dtype=float)
+            sel = n_labels == index
+            entry = {"recall_overall": _rate((n_pred == n_labels)[sel], n_groups[sel]),
+                     "recall_by_matched_bin": {}}
+            for b_index, b_name in enumerate(MATCHED_BIN_NAMES):
+                lo, hi = MATCHED_BINS[b_index]
+                in_bin = sel & np.isfinite(ci) & (ci >= lo) & ((ci < hi) if b_index < 2 else (ci <= hi))
+                entry["recall_by_matched_bin"][b_name] = _rate((n_pred == n_labels)[in_bin], n_groups[in_bin])
+            natural["classes"][name] = entry
+    return {"n_samples": int(len(labels)), "n_groups": int(len(np.unique(groups))),
+            "per_bin_groups": {name: int(len(np.unique(groups[bins == index]))) for index, name in enumerate(MATCHED_BIN_NAMES)},
+            "unconditional_accuracy": _rate(predictions == labels, groups),
+            "confusion": confusion_full, "per_class": per_class, "per_bin": per_bin_unconditional,
+            "clean_false_alarm": _rate(alarm[labels == 0], groups[labels == 0]),
+            "event_alarm": _rate(alarm[pair_mask], groups[pair_mask]),
+            "by_method": per_method, "natural_comparison": natural,
+            "n_asi_over_absent_carrier": int(np.sum(np.isfinite(asi_active) & (asi_active == 0.0) & (labels == LABELS.index("adjacent_satellite")))),
+            "conventions": {"unconditional": "argmax over the eight known classes, no rejection",
+                            "pair": "2x2 among samples whose true label is adjacent_satellite or unauthorized; clean/other/rejected predictions are counted, not dropped; pair_accuracy is threshold-free argmax, pair_accuracy_accepted_only uses the method's threshold",
+                            "bin_edges": "frozen K17c C/I_psd bins [4,7), [7,10), [10,13]",
+                            "natural_comparison": "natural test role scored with the same checkpoint; natural events differ from the matched set in level AND carrier width (matched Rs <= 6 Mbaud by joint feasibility)",
+                            "ci": "scenario-group bootstrap with fixed weights and thresholds; null below two groups"}}
+
+
+def _select_representatives(matched, seed=20261021, per_bin=3):
+    """Predeclared selection rule for paired spectrogram figures: fixed seed, up to three groups per bin."""
+    rng = np.random.default_rng([seed])
+    groups_by_bin = {}
+    for group, bin_index in zip(matched["seed"].tolist(), matched["matched_bin"].tolist()):
+        groups_by_bin.setdefault(int(bin_index), set()).add(int(group))
+    selected = {}
+    for index, name in enumerate(MATCHED_BIN_NAMES):
+        candidates = sorted(groups_by_bin.get(index, ()))
+        if candidates:
+            picked = rng.choice(candidates, size=min(per_bin, len(candidates)), replace=False)
+            selected[name] = sorted(int(g) for g in picked)
+        else:
+            selected[name] = []
+    return {"rule": f"numpy default_rng([{seed}]) choice without replacement, up to {per_bin} groups per frozen bin, bins in order",
+            "groups": selected}
+
+
+def _paired_figures(matched, selection, out_dir, view):
+    """Co-pol spectrogram triplets (clean / ASI / unauthorized) and the shared mask for the selected groups."""
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except Exception as error:   # pragma: no cover - optional dependency
+        return {"written": [], "error": f"matplotlib unavailable: {error}"}
+    out_dir.mkdir(parents=True, exist_ok=True)
+    written = []
+    index = {(int(seed), int(label)): i for i, (seed, label) in enumerate(zip(matched["seed"], matched["label"]))}
+    for bin_name, groups in selection["groups"].items():
+        for group in groups:
+            fig, axes = plt.subplots(1, 4, figsize=(16, 3.2), constrained_layout=True)
+            vmin = vmax = None
+            for ax, name in zip(axes[:3], MATCHED_LABELS):
+                spec = matched["spec"][index[(group, LABELS.index(name))], 0].astype(np.float32)
+                if vmin is None:
+                    vmin, vmax = float(np.percentile(spec, 1)), float(np.percentile(spec, 99))
+                ax.imshow(spec, aspect="auto", origin="lower", vmin=vmin, vmax=vmax, extent=[-48, 48, 0, spec.shape[0]])
+                ax.set_title(f"{name} (group {group}, bin {bin_name} dB)")
+                ax.set_xlabel("MHz")
+            mask = matched["mask"][index[(group, 0)], 0].astype(np.float32)
+            axes[3].plot(np.linspace(-48, 48, mask.shape[-1]), mask)
+            axes[3].set_title("co-pol operator plan mask (dB)")
+            axes[3].set_xlabel("MHz")
+            path = out_dir / f"matched_{view}_{bin_name.replace('-', '_')}_{group}.png"
+            fig.savefig(path, dpi=90)
+            plt.close(fig)
+            written.append(path.name)
+    return {"written": written, "directory": str(out_dir)}
+
+
 def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, device="cpu", log=print,
-                      unknown_data=None):
+                      unknown_data=None, matched_data=None):
     data, out = Path(data), Path(out)
     manifest = read_b2_manifest(data)
     if manifest["protocol"] != config.protocol or list(manifest["labels"]) != list(LABELS):
@@ -272,6 +443,15 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
                                 "per_family": {name: int(np.sum(unknown["family"] == index))
                                                for index, name in enumerate(unknown["families"])},
                                 "n_planned_carrier_missing": int(np.sum(unknown["plan_consistency"] == 1))}
+    matched_manifest = matched = None
+    if matched_data is not None:
+        matched_manifest, matched = _load_matched(matched_data, manifest, identity, config)
+        summary["test_matched"] = {"n_samples": int(len(matched["seed"])),
+                                   "scenario_ids": [int(s) for s in np.unique(matched["seed"])],
+                                   "per_label": {name: int(np.sum(matched["label"] == LABELS.index(name))) for name in MATCHED_LABELS},
+                                   "per_bin_groups": {name: int(len(np.unique(matched["seed"][matched["matched_bin"] == i])))
+                                                      for i, name in enumerate(MATCHED_BIN_NAMES)},
+                                   "n_planned_carrier_missing": int(np.sum(matched["plan_consistency"] == 1))}
     source = _source_identity()
     provenance = {"protocol": config.protocol, "data_fingerprint": identity,
                   "roles": {role: summary[role]["scenario_ids"] for role in ROLES},
@@ -302,6 +482,8 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
         calib_out = infer(fitted, parts["val-calib"])
         test_out = infer(fitted, test)
         unknown_out = infer(fitted, unknown) if unknown is not None else None
+        matched_out = infer(fitted, matched) if matched is not None else None
+        view_calibrations = {}
         scorer_path = out / f"mahalanobis_{view}.npz"
         scorer_provenance = fingerprint({"checkpoint_sha256": checkpoint_sha, "data": identity,
                                          "groups": summary["train"]["scenario_ids"],
@@ -345,6 +527,7 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
             else:
                 calibration.save(calibration_path)
             rejection[method] = metrics
+            view_calibrations[method] = calibration
             decisions.setdefault(view, {})[method] = test_scores
         methods[view] = {"input_channels": VIEW_CHANNELS[view],
                          "accuracy": _rate(predictions == labels, groups),
@@ -364,8 +547,16 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
                              name: _rate((1.0 - _softmax(unknown_out["logits"])[:, 0] > alarm_threshold)[item["mask"]],
                                          unknown["seed"][item["mask"]])
                              for name, item in _unknown_families(unknown).items()},
+                         "matched": None if matched_out is None else _matched_metrics(
+                             matched, matched_out, view_calibrations, scorer, alarm_threshold, test, predictions),
                          "checkpoint_sha256": checkpoint_sha, "training_source_revision": fitted.get("source_revision"),
                          "n_parameters": fitted["n_parameters"], "history": fitted["history"]}
+        if matched_out is not None:
+            selection = _select_representatives(matched)
+            methods[view]["matched"]["representatives"] = {**selection, "figures": _paired_figures(matched, selection, out / "figures", view),
+                                                            "predictions": {str(g): {LABELS[int(l)]: LABELS[int(p)] for l, p in
+                                                                                     zip(matched["label"][matched["seed"] == g], matched_out["logits"].argmax(axis=1)[matched["seed"] == g])}
+                                                                            for groups_ in selection["groups"].values() for g in groups_}}
         decisions[view]["prediction"] = predictions
         decisions[view]["event_probability"] = event_probability
         decisions[view]["alarm"] = alarm
@@ -373,6 +564,8 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
     result = {"protocol": config.protocol, "parent_protocol": manifest["parent_protocol"], "benchmark_complete": False,
               "test_only_protocol": None if test_manifest is None else test_manifest["protocol"],
               "test_only_fingerprint": None if unknown_data is None else b2_test_fingerprint(unknown_data),
+              "matched_protocol": None if matched_manifest is None else matched_manifest["protocol"],
+              "matched_fingerprint": None if matched_data is None else b2_matched_fingerprint(matched_data),
               "labels": list(LABELS), "config": config.resolved(), "experiment_fingerprint": experiment_identity,
               "data_fingerprint": identity, "source": source, "partitions": summary, "methods": methods,
               "generation": manifest["config"], "cancellation": manifest.get("cancellation"),
@@ -495,6 +688,49 @@ def report(result):
         lines += ["", "Pooled numbers use the pre-registered near families only; `wideband_noise` is equivalence-limited and",
                   "listed separately; `cid_overlay` is a benign control whose expected decision is `clean`. Thresholds are",
                   "the val-calib known-only thresholds above; nothing was tuned on these families."]
+    if result.get("matched_protocol"):
+        lines += ["", f"## K17c level-matched ASI versus unauthorized ({result['matched_protocol']})", "",
+                  "Unconditional = argmax over eight classes; pair = among samples whose true label is one of the pair, with",
+                  "clean / other-known / rejected predictions counted in the denominator (never dropped). Bins are the frozen",
+                  "C/I_psd ranges; thresholds are the val-calib ones. The matched set never trained, selected or calibrated anything.", "",
+                  "| View | n | Unconditional accuracy | ASI recall | Unauthorized recall | Pair accuracy (argmax, no rejection) | Pair accuracy among accepted (MSP) | ASI→unauth / unauth→ASI | pred clean | rejected (MSP) |",
+                  "|---|---|---|---|---|---|---|---|---|---|"]
+        for view, values in result["methods"].items():
+            m = values.get("matched")
+            if not m:
+                continue
+            pair = m["by_method"].get("msp", next(iter(m["by_method"].values())))["pair"]
+            tt = pair["two_by_two"] or {}
+            bd = pair["prediction_breakdown"] or {}
+            lines.append(f"| {view} | {m['n_samples']} | {_percent(m['unconditional_accuracy'])} | "
+                         f"{_percent(m['per_class']['adjacent_satellite']['recall'])} | {_percent(m['per_class']['unauthorized']['recall'])} | "
+                         f"{_percent(pair['pair_accuracy'])} | {_percent(pair.get('pair_accuracy_accepted_only'))} | "
+                         f"{tt.get('adjacent_satellite', {}).get('unauthorized', 'n/a')} / {tt.get('unauthorized', {}).get('adjacent_satellite', 'n/a')} | "
+                         f"{sum(v['predicted_clean'] for v in bd.values()) if bd else 'n/a'} | "
+                         f"{sum(v['rejected_as_unknown'] for v in bd.values()) if bd else 'n/a'} |")
+        lines += ["", "| View | Bin (dB) | Groups | Pair samples | Pair accuracy (argmax) | Natural ASI recall in bin | Natural unauthorized recall in bin |",
+                  "|---|---|---|---|---|---|---|"]
+        for view, values in result["methods"].items():
+            m = values.get("matched")
+            if not m:
+                continue
+            method = "msp" if "msp" in m["by_method"] else next(iter(m["by_method"]))
+            for name in MATCHED_BIN_NAMES:
+                pair = m["by_method"][method]["per_bin"][name]
+                natural = m.get("natural_comparison") or {"classes": {}}
+                nat_asi = natural["classes"].get("adjacent_satellite", {}).get("recall_by_matched_bin", {}).get(name)
+                nat_un = natural["classes"].get("unauthorized", {}).get("recall_by_matched_bin", {}).get(name)
+                lines.append(f"| {view} | {name} | {m['per_bin_groups'][name]} | {pair['n_samples']} | {_percent(pair['pair_accuracy'])} | "
+                             f"{_percent(nat_asi)} | {_percent(nat_un)} |")
+        for view, values in result["methods"].items():
+            m = values.get("matched")
+            if m:
+                lines += ["", f"Intersections ({view}, MSP): matched groups with a missing planned carrier = "
+                          f"{m['by_method'][next(iter(m['by_method']))]['per_plan_consistency']['planned_carrier_missing']['n_samples']} pair samples; "
+                          f"ASI variants over an absent carrier = {m['n_asi_over_absent_carrier']} (reported separately in results.json)."]
+        lines += ["", "Representative paired spectrograms (fixed-seed rule, up to three groups per bin) are written under `figures/`;",
+                  "the selected groups are listed in results.json. Natural events also differ from the matched ones in carrier width.",
+                  "A pilot with two groups cannot establish separability."]
     lines += ["", "Positive class of the alarm is any non-clean label; its threshold comes from clean val-calib scenes only.",
               "Plan-consistency positive class is `planned_carrier_missing` (auxiliary logit > 0); it does not affect checkpoint selection.",
               "Intervals in JSON resample scenario groups with fixed weights and thresholds; training-seed uncertainty is separate.",
@@ -514,10 +750,12 @@ def main(argv=None):
     parser.add_argument("--reuse", action="store_true")
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     parser.add_argument("--unknown-data", help="verified B2-test/1 artifact bound to --data (test-only families)")
+    parser.add_argument("--matched-data", help="verified B2-match/1 artifact bound to --data (K17c matched set)")
     args = parser.parse_args(argv)
     try:
         run_b2_experiment(B2ExperimentConfig.from_file(args.config), args.data, args.out,
-                          reuse=args.reuse, device=args.device, unknown_data=args.unknown_data)
+                          reuse=args.reuse, device=args.device, unknown_data=args.unknown_data,
+                          matched_data=args.matched_data)
     except (ValueError, FileNotFoundError) as error:
         parser.exit(2, f"error: {error}\n")
 

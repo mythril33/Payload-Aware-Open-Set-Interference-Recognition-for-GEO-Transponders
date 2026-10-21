@@ -102,3 +102,54 @@ mirror/roll, never to validation (spy test), both feeds together, zero shift wit
 uplink ASI generators consume the RNG identically; unknown seed derivation valid; CID muting keeps GUIDs;
 pre-registered groups match P18 §3; pooled near excludes `wideband_noise` and `cid_overlay`;
 `ranking_metrics` called with known test scores as negatives and argmax-correctness before rejection.
+
+---
+
+# Independent reviewer red team — B2-match/1 (K17c matched set)
+
+Date: 2026-10-21. Reviewed state: working tree of `ba98d6b` versus `82d6e7a`. Same role and brief as above,
+read-only; the reviewer ran `tests/test_b2_matched.py` (12 passed) and resolved all 150 frozen matched groups
+without waveforms to check the pairing, placement, bin and feasibility claims. The integrator reproduced the
+findings and applied the resolutions below in the follow-up commit recorded in DURUM.
+
+## Blockers
+
+None in code correctness. The pairing is real: within a group the three variants share link draws
+`[g,1801]`, plans (`default_plan(2g)` / `[g,1810,retry]`), activity `[g,1813]`, the full
+`DualScenarioConfig`, the carrier/noise streams, the copied calibration and canceller; the matched draw uses
+only `[g,1840]`; both events use the same power formula and reference and the same co-uplink injection; the
+reader enforces pair equality on read. Over the 150 groups: bins 50/54/46, 4 plan redraws, 46 targets above
+the natural unauthorized range, none outside the natural ASI range.
+
+## Should fix (all resolved)
+
+| # | Finding (reviewer) | Resolution (integrator) |
+|---|---|---|
+| 1 | In 5 of 150 groups the ASI overlaps only a carrier muted by the shared missing-carrier draw (4 fully, 1 partly); observationally an unauthorized-like carrier under a "planned" mask (the K17c "fazla/eksik taşıyıcı" intersection). The pilot report explained group 3300000's smaller ASI rise by planned-carrier power that is not there. The runner did not split by `plan_consistency`. | `matched` block now records `asi_overlap_fraction_plan`, `asi_overlap_fraction_active`, `asi_overlaps_only_absent_carrier` (validated on read); `_matched_metrics` reports pair metrics per `plan_consistency` and for the absent-carrier subset; P22 §3/§7 and the pilot report rewritten (group 3300000's rises differ by the clean-twin level difference, 1.45 dB). Test pins the flag on 3300000 and the retry on 3300002. |
+| 2 | "Widest-gap IM floor shift" measured the unauthorized carrier itself (the carrier lay inside the widest gap); the +11.4/+6.1 dB values were interpreted as nonlinear interaction. | The gap is now the widest free gap disjoint from both event bands; shifts are ≤ 0.2 dB in the pilot and the sentence was corrected. |
+| 3 | Report column "Pair accuracy (MSP threshold)" was the threshold-free argmax rate. | Renamed "Pair accuracy (argmax, no rejection)"; an "among accepted (MSP)" column added; conventions string states both. |
+| 4 | K18 audit cited "three random initializations" but the JSON held single means; quoted the init value where trained checkpoints are an order larger. | Per-seed values recorded (`k18_init_scale.json`); P22 cites both init and trained ranges (sum 6·10⁻⁴ init, 2·10⁻⁴–5·10⁻³ trained; weighted terms ≤ 3·10⁻⁵ and ≤ 4·10⁻⁷). |
+| 5 | Narrow-carrier skew understated: matched Rs ≤ 6 Mbaud always (1.0/1.5 Mbaud in 75/150) versus natural ASI 1–28.8 Mbaud; the natural-vs-matched comparison therefore also differs in carrier width. | Stated in P22 §7, in the natural-comparison denominator string and conventions; the physics check writes the matched Rs histogram. |
+| 6 | Natural-comparison bin logic untested (fake test role had no `c_over_i_psd_db`); `_pair_metrics` had no direct unit test. | Tests added: bins with values at 7.0, 13.0, 6.99 and 15.0; hand-built predictions with rejected-but-correct, predicted-clean and predicted-other cases. |
+| 7 | Placeholders left in DURUM. | Replaced. |
+
+## Optional (resolved or documented)
+
+- Empty-mask `_pair_metrics` now returns the full schema with nulls.
+- `SUMMARY_DROPPED` drops the unconditional 3 × 8 `confusion` and the former `bins` key; the conventions key
+  was renamed `bin_edges` so it survives, and P22 §4 qualifies what the summary keeps.
+- Reader now checks `f_lo`/`f_hi` against the reconstructed carrier edges for both matched events; the
+  1e-12 power tolerance covers the log round-trip of `c_over_i_db`.
+- Dead code and the precedence-dependent assertion in `tests/test_b2_matched.py` removed; the
+  `InfeasibleCarrierError` path of `adjacent_satellite_uplink_at_level` and the plan-retry path are tested.
+- Residual wording changed to "within ≈ 1.5 dB".
+
+## Verified OK (reviewer, abridged)
+
+Pairing (see Blockers); same power formula and reference for both events and equality in the pilot JSON;
+identical injection stage; role refusal and frozen 150-group cap; bin edges with 13.0 inclusive mirrored in
+the natural comparison; thresholds from val-calib only, Mahalanobis from train, nothing fitted on the matched
+set; `null` CIs below two groups; reader validations (duplicate (group, label), bin vs metadata, power 1e-12,
+geometry null, overlap 0.2–0.8, gap guard, foreign roles, atomic writes, calibration equality); known and
+test-only artifacts still verify; K17d audit numbers (78/500, 35 co, median 0.71 dB, p90 2.93 dB, max 5.91 dB)
+and K18 arithmetic (D/2 = 64/128) match the recorded JSON.
