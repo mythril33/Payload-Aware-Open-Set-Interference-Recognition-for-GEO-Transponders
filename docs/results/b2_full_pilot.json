@@ -5,7 +5,7 @@
   "test_only_protocol": "B2-test/1",
   "test_only_fingerprint": "deb51a01e48406513377fbb4e3772c450b002f83f2765f56392b8c5ed11ba151",
   "matched_protocol": "B2-match/1",
-  "matched_fingerprint": "cebfb4ab58837127ce503dc74585075909ca3b82c0b9cc044e493d4763a32080",
+  "matched_fingerprint": "8b70c6ae67bb76c36363ef1bffac2ccfb3a97edbaf65724eff9ea896de58394e",
   "labels": [
     "clean",
     "cw",
@@ -48,10 +48,10 @@
       "plan_shift_max_hz": 500000.0
     }
   },
-  "experiment_fingerprint": "82f94949c820e3a95ad2e86f32f5f8fc2732ba08ce5f84af11aaa346fefdcb8a",
+  "experiment_fingerprint": "022489f4fac30042d67fba92e89085e18eaf217e162c5a1de58267370aef2e36",
   "data_fingerprint": "325317b75dfaea64bd4872d09afd7511ffaf441dfd9e219153217081a9027831",
   "source": {
-    "revision": "82d6e7a850c37bb16236f54b4aabfe4f734d1641"
+    "revision": "ba98d6bc08cfe555856417d6b23c3f0a1c26117f"
   },
   "partitions": {
     "train": {
@@ -300,7 +300,7 @@
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "5ac45e1368667030b14ada777c2305d13ca478314f0945747f2fe4633669185f"
+            "provenance": "4c6964dfe28d6f4086c50ef2893301daa85e4960681dd14f1cb71b0e8d7c1300"
           },
           "known_acceptance": {
             "mean": 0.5,
@@ -568,7 +568,7 @@
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "9435606068b8da857d4032eac235223872c9c58c708c8183ffc10a71a386e838"
+            "provenance": "68b5d1a2b895d9cc6adb2b8bfb1bc218aaaa0e827fa9ecf5968c373c55fd657d"
           },
           "known_acceptance": {
             "mean": 1.0,
@@ -839,7 +839,7 @@
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "b1152188d6f6e87da51bb094706e4022c6543ad8ec19e38cfc4c35cd0b5e7221"
+            "provenance": "e1f0b5c8bc615f2e753d0ac4c4c0f050e320ddbeabfffe7c5a7ac92cb7b59551"
           },
           "known_acceptance": {
             "mean": 1.0,
@@ -1592,7 +1592,176 @@
                 "prediction_breakdown": null,
                 "pair_accuracy": null,
                 "pair_accuracy_among_pair_predictions": null,
+                "pair_accuracy_accepted_only": null,
+                "rejected_fraction": null,
                 "note": "no matched pair samples"
+              }
+            },
+            "per_plan_consistency": {
+              "consistent": {
+                "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+                "n_samples": 2,
+                "n_scenarios": 1,
+                "two_by_two": {
+                  "adjacent_satellite": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  },
+                  "unauthorized": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  }
+                },
+                "prediction_breakdown": {
+                  "adjacent_satellite": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  },
+                  "unauthorized": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  }
+                },
+                "pair_accuracy": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "pair_accuracy_among_pair_predictions": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "pair_accuracy_accepted_only": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "rejected_fraction": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                }
+              },
+              "planned_carrier_missing": {
+                "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+                "n_samples": 2,
+                "n_scenarios": 1,
+                "two_by_two": {
+                  "adjacent_satellite": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  },
+                  "unauthorized": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  }
+                },
+                "prediction_breakdown": {
+                  "adjacent_satellite": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 1,
+                    "n": 1
+                  },
+                  "unauthorized": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  }
+                },
+                "pair_accuracy": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "pair_accuracy_among_pair_predictions": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "pair_accuracy_accepted_only": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 1,
+                  "n_scenarios": 1
+                },
+                "rejected_fraction": {
+                  "mean": 0.5,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                }
+              }
+            },
+            "asi_over_absent_carrier": {
+              "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+              "n_samples": 2,
+              "n_scenarios": 1,
+              "two_by_two": {
+                "adjacent_satellite": {
+                  "adjacent_satellite": 0,
+                  "unauthorized": 0
+                },
+                "unauthorized": {
+                  "adjacent_satellite": 0,
+                  "unauthorized": 0
+                }
+              },
+              "prediction_breakdown": {
+                "adjacent_satellite": {
+                  "predicted_clean": 0,
+                  "predicted_other_known": 1,
+                  "predicted_pair_class": 0,
+                  "rejected_as_unknown": 1,
+                  "n": 1
+                },
+                "unauthorized": {
+                  "predicted_clean": 0,
+                  "predicted_other_known": 1,
+                  "predicted_pair_class": 0,
+                  "rejected_as_unknown": 0,
+                  "n": 1
+                }
+              },
+              "pair_accuracy": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
+              },
+              "pair_accuracy_among_pair_predictions": {
+                "mean": null,
+                "ci95": null,
+                "n_samples": 0,
+                "n_scenarios": 0
+              },
+              "pair_accuracy_accepted_only": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 1,
+                "n_scenarios": 1
+              },
+              "rejected_fraction": {
+                "mean": 0.5,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
               }
             },
             "known_acceptance_matched": {
@@ -1824,7 +1993,176 @@
                 "prediction_breakdown": null,
                 "pair_accuracy": null,
                 "pair_accuracy_among_pair_predictions": null,
+                "pair_accuracy_accepted_only": null,
+                "rejected_fraction": null,
                 "note": "no matched pair samples"
+              }
+            },
+            "per_plan_consistency": {
+              "consistent": {
+                "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+                "n_samples": 2,
+                "n_scenarios": 1,
+                "two_by_two": {
+                  "adjacent_satellite": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  },
+                  "unauthorized": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  }
+                },
+                "prediction_breakdown": {
+                  "adjacent_satellite": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  },
+                  "unauthorized": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  }
+                },
+                "pair_accuracy": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "pair_accuracy_among_pair_predictions": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "pair_accuracy_accepted_only": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "rejected_fraction": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                }
+              },
+              "planned_carrier_missing": {
+                "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+                "n_samples": 2,
+                "n_scenarios": 1,
+                "two_by_two": {
+                  "adjacent_satellite": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  },
+                  "unauthorized": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  }
+                },
+                "prediction_breakdown": {
+                  "adjacent_satellite": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  },
+                  "unauthorized": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  }
+                },
+                "pair_accuracy": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "pair_accuracy_among_pair_predictions": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "pair_accuracy_accepted_only": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "rejected_fraction": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                }
+              }
+            },
+            "asi_over_absent_carrier": {
+              "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+              "n_samples": 2,
+              "n_scenarios": 1,
+              "two_by_two": {
+                "adjacent_satellite": {
+                  "adjacent_satellite": 0,
+                  "unauthorized": 0
+                },
+                "unauthorized": {
+                  "adjacent_satellite": 0,
+                  "unauthorized": 0
+                }
+              },
+              "prediction_breakdown": {
+                "adjacent_satellite": {
+                  "predicted_clean": 0,
+                  "predicted_other_known": 1,
+                  "predicted_pair_class": 0,
+                  "rejected_as_unknown": 0,
+                  "n": 1
+                },
+                "unauthorized": {
+                  "predicted_clean": 0,
+                  "predicted_other_known": 1,
+                  "predicted_pair_class": 0,
+                  "rejected_as_unknown": 0,
+                  "n": 1
+                }
+              },
+              "pair_accuracy": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
+              },
+              "pair_accuracy_among_pair_predictions": {
+                "mean": null,
+                "ci95": null,
+                "n_samples": 0,
+                "n_scenarios": 0
+              },
+              "pair_accuracy_accepted_only": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
+              },
+              "rejected_fraction": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
               }
             },
             "known_acceptance_matched": {
@@ -2056,7 +2394,176 @@
                 "prediction_breakdown": null,
                 "pair_accuracy": null,
                 "pair_accuracy_among_pair_predictions": null,
+                "pair_accuracy_accepted_only": null,
+                "rejected_fraction": null,
                 "note": "no matched pair samples"
+              }
+            },
+            "per_plan_consistency": {
+              "consistent": {
+                "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+                "n_samples": 2,
+                "n_scenarios": 1,
+                "two_by_two": {
+                  "adjacent_satellite": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  },
+                  "unauthorized": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  }
+                },
+                "prediction_breakdown": {
+                  "adjacent_satellite": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  },
+                  "unauthorized": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  }
+                },
+                "pair_accuracy": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "pair_accuracy_among_pair_predictions": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "pair_accuracy_accepted_only": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "rejected_fraction": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                }
+              },
+              "planned_carrier_missing": {
+                "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+                "n_samples": 2,
+                "n_scenarios": 1,
+                "two_by_two": {
+                  "adjacent_satellite": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  },
+                  "unauthorized": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  }
+                },
+                "prediction_breakdown": {
+                  "adjacent_satellite": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  },
+                  "unauthorized": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  }
+                },
+                "pair_accuracy": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "pair_accuracy_among_pair_predictions": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "pair_accuracy_accepted_only": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "rejected_fraction": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                }
+              }
+            },
+            "asi_over_absent_carrier": {
+              "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+              "n_samples": 2,
+              "n_scenarios": 1,
+              "two_by_two": {
+                "adjacent_satellite": {
+                  "adjacent_satellite": 0,
+                  "unauthorized": 0
+                },
+                "unauthorized": {
+                  "adjacent_satellite": 0,
+                  "unauthorized": 0
+                }
+              },
+              "prediction_breakdown": {
+                "adjacent_satellite": {
+                  "predicted_clean": 0,
+                  "predicted_other_known": 1,
+                  "predicted_pair_class": 0,
+                  "rejected_as_unknown": 0,
+                  "n": 1
+                },
+                "unauthorized": {
+                  "predicted_clean": 0,
+                  "predicted_other_known": 1,
+                  "predicted_pair_class": 0,
+                  "rejected_as_unknown": 0,
+                  "n": 1
+                }
+              },
+              "pair_accuracy": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
+              },
+              "pair_accuracy_among_pair_predictions": {
+                "mean": null,
+                "ci95": null,
+                "n_samples": 0,
+                "n_scenarios": 0
+              },
+              "pair_accuracy_accepted_only": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
+              },
+              "rejected_fraction": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
               }
             },
             "known_acceptance_matched": {
@@ -2071,7 +2578,7 @@
           }
         },
         "natural_comparison": {
-          "denominator": "natural test role, same checkpoint",
+          "denominator": "natural test role, same checkpoint; natural carriers are wider (1-28.8 Mbaud) than the matched ones (<= 6 Mbaud)",
           "classes": {
             "adjacent_satellite": {
               "recall_overall": {
@@ -2137,9 +2644,12 @@
             }
           }
         },
+        "n_asi_over_absent_carrier": 1,
         "conventions": {
           "unconditional": "argmax over the eight known classes, no rejection",
-          "pair": "2x2 among samples whose true label is adjacent_satellite or unauthorized; clean/other/rejected predictions are counted, not dropped",
+          "pair": "2x2 among samples whose true label is adjacent_satellite or unauthorized; clean/other/rejected predictions are counted, not dropped; pair_accuracy is threshold-free argmax, pair_accuracy_accepted_only uses the method's threshold",
+          "bin_edges": "frozen K17c C/I_psd bins [4,7), [7,10), [10,13]",
+          "natural_comparison": "natural test role scored with the same checkpoint; natural events differ from the matched set in level AND carrier width (matched Rs <= 6 Mbaud by joint feasibility)",
           "ci": "scenario-group bootstrap with fixed weights and thresholds; null below two groups"
         },
         "representatives": {
@@ -2174,8 +2684,8 @@
           }
         }
       },
-      "checkpoint_sha256": "36a8438ea88ee617ee479f95f27ace1f715cadad96c790b6b3e05c5a3c598fff",
-      "training_source_revision": "82d6e7a850c37bb16236f54b4aabfe4f734d1641",
+      "checkpoint_sha256": "6ea474a51c5485e4070c83e56723040d6952e358fa4f60ffe87b9c485b73fa0f",
+      "training_source_revision": "ba98d6bc08cfe555856417d6b23c3f0a1c26117f",
       "n_parameters": 78777
     },
     "dual": {
@@ -2317,7 +2827,7 @@
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "1fa8eba484c26f0d008a0f7707a03a9881ebb2e431e7d468ecd19ef93ca9e9c1"
+            "provenance": "5810afa6673cb04e51eaccbf45eb207d2be31942a9b555630549b1d787d4f3ed"
           },
           "known_acceptance": {
             "mean": 0.0,
@@ -2585,7 +3095,7 @@
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "c51839c547ef850b92e08eef59a66840bfcc5eb8f5153f7be95797a227a4dcd0"
+            "provenance": "902cd1d4c07cb4fb72961c5a5a0758c1e927cb608ed82cb786317935fc345932"
           },
           "known_acceptance": {
             "mean": 1.0,
@@ -2856,7 +3366,7 @@
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "8ad681838bbd12c2811ff8479cca3e293bd6186b91f30113ec672f912941b6e2"
+            "provenance": "c4b918061eae2a7bf02eae8a441dd2bc4c81f60f1dd4e32622555eb65544c6e9"
           },
           "known_acceptance": {
             "mean": 0.9375,
@@ -3606,7 +4116,176 @@
                 "prediction_breakdown": null,
                 "pair_accuracy": null,
                 "pair_accuracy_among_pair_predictions": null,
+                "pair_accuracy_accepted_only": null,
+                "rejected_fraction": null,
                 "note": "no matched pair samples"
+              }
+            },
+            "per_plan_consistency": {
+              "consistent": {
+                "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+                "n_samples": 2,
+                "n_scenarios": 1,
+                "two_by_two": {
+                  "adjacent_satellite": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  },
+                  "unauthorized": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  }
+                },
+                "prediction_breakdown": {
+                  "adjacent_satellite": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 1,
+                    "n": 1
+                  },
+                  "unauthorized": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 1,
+                    "n": 1
+                  }
+                },
+                "pair_accuracy": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "pair_accuracy_among_pair_predictions": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "pair_accuracy_accepted_only": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "rejected_fraction": {
+                  "mean": 1.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                }
+              },
+              "planned_carrier_missing": {
+                "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+                "n_samples": 2,
+                "n_scenarios": 1,
+                "two_by_two": {
+                  "adjacent_satellite": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  },
+                  "unauthorized": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  }
+                },
+                "prediction_breakdown": {
+                  "adjacent_satellite": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  },
+                  "unauthorized": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  }
+                },
+                "pair_accuracy": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "pair_accuracy_among_pair_predictions": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "pair_accuracy_accepted_only": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "rejected_fraction": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                }
+              }
+            },
+            "asi_over_absent_carrier": {
+              "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+              "n_samples": 2,
+              "n_scenarios": 1,
+              "two_by_two": {
+                "adjacent_satellite": {
+                  "adjacent_satellite": 0,
+                  "unauthorized": 0
+                },
+                "unauthorized": {
+                  "adjacent_satellite": 0,
+                  "unauthorized": 0
+                }
+              },
+              "prediction_breakdown": {
+                "adjacent_satellite": {
+                  "predicted_clean": 0,
+                  "predicted_other_known": 1,
+                  "predicted_pair_class": 0,
+                  "rejected_as_unknown": 0,
+                  "n": 1
+                },
+                "unauthorized": {
+                  "predicted_clean": 0,
+                  "predicted_other_known": 1,
+                  "predicted_pair_class": 0,
+                  "rejected_as_unknown": 0,
+                  "n": 1
+                }
+              },
+              "pair_accuracy": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
+              },
+              "pair_accuracy_among_pair_predictions": {
+                "mean": null,
+                "ci95": null,
+                "n_samples": 0,
+                "n_scenarios": 0
+              },
+              "pair_accuracy_accepted_only": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
+              },
+              "rejected_fraction": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
               }
             },
             "known_acceptance_matched": {
@@ -3838,7 +4517,176 @@
                 "prediction_breakdown": null,
                 "pair_accuracy": null,
                 "pair_accuracy_among_pair_predictions": null,
+                "pair_accuracy_accepted_only": null,
+                "rejected_fraction": null,
                 "note": "no matched pair samples"
+              }
+            },
+            "per_plan_consistency": {
+              "consistent": {
+                "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+                "n_samples": 2,
+                "n_scenarios": 1,
+                "two_by_two": {
+                  "adjacent_satellite": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  },
+                  "unauthorized": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  }
+                },
+                "prediction_breakdown": {
+                  "adjacent_satellite": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  },
+                  "unauthorized": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  }
+                },
+                "pair_accuracy": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "pair_accuracy_among_pair_predictions": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "pair_accuracy_accepted_only": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "rejected_fraction": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                }
+              },
+              "planned_carrier_missing": {
+                "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+                "n_samples": 2,
+                "n_scenarios": 1,
+                "two_by_two": {
+                  "adjacent_satellite": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  },
+                  "unauthorized": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  }
+                },
+                "prediction_breakdown": {
+                  "adjacent_satellite": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  },
+                  "unauthorized": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  }
+                },
+                "pair_accuracy": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "pair_accuracy_among_pair_predictions": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "pair_accuracy_accepted_only": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "rejected_fraction": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                }
+              }
+            },
+            "asi_over_absent_carrier": {
+              "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+              "n_samples": 2,
+              "n_scenarios": 1,
+              "two_by_two": {
+                "adjacent_satellite": {
+                  "adjacent_satellite": 0,
+                  "unauthorized": 0
+                },
+                "unauthorized": {
+                  "adjacent_satellite": 0,
+                  "unauthorized": 0
+                }
+              },
+              "prediction_breakdown": {
+                "adjacent_satellite": {
+                  "predicted_clean": 0,
+                  "predicted_other_known": 1,
+                  "predicted_pair_class": 0,
+                  "rejected_as_unknown": 0,
+                  "n": 1
+                },
+                "unauthorized": {
+                  "predicted_clean": 0,
+                  "predicted_other_known": 1,
+                  "predicted_pair_class": 0,
+                  "rejected_as_unknown": 0,
+                  "n": 1
+                }
+              },
+              "pair_accuracy": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
+              },
+              "pair_accuracy_among_pair_predictions": {
+                "mean": null,
+                "ci95": null,
+                "n_samples": 0,
+                "n_scenarios": 0
+              },
+              "pair_accuracy_accepted_only": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
+              },
+              "rejected_fraction": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
               }
             },
             "known_acceptance_matched": {
@@ -4067,7 +4915,176 @@
                 "prediction_breakdown": null,
                 "pair_accuracy": null,
                 "pair_accuracy_among_pair_predictions": null,
+                "pair_accuracy_accepted_only": null,
+                "rejected_fraction": null,
                 "note": "no matched pair samples"
+              }
+            },
+            "per_plan_consistency": {
+              "consistent": {
+                "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+                "n_samples": 2,
+                "n_scenarios": 1,
+                "two_by_two": {
+                  "adjacent_satellite": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  },
+                  "unauthorized": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  }
+                },
+                "prediction_breakdown": {
+                  "adjacent_satellite": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 1,
+                    "n": 1
+                  },
+                  "unauthorized": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 1,
+                    "n": 1
+                  }
+                },
+                "pair_accuracy": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "pair_accuracy_among_pair_predictions": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "pair_accuracy_accepted_only": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "rejected_fraction": {
+                  "mean": 1.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                }
+              },
+              "planned_carrier_missing": {
+                "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+                "n_samples": 2,
+                "n_scenarios": 1,
+                "two_by_two": {
+                  "adjacent_satellite": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  },
+                  "unauthorized": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  }
+                },
+                "prediction_breakdown": {
+                  "adjacent_satellite": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  },
+                  "unauthorized": {
+                    "predicted_clean": 0,
+                    "predicted_other_known": 1,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  }
+                },
+                "pair_accuracy": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "pair_accuracy_among_pair_predictions": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "pair_accuracy_accepted_only": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "rejected_fraction": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                }
+              }
+            },
+            "asi_over_absent_carrier": {
+              "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+              "n_samples": 2,
+              "n_scenarios": 1,
+              "two_by_two": {
+                "adjacent_satellite": {
+                  "adjacent_satellite": 0,
+                  "unauthorized": 0
+                },
+                "unauthorized": {
+                  "adjacent_satellite": 0,
+                  "unauthorized": 0
+                }
+              },
+              "prediction_breakdown": {
+                "adjacent_satellite": {
+                  "predicted_clean": 0,
+                  "predicted_other_known": 1,
+                  "predicted_pair_class": 0,
+                  "rejected_as_unknown": 0,
+                  "n": 1
+                },
+                "unauthorized": {
+                  "predicted_clean": 0,
+                  "predicted_other_known": 1,
+                  "predicted_pair_class": 0,
+                  "rejected_as_unknown": 0,
+                  "n": 1
+                }
+              },
+              "pair_accuracy": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
+              },
+              "pair_accuracy_among_pair_predictions": {
+                "mean": null,
+                "ci95": null,
+                "n_samples": 0,
+                "n_scenarios": 0
+              },
+              "pair_accuracy_accepted_only": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
+              },
+              "rejected_fraction": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
               }
             },
             "known_acceptance_matched": {
@@ -4082,7 +5099,7 @@
           }
         },
         "natural_comparison": {
-          "denominator": "natural test role, same checkpoint",
+          "denominator": "natural test role, same checkpoint; natural carriers are wider (1-28.8 Mbaud) than the matched ones (<= 6 Mbaud)",
           "classes": {
             "adjacent_satellite": {
               "recall_overall": {
@@ -4148,9 +5165,12 @@
             }
           }
         },
+        "n_asi_over_absent_carrier": 1,
         "conventions": {
           "unconditional": "argmax over the eight known classes, no rejection",
-          "pair": "2x2 among samples whose true label is adjacent_satellite or unauthorized; clean/other/rejected predictions are counted, not dropped",
+          "pair": "2x2 among samples whose true label is adjacent_satellite or unauthorized; clean/other/rejected predictions are counted, not dropped; pair_accuracy is threshold-free argmax, pair_accuracy_accepted_only uses the method's threshold",
+          "bin_edges": "frozen K17c C/I_psd bins [4,7), [7,10), [10,13]",
+          "natural_comparison": "natural test role scored with the same checkpoint; natural events differ from the matched set in level AND carrier width (matched Rs <= 6 Mbaud by joint feasibility)",
           "ci": "scenario-group bootstrap with fixed weights and thresholds; null below two groups"
         },
         "representatives": {
@@ -4185,8 +5205,8 @@
           }
         }
       },
-      "checkpoint_sha256": "d5883bcda7a0398b8c9a3096d7b64d705b4c9b6b63d2914335911a7232e16cfd",
-      "training_source_revision": "82d6e7a850c37bb16236f54b4aabfe4f734d1641",
+      "checkpoint_sha256": "c3850cd54aa4f6b12877a00c1126008daf81186709281d87808c8c0dbdee810e",
+      "training_source_revision": "ba98d6bc08cfe555856417d6b23c3f0a1c26117f",
       "n_parameters": 79177
     },
     "dual_residual": {
@@ -4328,7 +5348,7 @@
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "57d8561392915455be4a42c2b8dbc991ca8286006487338bd8095aa3a621943e"
+            "provenance": "900051c48af4d1521cc185de276a6495dd00a6b11fe2f7e32e7b045e21d642ca"
           },
           "known_acceptance": {
             "mean": 1.0,
@@ -4599,7 +5619,7 @@
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "1934c2b1b0a4464918d9d677c630dfe34398260c41540c14fa88fe7145cff21b"
+            "provenance": "68c344463d9da90044d762d8163593370bc30b267be6ff8d9bf2640ad8050a85"
           },
           "known_acceptance": {
             "mean": 0.9375,
@@ -4870,7 +5890,7 @@
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "6d4c537780bb7fca7d8667110e642450e6c78a642f2de52f96c722622c41dd94"
+            "provenance": "324a0998bfc27f9f8bdfae9f72048906df184b1f9b15d3ec434ab370b6c689ec"
           },
           "known_acceptance": {
             "mean": 0.5,
@@ -5622,7 +6642,176 @@
                 "prediction_breakdown": null,
                 "pair_accuracy": null,
                 "pair_accuracy_among_pair_predictions": null,
+                "pair_accuracy_accepted_only": null,
+                "rejected_fraction": null,
                 "note": "no matched pair samples"
+              }
+            },
+            "per_plan_consistency": {
+              "consistent": {
+                "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+                "n_samples": 2,
+                "n_scenarios": 1,
+                "two_by_two": {
+                  "adjacent_satellite": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  },
+                  "unauthorized": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  }
+                },
+                "prediction_breakdown": {
+                  "adjacent_satellite": {
+                    "predicted_clean": 1,
+                    "predicted_other_known": 0,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  },
+                  "unauthorized": {
+                    "predicted_clean": 1,
+                    "predicted_other_known": 0,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  }
+                },
+                "pair_accuracy": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "pair_accuracy_among_pair_predictions": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "pair_accuracy_accepted_only": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "rejected_fraction": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                }
+              },
+              "planned_carrier_missing": {
+                "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+                "n_samples": 2,
+                "n_scenarios": 1,
+                "two_by_two": {
+                  "adjacent_satellite": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  },
+                  "unauthorized": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  }
+                },
+                "prediction_breakdown": {
+                  "adjacent_satellite": {
+                    "predicted_clean": 1,
+                    "predicted_other_known": 0,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  },
+                  "unauthorized": {
+                    "predicted_clean": 1,
+                    "predicted_other_known": 0,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  }
+                },
+                "pair_accuracy": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "pair_accuracy_among_pair_predictions": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "pair_accuracy_accepted_only": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "rejected_fraction": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                }
+              }
+            },
+            "asi_over_absent_carrier": {
+              "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+              "n_samples": 2,
+              "n_scenarios": 1,
+              "two_by_two": {
+                "adjacent_satellite": {
+                  "adjacent_satellite": 0,
+                  "unauthorized": 0
+                },
+                "unauthorized": {
+                  "adjacent_satellite": 0,
+                  "unauthorized": 0
+                }
+              },
+              "prediction_breakdown": {
+                "adjacent_satellite": {
+                  "predicted_clean": 1,
+                  "predicted_other_known": 0,
+                  "predicted_pair_class": 0,
+                  "rejected_as_unknown": 0,
+                  "n": 1
+                },
+                "unauthorized": {
+                  "predicted_clean": 1,
+                  "predicted_other_known": 0,
+                  "predicted_pair_class": 0,
+                  "rejected_as_unknown": 0,
+                  "n": 1
+                }
+              },
+              "pair_accuracy": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
+              },
+              "pair_accuracy_among_pair_predictions": {
+                "mean": null,
+                "ci95": null,
+                "n_samples": 0,
+                "n_scenarios": 0
+              },
+              "pair_accuracy_accepted_only": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
+              },
+              "rejected_fraction": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
               }
             },
             "known_acceptance_matched": {
@@ -5854,7 +7043,176 @@
                 "prediction_breakdown": null,
                 "pair_accuracy": null,
                 "pair_accuracy_among_pair_predictions": null,
+                "pair_accuracy_accepted_only": null,
+                "rejected_fraction": null,
                 "note": "no matched pair samples"
+              }
+            },
+            "per_plan_consistency": {
+              "consistent": {
+                "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+                "n_samples": 2,
+                "n_scenarios": 1,
+                "two_by_two": {
+                  "adjacent_satellite": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  },
+                  "unauthorized": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  }
+                },
+                "prediction_breakdown": {
+                  "adjacent_satellite": {
+                    "predicted_clean": 1,
+                    "predicted_other_known": 0,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  },
+                  "unauthorized": {
+                    "predicted_clean": 1,
+                    "predicted_other_known": 0,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  }
+                },
+                "pair_accuracy": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "pair_accuracy_among_pair_predictions": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "pair_accuracy_accepted_only": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "rejected_fraction": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                }
+              },
+              "planned_carrier_missing": {
+                "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+                "n_samples": 2,
+                "n_scenarios": 1,
+                "two_by_two": {
+                  "adjacent_satellite": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  },
+                  "unauthorized": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  }
+                },
+                "prediction_breakdown": {
+                  "adjacent_satellite": {
+                    "predicted_clean": 1,
+                    "predicted_other_known": 0,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  },
+                  "unauthorized": {
+                    "predicted_clean": 1,
+                    "predicted_other_known": 0,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 1,
+                    "n": 1
+                  }
+                },
+                "pair_accuracy": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "pair_accuracy_among_pair_predictions": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "pair_accuracy_accepted_only": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 1,
+                  "n_scenarios": 1
+                },
+                "rejected_fraction": {
+                  "mean": 0.5,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                }
+              }
+            },
+            "asi_over_absent_carrier": {
+              "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+              "n_samples": 2,
+              "n_scenarios": 1,
+              "two_by_two": {
+                "adjacent_satellite": {
+                  "adjacent_satellite": 0,
+                  "unauthorized": 0
+                },
+                "unauthorized": {
+                  "adjacent_satellite": 0,
+                  "unauthorized": 0
+                }
+              },
+              "prediction_breakdown": {
+                "adjacent_satellite": {
+                  "predicted_clean": 1,
+                  "predicted_other_known": 0,
+                  "predicted_pair_class": 0,
+                  "rejected_as_unknown": 0,
+                  "n": 1
+                },
+                "unauthorized": {
+                  "predicted_clean": 1,
+                  "predicted_other_known": 0,
+                  "predicted_pair_class": 0,
+                  "rejected_as_unknown": 1,
+                  "n": 1
+                }
+              },
+              "pair_accuracy": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
+              },
+              "pair_accuracy_among_pair_predictions": {
+                "mean": null,
+                "ci95": null,
+                "n_samples": 0,
+                "n_scenarios": 0
+              },
+              "pair_accuracy_accepted_only": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 1,
+                "n_scenarios": 1
+              },
+              "rejected_fraction": {
+                "mean": 0.5,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
               }
             },
             "known_acceptance_matched": {
@@ -6086,7 +7444,176 @@
                 "prediction_breakdown": null,
                 "pair_accuracy": null,
                 "pair_accuracy_among_pair_predictions": null,
+                "pair_accuracy_accepted_only": null,
+                "rejected_fraction": null,
                 "note": "no matched pair samples"
+              }
+            },
+            "per_plan_consistency": {
+              "consistent": {
+                "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+                "n_samples": 2,
+                "n_scenarios": 1,
+                "two_by_two": {
+                  "adjacent_satellite": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  },
+                  "unauthorized": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  }
+                },
+                "prediction_breakdown": {
+                  "adjacent_satellite": {
+                    "predicted_clean": 1,
+                    "predicted_other_known": 0,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  },
+                  "unauthorized": {
+                    "predicted_clean": 1,
+                    "predicted_other_known": 0,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  }
+                },
+                "pair_accuracy": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "pair_accuracy_among_pair_predictions": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "pair_accuracy_accepted_only": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "rejected_fraction": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                }
+              },
+              "planned_carrier_missing": {
+                "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+                "n_samples": 2,
+                "n_scenarios": 1,
+                "two_by_two": {
+                  "adjacent_satellite": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  },
+                  "unauthorized": {
+                    "adjacent_satellite": 0,
+                    "unauthorized": 0
+                  }
+                },
+                "prediction_breakdown": {
+                  "adjacent_satellite": {
+                    "predicted_clean": 1,
+                    "predicted_other_known": 0,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  },
+                  "unauthorized": {
+                    "predicted_clean": 1,
+                    "predicted_other_known": 0,
+                    "predicted_pair_class": 0,
+                    "rejected_as_unknown": 0,
+                    "n": 1
+                  }
+                },
+                "pair_accuracy": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "pair_accuracy_among_pair_predictions": {
+                  "mean": null,
+                  "ci95": null,
+                  "n_samples": 0,
+                  "n_scenarios": 0
+                },
+                "pair_accuracy_accepted_only": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                },
+                "rejected_fraction": {
+                  "mean": 0.0,
+                  "ci95": null,
+                  "n_samples": 2,
+                  "n_scenarios": 1
+                }
+              }
+            },
+            "asi_over_absent_carrier": {
+              "denominator": "all matched adjacent_satellite and unauthorized samples (clean variants excluded)",
+              "n_samples": 2,
+              "n_scenarios": 1,
+              "two_by_two": {
+                "adjacent_satellite": {
+                  "adjacent_satellite": 0,
+                  "unauthorized": 0
+                },
+                "unauthorized": {
+                  "adjacent_satellite": 0,
+                  "unauthorized": 0
+                }
+              },
+              "prediction_breakdown": {
+                "adjacent_satellite": {
+                  "predicted_clean": 1,
+                  "predicted_other_known": 0,
+                  "predicted_pair_class": 0,
+                  "rejected_as_unknown": 0,
+                  "n": 1
+                },
+                "unauthorized": {
+                  "predicted_clean": 1,
+                  "predicted_other_known": 0,
+                  "predicted_pair_class": 0,
+                  "rejected_as_unknown": 0,
+                  "n": 1
+                }
+              },
+              "pair_accuracy": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
+              },
+              "pair_accuracy_among_pair_predictions": {
+                "mean": null,
+                "ci95": null,
+                "n_samples": 0,
+                "n_scenarios": 0
+              },
+              "pair_accuracy_accepted_only": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
+              },
+              "rejected_fraction": {
+                "mean": 0.0,
+                "ci95": null,
+                "n_samples": 2,
+                "n_scenarios": 1
               }
             },
             "known_acceptance_matched": {
@@ -6101,7 +7628,7 @@
           }
         },
         "natural_comparison": {
-          "denominator": "natural test role, same checkpoint",
+          "denominator": "natural test role, same checkpoint; natural carriers are wider (1-28.8 Mbaud) than the matched ones (<= 6 Mbaud)",
           "classes": {
             "adjacent_satellite": {
               "recall_overall": {
@@ -6167,9 +7694,12 @@
             }
           }
         },
+        "n_asi_over_absent_carrier": 1,
         "conventions": {
           "unconditional": "argmax over the eight known classes, no rejection",
-          "pair": "2x2 among samples whose true label is adjacent_satellite or unauthorized; clean/other/rejected predictions are counted, not dropped",
+          "pair": "2x2 among samples whose true label is adjacent_satellite or unauthorized; clean/other/rejected predictions are counted, not dropped; pair_accuracy is threshold-free argmax, pair_accuracy_accepted_only uses the method's threshold",
+          "bin_edges": "frozen K17c C/I_psd bins [4,7), [7,10), [10,13]",
+          "natural_comparison": "natural test role scored with the same checkpoint; natural events differ from the matched set in level AND carrier width (matched Rs <= 6 Mbaud by joint feasibility)",
           "ci": "scenario-group bootstrap with fixed weights and thresholds; null below two groups"
         },
         "representatives": {
@@ -6204,8 +7734,8 @@
           }
         }
       },
-      "checkpoint_sha256": "b255160d0df80a6acd1595d99c2161bef1087cc2d0ee427fb77a5f45c2664759",
-      "training_source_revision": "82d6e7a850c37bb16236f54b4aabfe4f734d1641",
+      "checkpoint_sha256": "1f04178d723b590cc6186f5f7c0278c935b0f145cf34e25069239fb5d0d4caa6",
+      "training_source_revision": "ba98d6bc08cfe555856417d6b23c3f0a1c26117f",
       "n_parameters": 79377
     }
   },

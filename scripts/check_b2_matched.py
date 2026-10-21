@@ -84,11 +84,15 @@ def check(matched, oracle_groups=0):
             - band_power_db(clean_spec[0].astype(np.float32), *row["events"]["unauthorized"]["band_hz"]))
         if not row["requested_power_equal"]:
             raise AssertionError(f"group {seed}: requested interference powers differ")
-        gaps = free_gaps(plan, bandwidth)
+        bands = [tuple(row["events"][name]["band_hz"]) for name in ("adjacent_satellite", "unauthorized")]
+        gaps = [(lo, hi) for lo, hi in free_gaps(plan, bandwidth)
+                if all(hi <= b_lo or lo >= b_hi for b_lo, b_hi in bands)]      # disjoint from both event bands
+        row["asi_overlap_fraction_active"] = matched_block.get("asi_overlap_fraction_active")
         if gaps:
             lo, hi = max(gaps, key=lambda g: g[1] - g[0])
             if hi - lo >= 1e6:
-                row["widest_gap_floor_shift_db"] = {
+                row["event_free_gap_hz"] = [lo, hi]
+                row["event_free_gap_floor_shift_db"] = {
                     name: band_power_db(variants[name][0][0].astype(np.float32), lo, hi) - band_power_db(clean_spec[0].astype(np.float32), lo, hi)
                     for name in ("adjacent_satellite", "unauthorized")}
         rows.append(row)
@@ -103,7 +107,10 @@ def check(matched, oracle_groups=0):
                          "median_delta_residual_unauthorized_db": _median([r["events"]["unauthorized"].get("delta_residual_in_band_db") for r in selected
                                                                           if "delta_residual_in_band_db" in r["events"]["unauthorized"]]),
                          "median_realized_level_difference_db": _median([r["realized_level_difference_asi_minus_unauthorized_db"] for r in selected])}
+    rates = sorted({row["symbol_rate"] for row in rows})
     report = {"protocol": manifest["protocol"], "benchmark_complete": manifest["benchmark_complete"],
+              "symbol_rate_histogram": {f"{rate / 1e6:g} Mbaud": sum(1 for row in rows if row["symbol_rate"] == rate) for rate in rates},
+              "n_groups_asi_over_absent_carrier": sum(1 for row in rows if row.get("asi_overlap_fraction_active") == 0.0),
               "matched_fingerprint": b2_matched_fingerprint(matched), "n_groups": len(rows), "n_observations": 3 * len(rows),
               "all_requested_powers_equal": all(r["requested_power_equal"] for r in rows),
               "all_masks_identical": all(e["masks_identical"] for r in rows for e in r["events"].values()),

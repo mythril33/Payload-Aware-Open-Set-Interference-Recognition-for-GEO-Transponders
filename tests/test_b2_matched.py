@@ -67,8 +67,27 @@ def test_pair_shares_scene_and_differs_only_in_placement(group):
     assert 0.2 <= overlap_fraction(a["f_lo"], a["f_hi"], plan) <= 0.8
     assert not overlaps_plan(u["f_lo"], u["f_hi"], plan)
     assert any(lo <= u["f_lo"] and u["f_hi"] <= hi for lo, hi in free_gaps(plan, 36e6))
-    assert a["f0"] != u["f0"] if "f0" in a else a["carrier"]["f0"] != u["f0"]
+    assert a["carrier"]["f0"] != u["f0"]
+    assert 0.0 <= m["asi_overlap_fraction_active"] <= m["asi_overlap_fraction_plan"] == pytest.approx(a["overlap_fraction"])
     assert a["geometry"] is None and a["level_source"] == "matched_intervention"
+
+
+def test_plan_retry_and_absent_carrier_intersection_are_recorded():
+    # Group 3300002 needs one operator-plan redraw before both placements are feasible.
+    assert prepare_matched_scene("clean", FIRST + 2).metadata["operator_plan_source"]["co_rejected_plan_draws"] == 1
+    assert prepare_matched_scene("clean", FIRST).metadata["operator_plan_source"]["co_rejected_plan_draws"] == 0
+    # Group 3300000 drops the very carrier its ASI overlaps: flagged, not hidden.
+    first = prepare_matched_scene("adjacent_satellite", FIRST)
+    assert first.plan_consistency == 1 and first.metadata["matched"]["asi_overlaps_only_absent_carrier"] is True
+    assert first.metadata["matched"]["asi_overlap_fraction_active"] == 0.0
+    from geosim.asi import adjacent_satellite_uplink_at_level
+    from geosim.interferers import InfeasibleCarrierError
+    from geosim.waveform import Carrier
+    plan = first.plans[0]
+    gap_carrier = Carrier(f0=first.metadata["matched"]["unauthorized_f0"], symbol_rate=first.metadata["matched"]["symbol_rate"],
+                          alpha=first.metadata["matched"]["alpha"], mod="QPSK", power=0.01)
+    with pytest.raises(InfeasibleCarrierError):
+        adjacent_satellite_uplink_at_level(plan, 36e6, gap_carrier, 8.0)   # a gap placement is not an ASI
 
 
 def test_matched_draw_is_deterministic_and_bins_cover_the_frozen_role():
@@ -159,7 +178,7 @@ def test_generation_binds_calibration_and_stores_paired_variants(tmp_path, fakes
     for record in data["meta"]:
         assert record["role"] == "test-matched" and record["test_only"] is True
         assert record["matched"]["pair_id"] == f"B2-match/1:{record['scenario_id']}"
-        assert record["matched_bin" if False else "matched"]["bin"] in (0, 1, 2)
+        assert record["matched"]["bin"] in (0, 1, 2) and record["matched"]["asi_overlap_fraction_active"] <= record["matched"]["asi_overlap_fraction_plan"]
     assert not any((root / role).exists() for role in ("train", "val-select", "val-calib", "test"))
     before = ds.b2_matched_fingerprint(root)
     ds.generate_b2_matched_dataset(root, known, limit_groups=2, groups_per_shard=1, cancellation=CancellationConfig())

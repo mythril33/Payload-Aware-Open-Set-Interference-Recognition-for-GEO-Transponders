@@ -290,3 +290,44 @@ def test_matched_artifact_binding_and_role_are_enforced(matched_dataset, tmp_pat
     matched["seed"][:3] = ROLE_STARTS["test"]
     with pytest.raises(ValueError, match="test-matched role"):
         run_b2_experiment(_config(views=("co",)), data, tmp_path / "b", log=lambda *_: None, matched_data="x")
+
+
+def test_pair_metrics_count_clean_other_and_rejected_predictions_explicitly():
+    asi, un, cuc = LABELS.index("adjacent_satellite"), LABELS.index("unauthorized"), LABELS.index("carrier_under_carrier")
+    labels = np.array([asi, asi, asi, un, un, un, 0, 0])
+    predictions = np.array([asi, un, 0, un, cuc, asi, 0, 0])
+    accepted = np.array([True, True, True, False, True, True, True, True])
+    groups = np.array([1, 2, 3, 1, 2, 3, 1, 2])
+    pair = ex._pair_metrics(predictions, accepted, labels, groups, labels != 0)
+    assert pair["n_samples"] == 6 and pair["two_by_two"] == {"adjacent_satellite": {"adjacent_satellite": 1, "unauthorized": 1},
+                                                             "unauthorized": {"adjacent_satellite": 1, "unauthorized": 1}}
+    bd = pair["prediction_breakdown"]
+    assert bd["adjacent_satellite"] == {"predicted_clean": 1, "predicted_other_known": 0, "predicted_pair_class": 2, "rejected_as_unknown": 0, "n": 3}
+    assert bd["unauthorized"] == {"predicted_clean": 0, "predicted_other_known": 1, "predicted_pair_class": 2, "rejected_as_unknown": 1, "n": 3}
+    assert pair["pair_accuracy"]["mean"] == pytest.approx(2 / 6)                 # threshold-free argmax
+    assert pair["pair_accuracy_among_pair_predictions"]["mean"] == pytest.approx(2 / 4)
+    assert pair["pair_accuracy_accepted_only"]["mean"] == pytest.approx(1 / 5)   # the correct unauthorized was rejected
+    assert pair["rejected_fraction"]["mean"] == pytest.approx(1 / 6)
+    empty = ex._pair_metrics(predictions, accepted, labels, groups, np.zeros(8, bool))
+    assert empty["pair_accuracy"] is None and empty["pair_accuracy_accepted_only"] is None and empty["rejected_fraction"] is None
+
+
+def test_natural_comparison_bins_follow_the_frozen_edges(matched_dataset, tmp_path, dataset):
+    splits, _, data = dataset
+    test_meta = splits["test"]["meta"]
+    labels = splits["test"]["label"]
+    # Attach natural C/I_psd values to the ASI and unauthorized test samples: 7.0 belongs to 7-10, 13.0 to 10-13, 6.99 to 4-7.
+    values = iter([7.0, 13.0])
+    unauth_values = iter([6.99, 15.0])
+    for record, label in zip(test_meta, labels):
+        if LABELS[int(label)] == "adjacent_satellite":
+            record["event"] = {"kind": "adjacent_satellite", "c_over_i_psd_db": next(values)}
+        elif LABELS[int(label)] == "unauthorized":
+            record["event"] = {"kind": "unauthorized", "c_over_i_psd_db": next(unauth_values)}
+    result = run_b2_experiment(_config(views=("co",)), data, tmp_path / "n", log=lambda *_: None, matched_data="x")
+    natural = result["methods"]["co"]["matched"]["natural_comparison"]["classes"]
+    asi = natural["adjacent_satellite"]["recall_by_matched_bin"]
+    assert asi["7-10"]["n_samples"] == 1 and asi["10-13"]["n_samples"] == 1 and asi["4-7"]["n_samples"] == 0
+    un = natural["unauthorized"]["recall_by_matched_bin"]
+    assert un["4-7"]["n_samples"] == 1 and un["7-10"]["n_samples"] == 0 and un["10-13"]["n_samples"] == 0   # 15 dB is outside every bin
+    assert natural["unauthorized"]["recall_overall"]["n_samples"] == 2

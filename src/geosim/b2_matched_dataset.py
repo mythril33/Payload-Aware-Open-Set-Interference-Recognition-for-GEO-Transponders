@@ -122,7 +122,7 @@ def _calibration(root, request):
     return calibration, descriptor
 
 
-def _matched_block(record, plans, bandwidth):
+def _matched_block(record, plans, bandwidth, active):
     """Validate the group-level matched intervention stored in every variant."""
     matched = record["matched"]
     ci = _real(matched["target_c_over_i_psd_db"], "matched C/I_psd", minimum=MATCHED_CI_RANGE[0], maximum=MATCHED_CI_RANGE[1])
@@ -136,6 +136,14 @@ def _matched_block(record, plans, bandwidth):
     natural = {name: bool(lo <= ci <= hi) for name, (lo, hi) in NATURAL_CI_PSD_RANGES.items()}
     if matched["within_natural_range"] != natural:
         raise ValueError("matched natural-range flags are inconsistent")
+    half = rs * (1 + alpha) / 2
+    plan_overlap = overlap_fraction(matched["asi_f0"] - half, matched["asi_f0"] + half, plans[0])
+    transmitted = [c for c, keep in zip(plans[0], active[0]) if keep]
+    active_overlap = overlap_fraction(matched["asi_f0"] - half, matched["asi_f0"] + half, transmitted) if transmitted else 0.0
+    if (not np.isclose(matched["asi_overlap_fraction_plan"], plan_overlap, rtol=0, atol=1e-10)
+            or not np.isclose(matched["asi_overlap_fraction_active"], active_overlap, rtol=0, atol=1e-10)
+            or matched["asi_overlaps_only_absent_carrier"] != (active_overlap == 0.0)):
+        raise ValueError("matched ASI overlap with planned/transmitted carriers is inconsistent")
     return matched
 
 
@@ -171,6 +179,9 @@ def _event(record, name, plans, matched, bandwidth):
         need = carrier.symbol_rate * (1 + carrier.alpha) + 0.1 * carrier.symbol_rate
         if not lo + need / 2 - 1e-6 <= carrier.f0 <= hi - need / 2 + 1e-6:
             raise ValueError("matched unauthorized carrier violates the gap guard convention")
+    edges = [carrier.f0 - carrier.occupied_bw / 2, carrier.f0 + carrier.occupied_bw / 2]
+    if not np.allclose([event["f_lo"], event["f_hi"]], edges, rtol=0, atol=1e-6):
+        raise ValueError("matched event occupied band differs from its carrier")
     if (carrier.f0 != f0 or carrier.symbol_rate != matched["symbol_rate"] or carrier.alpha != matched["alpha"]
             or carrier.mod != matched["mod"] or not np.isclose(carrier.power, matched["requested_power"], rtol=1e-12, atol=0)):
         raise ValueError("matched event carrier differs from the shared matched draw")
@@ -211,7 +222,7 @@ def _record(record, config, group, label_index, consistency, bin_value, calibrat
             or any(not np.isclose(sum(c.power for c in plan), 1, rtol=1e-6, atol=1e-8) for plan in plans)):
         raise ValueError("B2 matched operator plans must contain two unit nominal loads")
     active = _activity(record, plans, consistency)
-    matched = _matched_block(record, plans, config.bandwidth)
+    matched = _matched_block(record, plans, config.bandwidth, active)
     if int(bin_value) != matched["bin"]:
         raise ValueError("stored matched_bin differs from the metadata bin")
     _event(record, name, plans, matched, config.bandwidth)

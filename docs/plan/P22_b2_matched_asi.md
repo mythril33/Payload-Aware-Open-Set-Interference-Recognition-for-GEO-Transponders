@@ -56,12 +56,14 @@ The acceptance tests separate four questions (`tests/test_b2_matched.py`, `scrip
    report only) measures the injected waveform power before IMUX/TWTA: identical for both events
    (+0.04 and +0.17 dB over the request in the two pilot groups, from finite symbol statistics; same value
    for ASI and unauthorized). After the nonlinear payload the stored spectra show the **observable** rise
-   over the clean twin in each event's own band; the ASI rise is smaller because its band already holds
-   a planned carrier (overlap 0.25–0.51), the unauthorized rise is the full level above the gap floor.
-   In the stored cancellation residual both events rise by the same amount (pilot: 13.9 vs 15.1 dB at
-   C/I_psd 5.8 dB; 10.1 vs 10.0 dB at 9.2 dB): the residual removes the planned carrier and leaves the
-   two matched interferers at equal level, so the remaining placement cue sits in the plan mask, not in
-   residual energy.
+   over the clean twin in each event's own band. In pilot group 3300001 (ASI overlap 0.25 with a
+   transmitted carrier) the ASI rise is 3.5 dB against 10.1 dB for the unauthorized carrier, because the ASI
+   band already holds planned carrier power. In pilot group 3300000 the ASI overlaps the group's *dropped*
+   carrier, so both bands are at the noise floor in the clean twin and the two rises differ only by the
+   clean-twin level difference of the two bands (1.45 dB; the absolute in-band PSDs differ by 0.07 dB).
+   In the stored cancellation residual the two events sit within ≈ 1.5 dB of each other (13.9 vs 15.1 dB;
+   10.1 vs 10.0 dB), i.e. once the planned carrier is removed the matched interferers are at near-equal
+   residual level and the remaining placement cue sits in the plan mask.
 4. **Remaining differences attributable to placement and nonlinear interaction** — plan overlap fraction,
    the clean level difference between the two bands, and the widest-gap floor shift are reported per
    group; they are the intended intervention plus a small group-dependent IM term.
@@ -82,7 +84,9 @@ test-only families):
   samples whose own `c_over_i_psd_db` falls in each bin (n reported; empty in pilots);
 - representative paired spectrograms by a predeclared rule (`default_rng([20261021])`, up to three groups
   per bin), written under `figures/` with the selected groups and their predictions in `results.json`;
-- the same scenes for every view; `results_summary.json` keeps all of it (fixed dropped-key rule).
+- pair metrics per `plan_consistency` and for ASI variants over an absent carrier (K17c intersections);
+- the same scenes for every view; `results_summary.json` keeps the matched metrics except the unconditional
+  3 × 8 `confusion` block (the rejection-aware 3 × 9 block survives) under the fixed dropped-key rule.
 
 ## 5. Evidence
 
@@ -102,10 +106,12 @@ term equals λ·D·σ²_within (sum convention) or λ·σ²_within (mean convent
 within-class variance of the embedding; its gradient on the embedding is 2λ(e − c) per sample versus the CE
 gradient of order ‖W‖/N on the logits, so the effective pull depends on the learned embedding scale, which
 has no anchor (mean+max pooled ReLU features, no normalization). Measured on the pilot inputs
-(`runs/k18_init_scale.json`, three random initializations; `runs/k18_scale_audit.json`, trained pilot
-checkpoints): the embedding rms is 0.03 at initialization and 0.05–0.06 after the degenerate three-epoch
-pilots, so the center term is ≈ 6·10⁻⁴ (sum) and ≈ 5·10⁻⁶ (mean) against a CE of 2.08 under either weight,
-i.e. negligible in both conventions **at these scales**; the pilots cannot calibrate λ. Risk: with the sum
+([k18_init_scale.json](../results/k18_init_scale.json), three random initializations recorded per seed;
+[k18_scale_audit.json](../results/k18_scale_audit.json), trained pilot checkpoints): the embedding rms is
+0.03 at initialization and 0.05–0.06 after the degenerate three-epoch pilots; the unweighted squared-distance
+sum is 6·10⁻⁴ at initialization and 2·10⁻⁴–5·10⁻³ on the trained checkpoints, so the weighted center term is
+≤ 3·10⁻⁵ (0.005 × sum) and ≤ 4·10⁻⁷ (0.01 × mean) against a CE of 2.08, negligible in both conventions
+**at these scales**; the pilots cannot calibrate λ. Risk: with the sum
 convention the term grows with D and with the embedding norm, so a model that expands its features would
 feel a 0.005 weight strongly while a collapsed one feels nothing. Recommendation (awaiting approval): keep
 the squared-Euclidean (sum) convention and λ = 0.005 as pre-registered, log the center/CE ratio per epoch
@@ -149,8 +155,20 @@ test family; new artifact stage name and P18 §10 entry.
 - The matched set imposes levels outside the natural unauthorized range for targets above 10 dB and
   below the typical natural ASI range for targets near 4 dB; per-group flags record this.
 - Placement positions use the ASI grid (4001 points) and uniform gap positions; the matched carrier
-  descriptor is drawn uniformly among jointly feasible (Rs, α) pairs, which favours narrow carriers in
-  crowded plans (recorded as `n_rate_rolloff_options`).
+  descriptor is drawn uniformly among jointly feasible (Rs, α) pairs. Joint feasibility (an overlapping
+  position **and** a free gap with guard) is a strong narrow-carrier filter: over the 150 frozen groups the
+  matched Rs is always ≤ 6 Mbaud and is 1.0 or 1.5 Mbaud in 75 of them, whereas the natural ASI in the test
+  role spans 1–28.8 Mbaud (≈ 45 % above 6 Mbaud). The natural-vs-matched bin comparison therefore differs in
+  carrier width as well as in level; the report's denominator string says so and the physics check writes
+  the matched Rs histogram.
+- **ASI over an absent carrier.** Overlap is defined against the operator plan (the class definition), and
+  the shared missing-carrier draw can mute the very carrier the ASI overlaps: in 5 of the 150 groups
+  (3300000, 3300007, 3300091, 3300104 fully; 3300011 partly) the ASI band holds no transmitted carrier, so
+  the variant is observationally an unauthorized-like carrier under a mask that says "planned". This is the
+  P18 §7a K17c intersection with the missing/extra-carrier cases and is **reported, not hidden**: the
+  metadata records `asi_overlap_fraction_plan`, `asi_overlap_fraction_active` and
+  `asi_overlaps_only_absent_carrier`; the runner reports pair metrics per `plan_consistency` and for the
+  "ASI over absent carrier" subset separately.
 - No geometry is drawn for the matched ASI; antenna-related metadata is null by design.
 - Realized post-payload levels are observable only as in-band rises; the oracle diagnostic measures the
   pre-payload injected power and is never stored with the data.

@@ -273,7 +273,8 @@ def _pair_metrics(predictions, accepted, labels, groups, mask):
            "n_samples": int(mask.sum()), "n_scenarios": int(len(np.unique(groups[mask])))}
     if not mask.any():
         return {**out, "two_by_two": None, "prediction_breakdown": None, "pair_accuracy": None,
-                "pair_accuracy_among_pair_predictions": None, "note": "no matched pair samples"}
+                "pair_accuracy_among_pair_predictions": None, "pair_accuracy_accepted_only": None,
+                "rejected_fraction": None, "note": "no matched pair samples"}
     truth, pred, acc, grp = labels[mask], predictions[mask], accepted[mask], groups[mask]
     two_by_two = {t_name: {p_name: int(np.sum((truth == t) & (pred == p))) for p_name, p in (("adjacent_satellite", asi), ("unauthorized", unauth))}
                   for t_name, t in (("adjacent_satellite", asi), ("unauthorized", unauth))}
@@ -295,6 +296,8 @@ def _matched_metrics(matched, outputs, calibrations, scorer, alarm_threshold, na
     labels = matched["label"].astype(np.int64)
     groups = matched["seed"]
     bins = matched["matched_bin"].astype(np.int64)
+    consistency = np.asarray(matched["plan_consistency"]).astype(np.int64)
+    asi_active = np.array([record.get("matched", {}).get("asi_overlap_fraction_active", np.nan) for record in matched["meta"]], dtype=float)
     predictions = outputs["logits"].argmax(axis=1)
     probabilities = _softmax(outputs["logits"])
     alarm = 1.0 - probabilities[:, 0] > alarm_threshold
@@ -310,6 +313,12 @@ def _matched_metrics(matched, outputs, calibrations, scorer, alarm_threshold, na
             "pair": _pair_metrics(predictions, accepted, labels, groups, pair_mask),
             "per_bin": {name: _pair_metrics(predictions, accepted, labels, groups, pair_mask & (bins == index))
                         for index, name in enumerate(MATCHED_BIN_NAMES)},
+            # P18 §7a K17c intersections: groups with a missing planned carrier, and ASI variants whose band
+            # holds no transmitted carrier (observationally an unauthorized-like carrier under a "planned" mask).
+            "per_plan_consistency": {PLAN_CONSISTENCY[value]: _pair_metrics(predictions, accepted, labels, groups, pair_mask & (consistency == value))
+                                     for value in (0, 1)},
+            "asi_over_absent_carrier": _pair_metrics(predictions, accepted, labels, groups,
+                                                     pair_mask & np.isfinite(asi_active) & (asi_active == 0.0)),
             "known_acceptance_matched": _rate(accepted, groups)}
     confusion_full = {LABELS[t]: {LABELS[p]: int(np.sum((labels == t) & (predictions == p))) for p in range(len(LABELS))}
                       for t in sorted(set(labels.tolist()))}
@@ -331,7 +340,7 @@ def _matched_metrics(matched, outputs, calibrations, scorer, alarm_threshold, na
     natural = None
     if natural_test is not None:
         n_labels, n_groups, n_pred = natural_test["label"].astype(np.int64), natural_test["seed"], natural_predictions
-        natural = {"denominator": "natural test role, same checkpoint", "classes": {}}
+        natural = {"denominator": "natural test role, same checkpoint; natural carriers are wider (1-28.8 Mbaud) than the matched ones (<= 6 Mbaud)", "classes": {}}
         for name in ("adjacent_satellite", "unauthorized"):
             index = LABELS.index(name)
             ci = np.array([record.get("event", {}).get("c_over_i_psd_db", np.nan) if lab == index else np.nan
@@ -351,9 +360,11 @@ def _matched_metrics(matched, outputs, calibrations, scorer, alarm_threshold, na
             "clean_false_alarm": _rate(alarm[labels == 0], groups[labels == 0]),
             "event_alarm": _rate(alarm[pair_mask], groups[pair_mask]),
             "by_method": per_method, "natural_comparison": natural,
+            "n_asi_over_absent_carrier": int(np.sum(np.isfinite(asi_active) & (asi_active == 0.0) & (labels == LABELS.index("adjacent_satellite")))),
             "conventions": {"unconditional": "argmax over the eight known classes, no rejection",
-                            "pair": "2x2 among samples whose true label is adjacent_satellite or unauthorized; clean/other/rejected predictions are counted, not dropped",
-                            "bins": "frozen K17c C/I_psd bins [4,7), [7,10), [10,13]",
+                            "pair": "2x2 among samples whose true label is adjacent_satellite or unauthorized; clean/other/rejected predictions are counted, not dropped; pair_accuracy is threshold-free argmax, pair_accuracy_accepted_only uses the method's threshold",
+                            "bin_edges": "frozen K17c C/I_psd bins [4,7), [7,10), [10,13]",
+                            "natural_comparison": "natural test role scored with the same checkpoint; natural events differ from the matched set in level AND carrier width (matched Rs <= 6 Mbaud by joint feasibility)",
                             "ci": "scenario-group bootstrap with fixed weights and thresholds; null below two groups"}}
 
 
@@ -682,8 +693,8 @@ def report(result):
                   "Unconditional = argmax over eight classes; pair = among samples whose true label is one of the pair, with",
                   "clean / other-known / rejected predictions counted in the denominator (never dropped). Bins are the frozen",
                   "C/I_psd ranges; thresholds are the val-calib ones. The matched set never trained, selected or calibrated anything.", "",
-                  "| View | n | Unconditional accuracy | ASI recall | Unauthorized recall | Pair accuracy (MSP threshold) | ASI→unauth / unauth→ASI | pred clean | rejected |",
-                  "|---|---|---|---|---|---|---|---|---|"]
+                  "| View | n | Unconditional accuracy | ASI recall | Unauthorized recall | Pair accuracy (argmax, no rejection) | Pair accuracy among accepted (MSP) | ASI→unauth / unauth→ASI | pred clean | rejected (MSP) |",
+                  "|---|---|---|---|---|---|---|---|---|---|"]
         for view, values in result["methods"].items():
             m = values.get("matched")
             if not m:
@@ -693,11 +704,11 @@ def report(result):
             bd = pair["prediction_breakdown"] or {}
             lines.append(f"| {view} | {m['n_samples']} | {_percent(m['unconditional_accuracy'])} | "
                          f"{_percent(m['per_class']['adjacent_satellite']['recall'])} | {_percent(m['per_class']['unauthorized']['recall'])} | "
-                         f"{_percent(pair['pair_accuracy'])} | "
+                         f"{_percent(pair['pair_accuracy'])} | {_percent(pair.get('pair_accuracy_accepted_only'))} | "
                          f"{tt.get('adjacent_satellite', {}).get('unauthorized', 'n/a')} / {tt.get('unauthorized', {}).get('adjacent_satellite', 'n/a')} | "
                          f"{sum(v['predicted_clean'] for v in bd.values()) if bd else 'n/a'} | "
                          f"{sum(v['rejected_as_unknown'] for v in bd.values()) if bd else 'n/a'} |")
-        lines += ["", "| View | Bin (dB) | Groups | Pair samples | Pair accuracy (MSP threshold) | Natural ASI recall in bin | Natural unauthorized recall in bin |",
+        lines += ["", "| View | Bin (dB) | Groups | Pair samples | Pair accuracy (argmax) | Natural ASI recall in bin | Natural unauthorized recall in bin |",
                   "|---|---|---|---|---|---|---|"]
         for view, values in result["methods"].items():
             m = values.get("matched")
@@ -711,8 +722,15 @@ def report(result):
                 nat_un = natural["classes"].get("unauthorized", {}).get("recall_by_matched_bin", {}).get(name)
                 lines.append(f"| {view} | {name} | {m['per_bin_groups'][name]} | {pair['n_samples']} | {_percent(pair['pair_accuracy'])} | "
                              f"{_percent(nat_asi)} | {_percent(nat_un)} |")
+        for view, values in result["methods"].items():
+            m = values.get("matched")
+            if m:
+                lines += ["", f"Intersections ({view}, MSP): matched groups with a missing planned carrier = "
+                          f"{m['by_method'][next(iter(m['by_method']))]['per_plan_consistency']['planned_carrier_missing']['n_samples']} pair samples; "
+                          f"ASI variants over an absent carrier = {m['n_asi_over_absent_carrier']} (reported separately in results.json)."]
         lines += ["", "Representative paired spectrograms (fixed-seed rule, up to three groups per bin) are written under `figures/`;",
-                  "the selected groups are listed in results.json. A pilot with two groups cannot establish separability."]
+                  "the selected groups are listed in results.json. Natural events also differ from the matched ones in carrier width.",
+                  "A pilot with two groups cannot establish separability."]
     lines += ["", "Positive class of the alarm is any non-clean label; its threshold comes from clean val-calib scenes only.",
               "Plan-consistency positive class is `planned_carrier_missing` (auxiliary logit > 0); it does not affect checkpoint selection.",
               "Intervals in JSON resample scenario groups with fixed weights and thresholds; training-seed uncertainty is separate.",

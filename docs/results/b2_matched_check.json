@@ -1,7 +1,12 @@
 {
   "protocol": "B2-match/1",
   "benchmark_complete": false,
-  "matched_fingerprint": "cebfb4ab58837127ce503dc74585075909ca3b82c0b9cc044e493d4763a32080",
+  "symbol_rate_histogram": {
+    "1 Mbaud": 1,
+    "1.5 Mbaud": 1
+  },
+  "n_groups_asi_over_absent_carrier": 1,
+  "matched_fingerprint": "8b70c6ae67bb76c36363ef1bffac2ccfb3a97edbaf65724eff9ea896de58394e",
   "n_groups": 2,
   "n_observations": 6,
   "all_requested_powers_equal": true,
@@ -80,9 +85,14 @@
       "requested_power_equal": true,
       "realized_level_difference_asi_minus_unauthorized_db": 0.06574871515833536,
       "clean_level_difference_in_the_two_bands_db": 1.4541982261984998,
-      "widest_gap_floor_shift_db": {
-        "adjacent_satellite": 8.935960341679689,
-        "unauthorized": 11.361661525941955
+      "asi_overlap_fraction_active": 0.0,
+      "event_free_gap_hz": [
+        13505224.977764662,
+        16207865.551455073
+      ],
+      "event_free_gap_floor_shift_db": {
+        "adjacent_satellite": 0.1957714943549007,
+        "unauthorized": 0.1506812303198899
       }
     },
     {
@@ -132,9 +142,14 @@
       "requested_power_equal": true,
       "realized_level_difference_asi_minus_unauthorized_db": 2.3554036689499185,
       "clean_level_difference_in_the_two_bands_db": 8.934325558620884,
-      "widest_gap_floor_shift_db": {
-        "adjacent_satellite": 0.031326413921306084,
-        "unauthorized": 6.132446441089371
+      "asi_overlap_fraction_active": 0.24554380677523713,
+      "event_free_gap_hz": [
+        1261532.3740743548,
+        2682044.231242028
+      ],
+      "event_free_gap_floor_shift_db": {
+        "adjacent_satellite": 0.035316299942309115,
+        "unauthorized": 0.027638547133790325
       }
     }
   ],

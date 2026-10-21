@@ -14,7 +14,8 @@ from dataclasses import dataclass, replace
 import numpy as np
 
 from . import interferers as it
-from .asi import DEFAULT_RANGES, adjacent_satellite_downlink, adjacent_satellite_uplink, adjacent_satellite_uplink_at_level, overlap_positions
+from .asi import (DEFAULT_RANGES, adjacent_satellite_downlink, adjacent_satellite_uplink,
+                  adjacent_satellite_uplink_at_level, overlap_fraction, overlap_positions)
 from .b2_protocol import (BASE_PROTOCOL, BENIGN_TEST_FAMILIES, EQUIVALENCE_LIMITED_UNKNOWN, NEAR_UNKNOWN,
                           PROTOCOL, B2Config, LABELS, require_base_group, role_for_group)
 from .cid import cid_overlay
@@ -243,11 +244,14 @@ def _matched_plans(group: int, bandwidth: float):
     raise it.InfeasibleCarrierError("matched group has no plan admitting both placements after bounded draws")
 
 
-def _matched_draw(group: int, plan, bandwidth: float) -> dict:
+def _matched_draw(group: int, plan, bandwidth: float, active=None) -> dict:
     """Group-level matched intervention, RNG namespace ``[group, 1840]``.
 
     One shared C/I_psd ~ U(4, 13) dB, one (Rs, alpha, modulation); ASI centre uniform among the
-    overlap-feasible grid positions, unauthorized centre uniform inside a feasible free gap.
+    overlap-feasible grid positions, unauthorized centre uniform inside a feasible free gap. The
+    overlap is defined against the *operator plan* (the class definition). With the shared
+    missing-carrier draw the overlapped carrier may be the absent one; ``asi_overlap_fraction_active``
+    records the overlap with transmitted carriers so that intersection is reported, not hidden.
     """
     rng = np.random.default_rng([group, 1840])
     ci_psd = float(rng.uniform(*MATCHED_CI_RANGE))
@@ -264,11 +268,17 @@ def _matched_draw(group: int, plan, bandwidth: float) -> dict:
     unauthorized_f0 = float(rng.uniform(lo + need / 2, hi - need / 2))
     mean_psd = sum(c.power for c in plan) / sum(c.symbol_rate for c in plan)
     natural = {name: bool(lo_ <= ci_psd <= hi_) for name, (lo_, hi_) in NATURAL_CI_PSD_RANGES.items()}
+    half = rs * (1 + alpha) / 2
+    overlap_plan = float(overlap_fraction(asi_f0 - half, asi_f0 + half, plan))
+    transmitted = plan if active is None else [c for c, keep in zip(plan, active) if keep]
+    overlap_active = float(overlap_fraction(asi_f0 - half, asi_f0 + half, transmitted)) if transmitted else 0.0
     return {"pair_id": f"{MATCHED_PROTOCOL}:{group}", "target_c_over_i_psd_db": ci_psd, "bin": matched_bin(ci_psd),
             "bin_name": MATCHED_BIN_NAMES[matched_bin(ci_psd)], "symbol_rate": rs, "alpha": alpha, "mod": mod,
             "requested_power": float(mean_psd * rs * 10 ** (-ci_psd / 10)),
             "power_reference": "total_planned_uplink (unit nominal load); PSD relative to the plan's mean PSD",
             "asi_f0": asi_f0, "unauthorized_f0": unauthorized_f0, "unauthorized_gap_hz": [lo, hi],
+            "asi_overlap_fraction_plan": overlap_plan, "asi_overlap_fraction_active": overlap_active,
+            "asi_overlaps_only_absent_carrier": bool(overlap_active == 0.0),
             "within_natural_range": natural, "n_rate_rolloff_options": len(options),
             "limitation": "controlled intervention: the two classes share level, carrier and plan by construction; "
                           "this conditional distribution does not represent natural operating levels"}
@@ -308,7 +318,7 @@ def prepare_matched_scene(label: str, group: int, config: B2Config | None = None
     nominal_ibo = [path.ibo_db for path in paths]
     plans, source = _matched_plans(group, config.bandwidth)
     active, dropped = _activity(group, plans, config, None)
-    matched = _matched_draw(group, plans[0], config.bandwidth)
+    matched = _matched_draw(group, plans[0], config.bandwidth, active[0])
     cfg = _dual_config(paths, config.nominal_xpd_db, config)
     callback, event = _matched_event(label, matched, plans[0], config.bandwidth)
     consistency = int(dropped is not None)
