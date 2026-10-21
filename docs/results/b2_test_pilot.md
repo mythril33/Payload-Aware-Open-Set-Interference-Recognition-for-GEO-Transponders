@@ -23,17 +23,21 @@ Generation of the ten test-only observations with cancellation took about 40 s o
 |---|---|---:|---:|---:|---:|
 | pulsed (CW, duty 36–41 %) | near | 2 | 0.10 dB | 0.87 dB | 0.00 dB |
 | intermittent_bursts | near | 2 | 0.16 dB | 1.80 dB | 0.00 dB |
-| adjacent_satellite_downlink (C/I_psd 26–27 dB) | near | 2 | 0.06 dB | 1.21 dB | 0.02 dB |
+| adjacent_satellite_downlink (pair-matched to the known uplink ASI: C/I_psd 6.2 and 24.6 dB) | near | 2 | 0.64 dB | 4.15 dB | 0.38 dB |
 | wideband_noise | equivalence-limited | 2 | 0.20 dB | 3.51 dB | 0.43 dB |
 | cid_overlay (6 and 4 transmitted CIDs, −21.5…−27.5 dB) | benign | 2 | n/a (under every carrier) | n/a | 0.00 dB |
 
-Reading: at the drawn C/I values all four unknown families are nearly invisible in the raw
-spectrum (≤ 0.2 dB) and become visible only after the planned carriers are cancelled (0.9–3.5 dB),
-the same mechanism as for `carrier_under_carrier` in P20. The time-gated families (pulsed, bursts)
-are additionally identifiable from their snapshot occupancy, which the spectrogram keeps as a time
-axis. The downlink ASI family differs from the known uplink ASI only by injection point, as K17d
-requires; whether a model can tell them apart is the pre-registered question of P18 §6.
-Two groups cannot establish distributions; these are execution-level measurements.
+Reading: at the drawn C/I values the pulsed, burst and wideband-noise families are nearly invisible in
+the raw spectrum (≤ 0.2 dB) and become visible only after the planned carriers are cancelled
+(0.9–3.5 dB), the same mechanism as for `carrier_under_carrier` in P20. The time-gated families
+(pulsed, bursts) are additionally identifiable from their snapshot occupancy, which the spectrogram
+keeps as a time axis. The downlink ASI family is pair-matched to the known uplink ASI of the same
+group (same geometry, C/I_psd, carrier and placement; only the injection point differs, K17d): at
+C/I_psd 6.2 dB it shows 1.27 dB in the spectrum and 7.98 dB in the residual, at 24.6 dB only 0.02 and
+0.32 dB. Both pilot groups have all carriers active, so the effective level equals the nominal one
+(`effective_c_over_i_psd_db`; see P21 §2 for the drift in missing-carrier groups). Whether a model can
+separate the downlink family from its uplink twin is the pre-registered question of P18 §6. Two groups
+cannot establish distributions; these are execution-level measurements.
 
 ## Open-set run (execution evidence only)
 
@@ -42,11 +46,11 @@ width 8, seed 0, center-loss weight 0.005, independent plan-consistency head. Th
 16 training observations. Thresholds from val-calib known samples (95 % acceptance), alarm threshold
 from val-calib clean scenes (Pfa 5 %). Test-only families scored with the frozen checkpoints.
 
-| View | Known accuracy (n = 16) | Pooled-near AUROC MSP / energy / Mahalanobis (n = 6 unknown vs 16 known) | cid_overlay accepted as clean (MSP) |
-|---|---:|---|---:|
-| co | 12.5 % | 0.51 / 0.58 / 0.58 | 0 % (n = 2) |
-| dual | 12.5 % | 0.53 / 0.41 / 0.51 | 0 % (n = 2) |
-| dual_residual | 12.5 % | 0.37 / 0.51 / 0.50 | 100 % (n = 2) |
+| View | Known accuracy (n = 16) | Pooled-near AUROC MSP / energy / Mahalanobis (n = 6 unknown vs 16 known) | Pooled-near rejection at threshold MSP / energy / Mahalanobis | cid_overlay accepted as clean (MSP) |
+|---|---:|---|---|---:|
+| co | 12.5 % | 0.55 / 0.55 / 0.53 | 50 % / 0 % / 0 % | 0 % (n = 2) |
+| dual | 12.5 % | 0.60 / 0.50 / 0.53 | 100 % / 0 % / 17 % | 0 % (n = 2) |
+| dual_residual | 12.5 % | 0.42 / 0.46 / 0.53 | 0 % / 0 % / 50 % | 100 % (n = 2) |
 
 All models are at chance on the known classes, so every AUROC/AP/OSCR/FPR@95TPR value here is
 noise around 0.5 with 2 positives per family. The run demonstrates that the test-only families flow

@@ -182,23 +182,31 @@ def test_zero_shift_reproduces_stored_masks_and_nonzero_shift_moves_them():
     assert np.mean((shifted[0] > -3) == moved) > 0.97 and not np.array_equal(shifted[0] > -3, core)
 
 
-def test_plan_shift_only_touches_mask_channels_of_selected_training_rows():
+def test_plan_shift_rebuilds_selected_rows_with_the_full_a5_style_preprocessing():
     import geoml.train as tr
+    from geoml.data import preprocess_dual
     d = _b2_like(6, 1)
     cfg = TrainConfig(labels=LABELS, input_mode="dual_residual", plan_shift_fraction=0.5, epochs=1, batch=6, width=4)
     plans = tr._training_plans(d, cfg)
     x = tr._inputs(d, cfg, None)
+    idx = torch.arange(6)
     gen = torch.Generator().manual_seed(5)
-    expected = torch.rand(6, generator=torch.Generator().manual_seed(5)) < 0.5     # replay the selection draw
-    out = tr._apply_plan_shift(x, plans, cfg, gen)
+    replay = torch.Generator().manual_seed(5)
+    expected = torch.rand(6, generator=replay) < 0.5                     # replay the selection draw
+    shifts = (torch.rand(6, generator=replay) * 2 - 1) * cfg.plan_shift_max_hz
+    out = tr._apply_plan_shift(x, idx, d, plans, cfg, None, gen)
     changed = (out != x).any(dim=(1, 2, 3))
-    assert torch.equal(changed, expected) and 0 < int(changed.sum())
+    assert torch.equal(changed, expected) and 0 < int(changed.sum()) < 6
     for row in range(6):
-        assert torch.equal(out[row, [0, 1, 4]], x[row, [0, 1, 4]])        # spectra and residual untouched
-        if changed[row]:
-            assert not torch.equal(out[row, 2], x[row, 2]) or not torch.equal(out[row, 3], x[row, 3])
-    assert torch.equal(tr._apply_plan_shift(x, plans, TrainConfig(labels=LABELS, input_mode="dual_residual",
-                                                                  plan_shift_fraction=0.0), torch.Generator()), x)
+        if not changed[row]:
+            continue
+        # Exactly what the A5 corruption does: shifted masks, then the whole preprocessing again.
+        masks = tr.shifted_mask_db(plans[row], float(shifts[row]))[None]
+        reference = preprocess_dual(d["spec"][row:row + 1], masks, view="dual_residual", residual_db=d["residual"][row:row + 1])
+        assert np.allclose(out[row].numpy(), reference[0], atol=1e-6)
+        assert not torch.equal(out[row, 2], x[row, 2])                  # the co mask moved
+    assert torch.equal(tr._apply_plan_shift(x, idx, d, plans, TrainConfig(labels=LABELS, input_mode="dual_residual",
+                                                                          plan_shift_fraction=0.0), None, torch.Generator()), x)
 
 
 def test_plan_shift_changes_training_but_never_validation_inputs():
@@ -207,9 +215,9 @@ def test_plan_shift_changes_training_but_never_validation_inputs():
     seen = []
     original = tr._apply_plan_shift
 
-    def spy(xb, plans, cfg, gen):
-        out = original(xb, plans, cfg, gen)
-        seen.append(len(plans))
+    def spy(xb, idx, raw, plans, cfg, ref, gen):
+        out = original(xb, idx, raw, plans, cfg, ref, gen)
+        seen.append(len(idx))
         return out
 
     monkeypatch_target = tr
@@ -229,10 +237,16 @@ def test_plan_shift_supports_the_co_view_with_the_co_plan_only():
     d = _b2_like(3, 7)
     cfg = TrainConfig(labels=LABELS, input_mode="co", plan_shift_fraction=1.0, epochs=1, batch=3, width=4)
     plans = tr._training_plans(d, cfg)
-    assert all(len(p) == 1 for p in plans)
+    assert all(len(p) == 2 for p in plans)
     x = tr._inputs(d, cfg, None)
-    out = tr._apply_plan_shift(x, plans, cfg, torch.Generator().manual_seed(0))
-    assert torch.equal(out[:, 0], x[:, 0]) and not torch.equal(out[:, 1], x[:, 1])
+    assert x.shape[1] == 2
+    out = tr._apply_plan_shift(x, torch.arange(3), d, plans, cfg, None, torch.Generator().manual_seed(0))
+    assert not torch.equal(out[:, 1], x[:, 1])
+    # Spectra move only by the per-row reference change (a constant), never by shape.
+    for row in range(3):
+        diff = (out[row, 0] - x[row, 0]).numpy()
+        inside = (x[row, 0].numpy() > -2.9) & (x[row, 0].numpy() < 0.9)   # away from the clip limits
+        assert np.ptp(diff[inside]) < 1e-5
 
 
 def test_plan_shift_requires_metadata_plans_and_valid_config():

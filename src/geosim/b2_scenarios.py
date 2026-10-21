@@ -192,7 +192,7 @@ def prepare_scene(label: str, group: int, config: B2Config | None = None, *,
 
 
 def _test_parameters(group: int, family: str) -> np.random.Generator:
-    """Separate RNG namespace for test-only families (P18 §4)."""
+    """Separate RNG namespace for test-only families (P18 §4); the downlink ASI is the K17d exception."""
     return np.random.default_rng([group, 1830, TEST_FAMILIES.index(family)])
 
 
@@ -206,7 +206,11 @@ def _test_event(family: str, group: int, plan, bandwidth: float, active, config:
         info.update(injection_stage="uplink", power_reference="total_planned_uplink", test_only=True)
         return callback, None, info
     if family == "adjacent_satellite_downlink":
-        callback, info = adjacent_satellite_downlink(rng, plan, bandwidth)
+        # K17d control: scenario, plan, link AND C/I_psd matched to the known uplink ASI of the
+        # same group, so the two differ only in injection point. This reuses the known event's
+        # RNG stream deliberately (test groups only); the other families keep their own namespace.
+        callback, info = adjacent_satellite_downlink(_parameters(group, "adjacent_satellite"), plan, bandwidth)
+        info.update(paired_with_known="adjacent_satellite", pairing="same group RNG stream: identical geometry, C/I_psd, carrier and placement")
         return None, callback, info
     if family == "cid_overlay":
         callback, info = cid_overlay(rng, plan, bandwidth, active=list(active))
@@ -255,6 +259,16 @@ def _simulate(scene: B2Scene, calibration, keep_iq: bool) -> DualScenarioResult:
     result = simulate_dual(scene.cfg, plans=scene.plans, interferers=scene.interferers,
                            active_carriers=scene.active_carriers, calibration=calibration, keep_iq=keep_iq, **kwargs)
     result.meta.update(scene.metadata)
+    if kwargs:
+        # The downlink event is scaled by the realized co feed power; with a missing carrier that
+        # power is below the nominal load, so the effective level relative to the planned mean PSD
+        # drifts by the dropped carrier's fraction. Record it instead of hiding it.
+        active = result.meta["active_planned_power"][0]
+        result.meta["event"] = {**result.meta["event"],
+                                "feed_reference_power": result.meta["downlink_interference_reference_power"][0],
+                                "active_planned_power_co": active,
+                                "effective_c_over_i_psd_db": float(result.meta["event"]["c_over_i_psd_db"] - 10 * np.log10(active)),
+                                "level_note": "nominal C/I_psd is relative to the unit planned load; the realized feed power scales the event"}
     return result
 
 

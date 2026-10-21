@@ -1,7 +1,7 @@
 {
   "protocol": "B2-test/1",
   "benchmark_complete": false,
-  "test_fingerprint": "8ff27cb0e257931fef0cafc95080dc19282d0dc83242399049d4241c4d73d79e",
+  "test_fingerprint": "deb51a01e48406513377fbb4e3772c450b002f83f2765f56392b8c5ed11ba151",
   "known_fingerprint": "325317b75dfaea64bd4872d09afd7511ffaf441dfd9e219153217081a9027831",
   "n_observations": 10,
   "per_family": {
@@ -19,9 +19,9 @@
     },
     "adjacent_satellite_downlink": {
       "n": 2,
-      "median_delta_psd_in_band_db": 0.061062547709489934,
-      "median_delta_residual_in_band_db": 1.210612836951249,
-      "mean_delta_psd_co_db": 0.022342681884765625
+      "median_delta_psd_in_band_db": 0.6445998308569401,
+      "median_delta_residual_in_band_db": 4.150273150972588,
+      "mean_delta_psd_co_db": 0.3813285827636719
     },
     "wideband_noise": {
       "n": 2,
@@ -75,15 +75,16 @@
       "group": "near",
       "expected_decision": "unknown",
       "injection_stage": "downlink",
-      "mean_delta_psd_co_db": 0.01495361328125,
+      "mean_delta_psd_co_db": 0.7437591552734375,
       "event_band_hz": [
-        -17909325.0,
-        -9809325.0
+        -10494180.0,
+        8945820.0
       ],
-      "delta_psd_in_band_db": 0.013379166151452182,
-      "delta_residual_in_band_db": 0.35679832841867665,
-      "c_over_i_psd_db": 26.00371421151777,
-      "overlap_fraction": 0.5660479172989827
+      "delta_psd_in_band_db": 1.2717669455809784,
+      "delta_residual_in_band_db": 7.982777901894579,
+      "c_over_i_psd_db": 6.210765680062687,
+      "overlap_fraction": 0.7063742370192198,
+      "effective_c_over_i_psd_db": 6.210765680062687
     },
     {
       "scenario_id": 3200000,
@@ -156,15 +157,16 @@
       "group": "near",
       "expected_decision": "unknown",
       "injection_stage": "downlink",
-      "mean_delta_psd_co_db": 0.02973175048828125,
+      "mean_delta_psd_co_db": 0.01889801025390625,
       "event_band_hz": [
-        10139400.0,
-        13739400.0
+        1836000.0,
+        13836000.0
       ],
-      "delta_psd_in_band_db": 0.10874592926752769,
-      "delta_residual_in_band_db": 2.0644273454838213,
-      "c_over_i_psd_db": 16.88988509389097,
-      "overlap_fraction": 0.6421815912244107
+      "delta_psd_in_band_db": 0.01743271613290176,
+      "delta_residual_in_band_db": 0.31776840005059626,
+      "c_over_i_psd_db": 24.608179664086787,
+      "overlap_fraction": 0.7671100580638596,
+      "effective_c_over_i_psd_db": 24.608179664086787
     },
     {
       "scenario_id": 3200001,

@@ -28,6 +28,11 @@ def test_test_scenes_share_group_draws_and_are_restricted_to_the_test_role():
         assert (scene.interferers[0] is None) == downlink and (scene.downlink_interferers[0] is not None) == downlink
         assert scene.metadata["expected_decision"] == ("clean" if family == "cid_overlay" else "unknown")
     assert prepare_test_scene("pulsed", group).event != prepare_test_scene("intermittent_bursts", group).event
+    # K17d: the downlink ASI is pair-matched to the known uplink ASI of the same group.
+    known_asi = prepare_scene("adjacent_satellite", group).event
+    downlink = prepare_test_scene("adjacent_satellite_downlink", group).event
+    assert downlink["carrier"] == known_asi["carrier"] and downlink["geometry"] == known_asi["geometry"]
+    assert downlink["c_over_i_psd_db"] == known_asi["c_over_i_psd_db"] and downlink["paired_with_known"] == "adjacent_satellite"
     for role in ("train", "val-select", "val-calib", "test-matched"):
         with pytest.raises(ValueError, match="test-role"):
             prepare_test_scene("pulsed", ROLE_STARTS[role])
@@ -42,6 +47,7 @@ def _fake_meta(cfg, plans, interferers, active_carriers, calibration, downlink):
     return {"config": cfg.to_dict(), "plans": [[asdict(c) for c in plan] for plan in plans],
             "has_interferer": [event is not None for event in interferers],
             "has_downlink_interferer": [event is not None for event in downlink],
+            "downlink_interference_reference_power": [0.1, 0.1],
             "active_carriers": [list(active) for active in active_carriers],
             "active_planned_power": power, "nominal_planned_power": [1., 1.],
             "gain_mode": "fixed_nominal_planned_power",
@@ -159,3 +165,28 @@ def test_cli_passes_binding_and_settings(tmp_path, monkeypatch):
              "--limit-groups", "2", "--groups-per-shard", "1"])
     assert calls[0][1] == str(tmp_path / "known")
     assert calls[0][3] == {"limit_groups": 2, "groups_per_shard": 1, "cancellation": CancellationConfig(iterations=2)}
+
+
+def test_real_chain_downlink_family_raises_only_its_band_and_keeps_known_streams():
+    """One real test group (~10 s): the downlink ASI appears in its band on the co feed; the
+    clean twin's carriers, noise and phase streams are untouched elsewhere."""
+    from geosim.b2_scenarios import sample_scene, sample_test_scene
+    from geosim.cancellation import band_power_db
+    group = ROLE_STARTS["test"]
+    clean = sample_scene("clean", group)
+    down = sample_test_scene("adjacent_satellite_downlink", group)
+    event = down.meta["event"]
+    assert down.meta["has_downlink_interferer"] == [True, False] and down.meta["has_interferer"] == [False, False]
+    assert np.array_equal(down.mask_db, clean.mask_db)
+    lo, hi = event["f_lo"], event["f_hi"]
+    inside = band_power_db(down.spec_db[0], lo, hi) - band_power_db(clean.spec_db[0], lo, hi)
+    assert inside > 0.0
+    # Far from the event band the co spectrum is numerically the clean twin's (same streams).
+    from geosim.plan import monitor_freqs
+    f = monitor_freqs()
+    far = (f < lo - 4e6) | (f > hi + 4e6)
+    assert far.any()
+    difference = np.abs(down.spec_db[0][:, far] - clean.spec_db[0][:, far])
+    assert np.median(difference) < 0.02 and difference.max() < 0.2        # Welch sidelobe leakage only
+    assert event["effective_c_over_i_psd_db"] == pytest.approx(
+        event["c_over_i_psd_db"] - 10 * np.log10(down.meta["active_planned_power"][0]))

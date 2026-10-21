@@ -159,7 +159,8 @@ def test_test_only_families_are_scored_with_frozen_thresholds_and_reported_per_g
     values = result["methods"]["dual_residual"]
     for method, metrics in values["rejection"].items():
         families = metrics["families"]
-        assert set(families) == set(unknown["families"]) and metrics["n_unknown"] == 8
+        assert set(families) == set(unknown["families"])
+        assert metrics["n_unknown"] == 6 and metrics["n_unknown_all_families"] == 8 and metrics["n_unknown_equivalence_limited"] == 2
         for name, entry in families.items():
             assert entry["n"] == 2 and entry["rejection_at_threshold"]["n_samples"] == 2
             if entry["pre_registered_group"] == "benign":
@@ -175,10 +176,20 @@ def test_test_only_families_are_scored_with_frozen_thresholds_and_reported_per_g
         # The threshold is the val-calib one; its calibration count is unchanged by the unknown families.
         assert metrics["calibration"]["n_calibration"] == 16
     assert set(values["open_set"]) == {"msp", "energy", "mahalanobis"}
-    assert values["open_set"]["msp"]["n_unknown"] == 8 and values["open_set"]["msp"]["unknown_auroc"] is not None
+    assert values["open_set"]["msp"]["n_unknown"] == 6 and values["open_set"]["msp"]["n_unknown_all_families"] == 8
+    assert values["open_set"]["msp"]["unknown_auroc"] is not None and values["open_set"]["msp"]["n_known"] == 16
+    assert (tmp_path / "os" / "results_summary.json").exists()
+    summary = json.loads((tmp_path / "os" / "results_summary.json").read_text())
+    assert summary["experiment_fingerprint"] == result["experiment_fingerprint"]
+    assert "curves" not in json.dumps(summary["methods"]) and summary["methods"]["dual_residual"]["rejection"]["msp"]["unknown_rejection"] is not None
+    # The scorer parameter block is dropped, but every method's metrics survive the trimming.
+    assert set(summary["methods"]["dual_residual"]["open_set"]) == {"msp", "energy", "mahalanobis"}
+    assert set(summary["methods"]["dual_residual"]["rejection"]) == {"msp", "energy", "mahalanobis"}
+    assert "mahalanobis_scorer" not in summary["methods"]["dual_residual"] and "mahalanobis_scorer" in result["methods"]["dual_residual"]
     assert set(values["test_only_alarm"]) == set(unknown["families"])
     text = (tmp_path / "os" / "results.md").read_text()
     assert "Test-only families (B2-test/1" in text and "pooled near" in text and "benign (expect clean)" in text
+    assert "null (n_unknown=0)" not in text and "were supplied; their metrics are null" not in text and "event alarm" in text
 
 
 def test_test_only_artifact_must_be_bound_to_the_same_known_data(unknown_dataset, tmp_path):

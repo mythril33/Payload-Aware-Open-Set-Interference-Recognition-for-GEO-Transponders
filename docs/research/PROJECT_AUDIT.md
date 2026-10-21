@@ -18,7 +18,7 @@ no representative evidence), **SUPPORTED** (pilot-level evidence only), **ASSUME
 | Size | 168 tracked files; 12.3 k lines of Python (src + tests + scripts) | `wc -l` |
 | Environment | Python 3.13; no venv in the fresh container; PyTorch CPU index blocked by network policy (403), PyPI allowed → torch 2.14.1+cu130 wheel runs on CPU | pip logs; `scripts/setup_cloud.sh` now falls back |
 | Hardware | 4 CPUs, 15 GiB RAM, no GPU, ~31 GB free disk | `nproc`, `free`, `df` |
-| Tests | 707 pass on HEAD; 743 after the B2-feat/1 slice; 757 after the B2-test/1 slice | pytest output |
+| Tests | 707 pass on HEAD; 743 after the B2-feat/1 slice; 758 after the B2-test/1 slice and its review fixes | pytest output |
 | Data / runs | None committed (by design); `data/`, `runs/` ignored | `.gitignore` |
 
 ## 2. Implementation matrix

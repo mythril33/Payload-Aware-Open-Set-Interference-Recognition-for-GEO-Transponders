@@ -1,9 +1,9 @@
 {
   "protocol": "B2-feat/1",
-  "test_only_protocol": "B2-test/1",
-  "test_only_fingerprint": "8ff27cb0e257931fef0cafc95080dc19282d0dc83242399049d4241c4d73d79e",
   "parent_protocol": "B2/1",
   "benchmark_complete": false,
+  "test_only_protocol": "B2-test/1",
+  "test_only_fingerprint": "deb51a01e48406513377fbb4e3772c450b002f83f2765f56392b8c5ed11ba151",
   "labels": [
     "clean",
     "cw",
@@ -46,8 +46,11 @@
       "plan_shift_max_hz": 500000.0
     }
   },
-  "experiment_fingerprint": "f75e54553681f1a26b5b9a5be30a0438e153d603180ddaf5167f3d4a640c8d8d",
+  "experiment_fingerprint": "c035a757da4f8a7b4f8f6922215d0f031957c1458017c8eff505864e17798c7c",
   "data_fingerprint": "325317b75dfaea64bd4872d09afd7511ffaf441dfd9e219153217081a9027831",
+  "source": {
+    "revision": "a09429b0ed157b06a613141a75bf7d128f764d22"
+  },
   "partitions": {
     "train": {
       "n_samples": 16,
@@ -137,21 +140,6 @@
       "n_planned_carrier_missing": 0
     }
   },
-  "cancellation": {
-    "srrc_span_symbols": 10,
-    "phase_grid": 16,
-    "iterations": 3,
-    "edge_guard": 512,
-    "version": "obs-cancel/1"
-  },
-  "runtime": {
-    "python": "3.13.16",
-    "numpy": "2.5.4",
-    "torch": "2.14.1+cu130",
-    "device": "cpu"
-  },
-  "scope": "Known-class learning slice on frozen B2/1 roles; not the complete open-set benchmark.",
-  "source_revision": "a59548497b92cb6d5348d8ba3330d002a3c3e260 (working tree; follow-up commit recorded in DURUM)",
   "methods": {
     "co": {
       "input_channels": 2,
@@ -165,88 +153,85 @@
         "n_scenarios": 2
       },
       "macro_f1": 0.027777777777777776,
-      "confusion": [
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          2,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          2,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          2,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          2,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          2,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          2,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          2,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          2,
-          0,
-          0
-        ]
-      ],
+      "per_class_recall": {
+        "clean": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "cw": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "swept_cw": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "unauthorized": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "overdrive": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "cross_pol": {
+          "mean": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "adjacent_satellite": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "carrier_under_carrier": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        }
+      },
+      "ece": {
+        "ece": 0.008817812046310408,
+        "n_bins": 15,
+        "n_samples": 16
+      },
       "clean_false_alarm": {
         "mean": 0.0,
         "ci95": [
@@ -265,6 +250,12 @@
         "n_samples": 14,
         "n_scenarios": 2
       },
+      "alarm": {
+        "score": "one_minus_softmax_clean",
+        "threshold": 0.8698002201928584,
+        "target_clean_pfa": 0.05,
+        "n_clean_calibration": 2
+      },
       "plan_consistency": {
         "positive_class": "planned_carrier_missing",
         "decision_rule": "auxiliary logit > 0",
@@ -281,95 +272,15 @@
         "n_predicted_positive": 0,
         "n_samples": 16
       },
-      "open_set": {
-        "msp": {
-          "unknown_auroc": 0.5104166666666666,
-          "unknown_ap": 0.3484610218356349,
-          "oscr": 0.0625,
-          "fpr_at_95_tpr": 0.8125,
-          "n_unknown": 8,
-          "positive_class": "unknown (near families pooled)"
-        },
-        "energy": {
-          "unknown_auroc": 0.5833333333333333,
-          "unknown_ap": 0.49836570593149543,
-          "oscr": 0.09375,
-          "fpr_at_95_tpr": 0.8125,
-          "n_unknown": 8,
-          "positive_class": "unknown (near families pooled)"
-        },
-        "mahalanobis": {
-          "unknown_auroc": 0.5833333333333333,
-          "unknown_ap": 0.44099136730715677,
-          "oscr": 0.0625,
-          "fpr_at_95_tpr": 0.8125,
-          "n_unknown": 8,
-          "positive_class": "unknown (near families pooled)"
-        }
-      },
-      "test_only_alarm": {
-        "pulsed": {
-          "mean": 0.0,
-          "ci95": [
-            0.0,
-            0.0
-          ],
-          "n_samples": 2,
-          "n_scenarios": 2
-        },
-        "intermittent_bursts": {
-          "mean": 0.0,
-          "ci95": [
-            0.0,
-            0.0
-          ],
-          "n_samples": 2,
-          "n_scenarios": 2
-        },
-        "adjacent_satellite_downlink": {
-          "mean": 0.0,
-          "ci95": [
-            0.0,
-            0.0
-          ],
-          "n_samples": 2,
-          "n_scenarios": 2
-        },
-        "wideband_noise": {
-          "mean": 0.0,
-          "ci95": [
-            0.0,
-            0.0
-          ],
-          "n_samples": 2,
-          "n_scenarios": 2
-        },
-        "cid_overlay": {
-          "mean": 0.0,
-          "ci95": [
-            0.0,
-            0.0
-          ],
-          "n_samples": 2,
-          "n_scenarios": 2
-        }
-      },
-      "checkpoint_sha256": "b788fce2df72bc401e3954c9f5f2fae152c3393492277c1242a88a08839bef03",
-      "n_parameters": 78777,
-      "ece": {
-        "ece": 0.008806185419754975,
-        "n_bins": 15,
-        "n_samples": 16
-      },
       "rejection": {
         "msp": {
           "calibration": {
             "method": "msp",
-            "threshold": 0.8661440945201879,
+            "threshold": 0.866114340372794,
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "f96578b88d2d4671bff3e3db4339c20bf1555d89b5d396a5e636f9d9666de26e"
+            "provenance": "938096da33f48abacc57fae5d5e1aa43254b97287a02f72181d5ba53925a226b"
           },
           "known_acceptance": {
             "mean": 0.5,
@@ -386,6 +297,16 @@
             "n_samples": 8,
             "n_scenarios": 1
           },
+          "unknown_rejection": {
+            "mean": 0.5,
+            "ci95": [
+              0.0,
+              1.0
+            ],
+            "n_samples": 6,
+            "n_scenarios": 2
+          },
+          "n_unknown": 6,
           "families": {
             "pulsed": {
               "pre_registered_group": "near",
@@ -407,8 +328,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.5,
@@ -441,8 +361,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.5,
@@ -459,10 +378,10 @@
               "pre_registered_group": "near",
               "n": 2,
               "ranking": {
-                "unknown_auroc": 0.53125,
-                "unknown_aupr": 0.23333333333333334,
+                "unknown_auroc": 0.65625,
+                "unknown_aupr": 0.25757575757575757,
                 "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.8125,
+                "unknown_fpr_at_95_tpr": 0.5625,
                 "n_known": 16,
                 "n_unknown": 2,
                 "known_closed_accuracy": 0.125,
@@ -475,8 +394,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.5,
@@ -493,10 +411,10 @@
               "pre_registered_group": "equivalence_limited",
               "n": 2,
               "ranking": {
-                "unknown_auroc": 0.65625,
-                "unknown_aupr": 0.3333333333333333,
+                "unknown_auroc": 0.6875,
+                "unknown_aupr": 0.34090909090909094,
                 "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.625,
+                "unknown_fpr_at_95_tpr": 0.5625,
                 "n_known": 16,
                 "n_unknown": 2,
                 "known_closed_accuracy": 0.125,
@@ -509,8 +427,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.5,
@@ -543,8 +460,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.5,
@@ -585,6 +501,7 @@
               }
             }
           },
+          "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; cid_overlay is a benign control",
           "pooled_near": {
             "families": [
               "pulsed",
@@ -592,8 +509,8 @@
               "adjacent_satellite_downlink"
             ],
             "ranking": {
-              "unknown_auroc": 0.5104166666666666,
-              "unknown_aupr": 0.3484610218356349,
+              "unknown_auroc": 0.5520833333333333,
+              "unknown_aupr": 0.36052738684317637,
               "oscr_auc": 0.0625,
               "unknown_fpr_at_95_tpr": 0.8125,
               "n_known": 16,
@@ -608,8 +525,7 @@
                 "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                 "oscr_known_denominator": "all_known_test_events",
                 "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-              },
-              "curves": null
+              }
             },
             "rejection_at_threshold": {
               "mean": 0.5,
@@ -621,17 +537,18 @@
               "n_scenarios": 2
             }
           },
-          "n_unknown": 8,
-          "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; cid_overlay is a benign control"
+          "n_unknown_equivalence_limited": 2,
+          "n_unknown_all_families": 8,
+          "unknown_rejection_denominator": "pooled near families only"
         },
         "energy": {
           "calibration": {
             "method": "energy",
-            "threshold": -2.097030972864173,
+            "threshold": -2.0969829892680747,
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "ca33ecd7fc29d60c90d685e57ff78d33a7f2d929f8dc5090d2f93d011218f585"
+            "provenance": "1557abdf45be280d6bcf67776771814a3c0ee78bf5d179d85d8dc1f5d66bd592"
           },
           "known_acceptance": {
             "mean": 1.0,
@@ -651,15 +568,25 @@
             "n_samples": 16,
             "n_scenarios": 2
           },
+          "unknown_rejection": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "n_samples": 6,
+            "n_scenarios": 2
+          },
+          "n_unknown": 6,
           "families": {
             "pulsed": {
               "pre_registered_group": "near",
               "n": 2,
               "ranking": {
-                "unknown_auroc": 0.59375,
-                "unknown_aupr": 0.5666666666666667,
+                "unknown_auroc": 0.625,
+                "unknown_aupr": 0.5714285714285714,
                 "oscr_auc": 0.09375,
-                "unknown_fpr_at_95_tpr": 0.8125,
+                "unknown_fpr_at_95_tpr": 0.75,
                 "n_known": 16,
                 "n_unknown": 2,
                 "known_closed_accuracy": 0.125,
@@ -672,8 +599,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -706,8 +632,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -724,10 +649,10 @@
               "pre_registered_group": "near",
               "n": 2,
               "ranking": {
-                "unknown_auroc": 0.53125,
-                "unknown_aupr": 0.17692307692307693,
-                "oscr_auc": 0.09375,
-                "unknown_fpr_at_95_tpr": 0.6875,
+                "unknown_auroc": 0.40625,
+                "unknown_aupr": 0.1588235294117647,
+                "oscr_auc": 0.0625,
+                "unknown_fpr_at_95_tpr": 0.9375,
                 "n_known": 16,
                 "n_unknown": 2,
                 "known_closed_accuracy": 0.125,
@@ -740,8 +665,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -774,8 +698,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -792,10 +715,10 @@
               "pre_registered_group": "benign",
               "n": 2,
               "ranking": {
-                "unknown_auroc": 0.65625,
-                "unknown_aupr": 0.5769230769230769,
+                "unknown_auroc": 0.625,
+                "unknown_aupr": 0.5714285714285714,
                 "oscr_auc": 0.09375,
-                "unknown_fpr_at_95_tpr": 0.6875,
+                "unknown_fpr_at_95_tpr": 0.75,
                 "n_known": 16,
                 "n_unknown": 2,
                 "known_closed_accuracy": 0.125,
@@ -808,8 +731,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -850,6 +772,7 @@
               }
             }
           },
+          "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; cid_overlay is a benign control",
           "pooled_near": {
             "families": [
               "pulsed",
@@ -857,10 +780,10 @@
               "adjacent_satellite_downlink"
             ],
             "ranking": {
-              "unknown_auroc": 0.5833333333333333,
-              "unknown_aupr": 0.49836570593149543,
-              "oscr_auc": 0.09375,
-              "unknown_fpr_at_95_tpr": 0.8125,
+              "unknown_auroc": 0.5520833333333333,
+              "unknown_aupr": 0.4902894491129786,
+              "oscr_auc": 0.08333333333333333,
+              "unknown_fpr_at_95_tpr": 0.9375,
               "n_known": 16,
               "n_unknown": 6,
               "known_closed_accuracy": 0.125,
@@ -873,8 +796,7 @@
                 "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                 "oscr_known_denominator": "all_known_test_events",
                 "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-              },
-              "curves": null
+              }
             },
             "rejection_at_threshold": {
               "mean": 0.0,
@@ -886,17 +808,18 @@
               "n_scenarios": 2
             }
           },
-          "n_unknown": 8,
-          "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; cid_overlay is a benign control"
+          "n_unknown_equivalence_limited": 2,
+          "n_unknown_all_families": 8,
+          "unknown_rejection_denominator": "pooled near families only"
         },
         "mahalanobis": {
           "calibration": {
             "method": "mahalanobis",
-            "threshold": 5204.431085284956,
+            "threshold": 5847.900397138717,
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "57110f553bd3cfe5fd156a35c2981082d6b1e4e40641f680ed6207034c9ce7ee"
+            "provenance": "fd1b0cd99c31004194413bf55520d947b1675fd9532294404d6787ac9e1ec15e"
           },
           "known_acceptance": {
             "mean": 1.0,
@@ -916,15 +839,25 @@
             "n_samples": 16,
             "n_scenarios": 2
           },
+          "unknown_rejection": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "n_samples": 6,
+            "n_scenarios": 2
+          },
+          "n_unknown": 6,
           "families": {
             "pulsed": {
               "pre_registered_group": "near",
               "n": 2,
               "ranking": {
-                "unknown_auroc": 0.53125,
-                "unknown_aupr": 0.23333333333333334,
+                "unknown_auroc": 0.5625,
+                "unknown_aupr": 0.5625,
                 "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.8125,
+                "unknown_fpr_at_95_tpr": 0.875,
                 "n_known": 16,
                 "n_unknown": 2,
                 "known_closed_accuracy": 0.125,
@@ -937,8 +870,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -956,9 +888,9 @@
               "n": 2,
               "ranking": {
                 "unknown_auroc": 0.5625,
-                "unknown_aupr": 0.31666666666666665,
+                "unknown_aupr": 0.5625,
                 "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.8125,
+                "unknown_fpr_at_95_tpr": 0.875,
                 "n_known": 16,
                 "n_unknown": 2,
                 "known_closed_accuracy": 0.125,
@@ -971,8 +903,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -989,10 +920,10 @@
               "pre_registered_group": "near",
               "n": 2,
               "ranking": {
-                "unknown_auroc": 0.65625,
-                "unknown_aupr": 0.3333333333333333,
-                "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.625,
+                "unknown_auroc": 0.46875,
+                "unknown_aupr": 0.14835164835164835,
+                "oscr_auc": 0.03125,
+                "unknown_fpr_at_95_tpr": 0.6875,
                 "n_known": 16,
                 "n_unknown": 2,
                 "known_closed_accuracy": 0.125,
@@ -1005,8 +936,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -1039,8 +969,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -1058,9 +987,9 @@
               "n": 2,
               "ranking": {
                 "unknown_auroc": 0.53125,
-                "unknown_aupr": 0.3125,
+                "unknown_aupr": 0.5588235294117647,
                 "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.875,
+                "unknown_fpr_at_95_tpr": 0.9375,
                 "n_known": 16,
                 "n_unknown": 2,
                 "known_closed_accuracy": 0.125,
@@ -1073,8 +1002,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -1115,6 +1043,7 @@
               }
             }
           },
+          "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; cid_overlay is a benign control",
           "pooled_near": {
             "families": [
               "pulsed",
@@ -1122,10 +1051,10 @@
               "adjacent_satellite_downlink"
             ],
             "ranking": {
-              "unknown_auroc": 0.5833333333333333,
-              "unknown_aupr": 0.44099136730715677,
-              "oscr_auc": 0.0625,
-              "unknown_fpr_at_95_tpr": 0.8125,
+              "unknown_auroc": 0.53125,
+              "unknown_aupr": 0.5271929824561403,
+              "oscr_auc": 0.052083333333333336,
+              "unknown_fpr_at_95_tpr": 0.875,
               "n_known": 16,
               "n_unknown": 6,
               "known_closed_accuracy": 0.125,
@@ -1138,8 +1067,7 @@
                 "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                 "oscr_known_denominator": "all_known_test_events",
                 "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-              },
-              "curves": null
+              }
             },
             "rejection_at_threshold": {
               "mean": 0.0,
@@ -1151,10 +1079,93 @@
               "n_scenarios": 2
             }
           },
-          "n_unknown": 8,
-          "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; cid_overlay is a benign control"
+          "n_unknown_equivalence_limited": 2,
+          "n_unknown_all_families": 8,
+          "unknown_rejection_denominator": "pooled near families only"
         }
-      }
+      },
+      "open_set": {
+        "msp": {
+          "unknown_auroc": 0.5520833333333333,
+          "unknown_ap": 0.36052738684317637,
+          "oscr": 0.0625,
+          "fpr_at_95_tpr": 0.8125,
+          "n_unknown": 6,
+          "n_known": 16,
+          "n_unknown_all_families": 8,
+          "positive_class": "unknown (near families pooled)"
+        },
+        "energy": {
+          "unknown_auroc": 0.5520833333333333,
+          "unknown_ap": 0.4902894491129786,
+          "oscr": 0.08333333333333333,
+          "fpr_at_95_tpr": 0.9375,
+          "n_unknown": 6,
+          "n_known": 16,
+          "n_unknown_all_families": 8,
+          "positive_class": "unknown (near families pooled)"
+        },
+        "mahalanobis": {
+          "unknown_auroc": 0.53125,
+          "unknown_ap": 0.5271929824561403,
+          "oscr": 0.052083333333333336,
+          "fpr_at_95_tpr": 0.875,
+          "n_unknown": 6,
+          "n_known": 16,
+          "n_unknown_all_families": 8,
+          "positive_class": "unknown (near families pooled)"
+        }
+      },
+      "test_only_alarm": {
+        "pulsed": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "intermittent_bursts": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "adjacent_satellite_downlink": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "wideband_noise": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "cid_overlay": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        }
+      },
+      "checkpoint_sha256": "bf6bdc48edbf2641dcd0546d23fa416929217c078a687f0cc1a9ad29469103fb",
+      "training_source_revision": "a09429b0ed157b06a613141a75bf7d128f764d22",
+      "n_parameters": 78777
     },
     "dual": {
       "input_channels": 4,
@@ -1168,88 +1179,85 @@
         "n_scenarios": 2
       },
       "macro_f1": 0.027777777777777776,
-      "confusion": [
-        [
-          0,
-          0,
-          2,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          2,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          2,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          2,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          2,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          2,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          2,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          2,
-          0,
-          0,
-          0,
-          0,
-          0
-        ]
-      ],
+      "per_class_recall": {
+        "clean": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "cw": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "swept_cw": {
+          "mean": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "unauthorized": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "overdrive": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "cross_pol": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "adjacent_satellite": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "carrier_under_carrier": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        }
+      },
+      "ece": {
+        "ece": 0.01024311536481412,
+        "n_bins": 15,
+        "n_samples": 16
+      },
       "clean_false_alarm": {
         "mean": 0.5,
         "ci95": [
@@ -1268,6 +1276,12 @@
         "n_samples": 14,
         "n_scenarios": 2
       },
+      "alarm": {
+        "score": "one_minus_softmax_clean",
+        "threshold": 0.8804843607236025,
+        "target_clean_pfa": 0.05,
+        "n_clean_calibration": 2
+      },
       "plan_consistency": {
         "positive_class": "planned_carrier_missing",
         "decision_rule": "auxiliary logit > 0",
@@ -1284,95 +1298,15 @@
         "n_predicted_positive": 0,
         "n_samples": 16
       },
-      "open_set": {
-        "msp": {
-          "unknown_auroc": 0.53125,
-          "unknown_ap": 0.32316729323308274,
-          "oscr": 0.09375,
-          "fpr_at_95_tpr": 0.8125,
-          "n_unknown": 8,
-          "positive_class": "unknown (near families pooled)"
-        },
-        "energy": {
-          "unknown_auroc": 0.40625,
-          "unknown_ap": 0.2574074074074074,
-          "oscr": 0.0625,
-          "fpr_at_95_tpr": 0.875,
-          "n_unknown": 8,
-          "positive_class": "unknown (near families pooled)"
-        },
-        "mahalanobis": {
-          "unknown_auroc": 0.5104166666666666,
-          "unknown_ap": 0.32307975821907714,
-          "oscr": 0.0625,
-          "fpr_at_95_tpr": 0.8125,
-          "n_unknown": 8,
-          "positive_class": "unknown (near families pooled)"
-        }
-      },
-      "test_only_alarm": {
-        "pulsed": {
-          "mean": 0.5,
-          "ci95": [
-            0.0,
-            1.0
-          ],
-          "n_samples": 2,
-          "n_scenarios": 2
-        },
-        "intermittent_bursts": {
-          "mean": 0.5,
-          "ci95": [
-            0.0,
-            1.0
-          ],
-          "n_samples": 2,
-          "n_scenarios": 2
-        },
-        "adjacent_satellite_downlink": {
-          "mean": 0.5,
-          "ci95": [
-            0.0,
-            1.0
-          ],
-          "n_samples": 2,
-          "n_scenarios": 2
-        },
-        "wideband_noise": {
-          "mean": 0.5,
-          "ci95": [
-            0.0,
-            1.0
-          ],
-          "n_samples": 2,
-          "n_scenarios": 2
-        },
-        "cid_overlay": {
-          "mean": 0.5,
-          "ci95": [
-            0.0,
-            1.0
-          ],
-          "n_samples": 2,
-          "n_scenarios": 2
-        }
-      },
-      "checkpoint_sha256": "493f2199f879a16e48b894c5f27b6ed6465d6c846ef68fef4567dff0cabbf529",
-      "n_parameters": 79177,
-      "ece": {
-        "ece": 0.010240823729425919,
-        "n_bins": 15,
-        "n_samples": 16
-      },
       "rejection": {
         "msp": {
           "calibration": {
             "method": "msp",
-            "threshold": 0.8644823188776312,
+            "threshold": 0.8644753234105136,
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "bc7b0760d1c1e13e5c86f6e76c104d2542b535173860c43be2e1953e7000befb"
+            "provenance": "d4fb50223406d793936381ac53184aa286bf0236f75b0b4c2c8707553306e74b"
           },
           "known_acceptance": {
             "mean": 0.0,
@@ -1389,6 +1323,16 @@
             "n_samples": 0,
             "n_scenarios": 0
           },
+          "unknown_rejection": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "n_samples": 6,
+            "n_scenarios": 2
+          },
+          "n_unknown": 6,
           "families": {
             "pulsed": {
               "pre_registered_group": "near",
@@ -1410,8 +1354,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 1.0,
@@ -1444,8 +1387,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 1.0,
@@ -1462,10 +1404,10 @@
               "pre_registered_group": "near",
               "n": 2,
               "ranking": {
-                "unknown_auroc": 0.4375,
-                "unknown_aupr": 0.15,
+                "unknown_auroc": 0.65625,
+                "unknown_aupr": 0.3333333333333333,
                 "oscr_auc": 0.09375,
-                "unknown_fpr_at_95_tpr": 0.8125,
+                "unknown_fpr_at_95_tpr": 0.625,
                 "n_known": 16,
                 "n_unknown": 2,
                 "known_closed_accuracy": 0.125,
@@ -1478,8 +1420,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 1.0,
@@ -1512,8 +1453,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 1.0,
@@ -1546,8 +1486,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 1.0,
@@ -1588,6 +1527,7 @@
               }
             }
           },
+          "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; cid_overlay is a benign control",
           "pooled_near": {
             "families": [
               "pulsed",
@@ -1595,10 +1535,10 @@
               "adjacent_satellite_downlink"
             ],
             "ranking": {
-              "unknown_auroc": 0.53125,
-              "unknown_aupr": 0.32316729323308274,
+              "unknown_auroc": 0.6041666666666666,
+              "unknown_aupr": 0.3953314659197012,
               "oscr_auc": 0.09375,
-              "unknown_fpr_at_95_tpr": 0.8125,
+              "unknown_fpr_at_95_tpr": 0.6875,
               "n_known": 16,
               "n_unknown": 6,
               "known_closed_accuracy": 0.125,
@@ -1611,8 +1551,7 @@
                 "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                 "oscr_known_denominator": "all_known_test_events",
                 "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-              },
-              "curves": null
+              }
             },
             "rejection_at_threshold": {
               "mean": 1.0,
@@ -1624,17 +1563,18 @@
               "n_scenarios": 2
             }
           },
-          "n_unknown": 8,
-          "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; cid_overlay is a benign control"
+          "n_unknown_equivalence_limited": 2,
+          "n_unknown_all_families": 8,
+          "unknown_rejection_denominator": "pooled near families only"
         },
         "energy": {
           "calibration": {
             "method": "energy",
-            "threshold": -2.0366116805831576,
+            "threshold": -2.0367267608779507,
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "3f87637f0a3161ea25bb669c87e89548315f081f2f3ce66afa92cd716b3cec93"
+            "provenance": "5c9b9f0c0f133e0c279306a62bda85c2c8d5b4ac7991bad35035e4eeb3816040"
           },
           "known_acceptance": {
             "mean": 1.0,
@@ -1654,15 +1594,25 @@
             "n_samples": 16,
             "n_scenarios": 2
           },
+          "unknown_rejection": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "n_samples": 6,
+            "n_scenarios": 2
+          },
+          "n_unknown": 6,
           "families": {
             "pulsed": {
               "pre_registered_group": "near",
               "n": 2,
               "ranking": {
-                "unknown_auroc": 0.46875,
-                "unknown_aupr": 0.15476190476190477,
+                "unknown_auroc": 0.5,
+                "unknown_aupr": 0.16025641025641024,
                 "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.75,
+                "unknown_fpr_at_95_tpr": 0.6875,
                 "n_known": 16,
                 "n_unknown": 2,
                 "known_closed_accuracy": 0.125,
@@ -1675,8 +1625,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -1693,10 +1642,10 @@
               "pre_registered_group": "near",
               "n": 2,
               "ranking": {
-                "unknown_auroc": 0.375,
-                "unknown_aupr": 0.12916666666666665,
+                "unknown_auroc": 0.40625,
+                "unknown_aupr": 0.13392857142857142,
                 "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.8125,
+                "unknown_fpr_at_95_tpr": 0.75,
                 "n_known": 16,
                 "n_unknown": 2,
                 "known_closed_accuracy": 0.125,
@@ -1709,8 +1658,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -1727,10 +1675,10 @@
               "pre_registered_group": "near",
               "n": 2,
               "ranking": {
-                "unknown_auroc": 0.375,
-                "unknown_aupr": 0.13392857142857142,
-                "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.875,
+                "unknown_auroc": 0.59375,
+                "unknown_aupr": 0.20833333333333331,
+                "oscr_auc": 0.09375,
+                "unknown_fpr_at_95_tpr": 0.625,
                 "n_known": 16,
                 "n_unknown": 2,
                 "known_closed_accuracy": 0.125,
@@ -1743,8 +1691,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -1777,8 +1724,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -1795,10 +1741,10 @@
               "pre_registered_group": "benign",
               "n": 2,
               "ranking": {
-                "unknown_auroc": 0.46875,
-                "unknown_aupr": 0.15476190476190477,
+                "unknown_auroc": 0.5,
+                "unknown_aupr": 0.16025641025641024,
                 "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.75,
+                "unknown_fpr_at_95_tpr": 0.6875,
                 "n_known": 16,
                 "n_unknown": 2,
                 "known_closed_accuracy": 0.125,
@@ -1811,8 +1757,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -1853,6 +1798,7 @@
               }
             }
           },
+          "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; cid_overlay is a benign control",
           "pooled_near": {
             "families": [
               "pulsed",
@@ -1860,10 +1806,10 @@
               "adjacent_satellite_downlink"
             ],
             "ranking": {
-              "unknown_auroc": 0.40625,
-              "unknown_aupr": 0.2574074074074074,
-              "oscr_auc": 0.0625,
-              "unknown_fpr_at_95_tpr": 0.875,
+              "unknown_auroc": 0.5,
+              "unknown_aupr": 0.2945436507936508,
+              "oscr_auc": 0.07291666666666666,
+              "unknown_fpr_at_95_tpr": 0.75,
               "n_known": 16,
               "n_unknown": 6,
               "known_closed_accuracy": 0.125,
@@ -1876,8 +1822,7 @@
                 "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                 "oscr_known_denominator": "all_known_test_events",
                 "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-              },
-              "curves": null
+              }
             },
             "rejection_at_threshold": {
               "mean": 0.0,
@@ -1889,17 +1834,18 @@
               "n_scenarios": 2
             }
           },
-          "n_unknown": 8,
-          "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; cid_overlay is a benign control"
+          "n_unknown_equivalence_limited": 2,
+          "n_unknown_all_families": 8,
+          "unknown_rejection_denominator": "pooled near families only"
         },
         "mahalanobis": {
           "calibration": {
             "method": "mahalanobis",
-            "threshold": 407.12306146030403,
+            "threshold": 411.2682261320524,
             "target_acceptance": 0.95,
             "n_calibration": 16,
             "temperature": 1.0,
-            "provenance": "2b00325371e7878eb5fabcd6ca186d5baf48d2dd297151dae532f2f5bfaea3d3"
+            "provenance": "818dc476ffabe1e664a4ce9628094d97c305b8fea3a9c7222ec4fdb9530c3619"
           },
           "known_acceptance": {
             "mean": 0.9375,
@@ -1919,6 +1865,16 @@
             "n_samples": 15,
             "n_scenarios": 2
           },
+          "unknown_rejection": {
+            "mean": 0.16666666666666666,
+            "ci95": [
+              0.0,
+              0.3333333333333333
+            ],
+            "n_samples": 6,
+            "n_scenarios": 2
+          },
+          "n_unknown": 6,
           "families": {
             "pulsed": {
               "pre_registered_group": "near",
@@ -1940,8 +1896,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -1958,8 +1913,8 @@
               "pre_registered_group": "near",
               "n": 2,
               "ranking": {
-                "unknown_auroc": 0.46875,
-                "unknown_aupr": 0.16666666666666669,
+                "unknown_auroc": 0.4375,
+                "unknown_aupr": 0.15,
                 "oscr_auc": 0.0625,
                 "unknown_fpr_at_95_tpr": 0.8125,
                 "n_known": 16,
@@ -1974,8 +1929,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -1992,10 +1946,10 @@
               "pre_registered_group": "near",
               "n": 2,
               "ranking": {
-                "unknown_auroc": 0.53125,
-                "unknown_aupr": 0.19642857142857142,
-                "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.75,
+                "unknown_auroc": 0.625,
+                "unknown_aupr": 0.3269230769230769,
+                "oscr_auc": 0.09375,
+                "unknown_fpr_at_95_tpr": 0.6875,
                 "n_known": 16,
                 "n_unknown": 2,
                 "known_closed_accuracy": 0.125,
@@ -2008,14 +1962,13 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
-                "mean": 0.0,
+                "mean": 0.5,
                 "ci95": [
                   0.0,
-                  0.0
+                  1.0
                 ],
                 "n_samples": 2,
                 "n_scenarios": 2
@@ -2027,9 +1980,9 @@
               "n": 2,
               "ranking": {
                 "unknown_auroc": 0.625,
-                "unknown_aupr": 0.2159090909090909,
-                "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.5625,
+                "unknown_aupr": 0.25,
+                "oscr_auc": 0.09375,
+                "unknown_fpr_at_95_tpr": 0.625,
                 "n_known": 16,
                 "n_unknown": 2,
                 "known_closed_accuracy": 0.125,
@@ -2042,8 +1995,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -2076,8 +2028,7 @@
                   "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                   "oscr_known_denominator": "all_known_test_events",
                   "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
+                }
               },
               "rejection_at_threshold": {
                 "mean": 0.0,
@@ -2118,6 +2069,7 @@
               }
             }
           },
+          "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; cid_overlay is a benign control",
           "pooled_near": {
             "families": [
               "pulsed",
@@ -2125,9 +2077,9 @@
               "adjacent_satellite_downlink"
             ],
             "ranking": {
-              "unknown_auroc": 0.5104166666666666,
-              "unknown_aupr": 0.32307975821907714,
-              "oscr_auc": 0.0625,
+              "unknown_auroc": 0.53125,
+              "unknown_aupr": 0.35859563123495014,
+              "oscr_auc": 0.07291666666666666,
               "unknown_fpr_at_95_tpr": 0.8125,
               "n_known": 16,
               "n_unknown": 6,
@@ -2141,23 +2093,105 @@
                 "oscr_interpolation": "linear_between_grouped_tie_endpoints",
                 "oscr_known_denominator": "all_known_test_events",
                 "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-              },
-              "curves": null
+              }
             },
             "rejection_at_threshold": {
-              "mean": 0.0,
+              "mean": 0.16666666666666666,
               "ci95": [
                 0.0,
-                0.0
+                0.3333333333333333
               ],
               "n_samples": 6,
               "n_scenarios": 2
             }
           },
-          "n_unknown": 8,
-          "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; cid_overlay is a benign control"
+          "n_unknown_equivalence_limited": 2,
+          "n_unknown_all_families": 8,
+          "unknown_rejection_denominator": "pooled near families only"
         }
-      }
+      },
+      "open_set": {
+        "msp": {
+          "unknown_auroc": 0.6041666666666666,
+          "unknown_ap": 0.3953314659197012,
+          "oscr": 0.09375,
+          "fpr_at_95_tpr": 0.6875,
+          "n_unknown": 6,
+          "n_known": 16,
+          "n_unknown_all_families": 8,
+          "positive_class": "unknown (near families pooled)"
+        },
+        "energy": {
+          "unknown_auroc": 0.5,
+          "unknown_ap": 0.2945436507936508,
+          "oscr": 0.07291666666666666,
+          "fpr_at_95_tpr": 0.75,
+          "n_unknown": 6,
+          "n_known": 16,
+          "n_unknown_all_families": 8,
+          "positive_class": "unknown (near families pooled)"
+        },
+        "mahalanobis": {
+          "unknown_auroc": 0.53125,
+          "unknown_ap": 0.35859563123495014,
+          "oscr": 0.07291666666666666,
+          "fpr_at_95_tpr": 0.8125,
+          "n_unknown": 6,
+          "n_known": 16,
+          "n_unknown_all_families": 8,
+          "positive_class": "unknown (near families pooled)"
+        }
+      },
+      "test_only_alarm": {
+        "pulsed": {
+          "mean": 0.5,
+          "ci95": [
+            0.0,
+            1.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "intermittent_bursts": {
+          "mean": 0.5,
+          "ci95": [
+            0.0,
+            1.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "adjacent_satellite_downlink": {
+          "mean": 0.5,
+          "ci95": [
+            0.0,
+            1.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "wideband_noise": {
+          "mean": 0.5,
+          "ci95": [
+            0.0,
+            1.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "cid_overlay": {
+          "mean": 0.5,
+          "ci95": [
+            0.0,
+            1.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        }
+      },
+      "checkpoint_sha256": "a11da339731526b16548552cec6be89a6898aa36f4030ebba9e3ad1cdfe9d191",
+      "training_source_revision": "a09429b0ed157b06a613141a75bf7d128f764d22",
+      "n_parameters": 79177
     },
     "dual_residual": {
       "input_channels": 5,
@@ -2171,88 +2205,85 @@
         "n_scenarios": 2
       },
       "macro_f1": 0.027777777777777776,
-      "confusion": [
-        [
-          2,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          2,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          2,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          2,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          2,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          2,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          2,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          2,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ]
-      ],
+      "per_class_recall": {
+        "clean": {
+          "mean": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "cw": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "swept_cw": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "unauthorized": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "overdrive": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "cross_pol": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "adjacent_satellite": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        },
+        "carrier_under_carrier": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "n_samples": 2,
+          "n_scenarios": 2
+        }
+      },
+      "ece": {
+        "ece": 0.011083170862998315,
+        "n_bins": 15,
+        "n_samples": 16
+      },
       "clean_false_alarm": {
         "mean": 0.0,
         "ci95": [
@@ -2263,13 +2294,19 @@
         "n_scenarios": 2
       },
       "event_detection": {
-        "mean": 0.0,
+        "mean": 0.07142857142857142,
         "ci95": [
           0.0,
-          0.0
+          0.14285714285714285
         ],
         "n_samples": 14,
         "n_scenarios": 2
+      },
+      "alarm": {
+        "score": "one_minus_softmax_clean",
+        "threshold": 0.8640236271160479,
+        "target_clean_pfa": 0.05,
+        "n_clean_calibration": 2
       },
       "plan_consistency": {
         "positive_class": "planned_carrier_missing",
@@ -2287,29 +2324,847 @@
         "n_predicted_positive": 0,
         "n_samples": 16
       },
+      "rejection": {
+        "msp": {
+          "calibration": {
+            "method": "msp",
+            "threshold": 0.8640635765445644,
+            "target_acceptance": 0.95,
+            "n_calibration": 16,
+            "temperature": 1.0,
+            "provenance": "6381f463d68d2a0cacf9008f7367c23a2e512d6b71b6c8b3690316a65a68b163"
+          },
+          "known_acceptance": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          },
+          "accepted_known_accuracy": {
+            "mean": 0.125,
+            "ci95": [
+              0.125,
+              0.125
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          },
+          "unknown_rejection": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "n_samples": 6,
+            "n_scenarios": 2
+          },
+          "n_unknown": 6,
+          "families": {
+            "pulsed": {
+              "pre_registered_group": "near",
+              "n": 2,
+              "ranking": {
+                "unknown_auroc": 0.40625,
+                "unknown_aupr": 0.14583333333333331,
+                "oscr_auc": 0.0625,
+                "unknown_fpr_at_95_tpr": 0.875,
+                "n_known": 16,
+                "n_unknown": 2,
+                "known_closed_accuracy": 0.125,
+                "unknown_prevalence": 0.1111111111111111,
+                "conventions": {
+                  "positive_population": "unknown",
+                  "unknown_score_direction": "higher_is_more_unknown_like",
+                  "unknown_aupr": "average_precision_step_integral",
+                  "ties": "equal_score_events_enter_together",
+                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
+                  "oscr_known_denominator": "all_known_test_events",
+                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
+                }
+              },
+              "rejection_at_threshold": {
+                "mean": 0.0,
+                "ci95": [
+                  0.0,
+                  0.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "expected_decision": "unknown"
+            },
+            "intermittent_bursts": {
+              "pre_registered_group": "near",
+              "n": 2,
+              "ranking": {
+                "unknown_auroc": 0.40625,
+                "unknown_aupr": 0.1380952380952381,
+                "oscr_auc": 0.0625,
+                "unknown_fpr_at_95_tpr": 0.8125,
+                "n_known": 16,
+                "n_unknown": 2,
+                "known_closed_accuracy": 0.125,
+                "unknown_prevalence": 0.1111111111111111,
+                "conventions": {
+                  "positive_population": "unknown",
+                  "unknown_score_direction": "higher_is_more_unknown_like",
+                  "unknown_aupr": "average_precision_step_integral",
+                  "ties": "equal_score_events_enter_together",
+                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
+                  "oscr_known_denominator": "all_known_test_events",
+                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
+                }
+              },
+              "rejection_at_threshold": {
+                "mean": 0.0,
+                "ci95": [
+                  0.0,
+                  0.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "expected_decision": "unknown"
+            },
+            "adjacent_satellite_downlink": {
+              "pre_registered_group": "near",
+              "n": 2,
+              "ranking": {
+                "unknown_auroc": 0.4375,
+                "unknown_aupr": 0.13942307692307693,
+                "oscr_auc": 0.0625,
+                "unknown_fpr_at_95_tpr": 0.6875,
+                "n_known": 16,
+                "n_unknown": 2,
+                "known_closed_accuracy": 0.125,
+                "unknown_prevalence": 0.1111111111111111,
+                "conventions": {
+                  "positive_population": "unknown",
+                  "unknown_score_direction": "higher_is_more_unknown_like",
+                  "unknown_aupr": "average_precision_step_integral",
+                  "ties": "equal_score_events_enter_together",
+                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
+                  "oscr_known_denominator": "all_known_test_events",
+                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
+                }
+              },
+              "rejection_at_threshold": {
+                "mean": 0.0,
+                "ci95": [
+                  0.0,
+                  0.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "expected_decision": "unknown"
+            },
+            "wideband_noise": {
+              "pre_registered_group": "equivalence_limited",
+              "n": 2,
+              "ranking": {
+                "unknown_auroc": 0.5,
+                "unknown_aupr": 0.22916666666666666,
+                "oscr_auc": 0.0625,
+                "unknown_fpr_at_95_tpr": 0.875,
+                "n_known": 16,
+                "n_unknown": 2,
+                "known_closed_accuracy": 0.125,
+                "unknown_prevalence": 0.1111111111111111,
+                "conventions": {
+                  "positive_population": "unknown",
+                  "unknown_score_direction": "higher_is_more_unknown_like",
+                  "unknown_aupr": "average_precision_step_integral",
+                  "ties": "equal_score_events_enter_together",
+                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
+                  "oscr_known_denominator": "all_known_test_events",
+                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
+                }
+              },
+              "rejection_at_threshold": {
+                "mean": 0.0,
+                "ci95": [
+                  0.0,
+                  0.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "expected_decision": "unknown"
+            },
+            "cid_overlay": {
+              "pre_registered_group": "benign",
+              "n": 2,
+              "ranking": {
+                "unknown_auroc": 0.5,
+                "unknown_aupr": 0.22916666666666666,
+                "oscr_auc": 0.0625,
+                "unknown_fpr_at_95_tpr": 0.875,
+                "n_known": 16,
+                "n_unknown": 2,
+                "known_closed_accuracy": 0.125,
+                "unknown_prevalence": 0.1111111111111111,
+                "conventions": {
+                  "positive_population": "unknown",
+                  "unknown_score_direction": "higher_is_more_unknown_like",
+                  "unknown_aupr": "average_precision_step_integral",
+                  "ties": "equal_score_events_enter_together",
+                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
+                  "oscr_known_denominator": "all_known_test_events",
+                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
+                }
+              },
+              "rejection_at_threshold": {
+                "mean": 0.0,
+                "ci95": [
+                  0.0,
+                  0.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "expected_decision": "clean",
+              "clean_acceptance": {
+                "mean": 1.0,
+                "ci95": [
+                  1.0,
+                  1.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "carrier_under_carrier_calls": {
+                "mean": 0.0,
+                "ci95": [
+                  0.0,
+                  0.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "rejected_as_unknown": {
+                "mean": 0.0,
+                "ci95": [
+                  0.0,
+                  0.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              }
+            }
+          },
+          "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; cid_overlay is a benign control",
+          "pooled_near": {
+            "families": [
+              "pulsed",
+              "intermittent_bursts",
+              "adjacent_satellite_downlink"
+            ],
+            "ranking": {
+              "unknown_auroc": 0.41666666666666663,
+              "unknown_aupr": 0.2601851851851852,
+              "oscr_auc": 0.0625,
+              "unknown_fpr_at_95_tpr": 0.875,
+              "n_known": 16,
+              "n_unknown": 6,
+              "known_closed_accuracy": 0.125,
+              "unknown_prevalence": 0.2727272727272727,
+              "conventions": {
+                "positive_population": "unknown",
+                "unknown_score_direction": "higher_is_more_unknown_like",
+                "unknown_aupr": "average_precision_step_integral",
+                "ties": "equal_score_events_enter_together",
+                "oscr_interpolation": "linear_between_grouped_tie_endpoints",
+                "oscr_known_denominator": "all_known_test_events",
+                "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
+              }
+            },
+            "rejection_at_threshold": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "n_samples": 6,
+              "n_scenarios": 2
+            }
+          },
+          "n_unknown_equivalence_limited": 2,
+          "n_unknown_all_families": 8,
+          "unknown_rejection_denominator": "pooled near families only"
+        },
+        "energy": {
+          "calibration": {
+            "method": "energy",
+            "threshold": -2.0654561144197237,
+            "target_acceptance": 0.95,
+            "n_calibration": 16,
+            "temperature": 1.0,
+            "provenance": "c7d6c1efd15aed7ca5e7d93393765c108d26527b3c610e96c1a5f21624611ffd"
+          },
+          "known_acceptance": {
+            "mean": 0.9375,
+            "ci95": [
+              0.875,
+              1.0
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          },
+          "accepted_known_accuracy": {
+            "mean": 0.13333333333333333,
+            "ci95": [
+              0.125,
+              0.14285714285714285
+            ],
+            "n_samples": 15,
+            "n_scenarios": 2
+          },
+          "unknown_rejection": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "n_samples": 6,
+            "n_scenarios": 2
+          },
+          "n_unknown": 6,
+          "families": {
+            "pulsed": {
+              "pre_registered_group": "near",
+              "n": 2,
+              "ranking": {
+                "unknown_auroc": 0.5,
+                "unknown_aupr": 0.19166666666666665,
+                "oscr_auc": 0.09375,
+                "unknown_fpr_at_95_tpr": 0.8125,
+                "n_known": 16,
+                "n_unknown": 2,
+                "known_closed_accuracy": 0.125,
+                "unknown_prevalence": 0.1111111111111111,
+                "conventions": {
+                  "positive_population": "unknown",
+                  "unknown_score_direction": "higher_is_more_unknown_like",
+                  "unknown_aupr": "average_precision_step_integral",
+                  "ties": "equal_score_events_enter_together",
+                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
+                  "oscr_known_denominator": "all_known_test_events",
+                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
+                }
+              },
+              "rejection_at_threshold": {
+                "mean": 0.0,
+                "ci95": [
+                  0.0,
+                  0.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "expected_decision": "unknown"
+            },
+            "intermittent_bursts": {
+              "pre_registered_group": "near",
+              "n": 2,
+              "ranking": {
+                "unknown_auroc": 0.4375,
+                "unknown_aupr": 0.18382352941176472,
+                "oscr_auc": 0.0625,
+                "unknown_fpr_at_95_tpr": 0.9375,
+                "n_known": 16,
+                "n_unknown": 2,
+                "known_closed_accuracy": 0.125,
+                "unknown_prevalence": 0.1111111111111111,
+                "conventions": {
+                  "positive_population": "unknown",
+                  "unknown_score_direction": "higher_is_more_unknown_like",
+                  "unknown_aupr": "average_precision_step_integral",
+                  "ties": "equal_score_events_enter_together",
+                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
+                  "oscr_known_denominator": "all_known_test_events",
+                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
+                }
+              },
+              "rejection_at_threshold": {
+                "mean": 0.0,
+                "ci95": [
+                  0.0,
+                  0.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "expected_decision": "unknown"
+            },
+            "adjacent_satellite_downlink": {
+              "pre_registered_group": "near",
+              "n": 2,
+              "ranking": {
+                "unknown_auroc": 0.4375,
+                "unknown_aupr": 0.18382352941176472,
+                "oscr_auc": 0.0625,
+                "unknown_fpr_at_95_tpr": 0.9375,
+                "n_known": 16,
+                "n_unknown": 2,
+                "known_closed_accuracy": 0.125,
+                "unknown_prevalence": 0.1111111111111111,
+                "conventions": {
+                  "positive_population": "unknown",
+                  "unknown_score_direction": "higher_is_more_unknown_like",
+                  "unknown_aupr": "average_precision_step_integral",
+                  "ties": "equal_score_events_enter_together",
+                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
+                  "oscr_known_denominator": "all_known_test_events",
+                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
+                }
+              },
+              "rejection_at_threshold": {
+                "mean": 0.0,
+                "ci95": [
+                  0.0,
+                  0.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "expected_decision": "unknown"
+            },
+            "wideband_noise": {
+              "pre_registered_group": "equivalence_limited",
+              "n": 2,
+              "ranking": {
+                "unknown_auroc": 0.5625,
+                "unknown_aupr": 0.31666666666666665,
+                "oscr_auc": 0.09375,
+                "unknown_fpr_at_95_tpr": 0.8125,
+                "n_known": 16,
+                "n_unknown": 2,
+                "known_closed_accuracy": 0.125,
+                "unknown_prevalence": 0.1111111111111111,
+                "conventions": {
+                  "positive_population": "unknown",
+                  "unknown_score_direction": "higher_is_more_unknown_like",
+                  "unknown_aupr": "average_precision_step_integral",
+                  "ties": "equal_score_events_enter_together",
+                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
+                  "oscr_known_denominator": "all_known_test_events",
+                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
+                }
+              },
+              "rejection_at_threshold": {
+                "mean": 0.5,
+                "ci95": [
+                  0.0,
+                  1.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "expected_decision": "unknown"
+            },
+            "cid_overlay": {
+              "pre_registered_group": "benign",
+              "n": 2,
+              "ranking": {
+                "unknown_auroc": 0.4375,
+                "unknown_aupr": 0.18382352941176472,
+                "oscr_auc": 0.0625,
+                "unknown_fpr_at_95_tpr": 0.9375,
+                "n_known": 16,
+                "n_unknown": 2,
+                "known_closed_accuracy": 0.125,
+                "unknown_prevalence": 0.1111111111111111,
+                "conventions": {
+                  "positive_population": "unknown",
+                  "unknown_score_direction": "higher_is_more_unknown_like",
+                  "unknown_aupr": "average_precision_step_integral",
+                  "ties": "equal_score_events_enter_together",
+                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
+                  "oscr_known_denominator": "all_known_test_events",
+                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
+                }
+              },
+              "rejection_at_threshold": {
+                "mean": 0.0,
+                "ci95": [
+                  0.0,
+                  0.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "expected_decision": "clean",
+              "clean_acceptance": {
+                "mean": 1.0,
+                "ci95": [
+                  1.0,
+                  1.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "carrier_under_carrier_calls": {
+                "mean": 0.0,
+                "ci95": [
+                  0.0,
+                  0.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "rejected_as_unknown": {
+                "mean": 0.0,
+                "ci95": [
+                  0.0,
+                  0.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              }
+            }
+          },
+          "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; cid_overlay is a benign control",
+          "pooled_near": {
+            "families": [
+              "pulsed",
+              "intermittent_bursts",
+              "adjacent_satellite_downlink"
+            ],
+            "ranking": {
+              "unknown_auroc": 0.45833333333333337,
+              "unknown_aupr": 0.3201680672268908,
+              "oscr_auc": 0.07291666666666667,
+              "unknown_fpr_at_95_tpr": 0.9375,
+              "n_known": 16,
+              "n_unknown": 6,
+              "known_closed_accuracy": 0.125,
+              "unknown_prevalence": 0.2727272727272727,
+              "conventions": {
+                "positive_population": "unknown",
+                "unknown_score_direction": "higher_is_more_unknown_like",
+                "unknown_aupr": "average_precision_step_integral",
+                "ties": "equal_score_events_enter_together",
+                "oscr_interpolation": "linear_between_grouped_tie_endpoints",
+                "oscr_known_denominator": "all_known_test_events",
+                "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
+              }
+            },
+            "rejection_at_threshold": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "n_samples": 6,
+              "n_scenarios": 2
+            }
+          },
+          "n_unknown_equivalence_limited": 2,
+          "n_unknown_all_families": 8,
+          "unknown_rejection_denominator": "pooled near families only"
+        },
+        "mahalanobis": {
+          "calibration": {
+            "method": "mahalanobis",
+            "threshold": 1830.4000350618096,
+            "target_acceptance": 0.95,
+            "n_calibration": 16,
+            "temperature": 1.0,
+            "provenance": "6b87877f749b85ba47ab9f654b14c4af36e134ad85acb4ce2001293716a720f2"
+          },
+          "known_acceptance": {
+            "mean": 0.5,
+            "ci95": [
+              0.0,
+              1.0
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          },
+          "accepted_known_accuracy": {
+            "mean": 0.125,
+            "ci95": null,
+            "n_samples": 8,
+            "n_scenarios": 1
+          },
+          "unknown_rejection": {
+            "mean": 0.5,
+            "ci95": [
+              0.0,
+              1.0
+            ],
+            "n_samples": 6,
+            "n_scenarios": 2
+          },
+          "n_unknown": 6,
+          "families": {
+            "pulsed": {
+              "pre_registered_group": "near",
+              "n": 2,
+              "ranking": {
+                "unknown_auroc": 0.46875,
+                "unknown_aupr": 0.16666666666666669,
+                "oscr_auc": 0.0625,
+                "unknown_fpr_at_95_tpr": 0.8125,
+                "n_known": 16,
+                "n_unknown": 2,
+                "known_closed_accuracy": 0.125,
+                "unknown_prevalence": 0.1111111111111111,
+                "conventions": {
+                  "positive_population": "unknown",
+                  "unknown_score_direction": "higher_is_more_unknown_like",
+                  "unknown_aupr": "average_precision_step_integral",
+                  "ties": "equal_score_events_enter_together",
+                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
+                  "oscr_known_denominator": "all_known_test_events",
+                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
+                }
+              },
+              "rejection_at_threshold": {
+                "mean": 0.5,
+                "ci95": [
+                  0.0,
+                  1.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "expected_decision": "unknown"
+            },
+            "intermittent_bursts": {
+              "pre_registered_group": "near",
+              "n": 2,
+              "ranking": {
+                "unknown_auroc": 0.5625,
+                "unknown_aupr": 0.31666666666666665,
+                "oscr_auc": 0.09375,
+                "unknown_fpr_at_95_tpr": 0.8125,
+                "n_known": 16,
+                "n_unknown": 2,
+                "known_closed_accuracy": 0.125,
+                "unknown_prevalence": 0.1111111111111111,
+                "conventions": {
+                  "positive_population": "unknown",
+                  "unknown_score_direction": "higher_is_more_unknown_like",
+                  "unknown_aupr": "average_precision_step_integral",
+                  "ties": "equal_score_events_enter_together",
+                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
+                  "oscr_known_denominator": "all_known_test_events",
+                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
+                }
+              },
+              "rejection_at_threshold": {
+                "mean": 0.5,
+                "ci95": [
+                  0.0,
+                  1.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "expected_decision": "unknown"
+            },
+            "adjacent_satellite_downlink": {
+              "pre_registered_group": "near",
+              "n": 2,
+              "ranking": {
+                "unknown_auroc": 0.5625,
+                "unknown_aupr": 0.31666666666666665,
+                "oscr_auc": 0.09375,
+                "unknown_fpr_at_95_tpr": 0.8125,
+                "n_known": 16,
+                "n_unknown": 2,
+                "known_closed_accuracy": 0.125,
+                "unknown_prevalence": 0.1111111111111111,
+                "conventions": {
+                  "positive_population": "unknown",
+                  "unknown_score_direction": "higher_is_more_unknown_like",
+                  "unknown_aupr": "average_precision_step_integral",
+                  "ties": "equal_score_events_enter_together",
+                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
+                  "oscr_known_denominator": "all_known_test_events",
+                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
+                }
+              },
+              "rejection_at_threshold": {
+                "mean": 0.5,
+                "ci95": [
+                  0.0,
+                  1.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "expected_decision": "unknown"
+            },
+            "wideband_noise": {
+              "pre_registered_group": "equivalence_limited",
+              "n": 2,
+              "ranking": {
+                "unknown_auroc": 0.53125,
+                "unknown_aupr": 0.16666666666666666,
+                "oscr_auc": 0.0625,
+                "unknown_fpr_at_95_tpr": 0.625,
+                "n_known": 16,
+                "n_unknown": 2,
+                "known_closed_accuracy": 0.125,
+                "unknown_prevalence": 0.1111111111111111,
+                "conventions": {
+                  "positive_population": "unknown",
+                  "unknown_score_direction": "higher_is_more_unknown_like",
+                  "unknown_aupr": "average_precision_step_integral",
+                  "ties": "equal_score_events_enter_together",
+                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
+                  "oscr_known_denominator": "all_known_test_events",
+                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
+                }
+              },
+              "rejection_at_threshold": {
+                "mean": 0.5,
+                "ci95": [
+                  0.0,
+                  1.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "expected_decision": "unknown"
+            },
+            "cid_overlay": {
+              "pre_registered_group": "benign",
+              "n": 2,
+              "ranking": {
+                "unknown_auroc": 0.46875,
+                "unknown_aupr": 0.16666666666666669,
+                "oscr_auc": 0.0625,
+                "unknown_fpr_at_95_tpr": 0.8125,
+                "n_known": 16,
+                "n_unknown": 2,
+                "known_closed_accuracy": 0.125,
+                "unknown_prevalence": 0.1111111111111111,
+                "conventions": {
+                  "positive_population": "unknown",
+                  "unknown_score_direction": "higher_is_more_unknown_like",
+                  "unknown_aupr": "average_precision_step_integral",
+                  "ties": "equal_score_events_enter_together",
+                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
+                  "oscr_known_denominator": "all_known_test_events",
+                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
+                }
+              },
+              "rejection_at_threshold": {
+                "mean": 0.5,
+                "ci95": [
+                  0.0,
+                  1.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "expected_decision": "clean",
+              "clean_acceptance": {
+                "mean": 0.5,
+                "ci95": [
+                  0.0,
+                  1.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "carrier_under_carrier_calls": {
+                "mean": 0.0,
+                "ci95": [
+                  0.0,
+                  0.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              },
+              "rejected_as_unknown": {
+                "mean": 0.5,
+                "ci95": [
+                  0.0,
+                  1.0
+                ],
+                "n_samples": 2,
+                "n_scenarios": 2
+              }
+            }
+          },
+          "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; cid_overlay is a benign control",
+          "pooled_near": {
+            "families": [
+              "pulsed",
+              "intermittent_bursts",
+              "adjacent_satellite_downlink"
+            ],
+            "ranking": {
+              "unknown_auroc": 0.53125,
+              "unknown_aupr": 0.4040165773911904,
+              "oscr_auc": 0.08333333333333333,
+              "unknown_fpr_at_95_tpr": 0.8125,
+              "n_known": 16,
+              "n_unknown": 6,
+              "known_closed_accuracy": 0.125,
+              "unknown_prevalence": 0.2727272727272727,
+              "conventions": {
+                "positive_population": "unknown",
+                "unknown_score_direction": "higher_is_more_unknown_like",
+                "unknown_aupr": "average_precision_step_integral",
+                "ties": "equal_score_events_enter_together",
+                "oscr_interpolation": "linear_between_grouped_tie_endpoints",
+                "oscr_known_denominator": "all_known_test_events",
+                "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
+              }
+            },
+            "rejection_at_threshold": {
+              "mean": 0.5,
+              "ci95": [
+                0.0,
+                1.0
+              ],
+              "n_samples": 6,
+              "n_scenarios": 2
+            }
+          },
+          "n_unknown_equivalence_limited": 2,
+          "n_unknown_all_families": 8,
+          "unknown_rejection_denominator": "pooled near families only"
+        }
+      },
       "open_set": {
         "msp": {
-          "unknown_auroc": 0.3645833333333333,
-          "unknown_ap": 0.24392189624387767,
-          "oscr": 0.041666666666666664,
+          "unknown_auroc": 0.41666666666666663,
+          "unknown_ap": 0.2601851851851852,
+          "oscr": 0.0625,
           "fpr_at_95_tpr": 0.875,
-          "n_unknown": 8,
+          "n_unknown": 6,
+          "n_known": 16,
+          "n_unknown_all_families": 8,
           "positive_class": "unknown (near families pooled)"
         },
         "energy": {
-          "unknown_auroc": 0.5104166666666666,
-          "unknown_ap": 0.3323529411764706,
-          "oscr": 0.08333333333333333,
-          "fpr_at_95_tpr": 0.875,
-          "n_unknown": 8,
+          "unknown_auroc": 0.45833333333333337,
+          "unknown_ap": 0.3201680672268908,
+          "oscr": 0.07291666666666667,
+          "fpr_at_95_tpr": 0.9375,
+          "n_unknown": 6,
+          "n_known": 16,
+          "n_unknown_all_families": 8,
           "positive_class": "unknown (near families pooled)"
         },
         "mahalanobis": {
-          "unknown_auroc": 0.5,
-          "unknown_ap": 0.345843776106934,
+          "unknown_auroc": 0.53125,
+          "unknown_ap": 0.4040165773911904,
           "oscr": 0.08333333333333333,
-          "fpr_at_95_tpr": 0.875,
-          "n_unknown": 8,
+          "fpr_at_95_tpr": 0.8125,
+          "n_unknown": 6,
+          "n_known": 16,
+          "n_unknown_all_families": 8,
           "positive_class": "unknown (near families pooled)"
         }
       },
@@ -2360,807 +3215,37 @@
           "n_scenarios": 2
         }
       },
-      "checkpoint_sha256": "feca7c52c66ccc0436a2c427756c72846caee329abe02faf1c88465fff6c2887",
-      "n_parameters": 79377,
-      "ece": {
-        "ece": 0.011071079861804056,
-        "n_bins": 15,
-        "n_samples": 16
-      },
-      "rejection": {
-        "msp": {
-          "calibration": {
-            "method": "msp",
-            "threshold": 0.8640631539237369,
-            "target_acceptance": 0.95,
-            "n_calibration": 16,
-            "temperature": 1.0,
-            "provenance": "2fbdcf7a417fd2d510af4ca4b5fa260b7eb001d0b3527e7c535d51e0b2ed9e57"
-          },
-          "known_acceptance": {
-            "mean": 1.0,
-            "ci95": [
-              1.0,
-              1.0
-            ],
-            "n_samples": 16,
-            "n_scenarios": 2
-          },
-          "accepted_known_accuracy": {
-            "mean": 0.125,
-            "ci95": [
-              0.125,
-              0.125
-            ],
-            "n_samples": 16,
-            "n_scenarios": 2
-          },
-          "families": {
-            "pulsed": {
-              "pre_registered_group": "near",
-              "n": 2,
-              "ranking": {
-                "unknown_auroc": 0.375,
-                "unknown_aupr": 0.13392857142857142,
-                "oscr_auc": 0.03125,
-                "unknown_fpr_at_95_tpr": 0.875,
-                "n_known": 16,
-                "n_unknown": 2,
-                "known_closed_accuracy": 0.125,
-                "unknown_prevalence": 0.1111111111111111,
-                "conventions": {
-                  "positive_population": "unknown",
-                  "unknown_score_direction": "higher_is_more_unknown_like",
-                  "unknown_aupr": "average_precision_step_integral",
-                  "ties": "equal_score_events_enter_together",
-                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
-                  "oscr_known_denominator": "all_known_test_events",
-                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
-              },
-              "rejection_at_threshold": {
-                "mean": 0.0,
-                "ci95": [
-                  0.0,
-                  0.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "expected_decision": "unknown"
-            },
-            "intermittent_bursts": {
-              "pre_registered_group": "near",
-              "n": 2,
-              "ranking": {
-                "unknown_auroc": 0.375,
-                "unknown_aupr": 0.12916666666666665,
-                "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.8125,
-                "n_known": 16,
-                "n_unknown": 2,
-                "known_closed_accuracy": 0.125,
-                "unknown_prevalence": 0.1111111111111111,
-                "conventions": {
-                  "positive_population": "unknown",
-                  "unknown_score_direction": "higher_is_more_unknown_like",
-                  "unknown_aupr": "average_precision_step_integral",
-                  "ties": "equal_score_events_enter_together",
-                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
-                  "oscr_known_denominator": "all_known_test_events",
-                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
-              },
-              "rejection_at_threshold": {
-                "mean": 0.0,
-                "ci95": [
-                  0.0,
-                  0.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "expected_decision": "unknown"
-            },
-            "adjacent_satellite_downlink": {
-              "pre_registered_group": "near",
-              "n": 2,
-              "ranking": {
-                "unknown_auroc": 0.34375,
-                "unknown_aupr": 0.125,
-                "oscr_auc": 0.03125,
-                "unknown_fpr_at_95_tpr": 0.875,
-                "n_known": 16,
-                "n_unknown": 2,
-                "known_closed_accuracy": 0.125,
-                "unknown_prevalence": 0.1111111111111111,
-                "conventions": {
-                  "positive_population": "unknown",
-                  "unknown_score_direction": "higher_is_more_unknown_like",
-                  "unknown_aupr": "average_precision_step_integral",
-                  "ties": "equal_score_events_enter_together",
-                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
-                  "oscr_known_denominator": "all_known_test_events",
-                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
-              },
-              "rejection_at_threshold": {
-                "mean": 0.0,
-                "ci95": [
-                  0.0,
-                  0.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "expected_decision": "unknown"
-            },
-            "wideband_noise": {
-              "pre_registered_group": "equivalence_limited",
-              "n": 2,
-              "ranking": {
-                "unknown_auroc": 0.5,
-                "unknown_aupr": 0.22916666666666666,
-                "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.875,
-                "n_known": 16,
-                "n_unknown": 2,
-                "known_closed_accuracy": 0.125,
-                "unknown_prevalence": 0.1111111111111111,
-                "conventions": {
-                  "positive_population": "unknown",
-                  "unknown_score_direction": "higher_is_more_unknown_like",
-                  "unknown_aupr": "average_precision_step_integral",
-                  "ties": "equal_score_events_enter_together",
-                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
-                  "oscr_known_denominator": "all_known_test_events",
-                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
-              },
-              "rejection_at_threshold": {
-                "mean": 0.0,
-                "ci95": [
-                  0.0,
-                  0.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "expected_decision": "unknown"
-            },
-            "cid_overlay": {
-              "pre_registered_group": "benign",
-              "n": 2,
-              "ranking": {
-                "unknown_auroc": 0.5,
-                "unknown_aupr": 0.22916666666666666,
-                "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.875,
-                "n_known": 16,
-                "n_unknown": 2,
-                "known_closed_accuracy": 0.125,
-                "unknown_prevalence": 0.1111111111111111,
-                "conventions": {
-                  "positive_population": "unknown",
-                  "unknown_score_direction": "higher_is_more_unknown_like",
-                  "unknown_aupr": "average_precision_step_integral",
-                  "ties": "equal_score_events_enter_together",
-                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
-                  "oscr_known_denominator": "all_known_test_events",
-                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
-              },
-              "rejection_at_threshold": {
-                "mean": 0.0,
-                "ci95": [
-                  0.0,
-                  0.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "expected_decision": "clean",
-              "clean_acceptance": {
-                "mean": 1.0,
-                "ci95": [
-                  1.0,
-                  1.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "carrier_under_carrier_calls": {
-                "mean": 0.0,
-                "ci95": [
-                  0.0,
-                  0.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "rejected_as_unknown": {
-                "mean": 0.0,
-                "ci95": [
-                  0.0,
-                  0.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              }
-            }
-          },
-          "pooled_near": {
-            "families": [
-              "pulsed",
-              "intermittent_bursts",
-              "adjacent_satellite_downlink"
-            ],
-            "ranking": {
-              "unknown_auroc": 0.3645833333333333,
-              "unknown_aupr": 0.24392189624387767,
-              "oscr_auc": 0.041666666666666664,
-              "unknown_fpr_at_95_tpr": 0.875,
-              "n_known": 16,
-              "n_unknown": 6,
-              "known_closed_accuracy": 0.125,
-              "unknown_prevalence": 0.2727272727272727,
-              "conventions": {
-                "positive_population": "unknown",
-                "unknown_score_direction": "higher_is_more_unknown_like",
-                "unknown_aupr": "average_precision_step_integral",
-                "ties": "equal_score_events_enter_together",
-                "oscr_interpolation": "linear_between_grouped_tie_endpoints",
-                "oscr_known_denominator": "all_known_test_events",
-                "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-              },
-              "curves": null
-            },
-            "rejection_at_threshold": {
-              "mean": 0.0,
-              "ci95": [
-                0.0,
-                0.0
-              ],
-              "n_samples": 6,
-              "n_scenarios": 2
-            }
-          },
-          "n_unknown": 8,
-          "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; cid_overlay is a benign control"
-        },
-        "energy": {
-          "calibration": {
-            "method": "energy",
-            "threshold": -2.0654198183269585,
-            "target_acceptance": 0.95,
-            "n_calibration": 16,
-            "temperature": 1.0,
-            "provenance": "4c842d883cdf569f054cfff49d1d6681b73d62c1d45f72894c8e82eb5b9a3f37"
-          },
-          "known_acceptance": {
-            "mean": 0.8125,
-            "ci95": [
-              0.625,
-              1.0
-            ],
-            "n_samples": 16,
-            "n_scenarios": 2
-          },
-          "accepted_known_accuracy": {
-            "mean": 0.15384615384615385,
-            "ci95": [
-              0.125,
-              0.2
-            ],
-            "n_samples": 13,
-            "n_scenarios": 2
-          },
-          "families": {
-            "pulsed": {
-              "pre_registered_group": "near",
-              "n": 2,
-              "ranking": {
-                "unknown_auroc": 0.53125,
-                "unknown_aupr": 0.19642857142857142,
-                "oscr_auc": 0.09375,
-                "unknown_fpr_at_95_tpr": 0.75,
-                "n_known": 16,
-                "n_unknown": 2,
-                "known_closed_accuracy": 0.125,
-                "unknown_prevalence": 0.1111111111111111,
-                "conventions": {
-                  "positive_population": "unknown",
-                  "unknown_score_direction": "higher_is_more_unknown_like",
-                  "unknown_aupr": "average_precision_step_integral",
-                  "ties": "equal_score_events_enter_together",
-                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
-                  "oscr_known_denominator": "all_known_test_events",
-                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
-              },
-              "rejection_at_threshold": {
-                "mean": 0.0,
-                "ci95": [
-                  0.0,
-                  0.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "expected_decision": "unknown"
-            },
-            "intermittent_bursts": {
-              "pre_registered_group": "near",
-              "n": 2,
-              "ranking": {
-                "unknown_auroc": 0.46875,
-                "unknown_aupr": 0.1875,
-                "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.875,
-                "n_known": 16,
-                "n_unknown": 2,
-                "known_closed_accuracy": 0.125,
-                "unknown_prevalence": 0.1111111111111111,
-                "conventions": {
-                  "positive_population": "unknown",
-                  "unknown_score_direction": "higher_is_more_unknown_like",
-                  "unknown_aupr": "average_precision_step_integral",
-                  "ties": "equal_score_events_enter_together",
-                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
-                  "oscr_known_denominator": "all_known_test_events",
-                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
-              },
-              "rejection_at_threshold": {
-                "mean": 0.0,
-                "ci95": [
-                  0.0,
-                  0.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "expected_decision": "unknown"
-            },
-            "adjacent_satellite_downlink": {
-              "pre_registered_group": "near",
-              "n": 2,
-              "ranking": {
-                "unknown_auroc": 0.53125,
-                "unknown_aupr": 0.19642857142857142,
-                "oscr_auc": 0.09375,
-                "unknown_fpr_at_95_tpr": 0.75,
-                "n_known": 16,
-                "n_unknown": 2,
-                "known_closed_accuracy": 0.125,
-                "unknown_prevalence": 0.1111111111111111,
-                "conventions": {
-                  "positive_population": "unknown",
-                  "unknown_score_direction": "higher_is_more_unknown_like",
-                  "unknown_aupr": "average_precision_step_integral",
-                  "ties": "equal_score_events_enter_together",
-                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
-                  "oscr_known_denominator": "all_known_test_events",
-                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
-              },
-              "rejection_at_threshold": {
-                "mean": 0.0,
-                "ci95": [
-                  0.0,
-                  0.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "expected_decision": "unknown"
-            },
-            "wideband_noise": {
-              "pre_registered_group": "equivalence_limited",
-              "n": 2,
-              "ranking": {
-                "unknown_auroc": 0.59375,
-                "unknown_aupr": 0.3214285714285714,
-                "oscr_auc": 0.09375,
-                "unknown_fpr_at_95_tpr": 0.75,
-                "n_known": 16,
-                "n_unknown": 2,
-                "known_closed_accuracy": 0.125,
-                "unknown_prevalence": 0.1111111111111111,
-                "conventions": {
-                  "positive_population": "unknown",
-                  "unknown_score_direction": "higher_is_more_unknown_like",
-                  "unknown_aupr": "average_precision_step_integral",
-                  "ties": "equal_score_events_enter_together",
-                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
-                  "oscr_known_denominator": "all_known_test_events",
-                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
-              },
-              "rejection_at_threshold": {
-                "mean": 0.5,
-                "ci95": [
-                  0.0,
-                  1.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "expected_decision": "unknown"
-            },
-            "cid_overlay": {
-              "pre_registered_group": "benign",
-              "n": 2,
-              "ranking": {
-                "unknown_auroc": 0.46875,
-                "unknown_aupr": 0.1875,
-                "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.875,
-                "n_known": 16,
-                "n_unknown": 2,
-                "known_closed_accuracy": 0.125,
-                "unknown_prevalence": 0.1111111111111111,
-                "conventions": {
-                  "positive_population": "unknown",
-                  "unknown_score_direction": "higher_is_more_unknown_like",
-                  "unknown_aupr": "average_precision_step_integral",
-                  "ties": "equal_score_events_enter_together",
-                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
-                  "oscr_known_denominator": "all_known_test_events",
-                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
-              },
-              "rejection_at_threshold": {
-                "mean": 0.0,
-                "ci95": [
-                  0.0,
-                  0.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "expected_decision": "clean",
-              "clean_acceptance": {
-                "mean": 1.0,
-                "ci95": [
-                  1.0,
-                  1.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "carrier_under_carrier_calls": {
-                "mean": 0.0,
-                "ci95": [
-                  0.0,
-                  0.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "rejected_as_unknown": {
-                "mean": 0.0,
-                "ci95": [
-                  0.0,
-                  0.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              }
-            }
-          },
-          "pooled_near": {
-            "families": [
-              "pulsed",
-              "intermittent_bursts",
-              "adjacent_satellite_downlink"
-            ],
-            "ranking": {
-              "unknown_auroc": 0.5104166666666666,
-              "unknown_aupr": 0.3323529411764706,
-              "oscr_auc": 0.08333333333333333,
-              "unknown_fpr_at_95_tpr": 0.875,
-              "n_known": 16,
-              "n_unknown": 6,
-              "known_closed_accuracy": 0.125,
-              "unknown_prevalence": 0.2727272727272727,
-              "conventions": {
-                "positive_population": "unknown",
-                "unknown_score_direction": "higher_is_more_unknown_like",
-                "unknown_aupr": "average_precision_step_integral",
-                "ties": "equal_score_events_enter_together",
-                "oscr_interpolation": "linear_between_grouped_tie_endpoints",
-                "oscr_known_denominator": "all_known_test_events",
-                "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-              },
-              "curves": null
-            },
-            "rejection_at_threshold": {
-              "mean": 0.0,
-              "ci95": [
-                0.0,
-                0.0
-              ],
-              "n_samples": 6,
-              "n_scenarios": 2
-            }
-          },
-          "n_unknown": 8,
-          "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; cid_overlay is a benign control"
-        },
-        "mahalanobis": {
-          "calibration": {
-            "method": "mahalanobis",
-            "threshold": 2029.8573167987631,
-            "target_acceptance": 0.95,
-            "n_calibration": 16,
-            "temperature": 1.0,
-            "provenance": "81f103f05ba7e4402368cf02e856c007ebb3b034f78f96170179d36964b312ed"
-          },
-          "known_acceptance": {
-            "mean": 0.5,
-            "ci95": [
-              0.0,
-              1.0
-            ],
-            "n_samples": 16,
-            "n_scenarios": 2
-          },
-          "accepted_known_accuracy": {
-            "mean": 0.125,
-            "ci95": null,
-            "n_samples": 8,
-            "n_scenarios": 1
-          },
-          "families": {
-            "pulsed": {
-              "pre_registered_group": "near",
-              "n": 2,
-              "ranking": {
-                "unknown_auroc": 0.4375,
-                "unknown_aupr": 0.1625,
-                "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.875,
-                "n_known": 16,
-                "n_unknown": 2,
-                "known_closed_accuracy": 0.125,
-                "unknown_prevalence": 0.1111111111111111,
-                "conventions": {
-                  "positive_population": "unknown",
-                  "unknown_score_direction": "higher_is_more_unknown_like",
-                  "unknown_aupr": "average_precision_step_integral",
-                  "ties": "equal_score_events_enter_together",
-                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
-                  "oscr_known_denominator": "all_known_test_events",
-                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
-              },
-              "rejection_at_threshold": {
-                "mean": 0.5,
-                "ci95": [
-                  0.0,
-                  1.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "expected_decision": "unknown"
-            },
-            "intermittent_bursts": {
-              "pre_registered_group": "near",
-              "n": 2,
-              "ranking": {
-                "unknown_auroc": 0.5,
-                "unknown_aupr": 0.22916666666666666,
-                "oscr_auc": 0.09375,
-                "unknown_fpr_at_95_tpr": 0.875,
-                "n_known": 16,
-                "n_unknown": 2,
-                "known_closed_accuracy": 0.125,
-                "unknown_prevalence": 0.1111111111111111,
-                "conventions": {
-                  "positive_population": "unknown",
-                  "unknown_score_direction": "higher_is_more_unknown_like",
-                  "unknown_aupr": "average_precision_step_integral",
-                  "ties": "equal_score_events_enter_together",
-                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
-                  "oscr_known_denominator": "all_known_test_events",
-                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
-              },
-              "rejection_at_threshold": {
-                "mean": 0.5,
-                "ci95": [
-                  0.0,
-                  1.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "expected_decision": "unknown"
-            },
-            "adjacent_satellite_downlink": {
-              "pre_registered_group": "near",
-              "n": 2,
-              "ranking": {
-                "unknown_auroc": 0.5625,
-                "unknown_aupr": 0.23809523809523808,
-                "oscr_auc": 0.09375,
-                "unknown_fpr_at_95_tpr": 0.75,
-                "n_known": 16,
-                "n_unknown": 2,
-                "known_closed_accuracy": 0.125,
-                "unknown_prevalence": 0.1111111111111111,
-                "conventions": {
-                  "positive_population": "unknown",
-                  "unknown_score_direction": "higher_is_more_unknown_like",
-                  "unknown_aupr": "average_precision_step_integral",
-                  "ties": "equal_score_events_enter_together",
-                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
-                  "oscr_known_denominator": "all_known_test_events",
-                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
-              },
-              "rejection_at_threshold": {
-                "mean": 0.5,
-                "ci95": [
-                  0.0,
-                  1.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "expected_decision": "unknown"
-            },
-            "wideband_noise": {
-              "pre_registered_group": "equivalence_limited",
-              "n": 2,
-              "ranking": {
-                "unknown_auroc": 0.53125,
-                "unknown_aupr": 0.16233766233766234,
-                "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.5625,
-                "n_known": 16,
-                "n_unknown": 2,
-                "known_closed_accuracy": 0.125,
-                "unknown_prevalence": 0.1111111111111111,
-                "conventions": {
-                  "positive_population": "unknown",
-                  "unknown_score_direction": "higher_is_more_unknown_like",
-                  "unknown_aupr": "average_precision_step_integral",
-                  "ties": "equal_score_events_enter_together",
-                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
-                  "oscr_known_denominator": "all_known_test_events",
-                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
-              },
-              "rejection_at_threshold": {
-                "mean": 0.5,
-                "ci95": [
-                  0.0,
-                  1.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "expected_decision": "unknown"
-            },
-            "cid_overlay": {
-              "pre_registered_group": "benign",
-              "n": 2,
-              "ranking": {
-                "unknown_auroc": 0.4375,
-                "unknown_aupr": 0.1625,
-                "oscr_auc": 0.0625,
-                "unknown_fpr_at_95_tpr": 0.875,
-                "n_known": 16,
-                "n_unknown": 2,
-                "known_closed_accuracy": 0.125,
-                "unknown_prevalence": 0.1111111111111111,
-                "conventions": {
-                  "positive_population": "unknown",
-                  "unknown_score_direction": "higher_is_more_unknown_like",
-                  "unknown_aupr": "average_precision_step_integral",
-                  "ties": "equal_score_events_enter_together",
-                  "oscr_interpolation": "linear_between_grouped_tie_endpoints",
-                  "oscr_known_denominator": "all_known_test_events",
-                  "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-                },
-                "curves": null
-              },
-              "rejection_at_threshold": {
-                "mean": 0.5,
-                "ci95": [
-                  0.0,
-                  1.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "expected_decision": "clean",
-              "clean_acceptance": {
-                "mean": 0.5,
-                "ci95": [
-                  0.0,
-                  1.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "carrier_under_carrier_calls": {
-                "mean": 0.0,
-                "ci95": [
-                  0.0,
-                  0.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              },
-              "rejected_as_unknown": {
-                "mean": 0.5,
-                "ci95": [
-                  0.0,
-                  1.0
-                ],
-                "n_samples": 2,
-                "n_scenarios": 2
-              }
-            }
-          },
-          "pooled_near": {
-            "families": [
-              "pulsed",
-              "intermittent_bursts",
-              "adjacent_satellite_downlink"
-            ],
-            "ranking": {
-              "unknown_auroc": 0.5,
-              "unknown_aupr": 0.345843776106934,
-              "oscr_auc": 0.08333333333333333,
-              "unknown_fpr_at_95_tpr": 0.875,
-              "n_known": 16,
-              "n_unknown": 6,
-              "known_closed_accuracy": 0.125,
-              "unknown_prevalence": 0.2727272727272727,
-              "conventions": {
-                "positive_population": "unknown",
-                "unknown_score_direction": "higher_is_more_unknown_like",
-                "unknown_aupr": "average_precision_step_integral",
-                "ties": "equal_score_events_enter_together",
-                "oscr_interpolation": "linear_between_grouped_tie_endpoints",
-                "oscr_known_denominator": "all_known_test_events",
-                "unknown_fpr_at_95_tpr": "known_fraction_scored_unknown_at_first_threshold_detecting_95pct_unknown"
-              },
-              "curves": null
-            },
-            "rejection_at_threshold": {
-              "mean": 0.5,
-              "ci95": [
-                0.0,
-                1.0
-              ],
-              "n_samples": 6,
-              "n_scenarios": 2
-            }
-          },
-          "n_unknown": 8,
-          "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; cid_overlay is a benign control"
-        }
-      }
+      "checkpoint_sha256": "50c730369623ab545e05e3df25f7f9192b487eab3af8736ef6c63656123fde6d",
+      "training_source_revision": "a09429b0ed157b06a613141a75bf7d128f764d22",
+      "n_parameters": 79377
     }
+  },
+  "cancellation": {
+    "srrc_span_symbols": 10,
+    "phase_grid": 16,
+    "iterations": 3,
+    "edge_guard": 512,
+    "version": "obs-cancel/1"
+  },
+  "runtime": {
+    "python": "3.13.16",
+    "numpy": "2.5.4",
+    "torch": "2.14.1+cu130",
+    "device": "cpu"
+  },
+  "scope": "Known-class learning slice on frozen B2/1 roles; not the complete open-set benchmark.",
+  "summary_rule": {
+    "dropped_keys": [
+      "curves",
+      "history",
+      "per_class_acceptance",
+      "bins",
+      "files_sha256",
+      "generation",
+      "receiver_calibration",
+      "mahalanobis_scorer",
+      "confusion"
+    ],
+    "source": "results.json"
   }
 }

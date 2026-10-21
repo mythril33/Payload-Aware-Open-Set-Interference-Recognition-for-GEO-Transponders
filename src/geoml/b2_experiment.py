@@ -224,9 +224,12 @@ def _family_metrics(method, calibration, known_test_scores, labels, predictions,
                   "ranking": ranking_metrics(known_test_scores, pooled_scores, correct),
                   "rejection_at_threshold": _rate(~calibration.accept(pooled_scores), pooled_groups)}
     unknown_mask = np.concatenate([item["mask"] for name, item in info.items() if item["group"] != "benign"]).any() if info else False
-    n_unknown = int(sum(int(item["mask"].sum()) for item in info.values() if item["group"] != "benign"))
-    return {"families": per_family, "pooled_near": pooled, "n_unknown": n_unknown,
+    n_near = int(sum(int(item["mask"].sum()) for item in info.values() if item["group"] == "near"))
+    n_equivalence = int(sum(int(item["mask"].sum()) for item in info.values() if item["group"] == "equivalence_limited"))
+    return {"families": per_family, "pooled_near": pooled, "n_unknown": n_near,
+            "n_unknown_equivalence_limited": n_equivalence, "n_unknown_all_families": n_near + n_equivalence,
             "unknown_rejection": pooled["rejection_at_threshold"] if pooled else None,
+            "unknown_rejection_denominator": "pooled near families only",
             "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; "
                     "cid_overlay is a benign control" if unknown_mask else "no unknown families"}
 
@@ -355,7 +358,7 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
                          "alarm": {"score": "one_minus_softmax_clean", "threshold": alarm_threshold,
                                    "target_clean_pfa": config.pfa, "n_clean_calibration": int(clean_calibration.sum())},
                          "plan_consistency": _plan_metrics(test_out["plan_logits"], test["plan_consistency"], groups),
-                         "rejection": rejection, "mahalanobis": scorer.to_dict(),
+                         "rejection": rejection, "mahalanobis_scorer": scorer.to_dict(),
                          "open_set": _open_set_summary(rejection),
                          "test_only_alarm": None if unknown_out is None else {
                              name: _rate((1.0 - _softmax(unknown_out["logits"])[:, 0] > alarm_threshold)[item["mask"]],
@@ -389,10 +392,30 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
                                for view, values in decisions.items()}})
     _write_json(out / "config.json", config.resolved())
     _write_json(out / "results.json", result)
+    _write_json(out / "results_summary.json", summarize(result))
     _write_json(out / "predictions.json", rows)
     (out / "results.md").write_text(report(result))
     log(f"wrote {out / 'results.md'}")
     return result
+
+
+SUMMARY_DROPPED = ("curves", "history", "per_class_acceptance", "bins", "files_sha256", "generation",
+                   "receiver_calibration", "mahalanobis_scorer", "confusion")
+
+
+def summarize(result):
+    """Small committed copy of ``results.json``: drops only the keys in ``SUMMARY_DROPPED`` (recursively).
+
+    Fingerprints, counts, every rate and every ``null`` are kept, so the committed
+    summary traces back to the full run output by identity.
+    """
+    def prune(value):
+        if isinstance(value, dict):
+            return {key: prune(item) for key, item in value.items() if key not in SUMMARY_DROPPED}
+        if isinstance(value, list):
+            return [prune(item) for item in value]
+        return value
+    return {**prune(result), "summary_rule": {"dropped_keys": list(SUMMARY_DROPPED), "source": "results.json"}}
 
 
 def _open_set_summary(rejection):
@@ -401,7 +424,10 @@ def _open_set_summary(rejection):
     for method, metrics in rejection.items():
         pooled = metrics.get("pooled_near")
         summary[method] = {"unknown_auroc": None, "unknown_ap": None, "oscr": None, "fpr_at_95_tpr": None,
-                           "n_unknown": metrics["n_unknown"], "positive_class": "unknown (near families pooled)"}
+                           "n_unknown": 0 if not pooled else pooled["ranking"]["n_unknown"],
+                           "n_known": None if not pooled else pooled["ranking"]["n_known"],
+                           "n_unknown_all_families": metrics.get("n_unknown_all_families", 0),
+                           "positive_class": "unknown (near families pooled)"}
         if pooled:
             summary[method].update(unknown_auroc=pooled["ranking"]["unknown_auroc"], unknown_ap=pooled["ranking"]["unknown_aupr"],
                                    oscr=pooled["ranking"]["oscr_auc"], fpr_at_95_tpr=pooled["ranking"]["unknown_fpr_at_95_tpr"])
@@ -425,7 +451,9 @@ def report(result):
              f"Parent protocol `{result['parent_protocol']}`; eight known labels; benchmark complete: **{result['benchmark_complete']}**.", "",
              "Roles are the frozen P18 §4 groups: train fits weights and Mahalanobis statistics, val-select picks the",
              "checkpoint, val-calib (known only) fits acceptance and alarm thresholds, test is evaluated once.",
-             "No unknown families, CID overlays or matched ASI sets exist in this stage; their metrics are null.", "",
+             ("Test-only families come from a bound B2-test/1 artifact and are scored with the frozen thresholds; the"
+              " matched ASI set is a later stage." if result.get("test_only_protocol") else
+              "No unknown families, CID overlays or matched ASI sets were supplied; their metrics are null."), "",
              "| View | Channels | Accuracy | Macro-F1 | ECE | Clean false alarm | Event detection | Plan-consistency accuracy |",
              "|---|---|---|---|---|---|---|---|"]
     for view, values in result["methods"].items():
@@ -433,12 +461,14 @@ def report(result):
         lines.append(f"| {view} | {values['input_channels']} | {_percent(values['accuracy'])} | {values['macro_f1']:.3f} | "
                      f"{values['ece']['ece']:.3f} | {_percent(values['clean_false_alarm'])} | {_percent(values['event_detection'])} | "
                      f"{_plan_cell(plan)} |")
-    lines += ["", "| View | Method | Known acceptance at calibrated threshold | Accuracy on accepted | Unknown rejection |",
+    lines += ["", "| View | Method | Known acceptance at calibrated threshold | Accuracy on accepted | Unknown rejection (pooled near) |",
               "|---|---|---|---|---|"]
     for view, values in result["methods"].items():
         for method, metrics in values["rejection"].items():
+            rejection = metrics["unknown_rejection"]
             lines.append(f"| {view} | {method} | {_percent(metrics['known_acceptance'])} | "
-                         f"{_percent(metrics['accepted_known_accuracy'])} | null (n_unknown=0) |")
+                         f"{_percent(metrics['accepted_known_accuracy'])} | "
+                         f"{'null (n_unknown=0)' if rejection is None else _percent(rejection)} |")
     if result.get("test_only_protocol"):
         lines += ["", f"## Test-only families ({result['test_only_protocol']}; unknown is the positive class)", "",
                   "| View | Method | Family | Group | n | AUROC | AP | OSCR | FPR@95TPR | Rejected at threshold |",
@@ -448,9 +478,10 @@ def report(result):
                 for name, entry in (metrics.get("families") or {}).items():
                     ranking = entry["ranking"]
                     if entry["pre_registered_group"] == "benign":
+                        alarm = (values.get("test_only_alarm") or {}).get(name)
                         lines.append(f"| {view} | {method} | {name} | benign (expect clean) | {entry['n']} | – | – | – | – | "
                                      f"{_percent(entry['rejected_as_unknown'])}; clean accepted {_percent(entry['clean_acceptance'])}; "
-                                     f"CuC calls {_percent(entry['carrier_under_carrier_calls'])} |")
+                                     f"CuC calls {_percent(entry['carrier_under_carrier_calls'])}; event alarm {_percent(alarm)} |")
                     elif ranking is not None:
                         lines.append(f"| {view} | {method} | {name} | {entry['pre_registered_group']} | {entry['n']} | "
                                      f"{ranking['unknown_auroc']:.3f} | {ranking['unknown_aupr']:.3f} | {ranking['oscr_auc']:.3f} | "

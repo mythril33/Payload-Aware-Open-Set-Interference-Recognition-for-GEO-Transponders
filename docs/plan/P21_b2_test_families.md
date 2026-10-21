@@ -19,14 +19,16 @@ only report known-class metrics with `null` open-set entries.
 |---|---|---|---|---|
 | `pulsed` | near | `geosim.unknowns.unknown_interferer` (U1-dev/1 pulsed CW; group-specific seed) | co uplink | unknown |
 | `intermittent_bursts` | near | same module, burst CW | co uplink | unknown |
-| `adjacent_satellite_downlink` | near | **new** `geosim.asi.adjacent_satellite_downlink`: identical draws to the known uplink ASI (geometry, C/I_psd, rate, roll-off, placement with 20–80 % plan overlap, modulation); only the injection point differs (K17d) | receiver feed after physical downlink mixing, bypassing the payload; scaled by the wanted feed power (P15 convention) | unknown |
+| `adjacent_satellite_downlink` | near | **new** `geosim.asi.adjacent_satellite_downlink`, driven by the **known uplink ASI's RNG stream of the same group**, so geometry, C/I_psd, rate, roll-off, placement (20–80 % plan overlap) and modulation are pair-matched per group; only the injection point differs (K17d control: "scenario, plan, link and C/I_psd matched") | receiver feed after physical downlink mixing, bypassing the payload; scaled by the realized wanted feed power (P15 convention) | unknown |
 | `wideband_noise` | equivalence-limited | U1-dev/1 band-limited noise, 60–90 % of the transponder | co uplink | unknown (reported separately) |
 | `cid_overlay` | benign | `geosim.cid.cid_overlay(..., active=...)`: ETSI TS 103 129 DVB-CID under every **transmitted** planned co-pol carrier | co uplink | **clean** |
 
 Shared with the group's eight known variants (`geosim.b2_scenarios._shared_scene`): operator plans, link
 draws (nominal IBO, C/N), carrier/noise RNG streams, phase realizations, missing-carrier state and the
 receiver calibration of the bound known artifact. Event parameters use their own RNG namespace
-`[group, 1830, family_index]` (P18 §4). Only groups of the frozen `test` role (3 200 000–3 200 499) are
+`[group, 1830, family_index]` (P18 §4), with one deliberate exception: the downlink ASI reuses the known
+uplink ASI's stream `[group, 1820, 6]` so that the K17d per-group control exists (the reviewer found the
+first version only distribution-matched; fixed). Only groups of the frozen `test` role (3 200 000–3 200 499) are
 accepted; the generator refuses any other role and the reader rejects artifacts that contain a `train`,
 `val-select`, `val-calib` or `test-matched` directory.
 
@@ -36,8 +38,12 @@ Implementation conventions recorded here (not protocol changes):
   draws are still consumed so the other CIDs are unchanged. Metadata records `host_active` and
   `n_transmitted`.
 - The downlink ASI power is `mean_psd_plan · Rs · 10^(−C/I_psd/10)` relative to a unit wanted load and is
-  scaled by the realized wanted feed power at the injection point, i.e. the same "C/I_psd relative to the
-  plan's mean PSD" definition as the known uplink ASI.
+  scaled by the **realized** wanted feed power at the injection point (`dual.simulate_dual`). The known
+  uplink ASI is referenced to the nominal unit load regardless of activity, so in the ≈ 15 % of groups
+  with a missing co carrier the downlink family sits lower by the dropped carrier's power fraction (plus
+  ≤ 0.14 dB of uplink noise at C/N 15 dB). The metadata records `feed_reference_power`,
+  `active_planned_power_co` and `effective_c_over_i_psd_db = C/I_psd − 10 log10(active co power)`; the
+  family physics check reports it. This is a documented level drift, not a hidden one.
 - Temporal families must show active and inactive retained snapshots (inherited U1 visibility rule).
 
 Binding: the request stores the known artifact's protocol, data fingerprint, request fingerprint, test
@@ -56,15 +62,20 @@ python -m geoml.b2_experiment --config configs/b2_feat.json --data data/b2-feat-
 
 ## 3. K17b training-time plan-shift augmentation (now implemented)
 
-`TrainConfig.plan_shift_fraction` (B2: **0.15**) and `plan_shift_max_hz` (B2: **0.5 MHz**): for the
-selected fraction of each training batch the operator-plan masks are rebuilt from the sample's plans
-with all carriers moved by Δf ~ U(−0.5, +0.5) MHz (continuous; 187.5 kHz bins, so ≈ 2.7 bins). The
-spectra and the residual are untouched: this models an operator plan with a wrong frequency reference
-while the transmitted signal is unchanged (K17b). Both feeds' masks move together [implementation
-choice: one frequency reference per operator plan database]. Validation, calibration and test masks are
-never shifted (tested). The augmentation precedes the existing mirror/roll so masks and spectra stay
-aligned. Zero shift reproduces the stored float16 masks within 0.02 dB (tested). Default 0 keeps every
-historical configuration unchanged.
+`TrainConfig.plan_shift_fraction` (B2: **0.15**) and `plan_shift_max_hz` (B2: **0.5 MHz**): in every
+training batch each sample is selected with probability 0.15 (Bernoulli per sample per epoch, so the
+realized fraction fluctuates around 15 % and the selected set changes every epoch) and its operator-plan
+masks are rebuilt with all carriers moved by Δf ~ U(−0.5, +0.5) MHz (continuous; 187.5 kHz bins, so
+≈ 2.7 bins). The selected rows then go through the **full preprocessing again** with the shifted masks,
+exactly as the A5 test-time corruption (`geoml.plan_shortcut`) does; the carrier-level reference
+therefore follows the shifted plan (median 0.10 dB, p95 0.48 dB, max 0.99 dB reference change on
+random plans, measured by the reviewer). The stored spectra and residual themselves are unchanged: this
+models an operator plan with a wrong frequency reference while the transmitted signal is unchanged
+(K17b). Both feeds' masks move together [implementation choice: one frequency reference per operator
+plan database]. Shifted carriers may spill past ±18 MHz by up to 0.5 MHz (≈ 2.7 % of carriers); the mask
+is truncated at the grid edge, as for any wrong plan. Validation, calibration and test masks are never
+shifted (tested). The augmentation precedes the existing mirror/roll. Zero shift reproduces the stored
+float16 masks within 0.02 dB (tested). Default 0 keeps every historical configuration unchanged.
 
 ## 4. Open-set evaluation (`geoml.b2_experiment --unknown-data`)
 
@@ -76,6 +87,20 @@ near families only; `wideband_noise` is listed separately; `cid_overlay` reports
 (predicted `clean` and accepted), `carrier_under_carrier` call rate and rejection as unknown. The
 runner refuses a test-only artifact bound to a different known dataset or with different physics or
 canceller settings, and requires its groups to be known test groups. Nothing is tuned on these families.
+Denominators are explicit: `n_unknown` counts the pooled near families, `n_unknown_equivalence_limited`
+and `n_unknown_all_families` are separate, and the benign control is never counted as unknown. The
+runner also writes `results_summary.json`, the committed copy of `results.json` with a fixed list of
+dropped keys (`SUMMARY_DROPPED`: curves, histories, per-class acceptance, ECE bins, source file hashes,
+generation/calibration/Mahalanobis parameter blocks, confusion matrices); fingerprints, counts and
+every rate or `null` are kept.
+
+## 4a. Independent review
+
+The slice was reviewed read-only by an independent agent ([REVIEWER_RED_TEAM](../research/REVIEWER_RED_TEAM.md)
+§B2-test/1). No leakage or role violation was found; `prepare_scene` was shown bit-identical to its
+pre-refactor version over 144 cases. Six "should fix" items were resolved before the follow-up commit:
+K17d pairing, report wording and unknown-rejection column, `n_unknown` denominators, K17b full
+re-preprocessing, a reproducible results summary, and the downlink level-drift documentation above.
 
 ## 5. Evidence
 

@@ -154,40 +154,56 @@ def _training_plans(d: dict, cfg: TrainConfig) -> list:
         if cfg.input_mode == "single":
             raw = None if record.get("plan") is None else [record["plan"]]
         else:
-            raw = record.get("plans")
-            if cfg.input_mode == "co" and isinstance(raw, list) and len(raw) == 2:
-                raw = raw[:1]                      # the co view carries only the co-pol plan mask
-        if (not isinstance(raw, list) or len(raw) != len(MASK_CHANNELS[cfg.input_mode])
+            raw = record.get("plans")              # both feeds; the co view simply ignores the cross mask
+        if (not isinstance(raw, list) or len(raw) != (1 if cfg.input_mode == "single" else 2)
                 or any(not isinstance(plan, list) or not plan for plan in raw)):
             raise ValueError("plan-shift augmentation requires the operator plans in training metadata")
         plans.append([[Carrier(**carrier) for carrier in plan] for plan in raw])
     return plans
 
 
-def shifted_mask_channels(plans: list, shift_hz: float) -> np.ndarray:
-    """Normalized plan-mask channels ``[n_pol, F]`` for operator plans shifted by ``shift_hz``.
+def shifted_mask_db(plans: list, shift_hz: float) -> np.ndarray:
+    """Plan masks in dB ``[n_pol, F]`` for operator plans whose carriers moved by ``shift_hz``.
 
     This models an operator plan whose frequency reference is wrong by ``shift_hz``;
     the transmitted signal is unchanged (K17b). Zero shift reproduces the stored mask
-    up to float16 rounding.
+    up to float16 rounding. Carriers may spill past the transponder edge; the mask is
+    simply truncated at the monitor grid, as for any wrong plan.
     """
     rows = []
     for plan in plans:
         moved = [Carrier(c.f0 + float(shift_hz), c.symbol_rate, c.alpha, c.mod, c.power, c.code_rate) for c in plan]
-        rows.append(plan_mask_db(moved).astype(np.float32) / SCALE_DB)
+        rows.append(plan_mask_db(moved).astype(np.float32))
     return np.stack(rows)
 
 
-def _apply_plan_shift(xb: torch.Tensor, batch_plans: list, cfg: TrainConfig, gen: torch.Generator) -> torch.Tensor:
-    selected = torch.rand(len(batch_plans), generator=gen) < cfg.plan_shift_fraction
-    shifts = (torch.rand(len(batch_plans), generator=gen) * 2 - 1) * cfg.plan_shift_max_hz
+def shifted_mask_channels(plans: list, shift_hz: float) -> np.ndarray:
+    """Normalized mask channels ``[n_pol, F]`` (dB / SCALE_DB) for shifted operator plans."""
+    return shifted_mask_db(plans, shift_hz) / SCALE_DB
+
+
+def _apply_plan_shift(xb: torch.Tensor, idx: torch.Tensor, raw: dict, plans: list, cfg: TrainConfig,
+                      absolute_ref_db, gen: torch.Generator) -> torch.Tensor:
+    """K17b: rebuild the plan masks of the selected rows and re-run the full preprocessing.
+
+    Re-running ``_inputs`` keeps the train-time transform identical to the A5 test-time
+    corruption (``geoml.plan_shortcut``), where the carrier-level reference also follows
+    the shifted plan. Selection is Bernoulli per sample per epoch (expected fraction
+    ``plan_shift_fraction``), the shift is continuous U(-max, +max).
+    """
+    selected = torch.rand(len(idx), generator=gen) < cfg.plan_shift_fraction
+    shifts = (torch.rand(len(idx), generator=gen) * 2 - 1) * cfg.plan_shift_max_hz
     if not selected.any():
         return xb
+    rows = torch.nonzero(selected).flatten()
+    global_rows = idx[rows].tolist()
+    masks = np.stack([shifted_mask_db(plans[g], float(shifts[r])) for r, g in zip(rows.tolist(), global_rows)])
+    subset = {"spec": np.asarray(raw["spec"])[global_rows],
+              "mask": masks[:, 0] if cfg.input_mode == "single" else masks}
+    if "residual" in raw:
+        subset["residual"] = np.asarray(raw["residual"])[global_rows]
     xb = xb.clone()
-    channels = MASK_CHANNELS[cfg.input_mode]
-    for row in torch.nonzero(selected).flatten().tolist():
-        masks = torch.from_numpy(shifted_mask_channels(batch_plans[row], float(shifts[row])))
-        xb[row, list(channels)] = masks[:, None, :].expand(len(channels), xb.shape[2], xb.shape[3])
+    xb[rows] = _inputs(subset, cfg, absolute_ref_db)
     return xb
 
 
@@ -243,7 +259,7 @@ def fit(train: dict, val: dict, cfg: TrainConfig, device: str | None = None, log
             idx = perm[i:i + cfg.batch]
             xb = xt[idx]
             if train_plans is not None:        # K17b: label-preserving operator-plan shift, training only
-                xb = _apply_plan_shift(xb, [train_plans[j] for j in idx.tolist()], cfg, gen)
+                xb = _apply_plan_shift(xb, idx, train, train_plans, cfg, ref, gen)
             if cfg.augment:
                 flip = torch.rand(len(idx), generator=gen) < 0.5
                 xb = torch.where(flip[:, None, None, None], xb.flip(-1), xb)

@@ -53,8 +53,7 @@ def check(known, test):
             own = spec[0].astype(np.float32)
             row = {"scenario_id": int(seed), "family": family, "group": record["family_group"],
                    "expected_decision": record["expected_decision"], "injection_stage": event["injection_stage"],
-                   "mean_delta_psd_co_db": float(np.mean(own) - np.mean(co)),
-                   "mean_delta_psd_cross_db": float(np.mean(spec[1].astype(np.float32)) - 0.0)}
+                   "mean_delta_psd_co_db": float(np.mean(own) - np.mean(co))}
             band = _band(event)
             if band is not None:
                 row["event_band_hz"] = list(band)
@@ -71,7 +70,8 @@ def check(known, test):
             else:
                 row.update(n_cids_transmitted=event["n_transmitted"],
                            relative_psd_db=[c["relative_psd_db"] for c in event["cids"]])
-            row.pop("mean_delta_psd_cross_db")
+            if family == "adjacent_satellite_downlink":
+                row["effective_c_over_i_psd_db"] = event["effective_c_over_i_psd_db"]
             rows.append(row)
     per_family = {}
     for family in manifest["families"]:
