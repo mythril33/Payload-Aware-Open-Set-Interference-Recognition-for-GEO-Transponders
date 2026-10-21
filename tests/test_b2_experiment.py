@@ -73,7 +73,7 @@ def test_run_reports_roles_rejection_plan_head_and_reuses_artifacts(dataset, tmp
             assert metrics["calibration"]["n_calibration"] == 16            # val-calib known samples only
         assert values["plan_consistency"]["positive_class"] == "planned_carrier_missing"
         assert values["plan_consistency"]["n_samples"] == 16
-        assert values["open_set"]["unknown_auroc"] is None
+        assert all(entry["unknown_auroc"] is None and entry["n_unknown"] == 0 for entry in values["open_set"].values())
         assert values["alarm"]["n_clean_calibration"] == 2
         assert sum(sum(row) for row in values["confusion"]) == 16
     assert result["partitions"]["train"]["scenario_ids"] == [3000000, 3000001]
@@ -120,3 +120,77 @@ def test_plan_consistency_accuracy_is_null_when_one_class_is_absent():
     both = ex._plan_metrics(logits, np.array([0, 1] * 4), groups)
     assert both["accuracy"]["mean"] == 0.5 and both["recall"] == 0.0 and both["precision"] is None
     assert "undefined" in ex._plan_cell(single) and ex._plan_cell(both).startswith("50.0%")
+
+
+# ---- test-only families (B2-test/1) ----
+
+def _unknown_split(n_groups, seed):
+    from geosim.b2_scenarios import TEST_FAMILIES
+    rng = np.random.default_rng(seed)
+    groups = np.repeat(np.arange(ROLE_STARTS["test"], ROLE_STARTS["test"] + n_groups), len(TEST_FAMILIES))
+    family = np.tile(np.arange(len(TEST_FAMILIES)), n_groups)
+    n = len(family)
+    spec = rng.normal(-80, 2, (n, 2, 8, 32)).astype(np.float16)
+    spec[:, 0, :, 30] += 40                                     # a signature no known class carries
+    mask = np.full((n, 2, 32), -60, np.float16)
+    mask[:, :, 8:16] = 0
+    return {"spec": spec, "mask": mask, "family": family.astype(np.int8), "seed": groups.astype(np.int64),
+            "plan_consistency": np.zeros(n, np.int8), "residual": (spec[:, 0].astype(np.float32) - 12).astype(np.float16),
+            "meta": [{"scenario_id": int(g)} for g in groups], "families": list(TEST_FAMILIES)}
+
+
+@pytest.fixture
+def unknown_dataset(monkeypatch, dataset):
+    _, manifest, data = dataset
+    unknown = _unknown_split(2, 99)
+    test_manifest = {"protocol": "B2-test/1", "config": manifest["config"], "cancellation": manifest["cancellation"],
+                     "request": {"known": {"known_data_fingerprint": "f" * 64}}}
+    monkeypatch.setattr(ex, "read_b2_test_manifest", lambda path: test_manifest)
+    monkeypatch.setattr(ex, "load_b2_test_split", lambda path: unknown)
+    monkeypatch.setattr(ex, "b2_test_fingerprint", lambda path: "e" * 64)
+    return unknown, test_manifest, data
+
+
+def test_test_only_families_are_scored_with_frozen_thresholds_and_reported_per_group(unknown_dataset, tmp_path):
+    unknown, _, data = unknown_dataset
+    result = run_b2_experiment(_config(views=("dual_residual",)), data, tmp_path / "os", log=lambda *_: None,
+                               unknown_data=tmp_path / "unknown")
+    assert result["test_only_protocol"] == "B2-test/1" and result["partitions"]["test_only"]["n_samples"] == 10
+    values = result["methods"]["dual_residual"]
+    for method, metrics in values["rejection"].items():
+        families = metrics["families"]
+        assert set(families) == set(unknown["families"]) and metrics["n_unknown"] == 8
+        for name, entry in families.items():
+            assert entry["n"] == 2 and entry["rejection_at_threshold"]["n_samples"] == 2
+            if entry["pre_registered_group"] == "benign":
+                assert name == "cid_overlay" and entry["expected_decision"] == "clean"
+                assert {"clean_acceptance", "carrier_under_carrier_calls", "rejected_as_unknown"} <= set(entry)
+            else:
+                assert entry["ranking"]["n_known"] == 16 and entry["ranking"]["n_unknown"] == 2
+                assert entry["ranking"]["conventions"]["positive_population"] == "unknown"
+        pooled = metrics["pooled_near"]
+        assert set(pooled["families"]) == {"pulsed", "intermittent_bursts", "adjacent_satellite_downlink"}
+        assert pooled["ranking"]["n_unknown"] == 6
+        assert metrics["unknown_rejection"] == pooled["rejection_at_threshold"]
+        # The threshold is the val-calib one; its calibration count is unchanged by the unknown families.
+        assert metrics["calibration"]["n_calibration"] == 16
+    assert set(values["open_set"]) == {"msp", "energy", "mahalanobis"}
+    assert values["open_set"]["msp"]["n_unknown"] == 8 and values["open_set"]["msp"]["unknown_auroc"] is not None
+    assert set(values["test_only_alarm"]) == set(unknown["families"])
+    text = (tmp_path / "os" / "results.md").read_text()
+    assert "Test-only families (B2-test/1" in text and "pooled near" in text and "benign (expect clean)" in text
+
+
+def test_test_only_artifact_must_be_bound_to_the_same_known_data(unknown_dataset, tmp_path):
+    unknown, test_manifest, data = unknown_dataset
+    test_manifest["request"]["known"]["known_data_fingerprint"] = "0" * 64
+    with pytest.raises(ValueError, match="different known dataset"):
+        run_b2_experiment(_config(views=("co",)), data, tmp_path / "a", log=lambda *_: None, unknown_data="x")
+    test_manifest["request"]["known"]["known_data_fingerprint"] = "f" * 64
+    test_manifest["cancellation"] = {"version": "other"}
+    with pytest.raises(ValueError, match="cancellation differ"):
+        run_b2_experiment(_config(views=("co",)), data, tmp_path / "b", log=lambda *_: None, unknown_data="x")
+    test_manifest["cancellation"] = {"version": "obs-cancel/1"}
+    unknown["seed"][:] = ROLE_STARTS["test"] + 7
+    with pytest.raises(ValueError, match="known test groups"):
+        run_b2_experiment(_config(views=("co",)), data, tmp_path / "c", log=lambda *_: None, unknown_data="x")

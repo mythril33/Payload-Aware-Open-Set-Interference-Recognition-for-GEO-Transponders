@@ -1,6 +1,16 @@
 # Proje durumu ve eksik kaydı
 
-Son güncelleme: 2026-10-21 (B2 iptal artığı ve beş kanallı model; temel deney durumu 2026-10-10) · Bu dosya "şu an neredeyiz, ne eksik" sorusunun tek yanıtıdır; her oturum sonunda güncellenir.
+Son güncelleme: 2026-10-21 (B2 yalnız-test aileleri, K17b artırımı ve ilk açık-küme koşusu; temel deney durumu 2026-10-10) · Bu dosya "şu an neredeyiz, ne eksik" sorusunun tek yanıtıdır; her oturum sonunda güncellenir.
+
+## Uygulama eki — 2026-10-21 (üçüncü dilim: yalnız-test aileleri, K17b, açık-küme değerlendirmesi)
+
+- **Kritik yol bağımlılığı kapatıldı — `B2-test/1` aşaması kodlandı:** [P21](P21_b2_test_families.md), `geosim.b2_test_dataset`. Beş yalnız-test aile (`pulsed`, `intermittent_bursts`, `adjacent_satellite_downlink`, `wideband_noise`, `cid_overlay`) yalnız dondurulmuş test gruplarında, bilinen varyantlarla aynı plan/link/akış/faz/eksik-taşıyıcı durumuyla ve bağlandığı bilinen artefaktın (B2-base/1 veya B2-feat/1) **aynı alıcı kalibrasyonuyla** üretilir; ayrı RNG ad alanı `[grup, 1830, aile]`. Eğitim/val rolleri için üretici reddeder; okuyucu yabancı rol dizinlerini reddeder. Beşinci kanal (artık) aynı iptal ayarıyla saklanır.
+- **Yeni üreteçler:** `geosim.asi.adjacent_satellite_downlink` (K17d: bilinen uplink ASI ile birebir aynı çekilişler, yalnız giriş noktası farklı; alıcı feed gücüne ölçekli, yükü atlar); `geosim.cid.cid_overlay(active=...)` susturulmuş taşıyıcının altında CID yok, kimlik çekilişleri korunur.
+- **K17b eğitim-zamanı plan kaydırma artırımı kodlandı:** `TrainConfig.plan_shift_fraction=0,15`, `plan_shift_max_hz=0,5 MHz` (`configs/b2_feat.json`); yalnız eğitim yığınlarının maske kanalları, her iki feed birlikte, sürekli Δf; spektrum/artık dokunulmaz; doğrulama/test maskeleri asla kaydırılmaz (testle). Sıfır kayma saklı float16 maskeyi 0,02 dB içinde yeniden üretir.
+- **Açık-küme değerlendirmesi:** `geoml.b2_experiment --unknown-data`: dondurulmuş checkpoint/skorlayıcı/eşiklerle aile ve ön kayıtlı grup başına AUROC/AP/OSCR/FPR@95TPR (bilinmeyen pozitif), eşikte ret, `cid_overlay` için temiz kabul / CuC deme / ret oranları; birleşik sayı yalnız "yakın" ailelerden; `wideband_noise` ayrı. Farklı bilinen veriye bağlı test artefaktı, farklı fizik/iptal ayarı veya bilinen test grubu dışındaki gruplar reddedilir.
+- **Pilot ([rapor](../results/b2_test_pilot.md)):** 2 test grubu × 5 aile = 10 gözlem, ≈ 40 s; bağ ve tekrar kullanım doğrulandı. Fizik: dört bilinmeyen aile ham spektrumda ≤ 0,2 dB iken iptal artığında 0,9–3,5 dB görünür oluyor (CuC ile aynı mekanizma). Öğrenme koşusu 16 eğitim gözlemiyle şans düzeyinde; bütün açık-küme sayıları yalnız yürütme kanıtıdır.
+- **Doğrulama:** tam paket **757 test geçti**. Bağımsız hakem incelemesi: [REVIEWER_RED_TEAM](../research/REVIEWER_RED_TEAM.md) §B2-test/1.
+- **Sıradaki:** seviye eşleşmiş ASI ↔ `unauthorized` kümesi (K17c, `test-matched` üreticisi); LOKO (A8) ve EDSC baseline; A5 çift-pol plan bozma; 20 gruplu maliyet ölçümü ve ardından bulutta tam üretim (bilinen ≈ 20–25 + yalnız-test ≈ 3 çekirdek-saat **[TAHMİN]**); eğitim kullanıcının GPU'sunda. K18 onayı bekliyor.
 
 ## Uygulama eki — 2026-10-21 (ikinci dilim: iptal artığı, beşinci kanal, iki çıktılı model)
 
@@ -160,6 +170,7 @@ Kademe A'nın (ders projesi) bütün zinciri kodlandı ve uçtan uca çalışıy
 | P18 | B2/1 sekiz sınıflı çift-pol açık-küme protokolü | **Donduruldu 2026-10-20 (K17)**; bilinen fiziksel aşama P19'da; nihai model ve yalnız-test aileleri bekliyor | `P18_b2_protocol.md` |
 | P19 | B2 bilinen fiziksel gözlemleri | `B2-base/1` üretici, aktif yayın ayrımı, bağımsız kalibrasyon ve veri bütünlüğü | `P19_b2_base_observations.md` |
 | P20 | B2 iptal artığı ve beş kanallı model | `B2-feat/1` üretici, `geosim.cancellation`, iki çıktılı model, `geoml.b2_experiment`; pilot fizik kanıtı var, tanıma sonucu yok | `P20_b2_cancellation_residual.md` |
+| P21 | B2 yalnız-test aileleri, K17b, açık-küme değerlendirmesi | `B2-test/1` üretici, downlink ASI ve aktif-farkında CID, plan kaydırma artırımı, aile başına açık-küme metrikleri; pilot yürütme kanıtı | `P21_b2_test_families.md` |
 | Kademe B | Çift pol, 8 sınıf, open-set | Geliştirme dilimleri var (B1-dev/1–2, D1-dev/1, E1-dev/1); nihai B2/1 benchmark yok | `P11`–`P14` |
 
 ## 3. Elde ne var
@@ -228,7 +239,7 @@ Bunların hiçbiri henüz tam veriyle alınmış bir model sonucu değil.
 | B10 | P16 İP-1: C3'ün IBO eğrisi, ECE, FPR@95TPR | Yüksek | **Kodlandı (P17)**; tam üretim ve değerlendirme sizde (S8) |
 | B11 | P16 İP-2: sentetik bellek polinomu, OpenDPD eşleme duyarlılığı (R1-eval/2), NPR'nin literatürle sayısal karşılaştırması | Yüksek | Rapp ve OpenDPD bellek polinomları (P17) ve [NPR kontrolü](../results/npr_check.md) yapıldı |
 | B12 | P16 İP-3/4: B2 gözlemleri, iptal artığı, PL çerçeve/SCF ve plan bozma | Yüksek | Sekiz bilinen sınıf P19'da, gözlemden iptal artığı P20'de bağlandı; kalan: PL çerçeve/SCF ve B2 plan-bozma değerlendirmesi |
-| B13 | P16 İP-5/6: B2/1 nihai test üretimi, eğitim-zamanı OSR, EDSC ve XGBoost | Orta | Beş kanallı/iki çıktılı model ve merkez kaybı P20'de var; unknown/CID/matched-test adaptörleri, EDSC ve XGBoost henüz yok |
+| B13 | P16 İP-5/6: B2/1 nihai test üretimi, eğitim-zamanı OSR, EDSC ve XGBoost | Orta | Beş kanallı/iki çıktılı model ve merkez kaybı P20'de; unknown/CID aileleri ve açık-küme değerlendirmesi P21'de var; seviye eşleşmiş test kümesi (K17c), EDSC ve XGBoost henüz yok |
 | B14 | K18: merkez kaybı 0,005 ve plan BCE 1,0 ön kaydının onayı | Orta | Araştırmacı kararı; onaylanmazsa P18 §10 ile değiştirilir |
 
 ### 5.4 Bilinçli olarak ertelenenler (Kademe B)

@@ -117,3 +117,19 @@ def test_uplink_event_raises_psd_in_its_band_through_the_payload():
     power = lambda r, sel: np.mean(10 ** (r.spec_db[:, sel].astype(float) / 10))
     assert 10 * np.log10(power(event, band) / power(clean, band)) > 0.3
     assert abs(10 * np.log10(power(event, outside) / power(clean, outside))) < 0.3
+
+
+def test_downlink_asi_family_shares_the_known_uplink_draws_and_differs_only_in_injection_point():
+    import numpy as np
+    from geosim.asi import adjacent_satellite_downlink, adjacent_satellite_uplink
+    from geosim.scenario import default_plan
+    plan = default_plan(11, 36e6)
+    _, up = adjacent_satellite_uplink(np.random.default_rng(7), plan, 36e6)
+    callback, down = adjacent_satellite_downlink(np.random.default_rng(7), plan, 36e6)
+    assert down["kind"] == "adjacent_satellite_downlink" and down["injection_stage"] == "downlink"
+    assert down["power_reference"] == "wanted_receiver_feed" and down["test_only"] is True
+    assert down["carrier"] == up["carrier"] and down["geometry"] == up["geometry"]
+    assert down["c_over_i_psd_db"] == up["c_over_i_psd_db"] and down["overlap_fraction"] == up["overlap_fraction"]
+    samples = callback(np.random.default_rng(0), np.arange(2) * 0.01, 4096, 288e6)
+    assert samples.shape == (2, 4096) and np.isfinite(samples).all()
+    assert np.isclose(np.mean(np.abs(samples) ** 2), down["carrier"]["power"], rtol=0.2)

@@ -137,6 +137,25 @@ Unknown families, CID overlays and the matched ASI set are not generated yet. Se
 [P20](docs/plan/P20_b2_cancellation_residual.md) and the [pilot report](docs/results/b2_feat_pilot.md).
 Claude Code context lives in [CLAUDE.md](CLAUDE.md), `.claude/rules/` and `.claude/skills/`.
 
+## B2 test-only families and open-set evaluation
+
+`B2-test/1` generates the five pre-registered test-only families (`pulsed`,
+`intermittent_bursts`, `adjacent_satellite_downlink`, `wideband_noise`, `cid_overlay`) for
+frozen test groups only, bound to a verified known artifact (same plans, streams and
+receiver calibration). `geoml.b2_experiment --unknown-data` scores them with the frozen
+checkpoints and thresholds; the K17b training plan-shift augmentation is enabled in
+`configs/b2_feat.json`.
+
+```bash
+python -m geosim.b2_test_dataset --out data/b2-test-pilot --known data/b2-feat-pilot --config configs/b2_base.json --cancellation configs/cancellation.json --limit-groups 2 --groups-per-shard 1
+python scripts/check_b2_test_families.py --known data/b2-feat-pilot --test data/b2-test-pilot --out runs/b2-test-pilot/family_check.json
+python -m geoml.b2_experiment --config configs/b2_feat.json --data data/b2-feat-pilot --unknown-data data/b2-test-pilot --out runs/b2-feat-pilot-os
+```
+
+The pilot run is at chance and proves execution only. The matched ASI set, LOKO rotations and
+full production remain. See [P21](docs/plan/P21_b2_test_families.md) and the
+[pilot report](docs/results/b2_test_pilot.md).
+
 ## Research dossier (2026-10-20)
 
 This is an evolving research project, **not** a completed dual-polarization, eight-class open-set system.

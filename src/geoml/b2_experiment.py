@@ -10,9 +10,12 @@ MSP/energy/Mahalanobis acceptance thresholds and the clean alarm threshold, and
 share data, budget and seeds. The optional independent ``plan_consistency``
 head is trained and reported separately (P18 §7a).
 
-This slice contains known classes only. Unknown families, benign CID overlays
-and the matched ASI set are later stages; their metrics are reported as
-``null`` with zero counts, never estimated from known data.
+With ``--unknown-data`` pointing at a verified B2-test/1 artifact bound to the
+same known data, the test-only families are scored with the *same* frozen
+checkpoints, scorers and thresholds: per-family and pre-registered-group AUROC,
+AP, OSCR and FPR@95TPR (unknown positive), thresholded rejection, and the benign
+``cid_overlay`` control (expected decision ``clean``). Without it those metrics
+are ``null`` with zero counts. The matched ASI set is a later stage.
 """
 from __future__ import annotations
 
@@ -26,7 +29,9 @@ import numpy as np
 import torch
 
 from geosim.b2_dataset import b2_fingerprint, load_b2_split, read_b2_manifest
-from geosim.b2_protocol import BASE_PROTOCOL, FEATURE_PROTOCOL, LABELS, PLAN_CONSISTENCY, role_for_group
+from geosim.b2_protocol import (BASE_PROTOCOL, BENIGN_TEST_FAMILIES, EQUIVALENCE_LIMITED_UNKNOWN, FEATURE_PROTOCOL,
+                                LABELS, NEAR_UNKNOWN, PLAN_CONSISTENCY, role_for_group)
+from geosim.b2_test_dataset import b2_test_fingerprint, load_b2_test_split, read_b2_test_manifest
 
 from .artifacts import fingerprint
 from .calibration import RejectionCalibration, calibrate_scores
@@ -35,6 +40,7 @@ from .experiment import _sha256, _source_identity, _write_json
 from .mahalanobis import MahalanobisScorer, fit_mahalanobis
 from .metrics import cluster_ci, confusion, expected_calibration_error, macro_f1, threshold_at_pfa
 from .openset import unknown_scores
+from .openset_metrics import ranking_metrics
 from .train import TrainConfig, fit, infer, load, save
 
 ROLES = ("train", "val-select", "val-calib", "test")
@@ -157,20 +163,90 @@ def _plan_metrics(plan_logits, targets, groups):
             "n_positive": positives, "n_predicted_positive": int(predicted.sum()), "n_samples": int(len(targets))}
 
 
-def _rejection(method, calib_scores, test_scores, labels, predictions, groups, provenance, config):
+def _rejection(method, calib_scores, test_scores, labels, predictions, groups, provenance, config, families=None):
     calibration = calibrate_scores(calib_scores, method, config.target_acceptance, provenance=provenance)
     accepted = calibration.accept(test_scores)
-    return calibration, {
+    metrics = {
         "calibration": calibration.to_dict(),
         "known_acceptance": _rate(accepted, groups),
         "accepted_known_accuracy": _rate((predictions == labels)[accepted], groups[accepted]),
         "per_class_acceptance": {label: _rate(accepted[labels == index], groups[labels == index])
                                  for index, label in enumerate(LABELS)},
-        "unknown_rejection": None, "n_unknown": 0,
-        "note": "no unknown or benign test-only families exist in this known-only stage"}
+        "unknown_rejection": None, "n_unknown": 0, "families": None,
+        "note": "no unknown or benign test-only families were supplied"}
+    if families is not None:
+        metrics.update(_family_metrics(method, calibration, test_scores, labels, predictions, families))
+    return calibration, metrics
 
 
-def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, device="cpu", log=print):
+def _unknown_families(unknown):
+    """Split the B2-test/1 split into named families with their pre-registered groups."""
+    names = unknown["families"]
+    return {name: {"index": index, "group": ("near" if name in NEAR_UNKNOWN else
+                                             "equivalence_limited" if name in EQUIVALENCE_LIMITED_UNKNOWN else "benign"),
+                   "mask": unknown["family"] == index}
+            for index, name in enumerate(names)}
+
+
+def _family_metrics(method, calibration, known_test_scores, labels, predictions, families):
+    """Open-set metrics per family and per pre-registered group; unknown is the positive class.
+
+    ``cid_overlay`` is a benign control and is excluded from every pooled unknown
+    number: for it the reported quantities are the clean-acceptance rate (predicted
+    clean and accepted) and the carrier-under-carrier call rate.
+    """
+    correct = predictions == labels
+    scores, groups, info = families["scores"], families["groups"], families["info"]
+    per_family, pooled_scores, pooled_groups = {}, [], []
+    for name, item in info.items():
+        mask = item["mask"]
+        family_scores, family_groups = scores[mask], groups[mask]
+        rejected = ~calibration.accept(family_scores)
+        entry = {"pre_registered_group": item["group"], "n": int(mask.sum()),
+                 "ranking": ranking_metrics(known_test_scores, family_scores, correct) if mask.any() else None,
+                 "rejection_at_threshold": _rate(rejected, family_groups)}
+        if item["group"] == "benign":
+            family_predictions = families["predictions"][mask]
+            entry.update(expected_decision="clean",
+                         clean_acceptance=_rate((family_predictions == 0) & ~rejected, family_groups),
+                         carrier_under_carrier_calls=_rate(family_predictions == LABELS.index("carrier_under_carrier"), family_groups),
+                         rejected_as_unknown=_rate(rejected, family_groups))
+        else:
+            entry["expected_decision"] = "unknown"
+        if item["group"] == "near" and mask.any():
+            pooled_scores.append(family_scores)
+            pooled_groups.append(family_groups)
+        per_family[name] = entry
+    pooled = None
+    if pooled_scores:
+        pooled_scores, pooled_groups = np.concatenate(pooled_scores), np.concatenate(pooled_groups)
+        pooled = {"families": [name for name, item in info.items() if item["group"] == "near" and item["mask"].any()],
+                  "ranking": ranking_metrics(known_test_scores, pooled_scores, correct),
+                  "rejection_at_threshold": _rate(~calibration.accept(pooled_scores), pooled_groups)}
+    unknown_mask = np.concatenate([item["mask"] for name, item in info.items() if item["group"] != "benign"]).any() if info else False
+    n_unknown = int(sum(int(item["mask"].sum()) for item in info.values() if item["group"] != "benign"))
+    return {"families": per_family, "pooled_near": pooled, "n_unknown": n_unknown,
+            "unknown_rejection": pooled["rejection_at_threshold"] if pooled else None,
+            "note": "pooled numbers use near families only; wideband_noise is equivalence-limited and reported separately; "
+                    "cid_overlay is a benign control" if unknown_mask else "no unknown families"}
+
+
+def _load_unknown(unknown_data, manifest, identity, config):
+    """Verify the B2-test/1 artifact and its binding to the known data in use."""
+    test_manifest = read_b2_test_manifest(unknown_data)
+    binding = test_manifest["request"]["known"]
+    if binding["known_data_fingerprint"] != identity:
+        raise ValueError("the test-only artifact is bound to a different known dataset")
+    if test_manifest["config"] != manifest["config"] or test_manifest.get("cancellation") != manifest.get("cancellation"):
+        raise ValueError("test-only artifact physics or cancellation differ from the known data")
+    unknown = load_b2_test_split(unknown_data)
+    if config.protocol == FEATURE_PROTOCOL and "residual" not in unknown:
+        raise ValueError("B2-feat/1 experiments require the stored residual in the test-only artifact")
+    return test_manifest, unknown
+
+
+def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, device="cpu", log=print,
+                      unknown_data=None):
     data, out = Path(data), Path(out)
     manifest = read_b2_manifest(data)
     if manifest["protocol"] != config.protocol or list(manifest["labels"]) != list(LABELS):
@@ -183,6 +259,16 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
         raise ValueError("B2-feat/1 splits must carry the stored residual")
     _check_roles(parts)
     summary = _summary(parts)
+    test_manifest = unknown = None
+    if unknown_data is not None:
+        test_manifest, unknown = _load_unknown(unknown_data, manifest, identity, config)
+        if not set(np.unique(unknown["seed"]).tolist()) <= set(summary["test"]["scenario_ids"]):
+            raise ValueError("test-only families must belong to the known test groups")
+        summary["test_only"] = {"n_samples": int(len(unknown["seed"])),
+                                "scenario_ids": [int(s) for s in np.unique(unknown["seed"])],
+                                "per_family": {name: int(np.sum(unknown["family"] == index))
+                                               for index, name in enumerate(unknown["families"])},
+                                "n_planned_carrier_missing": int(np.sum(unknown["plan_consistency"] == 1))}
     source = _source_identity()
     provenance = {"protocol": config.protocol, "data_fingerprint": identity,
                   "roles": {role: summary[role]["scenario_ids"] for role in ROLES},
@@ -212,6 +298,7 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
         train_out = infer(fitted, parts["train"])
         calib_out = infer(fitted, parts["val-calib"])
         test_out = infer(fitted, test)
+        unknown_out = infer(fitted, unknown) if unknown is not None else None
         scorer_path = out / f"mahalanobis_{view}.npz"
         scorer_provenance = fingerprint({"checkpoint_sha256": checkpoint_sha, "data": identity,
                                          "groups": summary["train"]["scenario_ids"],
@@ -237,11 +324,17 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
                 calib_scores, test_scores = scorer.score(calib_out["embedding"]), scorer.score(test_out["embedding"])
             else:
                 calib_scores, test_scores = unknown_scores(calib_out["logits"], method), unknown_scores(test_out["logits"], method)
+            families = None
+            if unknown_out is not None:
+                family_scores = (scorer.score(unknown_out["embedding"]) if method == "mahalanobis"
+                                 else unknown_scores(unknown_out["logits"], method))
+                families = {"scores": family_scores, "groups": unknown["seed"], "info": _unknown_families(unknown),
+                            "predictions": unknown_out["logits"].argmax(axis=1)}
             rejection_provenance = fingerprint({"checkpoint_sha256": checkpoint_sha, "data": identity, "method": method,
                                                 "groups": summary["val-calib"]["scenario_ids"],
                                                 "target_acceptance": config.target_acceptance})
             calibration, metrics = _rejection(method, calib_scores, test_scores, labels, predictions, groups,
-                                              rejection_provenance, config)
+                                              rejection_provenance, config, families)
             calibration_path = out / f"rejection_{view}_{method}.json"
             if calibration_path.exists():
                 if RejectionCalibration.load(calibration_path) != calibration:
@@ -263,8 +356,11 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
                                    "target_clean_pfa": config.pfa, "n_clean_calibration": int(clean_calibration.sum())},
                          "plan_consistency": _plan_metrics(test_out["plan_logits"], test["plan_consistency"], groups),
                          "rejection": rejection, "mahalanobis": scorer.to_dict(),
-                         "open_set": {"unknown_auroc": None, "unknown_ap": None, "oscr": None, "fpr_at_95_tpr": None,
-                                      "n_unknown": 0, "note": "unknown families are a later B2 stage"},
+                         "open_set": _open_set_summary(rejection),
+                         "test_only_alarm": None if unknown_out is None else {
+                             name: _rate((1.0 - _softmax(unknown_out["logits"])[:, 0] > alarm_threshold)[item["mask"]],
+                                         unknown["seed"][item["mask"]])
+                             for name, item in _unknown_families(unknown).items()},
                          "checkpoint_sha256": checkpoint_sha, "training_source_revision": fitted.get("source_revision"),
                          "n_parameters": fitted["n_parameters"], "history": fitted["history"]}
         decisions[view]["prediction"] = predictions
@@ -272,6 +368,8 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
         decisions[view]["alarm"] = alarm
         decisions[view]["plan_logit"] = None if test_out["plan_logits"] is None else test_out["plan_logits"][:, 0]
     result = {"protocol": config.protocol, "parent_protocol": manifest["parent_protocol"], "benchmark_complete": False,
+              "test_only_protocol": None if test_manifest is None else test_manifest["protocol"],
+              "test_only_fingerprint": None if unknown_data is None else b2_test_fingerprint(unknown_data),
               "labels": list(LABELS), "config": config.resolved(), "experiment_fingerprint": experiment_identity,
               "data_fingerprint": identity, "source": source, "partitions": summary, "methods": methods,
               "generation": manifest["config"], "cancellation": manifest.get("cancellation"),
@@ -295,6 +393,19 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
     (out / "results.md").write_text(report(result))
     log(f"wrote {out / 'results.md'}")
     return result
+
+
+def _open_set_summary(rejection):
+    """Compact per-method ranking numbers (pooled near families); null when no unknowns were supplied."""
+    summary = {}
+    for method, metrics in rejection.items():
+        pooled = metrics.get("pooled_near")
+        summary[method] = {"unknown_auroc": None, "unknown_ap": None, "oscr": None, "fpr_at_95_tpr": None,
+                           "n_unknown": metrics["n_unknown"], "positive_class": "unknown (near families pooled)"}
+        if pooled:
+            summary[method].update(unknown_auroc=pooled["ranking"]["unknown_auroc"], unknown_ap=pooled["ranking"]["unknown_aupr"],
+                                   oscr=pooled["ranking"]["oscr_auc"], fpr_at_95_tpr=pooled["ranking"]["unknown_fpr_at_95_tpr"])
+    return summary
 
 
 def _percent(rate):
@@ -328,6 +439,31 @@ def report(result):
         for method, metrics in values["rejection"].items():
             lines.append(f"| {view} | {method} | {_percent(metrics['known_acceptance'])} | "
                          f"{_percent(metrics['accepted_known_accuracy'])} | null (n_unknown=0) |")
+    if result.get("test_only_protocol"):
+        lines += ["", f"## Test-only families ({result['test_only_protocol']}; unknown is the positive class)", "",
+                  "| View | Method | Family | Group | n | AUROC | AP | OSCR | FPR@95TPR | Rejected at threshold |",
+                  "|---|---|---|---|---|---|---|---|---|---|"]
+        for view, values in result["methods"].items():
+            for method, metrics in values["rejection"].items():
+                for name, entry in (metrics.get("families") or {}).items():
+                    ranking = entry["ranking"]
+                    if entry["pre_registered_group"] == "benign":
+                        lines.append(f"| {view} | {method} | {name} | benign (expect clean) | {entry['n']} | – | – | – | – | "
+                                     f"{_percent(entry['rejected_as_unknown'])}; clean accepted {_percent(entry['clean_acceptance'])}; "
+                                     f"CuC calls {_percent(entry['carrier_under_carrier_calls'])} |")
+                    elif ranking is not None:
+                        lines.append(f"| {view} | {method} | {name} | {entry['pre_registered_group']} | {entry['n']} | "
+                                     f"{ranking['unknown_auroc']:.3f} | {ranking['unknown_aupr']:.3f} | {ranking['oscr_auc']:.3f} | "
+                                     f"{ranking['unknown_fpr_at_95_tpr']:.3f} | {_percent(entry['rejection_at_threshold'])} |")
+                pooled = metrics.get("pooled_near")
+                if pooled:
+                    r = pooled["ranking"]
+                    lines.append(f"| {view} | {method} | **pooled near** | near | {r['n_unknown']} | {r['unknown_auroc']:.3f} | "
+                                 f"{r['unknown_aupr']:.3f} | {r['oscr_auc']:.3f} | {r['unknown_fpr_at_95_tpr']:.3f} | "
+                                 f"{_percent(pooled['rejection_at_threshold'])} |")
+        lines += ["", "Pooled numbers use the pre-registered near families only; `wideband_noise` is equivalence-limited and",
+                  "listed separately; `cid_overlay` is a benign control whose expected decision is `clean`. Thresholds are",
+                  "the val-calib known-only thresholds above; nothing was tuned on these families."]
     lines += ["", "Positive class of the alarm is any non-clean label; its threshold comes from clean val-calib scenes only.",
               "Plan-consistency positive class is `planned_carrier_missing` (auxiliary logit > 0); it does not affect checkpoint selection.",
               "Intervals in JSON resample scenario groups with fixed weights and thresholds; training-seed uncertainty is separate.",
@@ -346,10 +482,11 @@ def main(argv=None):
     parser.add_argument("--out", required=True)
     parser.add_argument("--reuse", action="store_true")
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
+    parser.add_argument("--unknown-data", help="verified B2-test/1 artifact bound to --data (test-only families)")
     args = parser.parse_args(argv)
     try:
         run_b2_experiment(B2ExperimentConfig.from_file(args.config), args.data, args.out,
-                          reuse=args.reuse, device=args.device)
+                          reuse=args.reuse, device=args.device, unknown_data=args.unknown_data)
     except (ValueError, FileNotFoundError) as error:
         parser.exit(2, f"error: {error}\n")
 
