@@ -1,5 +1,8 @@
 # CLAUDE.md — Claude Code context for this repository
 
+**Next (proposed, not executed):** [P23 B2 Production Readiness](docs/plan/P23_b2_production_readiness.md) and the [bounded master prompt](docs/agent_prompts/B2_PRODUCTION_READINESS_MASTER_PROMPT.md) define streaming, LOKO, EDSC/XGBoost, A5 dual-pol tests, CI, and explicit K18/K17d/OBS-CANCEL/2 approvals. No full production authorization is implied.
+
+
 Read `AGENTS.md` first; it holds the binding repository rules. This file adds
 navigation, commands and the current milestone. It never overrides frozen
 protocols. Progress and final explanations to the researcher are in Turkish;

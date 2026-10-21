@@ -1,5 +1,8 @@
 # Payload-Aware Open-Set Interference Recognition for GEO Transponders
 
+**B2 production-readiness next phase (2026-10-21; proposed, not executed):** [P23 implementation/gate plan](docs/plan/P23_b2_production_readiness.md), [Claude Code Fable 5 master prompt](docs/agent_prompts/B2_PRODUCTION_READINESS_MASTER_PROMPT.md), [decision gate JSON](docs/plan/b2_readiness_gates_2026-10-21.json). Full production remains authorization-gated.
+
+
 GEO bent-pipe transponderindeki girişimi, operatörün downlink spektrum izlemesinden tanıyan derin öğrenme çalışması. Ders projesi; makaleye genişletilecek.
 
 - Plan ve kararlar: `docs/plan/` (`00_ana_plan.md` ile başlayın)
