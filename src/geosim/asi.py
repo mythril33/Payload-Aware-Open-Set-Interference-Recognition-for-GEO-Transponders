@@ -196,6 +196,32 @@ def place_carrier(rng: np.random.Generator, plan: list[Carrier], bandwidth: floa
     return float(rs), float(alpha), float(ok[int(rng.integers(ok.size))])
 
 
+def adjacent_satellite_downlink(rng: np.random.Generator, plan: list[Carrier], bandwidth: float,
+                                ranges: AsiRanges = DEFAULT_RANGES):
+    """Test-only near-OOD family (P18 §3, K17d): the known uplink-ASI waveform at the receiver.
+
+    Geometry, C/I_psd, rate/roll-off/placement and modulation follow exactly the same
+    draws as ``adjacent_satellite_uplink``; only the injection point differs. The
+    callback has nominal power ``mean_psd * Rs * 10**(-C/I_psd/10)`` relative to a
+    unit wanted load; the dual simulator scales it by the wanted feed power after the
+    physical downlink mixing, so it bypasses this satellite's payload (P15 convention).
+    """
+    carriers, bandwidth, _ = _request(rng, plan, bandwidth, 0.0)
+    geometry = draw_geometry(rng, ranges)
+    rs, alpha, f0 = place_carrier(rng, carriers, bandwidth, ranges.overlap)
+    mean_psd = sum(c.power for c in carriers) / sum(c.symbol_rate for c in carriers)
+    carrier = Carrier(f0=f0, symbol_rate=rs, alpha=alpha, mod=MODULATIONS[int(rng.integers(len(MODULATIONS)))],
+                      power=float(mean_psd * rs * 10 ** (-geometry["c_over_i_psd_db"] / 10)))
+    metadata = _metadata("adjacent_satellite_downlink", "downlink", "wanted_receiver_feed", carrier,
+                         float(-10 * np.log10(carrier.power)))
+    metadata.update(c_over_i_psd_db=geometry["c_over_i_psd_db"], geometry=geometry,
+                    overlap_fraction=overlap_fraction(metadata["f_lo"], metadata["f_hi"], carriers),
+                    ranges=asdict(ranges), sources=list(SOURCES), test_only=True,
+                    bypasses_wanted_payload=True,
+                    identifiability="same waveform and level distribution as the known uplink ASI; differs only in injection point")
+    return _waveform(carrier), metadata
+
+
 def adjacent_satellite_uplink(rng: np.random.Generator, plan: list[Carrier], bandwidth: float,
                               ranges: AsiRanges = DEFAULT_RANGES):
     """Draw one uplink ASI carrier; returns (generate(rng, t0, n, fs), metadata).

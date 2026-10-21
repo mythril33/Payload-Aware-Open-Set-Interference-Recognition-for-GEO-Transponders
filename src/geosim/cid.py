@@ -202,14 +202,22 @@ class _Cid:
         return hi[offset: offset + n]
 
 
-def cid_overlay(rng: np.random.Generator, plan: list[Carrier], bandwidth: float):
+def cid_overlay(rng: np.random.Generator, plan: list[Carrier], bandwidth: float, active=None):
     """DVB-CID under every planned carrier; returns (generate(rng, t0, n, fs), metadata).
 
     Identifiers, frame timing and carrier phases are drawn here; the waveform is a
     continuous function of absolute time, so successive snapshots continue the same
-    CID frames. ``generate`` ignores its rng.
+    CID frames. ``generate`` ignores its rng. ``active`` optionally marks which planned
+    hosts are actually transmitted: a CID rides on its host, so muted hosts carry no
+    CID, while their identifier draws are still consumed to keep the other CIDs fixed.
     """
     carriers, bandwidth, _ = _request(rng, plan, bandwidth, 0.0)
+    if active is None:
+        active = [True] * len(carriers)
+    if (not isinstance(active, (list, tuple)) or len(active) != len(carriers)
+            or any(not isinstance(flag, (bool, np.bool_)) for flag in active)):
+        raise ValueError("active must contain one boolean per planned carrier")
+    active = [bool(flag) for flag in active]
     cids = []
     for host in carriers:
         if host.symbol_rate < 128e3:
@@ -233,7 +241,9 @@ def cid_overlay(rng: np.random.Generator, plan: list[Carrier], bandwidth: float)
         if np.max(np.abs(first - np.round(first))) > 1e-6:
             raise ValueError("snapshot starts must fall on the simulation sample grid")
         out = np.zeros((len(starts), int(n)), np.complex64)
-        for c in cids:
+        for c, transmitted in zip(cids, active):
+            if not transmitted:
+                continue
             for row, s0 in enumerate(np.round(first).astype(np.int64)):
                 t = (s0 + np.arange(n)) / fs
                 carrier = np.exp(1j * (2 * np.pi * ((c.frequency * t) % 1.0) + c.phase))
@@ -245,6 +255,8 @@ def cid_overlay(rng: np.random.Generator, plan: list[Carrier], bandwidth: float)
                 "cids": [{"host_f0": c.host.f0, "host_symbol_rate": c.host.symbol_rate, "chip_rate": c.rc,
                           "relative_psd_db": c.psd_db, "power": float(c.power), "f_center": c.frequency,
                           "guid": f"{c.guid:016x}", "check_digits": f"{check_digits(c.guid):02x}",
-                          "start_chip": c.start_chip} for c in cids],
+                          "start_chip": c.start_chip, "host_active": transmitted}
+                         for c, transmitted in zip(cids, active)],
+                "n_transmitted": int(sum(active)),
                 "sources": list(SOURCES)}
     return generate, metadata

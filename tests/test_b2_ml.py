@@ -147,3 +147,117 @@ def test_checkpoint_selection_ignores_plan_head(monkeypatch):
     # The restored weights are the epoch-2 snapshot, not the final epoch's.
     restored = snapshots[-1]
     assert all(torch.equal(restored[k], v) for k, v in fitted["model"].state_dict().items())
+
+
+# ---- K17b: training-only operator-plan shift augmentation ----
+
+def _b2_like(n, seed):
+    """Dual data with real random plans in metadata so masks can be rebuilt."""
+    from geosim.plan import plan_mask_db, random_plan
+    from dataclasses import asdict
+    rng = np.random.default_rng(seed)
+    plans, masks = [], []
+    for _ in range(n):
+        pair = [random_plan(rng, 36e6), random_plan(rng, 36e6)]
+        plans.append([[asdict(c) for c in plan] for plan in pair])
+        masks.append(np.stack([plan_mask_db(plan) for plan in pair]).astype(np.float16))
+    spec = rng.normal(-80, 3, (n, 2, 8, 512)).astype(np.float32)
+    return {"spec": spec, "mask": np.stack(masks), "label": (np.arange(n) % 4).astype(np.int64),
+            "seed": np.arange(n), "plan_consistency": np.zeros(n, np.int64),
+            "residual": (spec[:, 0] - 15).astype(np.float32), "meta": [{"plans": p} for p in plans]}
+
+
+def test_zero_shift_reproduces_stored_masks_and_nonzero_shift_moves_them():
+    from geoml.train import shifted_mask_channels
+    from geoml.data import SCALE_DB
+    from geosim.waveform import Carrier
+    d = _b2_like(3, 0)
+    plans = [[Carrier(**c) for c in plan] for plan in d["meta"][0]["plans"]]
+    rebuilt = shifted_mask_channels(plans, 0.0) * SCALE_DB
+    assert np.abs(rebuilt - d["mask"][0].astype(np.float32)).max() < 0.02      # float16 storage rounding
+    shifted = shifted_mask_channels(plans, 0.5e6) * SCALE_DB
+    # A 0.5 MHz move is ~2.67 monitor bins; the mask moves right by that amount.
+    core = rebuilt[0] > -3
+    moved = np.roll(core, 3)
+    assert np.mean((shifted[0] > -3) == moved) > 0.97 and not np.array_equal(shifted[0] > -3, core)
+
+
+def test_plan_shift_rebuilds_selected_rows_with_the_full_a5_style_preprocessing():
+    import geoml.train as tr
+    from geoml.data import preprocess_dual
+    d = _b2_like(6, 1)
+    cfg = TrainConfig(labels=LABELS, input_mode="dual_residual", plan_shift_fraction=0.5, epochs=1, batch=6, width=4)
+    plans = tr._training_plans(d, cfg)
+    x = tr._inputs(d, cfg, None)
+    idx = torch.arange(6)
+    gen = torch.Generator().manual_seed(5)
+    replay = torch.Generator().manual_seed(5)
+    expected = torch.rand(6, generator=replay) < 0.5                     # replay the selection draw
+    shifts = (torch.rand(6, generator=replay) * 2 - 1) * cfg.plan_shift_max_hz
+    out = tr._apply_plan_shift(x, idx, d, plans, cfg, None, gen)
+    changed = (out != x).any(dim=(1, 2, 3))
+    assert torch.equal(changed, expected) and 0 < int(changed.sum()) < 6
+    for row in range(6):
+        if not changed[row]:
+            continue
+        # Exactly what the A5 corruption does: shifted masks, then the whole preprocessing again.
+        masks = tr.shifted_mask_db(plans[row], float(shifts[row]))[None]
+        reference = preprocess_dual(d["spec"][row:row + 1], masks, view="dual_residual", residual_db=d["residual"][row:row + 1])
+        assert np.allclose(out[row].numpy(), reference[0], atol=1e-6)
+        assert not torch.equal(out[row, 2], x[row, 2])                  # the co mask moved
+    assert torch.equal(tr._apply_plan_shift(x, idx, d, plans, TrainConfig(labels=LABELS, input_mode="dual_residual",
+                                                                          plan_shift_fraction=0.0), None, torch.Generator()), x)
+
+
+def test_plan_shift_changes_training_but_never_validation_inputs():
+    import geoml.train as tr
+    train, val = _b2_like(8, 4), _b2_like(8, 5)
+    seen = []
+    original = tr._apply_plan_shift
+
+    def spy(xb, idx, raw, plans, cfg, ref, gen):
+        out = original(xb, idx, raw, plans, cfg, ref, gen)
+        seen.append(len(idx))
+        return out
+
+    monkeypatch_target = tr
+    monkeypatch_target._apply_plan_shift = spy
+    try:
+        cfg = TrainConfig(labels=LABELS, input_mode="dual", plan_shift_fraction=1.0, epochs=1, batch=4, width=4, augment=False)
+        fitted = fit(train, val, cfg, device="cpu", log=lambda *_: None)
+    finally:
+        monkeypatch_target._apply_plan_shift = original
+    assert seen == [4, 4]                     # two training batches, no validation batch
+    assert np.array_equal(tr._inputs(val, cfg, fitted["absolute_ref_db"]).numpy(),
+                          tr._inputs(val, TrainConfig(labels=LABELS, input_mode="dual"), fitted["absolute_ref_db"]).numpy())
+
+
+def test_plan_shift_supports_the_co_view_with_the_co_plan_only():
+    import geoml.train as tr
+    d = _b2_like(3, 7)
+    cfg = TrainConfig(labels=LABELS, input_mode="co", plan_shift_fraction=1.0, epochs=1, batch=3, width=4)
+    plans = tr._training_plans(d, cfg)
+    assert all(len(p) == 2 for p in plans)
+    x = tr._inputs(d, cfg, None)
+    assert x.shape[1] == 2
+    out = tr._apply_plan_shift(x, torch.arange(3), d, plans, cfg, None, torch.Generator().manual_seed(0))
+    assert not torch.equal(out[:, 1], x[:, 1])
+    # Spectra move only by the per-row reference change (a constant), never by shape.
+    for row in range(3):
+        diff = (out[row, 0] - x[row, 0]).numpy()
+        inside = (x[row, 0].numpy() > -2.9) & (x[row, 0].numpy() < 0.9)   # away from the clip limits
+        assert np.ptp(diff[inside]) < 1e-5
+
+
+def test_plan_shift_requires_metadata_plans_and_valid_config():
+    d = _b2_like(4, 6)
+    stripped = {**d, "meta": [{} for _ in range(4)]}
+    cfg = TrainConfig(labels=LABELS, input_mode="dual", plan_shift_fraction=0.15, epochs=1, batch=4, width=4)
+    with pytest.raises(ValueError, match="operator plans"):
+        fit(stripped, d, cfg, device="cpu", log=lambda *_: None)
+    with pytest.raises(ValueError, match="plan_shift_fraction"):
+        TrainConfig(labels=LABELS, plan_shift_fraction=1.5)
+    with pytest.raises(ValueError):
+        TrainConfig(labels=LABELS, plan_shift_max_hz=-1.0)
+    # Disabled by default: legacy configurations are unchanged.
+    assert TrainConfig(labels=LABELS).plan_shift_fraction == 0.0

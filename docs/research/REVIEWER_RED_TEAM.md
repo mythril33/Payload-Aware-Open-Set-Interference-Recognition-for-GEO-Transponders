@@ -58,3 +58,47 @@ artifacts remain readable with unchanged fingerprints.
 - K18: confirm the pre-registered center-loss weight 0.005 and plan BCE weight 1.0.
 - Decide whether an `obs-cancel/2` with per-segment phase tracking should be pre-registered before the
   full B2 production, since the residual channel is bound to the canceller version.
+
+---
+
+# Independent reviewer red team — B2-test/1, K17b, K17d and open-set evaluation
+
+Date: 2026-10-21. Reviewed commit: `a09429b` (versus `a595484`). Same reviewer role and brief as
+above, read-only. The reviewer ran the new test files (54 passed) and executed the pre-refactor
+`b2_scenarios.py` side by side with the new one: `prepare_scene` bit-identical over 6 groups × 8 labels
+× 3 missing-carrier states (144 cases, 0 mismatches). The integrator reproduced the findings and applied
+the resolutions below in the follow-up commit recorded in DURUM.
+
+## Blockers
+
+None. Test-only samples cannot reach weights, checkpoint selection, Mahalanobis fitting or thresholds;
+families are restricted to frozen test groups; the test artifact is bound to the known data fingerprint.
+
+## Should fix (all resolved)
+
+| # | Finding (reviewer) | Resolution (integrator) |
+|---|---|---|
+| 1 | K17d control was distribution-matched, not pair-matched: the downlink ASI used its own RNG namespace, so per group its C/I_psd, carrier and placement differed from the known uplink ASI (e.g. 6.2 vs 26.0 dB), while P18 §7a K17d requires "scenario, plan, link and C/I_psd matched" and the docs said "identical draws". | The downlink family now consumes the known uplink ASI's stream `[group, 1820, 6]`; metadata records the pairing; test asserts equal carrier, geometry and C/I_psd per group. Logged in P18 §10. The other families keep the separate namespace. |
+| 2 | `results.md` printed "No unknown families … exist; their metrics are null" and a hardcoded `null (n_unknown=0)` column even when `--unknown-data` was supplied. | Header conditioned on the test-only protocol; the column prints the pooled-near rejection rate. Test asserts the old strings are absent. |
+| 3 | `n_unknown` in the compact `open_set` summary counted all non-benign families (8) while pooled AUROC/AP/OSCR used near families only (6). | `n_unknown` = pooled near count, with `n_known`, `n_unknown_equivalence_limited` and `n_unknown_all_families` as separate fields and an explicit `unknown_rejection_denominator`. |
+| 4 | K17b augmentation replaced the mask channels only, while the A5 corruption rebuilds the mask and re-runs the full preprocessing, so the carrier-level reference moved at test time but not at train time (median 0.10 dB, p95 0.48 dB, max 0.99 dB). | Selected rows are now re-preprocessed from the raw spectra, residual and shifted masks with `_inputs`, i.e. the same transform as `geoml.plan_shortcut`. Test asserts equality with `preprocess_dual` on the shifted masks. |
+| 5 | `docs/results/b2_test_pilot.json` was a hand-trimmed copy without a reproducible rule (`source: null`, 1156 key paths missing, including `unknown_rejection`). | `b2_experiment` writes `results_summary.json` with a fixed `SUMMARY_DROPPED` key list (curves, histories, per-class acceptance, ECE bins, source hashes, generation/calibration/Mahalanobis blocks, confusion); the committed copy is that file, keeping fingerprints, counts, rates and nulls. |
+| 6 | Downlink ASI is scaled by the realized feed power (lower after a dropped carrier) while the uplink ASI is referenced to the nominal unit load; P21 called them "the same definition". | Metadata now records `feed_reference_power`, `active_planned_power_co` and `effective_c_over_i_psd_db`; P21 §2 states the ≈ 15 %-of-groups level drift explicitly; the family check reports it. |
+
+## Optional (resolved or documented)
+
+- Dead `mean_delta_psd_cross_db` code in `scripts/check_b2_test_families.py` removed.
+- `test_only_alarm` (event-alarm rate on the benign CID control) is now rendered in `results.md`.
+- Bernoulli-per-epoch selection and the ≈ 2.7 % of shifted carriers spilling past ±18 MHz are stated in P21 §3.
+- A real-chain integration test on one test group now checks that the downlink family raises its band on the co feed, leaves the far spectrum at Welch-leakage level (median < 0.02 dB, max < 0.2 dB) and records the effective level.
+- Not changed: `_rate` still returns a degenerate CI with two groups (consider `null` below three groups when K17c slices arrive); `check_b2_test_families.py` has no unit test yet.
+
+## Verified OK (reviewer, abridged)
+
+Role refusal for non-test groups and foreign role directories; binding of groups, configuration,
+cancellation setting and calibration to the known artifact; unknown split used only in `infer` after
+`fit`; Mahalanobis on train, thresholds on val-calib; K17b applied inside the training loop before
+mirror/roll, never to validation (spy test), both feeds together, zero shift within 0.02 dB; downlink and
+uplink ASI generators consume the RNG identically; unknown seed derivation valid; CID muting keeps GUIDs;
+pre-registered groups match P18 §3; pooled near excludes `wideband_noise` and `cid_overlay`;
+`ranking_metrics` called with known test scores as negatives and argmax-correctness before rejection.

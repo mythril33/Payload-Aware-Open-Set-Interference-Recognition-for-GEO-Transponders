@@ -2,7 +2,9 @@
 
 Durum: **DONDURULDU — 2026-10-20 (K17, kullanıcı onayı)**; bilinen fiziksel gözlem aşaması
 `B2-base/1` [P19](P19_b2_base_observations.md)'da, iptal artığı (beşinci kanal) ve iki çıktılı model
-arayüzü `B2-feat/1` [P20](P20_b2_cancellation_residual.md)'de uygulandı; nihai B2/1 hattı tamamlanmadı ·
+arayüzü `B2-feat/1` [P20](P20_b2_cancellation_residual.md)'de, yalnız-test aileleri ve K17b artırımı
+`B2-test/1` [P21](P21_b2_test_families.md)'de uygulandı; seviye eşleşmiş küme (K17c), LOKO ve tam üretim
+bekliyor; nihai B2/1 hattı tamamlanmadı ·
 Bütün K17 kararları aşağıya işlendi (§10). Hazır ve test edilmiş üreteçler: uplink ASI `geosim.asi`,
 DVB-CID `geosim.cid` ·
 Girdi: [P3](P3_taksonomi.md), [P5](P5_veri_protokol.md) (A1), [P12](P12_unknown_events.md),
@@ -247,7 +249,8 @@ Veri, eğitim bütçesi, eşik seçimi ve tohum protokolü bütün ablasyonlarda
 
 | Tarih | Değişiklik | Gerekçe |
 |---|---|---|
-| 2026-10-21 | Ayrı gözlem-alıcısı geliştirme kolu [P21](P21_b2_observed_receiver.md): `B2-features/1` + `B2-observed-dev/1`; kısa FIR alıcısı, iki-logit CE yardımcı çıktı, boyut başına ortalama merkez kaybı 0,01; %15 maskeye ±0,5 MHz artırımı ve shard akışı | PR #5'in `B2-feat/1`/P20 sürümü ve K18 adayı 0,005 toplam-boyut kaybı korunur; katsayılar farklı tanımlıdır, birbirinin yerine geçmez. Ayrı geliştirme ayarları pilot öncesi yazıldı; nihai B2 fiziksel/test protokolü değişmez |
+| 2026-10-21 | K17d kontrolü grup başına eşleştirildi: `adjacent_satellite_downlink`, aynı grubun bilinen uplink ASI RNG akışını (`[grup, 1820, 6]`) kullanır; geometri, C/I_psd, taşıyıcı ve yerleşim birebir aynı, yalnız giriş noktası farklı. İlk uygulama yalnız dağılım eşleşmeliydi (hakem bulgusu). Gerçekleşen feed gücüne göre etkin C/I_psd metadata'ya yazılır (eksik taşıyıcılı gruplarda sapma belgelendi). K17b artırımı A5 ile aynı dönüşümü kullanır (maske yeniden kurulur, ön işleme tamamen yinelenir) | §7a K17d "senaryo, plan, link ve C/I_psd eşleşmiştir" kontrolünün gerçekleştirilmesi; hakem incelemesi |
+| 2026-10-21 | §3 yalnız-test aileleri `B2-test/1` aşamasında kodlandı ([P21](P21_b2_test_families.md)): yalnız test grupları, ayrı RNG ad alanı `[grup, 1830, aile]`, bilinen artefaktla aynı kalibrasyon. Uygulama kuralları (protokol değişikliği değil): CID yalnız yayınlanan taşıyıcıların altında; downlink ASI gücü plan ortalama PSD'sine göre C/I_psd ile, alıcı feed gücüne ölçekli. **K17b eğitim-zamanı plan kaydırma artırımı uygulandı** (%15, ±0,5 MHz sürekli; iki feed'in maskeleri birlikte kayar [uygulama seçimi]). Birleşik açık-küme sayısı yalnız yakın ailelerden; `cid_overlay` kontrol | §3, §4, §7, §7a K17b ve K17d'nin uygulanması |
 | 2026-10-21 | Beşinci kanal gözlemden iptal artığı olarak `B2-feat/1` aşamasında kodlandı ([P20](P20_b2_cancellation_residual.md)): yalnız kalibre co-pol IQ + co-pol operatör planı girdi; karar yönlü yeniden modülasyon, `obs-cancel/1` ayarları isteğe bağlanır. **Belirtilmemiş hiperparametre tamamlandı (K18 adayı, araştırmacı onayı bekler):** merkez kaybı ağırlığı **0,005**, plan-tutarlılık BCE ağırlığı 1,0; her ikisi B2 eğitiminden önce `configs/b2_feat.json`'da donduruldu, arama yapılmadı. Checkpoint seçimi yalnız bilinen sınıf makro-F1 ile; yardımcı çıktı seçime girmez. Bölünme, sınıf, eşik ve gruplama değişmedi | §5 K9 ve §7a K17b'nin uygulanması; P6 merkez kaybı değeri vermiyordu, P19 bunun eğitimden önce yazılmasını istiyordu |
 | 2026-10-21 | Bilinen fiziksel gözlem aşaması `B2-base/1` olarak ayrıldı; iptal/unknown/model tamamlanmadan B2/1 tamamlandı denmez. K17b'nin %10–20 aralığı içinde taşıyıcı düşmesi Bernoulli olasılığı %15 seçildi; iki feed'den tek taşıyıcı, tek kalan co taşıyıcı hariç; CuC kurbanı aktif olmalı. Bütün sınıflar için ortak plan yalnız açık yerleşim olanaksızlığında en çok 64 çekilişle yenilenir; koşullama metadata'ya yazılır | Dondurulmuş fiziksel olayları tam eşleşmiş sekizli sahnelere bağlamak; nominal kazancı ve tarihsel sürümleri korumak. Sayısal uygulama seçimleri fiziksel pilot sonuçlarından önce kaydedildi |
 | 2026-10-20 | Taslak | — |

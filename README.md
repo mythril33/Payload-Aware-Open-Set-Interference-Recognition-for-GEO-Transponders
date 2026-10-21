@@ -136,58 +136,24 @@ Unknown families, CID overlays and the matched ASI set are not generated yet. Se
 [P20](docs/plan/P20_b2_cancellation_residual.md) and the [pilot report](docs/results/b2_feat_pilot.md).
 Claude Code context lives in [CLAUDE.md](CLAUDE.md), `.claude/rules/` and `.claude/skills/`.
 
-## B2 observed receiver and two-output development model
+## B2 test-only families and open-set evaluation
 
-`B2-features/1` is a separate development stage using the
-`geosim.observed_receiver` linear receiver. It generates fresh physical
-observations with a co-feed cancellation residual PSD. The receiver uses
-calibrated monitor IQ and declared operator frequency, symbol rate, roll-off,
-modulation and APSK code-rate information. Availability of those fields is an
-experiment assumption. Transmitted symbols, true powers, timing, phase and
-active-state truth are excluded. The decision-directed receiver estimates
-synchronization and a received-domain FIR channel; it does not invert the
-nonlinear payload or implement a complete DVB-S2 modem.
-
-`B2-observed-dev/1` compares the four-channel `dual` view with the five-channel
-`b2` view using the same scenario roles, seeds and training budget. The fifth
-channel shares the co-plan power reference. Both models have an eight-class
-head and an independent two-state plan-consistency head. Training uses primary
-CE + 1.0 × consistency CE + 0.01 × mean squared embedding-to-center loss;
-class centers and feature statistics are fitted on train groups only.
-
-The P20 and P21 stages retain separate receiver algorithms, artifacts and
-training conventions. P20 uses a one-logit BCE auxiliary head and center weight
-0.005 on squared distance summed over features, then averaged over samples.
-P21 uses two-logit CE and center weight 0.01 on distance averaged over both
-features and samples. These coefficients and results are not directly
-comparable as a single-variable ablation.
+`B2-test/1` generates the five pre-registered test-only families (`pulsed`,
+`intermittent_bursts`, `adjacent_satellite_downlink`, `wideband_noise`, `cid_overlay`) for
+frozen test groups only, bound to a verified known artifact (same plans, streams and
+receiver calibration). `geoml.b2_experiment --unknown-data` scores them with the frozen
+checkpoints and thresholds; the K17b training plan-shift augmentation is enabled in
+`configs/b2_feat.json`.
 
 ```bash
-python -m geosim.b2_features --config configs/b2_base.json \
-  --cancellation-config configs/b2_receiver.json \
-  --role-limits configs/b2_feature_pilot_limits.json \
-  --groups-per-shard 1 --out data/b2-features-pilot
-python -m geoml.b2_observed_experiment --config configs/b2_observed_experiment.json \
-  --data data/b2-features-pilot --out runs/b2-observed-pilot
+python -m geosim.b2_test_dataset --out data/b2-test-pilot --known data/b2-feat-pilot --config configs/b2_base.json --cancellation configs/cancellation.json --limit-groups 2 --groups-per-shard 1
+python scripts/check_b2_test_families.py --known data/b2-feat-pilot --test data/b2-test-pilot --out runs/b2-test-pilot/family_check.json
+python -m geoml.b2_experiment --config configs/b2_feat.json --data data/b2-feat-pilot --unknown-data data/b2-test-pilot --out runs/b2-feat-pilot-os
 ```
 
-These commands select 96 known-class observations: 9 train groups and one each
-for val-select, val-calib and test, with eight paired classes per group.
-Val-select primary macro-F1 selects weights; clean val-calib observations alone
-set the event-alarm threshold. The held-out prefixes have no missing carriers,
-so their missing-carrier recall is `null` with zero support.
-
-Training applies mirroring and time shifts. Separately, 15% of samples receive
-continuous ±0.5 MHz mask jitter. This jitter changes model mask inputs only;
-the stored receiver residual stays fixed. Full receiver plan-error tests must
-rerun cancellation with perturbed descriptors. Final unknown-family,
-CID-overlay and level-matched ASI/unauthorized tests, full-data training and
-multi-seed evaluation remain pending. This is an execution pilot, with
-`benchmark_complete: false`, rather than evidence of useful recognition or
-cancellation quality. Freeze source before generation, use a fresh data
-directory after source/configuration changes, and use experiment `--reuse`
-only for matching artifacts. See [P21 receiver assumptions and development
-contract](docs/plan/P21_b2_observed_receiver.md).
+The pilot run is at chance and proves execution only. The matched ASI set, LOKO rotations and
+full production remain. See [P21](docs/plan/P21_b2_test_families.md) and the
+[pilot report](docs/results/b2_test_pilot.md).
 
 ## Research dossier (2026-10-20)
 

@@ -10,7 +10,10 @@ import torch
 from torch import nn
 
 from .artifacts import fingerprint
-from .data import CORE_DB, VIEW_CHANNELS, preprocess, preprocess_dual, reference_level
+from geosim.plan import plan_mask_db
+from geosim.waveform import Carrier
+
+from .data import CORE_DB, SCALE_DB, VIEW_CHANNELS, preprocess, preprocess_dual, reference_level
 from .metrics import macro_f1
 from .model import CenterLoss, SmallResNet, n_parameters
 
@@ -31,6 +34,8 @@ class TrainConfig:
     plan_consistency: bool = False   # independent binary auxiliary head (B2/1, P18 §7a)
     plan_loss_weight: float = 1.0    # BCE weight of the auxiliary head
     center_loss_weight: float = 0.0  # prototype/center loss weight; 0 disables (frozen before training)
+    plan_shift_fraction: float = 0.0   # K17b: fraction of training samples whose plan masks are shifted
+    plan_shift_max_hz: float = 0.5e6   # K17b: shift ~ U(-max, +max), continuous; validation/test never shifted
 
     def __post_init__(self):
         if (not isinstance(self.labels, (tuple, list)) or len(self.labels) < 2
@@ -43,11 +48,13 @@ class TrainConfig:
             raise ValueError(f"input_mode must be one of {tuple(VIEW_CHANNELS)}")
         if not isinstance(self.plan_consistency, bool):
             raise ValueError("plan_consistency must be a boolean")
-        for name in ("plan_loss_weight", "center_loss_weight"):
+        for name in ("plan_loss_weight", "center_loss_weight", "plan_shift_fraction", "plan_shift_max_hz"):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, (int, float)) or not np.isfinite(value) or value < 0:
                 raise ValueError(f"{name} must be a finite nonnegative number")
             object.__setattr__(self, name, float(value))
+        if self.plan_shift_fraction > 1:
+            raise ValueError("plan_shift_fraction must be in [0, 1]")
         for name in ("time_pool", "width", "epochs", "batch"):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 1:
@@ -134,6 +141,72 @@ def _plan_targets(d: dict, name: str) -> np.ndarray:
     return targets.astype(np.int64, copy=False)
 
 
+MASK_CHANNELS = {"single": (1,), "co": (1,), "dual": (2, 3), "dual_residual": (2, 3)}
+
+
+def _training_plans(d: dict, cfg: TrainConfig) -> list:
+    """Operator plans per training sample, needed to rebuild shifted plan masks (K17b)."""
+    meta = d.get("meta")
+    if not isinstance(meta, list) or len(meta) != len(d["spec"]):
+        raise ValueError("plan-shift augmentation requires one metadata record per training sample")
+    plans = []
+    for record in meta:
+        if cfg.input_mode == "single":
+            raw = None if record.get("plan") is None else [record["plan"]]
+        else:
+            raw = record.get("plans")              # both feeds; the co view simply ignores the cross mask
+        if (not isinstance(raw, list) or len(raw) != (1 if cfg.input_mode == "single" else 2)
+                or any(not isinstance(plan, list) or not plan for plan in raw)):
+            raise ValueError("plan-shift augmentation requires the operator plans in training metadata")
+        plans.append([[Carrier(**carrier) for carrier in plan] for plan in raw])
+    return plans
+
+
+def shifted_mask_db(plans: list, shift_hz: float) -> np.ndarray:
+    """Plan masks in dB ``[n_pol, F]`` for operator plans whose carriers moved by ``shift_hz``.
+
+    This models an operator plan whose frequency reference is wrong by ``shift_hz``;
+    the transmitted signal is unchanged (K17b). Zero shift reproduces the stored mask
+    up to float16 rounding. Carriers may spill past the transponder edge; the mask is
+    simply truncated at the monitor grid, as for any wrong plan.
+    """
+    rows = []
+    for plan in plans:
+        moved = [Carrier(c.f0 + float(shift_hz), c.symbol_rate, c.alpha, c.mod, c.power, c.code_rate) for c in plan]
+        rows.append(plan_mask_db(moved).astype(np.float32))
+    return np.stack(rows)
+
+
+def shifted_mask_channels(plans: list, shift_hz: float) -> np.ndarray:
+    """Normalized mask channels ``[n_pol, F]`` (dB / SCALE_DB) for shifted operator plans."""
+    return shifted_mask_db(plans, shift_hz) / SCALE_DB
+
+
+def _apply_plan_shift(xb: torch.Tensor, idx: torch.Tensor, raw: dict, plans: list, cfg: TrainConfig,
+                      absolute_ref_db, gen: torch.Generator) -> torch.Tensor:
+    """K17b: rebuild the plan masks of the selected rows and re-run the full preprocessing.
+
+    Re-running ``_inputs`` keeps the train-time transform identical to the A5 test-time
+    corruption (``geoml.plan_shortcut``), where the carrier-level reference also follows
+    the shifted plan. Selection is Bernoulli per sample per epoch (expected fraction
+    ``plan_shift_fraction``), the shift is continuous U(-max, +max).
+    """
+    selected = torch.rand(len(idx), generator=gen) < cfg.plan_shift_fraction
+    shifts = (torch.rand(len(idx), generator=gen) * 2 - 1) * cfg.plan_shift_max_hz
+    if not selected.any():
+        return xb
+    rows = torch.nonzero(selected).flatten()
+    global_rows = idx[rows].tolist()
+    masks = np.stack([shifted_mask_db(plans[g], float(shifts[r])) for r, g in zip(rows.tolist(), global_rows)])
+    subset = {"spec": np.asarray(raw["spec"])[global_rows],
+              "mask": masks[:, 0] if cfg.input_mode == "single" else masks}
+    if "residual" in raw:
+        subset["residual"] = np.asarray(raw["residual"])[global_rows]
+    xb = xb.clone()
+    xb[rows] = _inputs(subset, cfg, absolute_ref_db)
+    return xb
+
+
 def _model(cfg: TrainConfig) -> SmallResNet:
     return SmallResNet(len(cfg.labels), cfg.width, in_ch=VIEW_CHANNELS[cfg.input_mode],
                        aux_outputs=1 if cfg.plan_consistency else 0)
@@ -169,6 +242,7 @@ def fit(train: dict, val: dict, cfg: TrainConfig, device: str | None = None, log
     if cfg.plan_consistency:
         pt = torch.from_numpy(_plan_targets(train, "training")).float()
         pv = _plan_targets(val, "validation")
+    train_plans = _training_plans(train, cfg) if cfg.plan_shift_fraction > 0 else None
     model = _model(cfg).to(device)
     center = CenterLoss(len(cfg.labels), model.embedding_dim).to(device) if cfg.center_loss_weight > 0 else None
     parameters = list(model.parameters()) + ([] if center is None else list(center.parameters()))
@@ -184,6 +258,8 @@ def fit(train: dict, val: dict, cfg: TrainConfig, device: str | None = None, log
         for i in range(0, len(perm), cfg.batch):
             idx = perm[i:i + cfg.batch]
             xb = xt[idx]
+            if train_plans is not None:        # K17b: label-preserving operator-plan shift, training only
+                xb = _apply_plan_shift(xb, idx, train, train_plans, cfg, ref, gen)
             if cfg.augment:
                 flip = torch.rand(len(idx), generator=gen) < 0.5
                 xb = torch.where(flip[:, None, None, None], xb.flip(-1), xb)

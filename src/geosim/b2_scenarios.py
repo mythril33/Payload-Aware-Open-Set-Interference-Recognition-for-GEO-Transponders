@@ -1,9 +1,11 @@
-"""Paired known-class scenes for the B2 physical-observation foundation.
+"""Paired scenes for the B2 stages: eight known classes and the test-only families.
 
-All eight variants retain operator plans, carrier/noise RNG streams, physical
-link settings and the independently drawn missing-carrier state. Only the
-named primary event changes. This module does not compute cancellation
-features or create final unknown-test families.
+All variants of a scenario group retain operator plans, carrier/noise RNG
+streams, physical link settings and the independently drawn missing-carrier
+state. Only the named primary event changes. Test-only families (P18 §3) use a
+separate event-RNG namespace, are generated only for test-role groups and never
+enter training, checkpoint selection or threshold calibration. This module does
+not compute cancellation features.
 """
 from __future__ import annotations
 
@@ -12,8 +14,11 @@ from dataclasses import dataclass, replace
 import numpy as np
 
 from . import interferers as it
-from .asi import adjacent_satellite_uplink
-from .b2_protocol import BASE_PROTOCOL, PROTOCOL, B2Config, LABELS, require_base_group
+from .asi import adjacent_satellite_downlink, adjacent_satellite_uplink
+from .b2_protocol import (BASE_PROTOCOL, BENIGN_TEST_FAMILIES, EQUIVALENCE_LIMITED_UNKNOWN, NEAR_UNKNOWN,
+                          PROTOCOL, B2Config, LABELS, require_base_group, role_for_group)
+from .cid import cid_overlay
+from .unknowns import unknown_interferer
 from .dual import DualScenarioConfig, DualScenarioResult, simulate_dual
 from .events import carrier_under_carrier
 from .plan import random_plan
@@ -23,6 +28,10 @@ from .waveform import Carrier
 
 MAX_PLAN_DRAWS = 64
 MAX_VICTIM_DRAWS = 64
+TEST_FAMILIES = NEAR_UNKNOWN + EQUIVALENCE_LIMITED_UNKNOWN + BENIGN_TEST_FAMILIES
+TEST_PROTOCOL = "B2-test/1"
+EXPECTED_DECISION = {**{family: "unknown" for family in NEAR_UNKNOWN + EQUIVALENCE_LIMITED_UNKNOWN},
+                     **{family: "clean" for family in BENIGN_TEST_FAMILIES}}
 
 
 @dataclass(frozen=True)
@@ -34,6 +43,7 @@ class B2Scene:
     event: dict
     plan_consistency: int
     metadata: dict
+    downlink_interferers: tuple[object | None, object | None] = (None, None)
 
 
 def receiver_response(config: B2Config) -> np.ndarray:
@@ -123,6 +133,37 @@ def _activity(group: int, plans, config: B2Config, missing_carrier):
     return active, dropped
 
 
+def _shared_scene(group: int, config: B2Config, missing_carrier):
+    """Group-level draws shared by every known and test-only variant of a scenario."""
+    group = int(group)
+    link = np.random.default_rng([group, 1801])
+    paths = [ScenarioConfig(bandwidth=config.bandwidth, seed=2 * group + pol,
+                            n_snap=config.n_snap, snap_interval=config.snap_interval,
+                            ibo_db=float(link.uniform(9, 13)), cn_up_db=float(link.uniform(15, 30)),
+                            cn_dn_db=float(link.uniform(15, 30))) for pol in range(2)]
+    nominal_ibo = [path.ibo_db for path in paths]
+    plans, source = _plans(group, config.bandwidth)
+    active, dropped = _activity(group, plans, config, missing_carrier)
+    return paths, nominal_ibo, plans, source, active, dropped
+
+
+def _dual_config(paths, uplink_xpd_db, config: B2Config) -> DualScenarioConfig:
+    return DualScenarioConfig(co=paths[0], cross=paths[1], uplink_xpd_db=uplink_xpd_db,
+                              downlink_xpd_db=config.downlink_xpd_db,
+                              receiver_response=receiver_response(config),
+                              satellite_linewidth_hz=config.satellite_linewidth_hz,
+                              receiver_linewidth_hz=config.receiver_linewidth_hz)
+
+
+def _metadata(protocol, label, group, role, event, consistency, nominal_ibo, source, dropped, missing_carrier):
+    return {"protocol": protocol, "parent_protocol": PROTOCOL, "label": label,
+            "scenario_id": int(group), "role": role, "event": event,
+            "plan_consistency": consistency, "nominal_ibo_db": nominal_ibo,
+            "operator_plan_source": source, "dropped_carrier": dropped,
+            "missing_carrier_override": missing_carrier,
+            "missing_carrier_convention": "one planned carrier absent; nominal-load gain fixed; no power renormalization"}
+
+
 def prepare_scene(label: str, group: int, config: B2Config | None = None, *,
                   missing_carrier: bool | None = None) -> B2Scene:
     """Resolve one known scene without running the expensive waveform chain.
@@ -139,31 +180,68 @@ def prepare_scene(label: str, group: int, config: B2Config | None = None, *,
     if missing_carrier is not None and not isinstance(missing_carrier, bool):
         raise ValueError("missing_carrier must be a boolean or None")
     group = int(group)
-    link = np.random.default_rng([group, 1801])
-    paths = [ScenarioConfig(bandwidth=config.bandwidth, seed=2 * group + pol,
-                            n_snap=config.n_snap, snap_interval=config.snap_interval,
-                            ibo_db=float(link.uniform(9, 13)), cn_up_db=float(link.uniform(15, 30)),
-                            cn_dn_db=float(link.uniform(15, 30))) for pol in range(2)]
-    nominal_ibo = [path.ibo_db for path in paths]
+    paths, nominal_ibo, plans, source, active, dropped = _shared_scene(group, config, missing_carrier)
     if label == "overdrive":
         paths[0] = replace(paths[0], ibo_db=float(_parameters(group, label).uniform(1, 4)))
-    cfg = DualScenarioConfig(co=paths[0], cross=paths[1],
-                              uplink_xpd_db=10.0 if label == "cross_pol" else config.nominal_xpd_db,
-                              downlink_xpd_db=config.downlink_xpd_db,
-                              receiver_response=receiver_response(config),
-                              satellite_linewidth_hz=config.satellite_linewidth_hz,
-                              receiver_linewidth_hz=config.receiver_linewidth_hz)
-    plans, source = _plans(group, config.bandwidth)
-    active, dropped = _activity(group, plans, config, missing_carrier)
+    cfg = _dual_config(paths, 10.0 if label == "cross_pol" else config.nominal_xpd_db, config)
     callback, event = _event(label, group, plans[0], config.bandwidth, active[0])
     consistency = int(dropped is not None)
-    metadata = {"protocol": BASE_PROTOCOL, "parent_protocol": PROTOCOL, "label": label,
-                "scenario_id": group, "role": role, "event": event,
-                "plan_consistency": consistency, "nominal_ibo_db": nominal_ibo,
-                "operator_plan_source": source, "dropped_carrier": dropped,
-                "missing_carrier_override": missing_carrier,
-                "missing_carrier_convention": "one planned carrier absent; nominal-load gain fixed; no power renormalization"}
+    metadata = _metadata(BASE_PROTOCOL, label, group, role, event, consistency, nominal_ibo, source, dropped,
+                         missing_carrier)
     return B2Scene(cfg, plans, (callback, None), active, event, consistency, metadata)
+
+
+def _test_parameters(group: int, family: str) -> np.random.Generator:
+    """Separate RNG namespace for test-only families (P18 §4); the downlink ASI is the K17d exception."""
+    return np.random.default_rng([group, 1830, TEST_FAMILIES.index(family)])
+
+
+def _test_event(family: str, group: int, plan, bandwidth: float, active, config: B2Config):
+    """Return (uplink callback, downlink callback, metadata) for one test-only family."""
+    rng = _test_parameters(group, family)
+    if family in ("pulsed", "intermittent_bursts", "wideband_noise"):
+        # U1-dev/1 generators with a group-specific seed; C/I is relative to the unit planned uplink load.
+        callback, info = unknown_interferer(family, bandwidth, int(rng.integers(0, 2**62)),
+                                            n_snap=config.n_snap, snap_interval=config.snap_interval)
+        info.update(injection_stage="uplink", power_reference="total_planned_uplink", test_only=True)
+        return callback, None, info
+    if family == "adjacent_satellite_downlink":
+        # K17d control: scenario, plan, link AND C/I_psd matched to the known uplink ASI of the
+        # same group, so the two differ only in injection point. This reuses the known event's
+        # RNG stream deliberately (test groups only); the other families keep their own namespace.
+        callback, info = adjacent_satellite_downlink(_parameters(group, "adjacent_satellite"), plan, bandwidth)
+        info.update(paired_with_known="adjacent_satellite", pairing="same group RNG stream: identical geometry, C/I_psd, carrier and placement")
+        return None, callback, info
+    if family == "cid_overlay":
+        callback, info = cid_overlay(rng, plan, bandwidth, active=list(active))
+        info.update(test_only=True)
+        return callback, None, info
+    raise ValueError(f"test-only family must be one of {TEST_FAMILIES}")
+
+
+def prepare_test_scene(family: str, group: int, config: B2Config | None = None) -> B2Scene:
+    """Resolve one test-only variant sharing the group's plans, link, activity and streams.
+
+    Only groups of the frozen ``test`` role are accepted; unknown families and the
+    benign CID overlay never exist for train, val-select or val-calib groups.
+    """
+    config = B2Config() if config is None else config
+    if not isinstance(config, B2Config):
+        raise ValueError("config must be a B2Config")
+    if family not in TEST_FAMILIES:
+        raise ValueError(f"test-only family must be one of {TEST_FAMILIES}")
+    if role_for_group(group) != "test":
+        raise ValueError("test-only families are generated for frozen test-role groups only")
+    group = int(group)
+    paths, nominal_ibo, plans, source, active, dropped = _shared_scene(group, config, None)
+    cfg = _dual_config(paths, config.nominal_xpd_db, config)
+    uplink, downlink, event = _test_event(family, group, plans[0], config.bandwidth, active[0], config)
+    consistency = int(dropped is not None)
+    metadata = _metadata(TEST_PROTOCOL, family, group, "test", event, consistency, nominal_ibo, source, dropped, None)
+    metadata.update(test_only=True, expected_decision=EXPECTED_DECISION[family],
+                    family_group=("near" if family in NEAR_UNKNOWN else
+                                  "equivalence_limited" if family in EQUIVALENCE_LIMITED_UNKNOWN else "benign"))
+    return B2Scene(cfg, plans, (uplink, None), active, event, consistency, metadata, (downlink, None))
 
 
 def sample_scene(label: str, group: int, config: B2Config | None = None, *,
@@ -171,7 +249,30 @@ def sample_scene(label: str, group: int, config: B2Config | None = None, *,
                  keep_iq: bool = False) -> DualScenarioResult:
     """Simulate a scene; hidden parameters stay in metadata, never extra inputs."""
     scene = prepare_scene(label, group, config, missing_carrier=missing_carrier)
+    return _simulate(scene, calibration, keep_iq)
+
+
+def _simulate(scene: B2Scene, calibration, keep_iq: bool) -> DualScenarioResult:
+    kwargs = {}
+    if any(event is not None for event in scene.downlink_interferers):
+        kwargs["downlink_interferers"] = scene.downlink_interferers
     result = simulate_dual(scene.cfg, plans=scene.plans, interferers=scene.interferers,
-                           active_carriers=scene.active_carriers, calibration=calibration, keep_iq=keep_iq)
+                           active_carriers=scene.active_carriers, calibration=calibration, keep_iq=keep_iq, **kwargs)
     result.meta.update(scene.metadata)
+    if kwargs:
+        # The downlink event is scaled by the realized co feed power; with a missing carrier that
+        # power is below the nominal load, so the effective level relative to the planned mean PSD
+        # drifts by the dropped carrier's fraction. Record it instead of hiding it.
+        active = result.meta["active_planned_power"][0]
+        result.meta["event"] = {**result.meta["event"],
+                                "feed_reference_power": result.meta["downlink_interference_reference_power"][0],
+                                "active_planned_power_co": active,
+                                "effective_c_over_i_psd_db": float(result.meta["event"]["c_over_i_psd_db"] - 10 * np.log10(active)),
+                                "level_note": "nominal C/I_psd is relative to the unit planned load; the realized feed power scales the event"}
     return result
+
+
+def sample_test_scene(family: str, group: int, config: B2Config | None = None, *,
+                      calibration: ReceiverCalibration | None = None, keep_iq: bool = False) -> DualScenarioResult:
+    """Simulate one test-only variant; event truth stays in metadata."""
+    return _simulate(prepare_test_scene(family, group, config), calibration, keep_iq)

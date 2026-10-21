@@ -111,3 +111,23 @@ def test_cid_scene_passes_the_payload_with_small_in_band_change():
     power = lambda r: np.mean(10 ** (r.spec_db[:, band].astype(float) / 10))
     delta = 10 * np.log10(power(event) / power(clean))
     assert 0 < delta < 0.5                                             # CID sits well below its host
+
+
+def test_cid_overlay_mutes_cids_of_inactive_hosts_but_keeps_identifier_draws():
+    import numpy as np
+    from geosim.cid import cid_overlay
+    from geosim.scenario import default_plan
+    plan = default_plan(5, 36e6)
+    assert len(plan) >= 2
+    full_gen, full_meta = cid_overlay(np.random.default_rng(1), plan, 36e6)
+    active = [True] * len(plan)
+    active[0] = False
+    part_gen, part_meta = cid_overlay(np.random.default_rng(1), plan, 36e6, active=active)
+    assert [c["guid"] for c in full_meta["cids"]] == [c["guid"] for c in part_meta["cids"]]
+    assert part_meta["n_transmitted"] == len(plan) - 1 and part_meta["cids"][0]["host_active"] is False
+    t0 = np.arange(2) * 0.01
+    full = full_gen(np.random.default_rng(0), t0, 6000, 288e6)
+    part = part_gen(np.random.default_rng(0), t0, 6000, 288e6)
+    assert np.mean(np.abs(part) ** 2) < np.mean(np.abs(full) ** 2)
+    with pytest.raises(ValueError):
+        cid_overlay(np.random.default_rng(1), plan, 36e6, active=[True])

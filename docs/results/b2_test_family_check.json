@@ -1,0 +1,205 @@
+{
+  "protocol": "B2-test/1",
+  "benchmark_complete": false,
+  "test_fingerprint": "deb51a01e48406513377fbb4e3772c450b002f83f2765f56392b8c5ed11ba151",
+  "known_fingerprint": "325317b75dfaea64bd4872d09afd7511ffaf441dfd9e219153217081a9027831",
+  "n_observations": 10,
+  "per_family": {
+    "pulsed": {
+      "n": 2,
+      "median_delta_psd_in_band_db": 0.10134867869738429,
+      "median_delta_residual_in_band_db": 0.8688371946198075,
+      "mean_delta_psd_co_db": 0.00107574462890625
+    },
+    "intermittent_bursts": {
+      "n": 2,
+      "median_delta_psd_in_band_db": 0.15922273434999568,
+      "median_delta_residual_in_band_db": 1.8009497272954533,
+      "mean_delta_psd_co_db": 0.0023345947265625
+    },
+    "adjacent_satellite_downlink": {
+      "n": 2,
+      "median_delta_psd_in_band_db": 0.6445998308569401,
+      "median_delta_residual_in_band_db": 4.150273150972588,
+      "mean_delta_psd_co_db": 0.3813285827636719
+    },
+    "wideband_noise": {
+      "n": 2,
+      "median_delta_psd_in_band_db": 0.1999059414944142,
+      "median_delta_residual_in_band_db": 3.5127663576471093,
+      "mean_delta_psd_co_db": 0.43289947509765625
+    },
+    "cid_overlay": {
+      "n": 2,
+      "median_delta_psd_in_band_db": null,
+      "median_delta_residual_in_band_db": null,
+      "mean_delta_psd_co_db": 0.00101470947265625
+    }
+  },
+  "rows": [
+    {
+      "scenario_id": 3200000,
+      "family": "pulsed",
+      "group": "near",
+      "expected_decision": "unknown",
+      "injection_stage": "uplink",
+      "mean_delta_psd_co_db": 0.00180816650390625,
+      "event_band_hz": [
+        -7346242.853711309,
+        -6946242.853711309
+      ],
+      "delta_psd_in_band_db": 0.17030425605803146,
+      "delta_residual_in_band_db": 1.5122807761179047,
+      "active_c_over_i_db": 27.86154903086531,
+      "observed_snapshot_occupancy": 0.359375
+    },
+    {
+      "scenario_id": 3200000,
+      "family": "intermittent_bursts",
+      "group": "near",
+      "expected_decision": "unknown",
+      "injection_stage": "uplink",
+      "mean_delta_psd_co_db": 0.00193023681640625,
+      "event_band_hz": [
+        7679887.495623492,
+        8079887.495623492
+      ],
+      "delta_psd_in_band_db": 0.07750408393384589,
+      "delta_residual_in_band_db": 1.2508211750308647,
+      "active_c_over_i_db": 27.357112889962337,
+      "observed_snapshot_occupancy": 0.3515625
+    },
+    {
+      "scenario_id": 3200000,
+      "family": "adjacent_satellite_downlink",
+      "group": "near",
+      "expected_decision": "unknown",
+      "injection_stage": "downlink",
+      "mean_delta_psd_co_db": 0.7437591552734375,
+      "event_band_hz": [
+        -10494180.0,
+        8945820.0
+      ],
+      "delta_psd_in_band_db": 1.2717669455809784,
+      "delta_residual_in_band_db": 7.982777901894579,
+      "c_over_i_psd_db": 6.210765680062687,
+      "overlap_fraction": 0.7063742370192198,
+      "effective_c_over_i_psd_db": 6.210765680062687
+    },
+    {
+      "scenario_id": 3200000,
+      "family": "wideband_noise",
+      "group": "equivalence_limited",
+      "expected_decision": "unknown",
+      "injection_stage": "uplink",
+      "mean_delta_psd_co_db": 0.49681854248046875,
+      "event_band_hz": [
+        -12215581.606442098,
+        12215581.606442098
+      ],
+      "delta_psd_in_band_db": 0.22315104576466638,
+      "delta_residual_in_band_db": 4.030595594456585,
+      "active_c_over_i_db": 11.51846988465624,
+      "bandwidth_hz": 24431163.212884195
+    },
+    {
+      "scenario_id": 3200000,
+      "family": "cid_overlay",
+      "group": "benign",
+      "expected_decision": "clean",
+      "injection_stage": "uplink",
+      "mean_delta_psd_co_db": 0.00125885009765625,
+      "n_cids_transmitted": 6,
+      "relative_psd_db": [
+        -21.5,
+        -24.5,
+        -24.5,
+        -27.5,
+        -21.5,
+        -27.5
+      ]
+    },
+    {
+      "scenario_id": 3200001,
+      "family": "pulsed",
+      "group": "near",
+      "expected_decision": "unknown",
+      "injection_stage": "uplink",
+      "mean_delta_psd_co_db": 0.00034332275390625,
+      "event_band_hz": [
+        2705048.375472218,
+        3105048.375472218
+      ],
+      "delta_psd_in_band_db": 0.03239310133673712,
+      "delta_residual_in_band_db": 0.22539361312171025,
+      "active_c_over_i_db": 33.67572480273434,
+      "observed_snapshot_occupancy": 0.1953125
+    },
+    {
+      "scenario_id": 3200001,
+      "family": "intermittent_bursts",
+      "group": "near",
+      "expected_decision": "unknown",
+      "injection_stage": "uplink",
+      "mean_delta_psd_co_db": 0.00273895263671875,
+      "event_band_hz": [
+        -3891576.792800106,
+        -3491576.792800106
+      ],
+      "delta_psd_in_band_db": 0.24094138476614546,
+      "delta_residual_in_band_db": 2.351078279560042,
+      "active_c_over_i_db": 25.11586074790466,
+      "observed_snapshot_occupancy": 0.359375
+    },
+    {
+      "scenario_id": 3200001,
+      "family": "adjacent_satellite_downlink",
+      "group": "near",
+      "expected_decision": "unknown",
+      "injection_stage": "downlink",
+      "mean_delta_psd_co_db": 0.01889801025390625,
+      "event_band_hz": [
+        1836000.0,
+        13836000.0
+      ],
+      "delta_psd_in_band_db": 0.01743271613290176,
+      "delta_residual_in_band_db": 0.31776840005059626,
+      "c_over_i_psd_db": 24.608179664086787,
+      "overlap_fraction": 0.7671100580638596,
+      "effective_c_over_i_psd_db": 24.608179664086787
+    },
+    {
+      "scenario_id": 3200001,
+      "family": "wideband_noise",
+      "group": "equivalence_limited",
+      "expected_decision": "unknown",
+      "injection_stage": "uplink",
+      "mean_delta_psd_co_db": 0.36898040771484375,
+      "event_band_hz": [
+        -15434647.067848751,
+        15434647.067848751
+      ],
+      "delta_psd_in_band_db": 0.17666083722416204,
+      "delta_residual_in_band_db": 2.9949371208376334,
+      "active_c_over_i_db": 12.78827725500809,
+      "bandwidth_hz": 30869294.135697503
+    },
+    {
+      "scenario_id": 3200001,
+      "family": "cid_overlay",
+      "group": "benign",
+      "expected_decision": "clean",
+      "injection_stage": "uplink",
+      "mean_delta_psd_co_db": 0.00077056884765625,
+      "n_cids_transmitted": 4,
+      "relative_psd_db": [
+        -21.5,
+        -18.5,
+        -24.5,
+        -27.5
+      ]
+    }
+  ],
+  "recognition_metrics": null,
+  "scope": "Physics of test-only families against clean twins; no classifier claim."
+}
