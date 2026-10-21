@@ -1,0 +1,102 @@
+{
+  "schema": "b2-readiness-gates/1",
+  "as_of": "2026-10-21",
+  "baseline": {
+    "repository": "mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
+    "branch": "main",
+    "sha": "ff1418f2936c5c01c1f171c38c6804b9023cd064",
+    "reported_tests_passed": 955,
+    "retested_in_this_change": false
+  },
+  "scope": "Readiness plan; no researcher approvals implied",
+  "benchmark_complete": false,
+  "decisions": {
+    "K18": {
+      "status": "PENDING_RESEARCHER",
+      "observed": "P20 0.005 times summed squared distance vs P21b 0.01 times mean; D/2 difference",
+      "proposal": "Retain P20 sum 0.005 and plan BCE 1.0; train-only center/CE diagnostic",
+      "approval": null
+    },
+    "K17d": {
+      "status": "PENDING_RESEARCHER",
+      "observed": "35/500 held-out groups affected by co-feed carrier loss; median drift 0.71 dB, max 5.91 dB",
+      "proposal": "Retain frozen K17d; flagged subgroup plus prespecified sensitivity; separately version B2-test/2 only if authorized",
+      "approval": null
+    },
+    "OBS-CANCEL-2": {
+      "status": "PENDING_RESEARCHER",
+      "observed": "obs-cancel/1 phase-noise depth ceiling ~21-25 dB",
+      "proposal": "Separately version phase-tracking experiment; >=35 dB synthetic depth, <=0.1 dB gap-floor shift, <=2x runtime, no paired CuC regression",
+      "approval": null
+    },
+    "full_generation": {
+      "status": "NOT_AUTHORIZED",
+      "estimate": {
+        "observations": 21350,
+        "wall_hours_single_process_low": 23,
+        "wall_hours_single_process_high": 30.2,
+        "artifact_storage_GB": 8.7
+      },
+      "approval": null
+    },
+    "full_gpu_training": {
+      "status": "NOT_AUTHORIZED",
+      "approval": null
+    },
+    "full_loko_sweep": {
+      "status": "NOT_AUTHORIZED",
+      "approval": null
+    },
+    "merge_to_main": {
+      "status": "NOT_AUTHORIZED_BY_THIS_PLAN",
+      "approval": null
+    }
+  },
+  "engineering": {
+    "streaming_canonical_b2": {
+      "status": "PLANNED"
+    },
+    "loko_a8": {
+      "status": "PLANNED"
+    },
+    "edsc": {
+      "status": "PLANNED"
+    },
+    "xgboost_baseline": {
+      "status": "PLANNED"
+    },
+    "dual_pol_a5_plan_corruption": {
+      "status": "PLANNED"
+    },
+    "github_actions_ci": {
+      "status": "INCLUDED_AS_UNVALIDATED_PROPOSAL",
+      "workflow": ".github/workflows/b2-readiness-ci.yml"
+    }
+  },
+  "permitted_without_new_researcher_decisions": [
+    "source audit",
+    "small unit and bounded smoke tests",
+    "streaming-loader engineering",
+    "LOKO harness implementation without full sweep",
+    "baseline implementations without full training",
+    "A5 testing against bounded fixtures",
+    "lightweight GitHub Actions tests",
+    "draft pull request"
+  ],
+  "prohibited_without_explicit_approval": [
+    "full B2 dataset generation",
+    "full GPU/multi-seed training",
+    "full LOKO evaluation",
+    "new protocol semantics without version and P18 section 10",
+    "test-set driven threshold or hyperparameter selection",
+    "auto merge",
+    "setting benchmark_complete true"
+  ],
+  "references": [
+    "docs/plan/P18_b2_protocol.md",
+    "docs/plan/P22_b2_matched_asi.md",
+    "docs/plan/P23_b2_production_readiness.md",
+    "docs/results/b2_production_budget.md"
+  ],
+  "integrity_note": "Proposed researcher decisions are not approvals. Preserve frozen semantics and strictly segregate train, val-select, val-calib, test and test-matched."
+}
