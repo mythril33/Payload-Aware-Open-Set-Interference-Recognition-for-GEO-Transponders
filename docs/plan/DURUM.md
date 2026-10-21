@@ -1,6 +1,20 @@
 # Proje durumu ve eksik kaydı
 
-Son güncelleme: 2026-10-21 (B2 iptal artığı ve beş kanallı model; temel deney durumu 2026-10-10) · Bu dosya "şu an neredeyiz, ne eksik" sorusunun tek yanıtıdır; her oturum sonunda güncellenir.
+Son güncelleme: 2026-10-21 (PR #5 birleşimi ve ayrı gözlem-alıcısı geliştirmesi; temel deney durumu 2026-10-10) · Bu dosya "şu an neredeyiz, ne eksik" sorusunun tek yanıtıdır; her oturum sonunda güncellenir.
+
+## Uygulama eki — 2026-10-21 (üçüncü dilim: gözlem alıcısı, shard akışı, plan artırımı)
+
+- **Eşzamanlı PR #5 birleştirildi (`707980d`).** P20'nin `B2-feat/1`, `geosim.cancellation` ve `geoml.b2_experiment` sürümleri, raporları ve ayarları korundu. Bu oturumun farklı alıcısı [P21](P21_b2_observed_receiver.md) altında `B2-features/1` / `B2-observed-dev/1`, `geosim.observed_receiver` ve `geoml.b2_observed_experiment` adlarıyla ayrıldı. İki sürüm aynı deneyin tekrarları değildir; birbirinin yerine kullanılamaz.
+- **Yeni bağlantı:** kalibre co IQ + beş operatör alanı → gözlemden zamanlama/faz ve karar → SRRC yeniden modülasyonu + kısa FIR → gerçek iptal artığı PSD → ortak co-plan referanslı beşinci kanal. Gerçek güç, sembol, aktiflik, IBO/XPD ve olay bilgisi alıcıya/model girdisine verilmez.
+- **Eğitim:** ayrı sekiz-sınıf ve iki-durum çıktısı; CE + yardımcı CE + boyut/örnek ortalamalı merkez kaybı. Merkezler iki çıktıyla birlikte checkpoint'e kaydedilir. Shard başına okuma bellek kullanımını sınırlar; istatistikler/merkezler yalnız train'den, seçim yalnız val-select'ten, temiz alarm eşiği yalnız val-calib'den gelir.
+- **K17b artırımı bu ayrı geliştirme sürümünde kodlandı:** %15 olasılıkla sürekli ±0,5 MHz **model-maskesi** kaydırma; güç alanında enterpolasyon ve taban dolgusu. Kaydedilmiş artık değişmez. Tam A5 operatör-plan-hatası değerlendirmesi alıcının bozulmuş tanımlayıcılarla yeniden çalıştırılmasını gerektirir; canonical P20 eğitimine bu artırımı ekleme hâlâ ayrı iştir.
+- **İki merkez kaybı karıştırılmamalı:** P20/K18 adayı 0,005 × boyutlar toplamı; P21 geliştirme ayarı 0,01 × boyutlar ortalaması. K18 onayı verilmiş sayılmadı; nihai ana-model ayarı bu pilot sonuçlarından seçilmez.
+- **Birleşik doğrulama: 923 test geçti.** Bunun 180'i bu geliştirme sürümünü kapsar. Paylaşılan fiziksel zincir, P20 alıcısı/deney koşucusu ve eski eğitim API'leri değiştirilmedi. Sayısal sınırlar, gizli bilgi dışlama, train/selection/calibration ayrımı, gerçek optimizer/merkez güncellemesi, checkpoint ve bozulma reddi doğrulandı.
+
+- **Gerçek pilot tamamlandı:** 96 gözlem / 12 eşleşmiş grup: train 72, val-select 8, val-calib 8, test 8. Üretim 182,30 s, tepe RSS 598,98 MiB, artefakt 40,31 MiB. İki üç-epokluk eğitim ve değerlendirme toplam 11,48 s sürdü. Kaynak/checksum kontrolü, doğrulanmış üretim tekrar kullanımı ve model/eşik yeniden yüklemede aynı tahminler doğrulandı. [Sonuç](../results/b2_observed_pilot.md), [JSON](../results/b2_observed_pilot.json), [tahminler](../results/b2_observed_predictions.json).
+- **Sonuç sınırı:** iki model de testte %12,5 (1/8), yani şans düzeyinde. Yardımcı çıktı dual'da sürekli "tutarlı", beş kanalda sürekli "eksik" dedi; testte eksik taşıyıcı yok. Bu yüzden %100/%0 yardımcı doğruluk eksik taşıyıcı tanıma kanıtı değildir; recall `null`, n=0. Eğitimdeki tek eksik grup 3000008 çapraz feed'dedir; co-feed yokluğu fiziksel pilotta yok. Tek grup nedeniyle güven aralıkları `null`; tek temiz kalibrasyon/test örneği %5 yanlış alarm garantisi vermez.
+- Temiz 12 sahnede toplam güç azalması ortancası 11,80 dB (10,37–14,67 dB). Bu alıcı tanısıdır; kalan girişimin korunması veya tanıma kazancı değildir. Ayarlar sonuçlara bakılarak değiştirilmedi.
+- **Sıradaki ortak paket:** B2 çift-pol yalnız-test unknown/CID ve seviye eşleşmiş ASI/unauthorized üretimi; nihai reddetme/LOKO bağlantısı; alıcıyı da yeniden hesaplayan A5 ve EDSC. P20/P21 geliştirme kolları farklı kayıp tanımları içerdiğinden nihai karşılaştırma aynı ön-kayıtlı eğitim tanımıyla kurulmalı. Tam üretim/çok-tohumlu eğitim, SCF/PL çerçeve ve uzman özellik + XGBoost hâlâ açık.
 
 ## Uygulama eki — 2026-10-21 (ikinci dilim: iptal artığı, beşinci kanal, iki çıktılı model)
 

@@ -104,18 +104,17 @@ scaling are assumptions. See [protocol, assumptions and validation](docs/plan/P1
 
 ## B2 known physical observations
 
-The frozen B2/1 roles and eight known classes are connected in the preliminary
-`B2-base/1` artifact stage. Operator plans remain intact when a planned carrier
-is absent, with fixed nominal gain and preserved waveform RNG streams.
+The completed preliminary `B2-base/1` artifact stage connected the frozen B2/1
+roles and eight known classes. Operator plans remain intact when a planned
+carrier is absent, with fixed nominal gain and preserved waveform RNG streams.
 
 ```bash
 python -m geosim.b2_dataset --config configs/b2_base.json --out data/b2-base-pilot --limit-groups 2 --groups-per-shard 1
 ```
 
-This stage emits paired spectra, operator masks and a separate plan-consistency
-target. Its manifest marks the benchmark incomplete. Cancellation, the fifth
-input channel, unknown/CID tests and the final B2 model follow. See [contracts,
-sampling assumptions and reuse](docs/plan/P19_b2_base_observations.md).
+This historical stage emits paired spectra, operator masks and a separate
+plan-consistency target. It has no cancellation channel, and its manifest marks
+the benchmark incomplete. See [contracts, sampling assumptions and reuse](docs/plan/P19_b2_base_observations.md).
 
 ## B2 cancellation residual and five-channel model
 
@@ -137,6 +136,59 @@ Unknown families, CID overlays and the matched ASI set are not generated yet. Se
 [P20](docs/plan/P20_b2_cancellation_residual.md) and the [pilot report](docs/results/b2_feat_pilot.md).
 Claude Code context lives in [CLAUDE.md](CLAUDE.md), `.claude/rules/` and `.claude/skills/`.
 
+## B2 observed receiver and two-output development model
+
+`B2-features/1` is a separate development stage using the
+`geosim.observed_receiver` linear receiver. It generates fresh physical
+observations with a co-feed cancellation residual PSD. The receiver uses
+calibrated monitor IQ and declared operator frequency, symbol rate, roll-off,
+modulation and APSK code-rate information. Availability of those fields is an
+experiment assumption. Transmitted symbols, true powers, timing, phase and
+active-state truth are excluded. The decision-directed receiver estimates
+synchronization and a received-domain FIR channel; it does not invert the
+nonlinear payload or implement a complete DVB-S2 modem.
+
+`B2-observed-dev/1` compares the four-channel `dual` view with the five-channel
+`b2` view using the same scenario roles, seeds and training budget. The fifth
+channel shares the co-plan power reference. Both models have an eight-class
+head and an independent two-state plan-consistency head. Training uses primary
+CE + 1.0 × consistency CE + 0.01 × mean squared embedding-to-center loss;
+class centers and feature statistics are fitted on train groups only.
+
+The P20 and P21 stages retain separate receiver algorithms, artifacts and
+training conventions. P20 uses a one-logit BCE auxiliary head and center weight
+0.005 on squared distance summed over features, then averaged over samples.
+P21 uses two-logit CE and center weight 0.01 on distance averaged over both
+features and samples. These coefficients and results are not directly
+comparable as a single-variable ablation.
+
+```bash
+python -m geosim.b2_features --config configs/b2_base.json \
+  --cancellation-config configs/b2_receiver.json \
+  --role-limits configs/b2_feature_pilot_limits.json \
+  --groups-per-shard 1 --out data/b2-features-pilot
+python -m geoml.b2_observed_experiment --config configs/b2_observed_experiment.json \
+  --data data/b2-features-pilot --out runs/b2-observed-pilot
+```
+
+These commands select 96 known-class observations: 9 train groups and one each
+for val-select, val-calib and test, with eight paired classes per group.
+Val-select primary macro-F1 selects weights; clean val-calib observations alone
+set the event-alarm threshold. The held-out prefixes have no missing carriers,
+so their missing-carrier recall is `null` with zero support.
+
+Training applies mirroring and time shifts. Separately, 15% of samples receive
+continuous ±0.5 MHz mask jitter. This jitter changes model mask inputs only;
+the stored receiver residual stays fixed. Full receiver plan-error tests must
+rerun cancellation with perturbed descriptors. Final unknown-family,
+CID-overlay and level-matched ASI/unauthorized tests, full-data training and
+multi-seed evaluation remain pending. This is an execution pilot, with
+`benchmark_complete: false`, rather than evidence of useful recognition or
+cancellation quality. Freeze source before generation, use a fresh data
+directory after source/configuration changes, and use experiment `--reuse`
+only for matching artifacts. See [P21 receiver assumptions and development
+contract](docs/plan/P21_b2_observed_receiver.md).
+
 ## Research dossier (2026-10-20)
 
 This is an evolving research project, **not** a completed dual-polarization, eight-class open-set system.
@@ -151,4 +203,4 @@ This is an evolving research project, **not** a completed dual-polarization, eig
 - [Literature bibliography (BibTeX)](references/references.bib)
 - [Detailed current Stage A status](docs/plan/DURUM.md) and [pilot-only results](docs/results/pilot_A.md)
 
-**Current research boundary:** Stage A is single-polarization/five known classes, with a small pilot. B2-base/1 and B2-feat/1 connect the eight frozen known classes, the fifth channel and the two-output model, but no unknown/CID/matched test families or full-scale training exist yet. B1-dev/1 implements known-class holdout rejection with MSP and energy; B1-dev/2 adds unknown families, Mahalanobis and ranking metrics. D1-dev/1 adds calibrated dual-polarization observations and a controlled two-class leakage task. E1-dev/1 adds phase noise and two modulated-interference mechanisms in a separate three-class task. Full-data results and the unified eight-class dual-polarization open-set benchmark remain outstanding. The pilots are not evidence of field/deployment performance. The code repository does not currently specify a top-level license; third-party PDF/data licenses and redistribution conditions must be handled separately. Official primary-source links are preserved instead of automatically mirroring restricted documents.
+**Current research boundary:** Stage A is single-polarization/five known classes, with a small pilot. B2-base/1 and B2-feat/1 connect the eight frozen known classes, the fifth channel and the two-output model. B2-features/1 and B2-observed-dev/1 provide a separate observed-receiver development stage with distinct artifacts and training conventions. Neither B2 stage includes final unknown/CID/matched test families or full-scale training. B1-dev/1 implements known-class holdout rejection with MSP and energy; B1-dev/2 adds unknown families, Mahalanobis and ranking metrics. D1-dev/1 adds calibrated dual-polarization observations and a controlled two-class leakage task. E1-dev/1 adds phase noise and two modulated-interference mechanisms in a separate three-class task. Full-data results and the unified eight-class dual-polarization open-set benchmark remain outstanding. The pilots are not evidence of field/deployment performance. The code repository does not currently specify a top-level license; third-party PDF/data licenses and redistribution conditions must be handled separately. Official primary-source links are preserved instead of automatically mirroring restricted documents.

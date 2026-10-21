@@ -1,0 +1,15 @@
+{
+  "timing_steps": 12,
+  "timing_refinements": 2,
+  "timing_windows": 4,
+  "phase_steps": 32,
+  "pulse_span_symbols": 8,
+  "guard_symbols": 4,
+  "fir_taps": 5,
+  "ridge": 0.001,
+  "min_snr_db": 3.0,
+  "max_decision_error": 0.15,
+  "min_timing_contrast": 0.04,
+  "min_relative_power": 1e-06,
+  "max_symbol_tone_fraction": 0.5
+}

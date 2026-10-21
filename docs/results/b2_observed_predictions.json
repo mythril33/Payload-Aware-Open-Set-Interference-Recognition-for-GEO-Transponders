@@ -1,0 +1,166 @@
+{
+  "dual": [
+    {
+      "scenario_id": 3200000,
+      "true_label": "clean",
+      "prediction": "carrier_under_carrier",
+      "true_plan_consistency": 0,
+      "plan_consistency_prediction": 0,
+      "missing_probability": 0.4333892863502017,
+      "event_probability": 0.898116776368566,
+      "event_alarm": true
+    },
+    {
+      "scenario_id": 3200000,
+      "true_label": "cw",
+      "prediction": "carrier_under_carrier",
+      "true_plan_consistency": 0,
+      "plan_consistency_prediction": 0,
+      "missing_probability": 0.43385307899753783,
+      "event_probability": 0.898124477960579,
+      "event_alarm": true
+    },
+    {
+      "scenario_id": 3200000,
+      "true_label": "swept_cw",
+      "prediction": "carrier_under_carrier",
+      "true_plan_consistency": 0,
+      "plan_consistency_prediction": 0,
+      "missing_probability": 0.4362483332437538,
+      "event_probability": 0.8974807432624291,
+      "event_alarm": true
+    },
+    {
+      "scenario_id": 3200000,
+      "true_label": "unauthorized",
+      "prediction": "carrier_under_carrier",
+      "true_plan_consistency": 0,
+      "plan_consistency_prediction": 0,
+      "missing_probability": 0.4326324031790877,
+      "event_probability": 0.8991428918585482,
+      "event_alarm": true
+    },
+    {
+      "scenario_id": 3200000,
+      "true_label": "overdrive",
+      "prediction": "carrier_under_carrier",
+      "true_plan_consistency": 0,
+      "plan_consistency_prediction": 0,
+      "missing_probability": 0.3955654490533336,
+      "event_probability": 0.9044666641954708,
+      "event_alarm": true
+    },
+    {
+      "scenario_id": 3200000,
+      "true_label": "cross_pol",
+      "prediction": "swept_cw",
+      "true_plan_consistency": 0,
+      "plan_consistency_prediction": 0,
+      "missing_probability": 0.43476371238676653,
+      "event_probability": 0.8925785435073604,
+      "event_alarm": false
+    },
+    {
+      "scenario_id": 3200000,
+      "true_label": "adjacent_satellite",
+      "prediction": "carrier_under_carrier",
+      "true_plan_consistency": 0,
+      "plan_consistency_prediction": 0,
+      "missing_probability": 0.42550217025635517,
+      "event_probability": 0.8984512238623772,
+      "event_alarm": true
+    },
+    {
+      "scenario_id": 3200000,
+      "true_label": "carrier_under_carrier",
+      "prediction": "carrier_under_carrier",
+      "true_plan_consistency": 0,
+      "plan_consistency_prediction": 0,
+      "missing_probability": 0.4279715549829329,
+      "event_probability": 0.8982585173251744,
+      "event_alarm": true
+    }
+  ],
+  "b2": [
+    {
+      "scenario_id": 3200000,
+      "true_label": "clean",
+      "prediction": "clean",
+      "true_plan_consistency": 0,
+      "plan_consistency_prediction": 1,
+      "missing_probability": 0.5449095056576932,
+      "event_probability": 0.8549766041291269,
+      "event_alarm": false
+    },
+    {
+      "scenario_id": 3200000,
+      "true_label": "cw",
+      "prediction": "clean",
+      "true_plan_consistency": 0,
+      "plan_consistency_prediction": 1,
+      "missing_probability": 0.5450516577495625,
+      "event_probability": 0.854994726847136,
+      "event_alarm": false
+    },
+    {
+      "scenario_id": 3200000,
+      "true_label": "swept_cw",
+      "prediction": "clean",
+      "true_plan_consistency": 0,
+      "plan_consistency_prediction": 1,
+      "missing_probability": 0.5453186118585066,
+      "event_probability": 0.8548923600811996,
+      "event_alarm": false
+    },
+    {
+      "scenario_id": 3200000,
+      "true_label": "unauthorized",
+      "prediction": "clean",
+      "true_plan_consistency": 0,
+      "plan_consistency_prediction": 1,
+      "missing_probability": 0.5446811084284425,
+      "event_probability": 0.8549928770504981,
+      "event_alarm": false
+    },
+    {
+      "scenario_id": 3200000,
+      "true_label": "overdrive",
+      "prediction": "clean",
+      "true_plan_consistency": 0,
+      "plan_consistency_prediction": 1,
+      "missing_probability": 0.5456758498890748,
+      "event_probability": 0.8553462733919456,
+      "event_alarm": true
+    },
+    {
+      "scenario_id": 3200000,
+      "true_label": "cross_pol",
+      "prediction": "clean",
+      "true_plan_consistency": 0,
+      "plan_consistency_prediction": 1,
+      "missing_probability": 0.5457086800658896,
+      "event_probability": 0.855213819898723,
+      "event_alarm": false
+    },
+    {
+      "scenario_id": 3200000,
+      "true_label": "adjacent_satellite",
+      "prediction": "clean",
+      "true_plan_consistency": 0,
+      "plan_consistency_prediction": 1,
+      "missing_probability": 0.5453253546533189,
+      "event_probability": 0.8550080163720173,
+      "event_alarm": false
+    },
+    {
+      "scenario_id": 3200000,
+      "true_label": "carrier_under_carrier",
+      "prediction": "clean",
+      "true_plan_consistency": 0,
+      "plan_consistency_prediction": 1,
+      "missing_probability": 0.5454215069448671,
+      "event_probability": 0.8548519811488975,
+      "event_alarm": false
+    }
+  ]
+}

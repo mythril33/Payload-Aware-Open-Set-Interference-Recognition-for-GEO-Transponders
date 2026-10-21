@@ -17,6 +17,7 @@ tested milestone. Reuse existing checkout and authentication.
 | [Polarization modelling](polarization-modeling.md) | Dual-path physics, calibration boundaries and polarization observables |
 | [Impairment modelling](impairment-modeling.md) | Sparse oscillator phase, uplink/downlink events and power conventions |
 | [B2 integration](b2-integration.md) | Frozen B2 roles, paired scenes, active loading and artifact stages |
+| [B2 observed receiver](b2-observed-receiver.md) | Observation-only cancellation, feature/ML boundaries and source-bound development pilots |
 | [Independent review](review.md) | Physics, leakage, numerical correctness and integration review |
 
 Never assign overlapping files to concurrent agents. Hand off ownership or

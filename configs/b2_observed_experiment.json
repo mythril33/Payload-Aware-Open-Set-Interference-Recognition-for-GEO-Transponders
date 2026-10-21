@@ -1,0 +1,23 @@
+{
+  "protocol": "B2-observed-dev/1",
+  "pfa": 0.05,
+  "views": [
+    "dual",
+    "b2"
+  ],
+  "training": {
+    "level": "carrier",
+    "time_pool": 2,
+    "width": 8,
+    "epochs": 3,
+    "batch": 8,
+    "lr": 0.001,
+    "weight_decay": 0.0001,
+    "seed": 0,
+    "augment": true,
+    "center_weight": 0.01,
+    "consistency_weight": 1.0,
+    "plan_shift_probability": 0.15,
+    "max_plan_shift_hz": 500000.0
+  }
+}

@@ -20,6 +20,7 @@ open-set recognition, C3 payload gap under operating conditions.
 | Honest current status, next step | `docs/plan/DURUM.md` (top appendix = latest) |
 | Frozen final benchmark protocol (B2/1, K17) | `docs/plan/P18_b2_protocol.md` — change only via its §10 log |
 | B2 artifact stages | `docs/plan/P19_b2_base_observations.md` (B2-base/1), `docs/plan/P20_b2_cancellation_residual.md` (B2-feat/1) |
+| Separate observed-receiver development | `docs/plan/P21_b2_observed_receiver.md` (B2-features/1, B2-observed-dev/1); `geosim.observed_receiver`, `geoml.b2_observed_experiment` |
 | Repository/scientific audit | `docs/research/PROJECT_AUDIT.md` |
 | Simulator | `src/geosim/` (`dual.py` chain, `b2_scenarios.py` scenes, `b2_dataset.py` artifacts, `cancellation.py` fifth channel) |
 | Learning | `src/geoml/` (`train.py`, `model.py`, `b2_experiment.py`, `openset.py`, `mahalanobis.py`, `calibration.py`) |
@@ -58,3 +59,10 @@ frozen center-loss weight 0.005 (pre-registered, see P20). Next: test-only
 families (`pulsed`, `intermittent_bursts`, `adjacent_satellite_downlink`,
 `cid_overlay`, `wideband_noise`) and the matched ASI set, then full
 production in the cloud and training on the researcher's GPU.
+
+P21 preserves those P20 APIs and adds a separately named receiver/streaming
+training stage, including 15% model-mask jitter. Its two-logit auxiliary CE and
+mean-over-features center weight 0.01 differ from P20's BCE/summed loss. Do not
+interchange configs, artifacts or reports, or treat the tiny pilots as a receiver
+comparison. Full operator-plan-error tests still require recomputed residuals.
+Read DURUM's newest appendix before choosing or extending either runner.

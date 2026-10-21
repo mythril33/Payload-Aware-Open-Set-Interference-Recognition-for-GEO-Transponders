@@ -15,6 +15,10 @@ Agree on public APIs and disjoint ownership before editing.
   on the calibrated co-pol IQ and co-pol operator plan only (B2-feat/1, P20). Any
   new feature channel must keep that signature discipline and its own frozen
   settings bound into the artifact request.
+- The separate `B2-features/1` receiver uses
+  `geosim.observed_receiver.cancel_observed` and the P21 descriptor whitelist.
+  Follow the [observed-receiver brief](b2-observed-receiver.md); preserve both
+  stages' APIs, settings, artifact identities and result provenance.
 - Validate independent calibration, artifacts, source identity and historical
   reads. Run meaningful physics and corruption/reuse tests before scaling.
 - Deliver code, tests and findings to the integrator for combined verification,
