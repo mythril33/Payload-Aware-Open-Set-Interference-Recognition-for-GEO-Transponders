@@ -1,6 +1,6 @@
 # CLAUDE.md — Claude Code context for this repository
 
-**Next (proposed, not executed):** [P23 B2 Production Readiness](docs/plan/P23_b2_production_readiness.md) and the [bounded master prompt](docs/agent_prompts/B2_PRODUCTION_READINESS_MASTER_PROMPT.md) define streaming, LOKO, EDSC/XGBoost, A5 dual-pol tests, CI, and explicit K18/K17d/OBS-CANCEL/2 approvals. No full production authorization is implied.
+**Readiness status (2026-10-22):** E1 is merged; [P25](docs/plan/P25_b2_e2_loko_harness.md) adds a bounded E2 LOKO harness. Remaining work is governed by [P23 B2 Production Readiness](docs/plan/P23_b2_production_readiness.md) and the [bounded master prompt](docs/agent_prompts/B2_PRODUCTION_READINESS_MASTER_PROMPT.md) define streaming, LOKO, EDSC/XGBoost, A5 dual-pol tests, CI, and explicit K18/K17d/OBS-CANCEL/2 approvals. No full production authorization is implied.
 
 
 Read `AGENTS.md` first; it holds the binding repository rules. This file adds
@@ -67,4 +67,5 @@ experiment config); single-window runs are bit-identical to the former in-memory
 (`scripts/profile_b2_experiment_memory.py` measures legacy vs streaming).
 Blocked on researcher decisions: K18 loss weights, K17d drift handling,
 OBS-CANCEL/2, compute authorization for full production and GPU training.
-Remaining code work: LOKO (A8), EDSC/XGBoost baselines, A5 dual-pol test corruption.
+E2 first slice (P25, 2026-10-22): `geoml.b2_loko` plans all A8 folds and supports a capped single CPU smoke fold. Production dispatcher and multi-seed aggregation remain unimplemented.
+Remaining code work: production LOKO execution/aggregation, EDSC/XGBoost baselines, A5 dual-pol test corruption.

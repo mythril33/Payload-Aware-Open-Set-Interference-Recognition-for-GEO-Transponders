@@ -203,3 +203,13 @@ Every `shards()`/`fetch()` read re-verifies descriptor, sha256, arrays and metad
 open-time index; tampering, missing files, missing manifest, swapped order, duplicates and foreign stage/role
 fail. No O(N) materialization of spectra remains in the runner. Reader signatures are additive; `window_shards`
 is outside `TrainConfig`, so checkpoint configuration checks are unchanged.
+
+
+## B2-LOKO-harness/1 — independent engineering review (2026-10-22)
+
+Read-only reviewer inspected `geoml.b2_loko`, tests, P18/P23/P25 and E1 training/data interfaces. No held-out-class leakage, label-remapping or paired-bootstrap blocker found. Two should-fix findings resolved before delivery:
+
+1. Existing derived scorer/calibration files previously could be overwritten under reuse. They now bind to checkpoint SHA256, and existing parameters/provenance are checked before test inference. Negative tests preserve and reject incompatible files.
+2. A nonempty directory without a checkpoint previously could be reused. It now fails closed; unrelated content remains untouched.
+
+Re-review confirmed both fixes, complete-group validation, label-index drift detection and plan JSON round-trip compatibility. Documentation links and explicit smoke-only scope were checked. This review is engineering evidence, not validation of recognition quality or authorization for production.

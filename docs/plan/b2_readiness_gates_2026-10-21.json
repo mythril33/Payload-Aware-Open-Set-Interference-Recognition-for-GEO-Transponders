@@ -1,6 +1,6 @@
 {
   "schema": "b2-readiness-gates/1",
-  "as_of": "2026-10-21",
+  "as_of": "2026-10-22",
   "baseline": {
     "repository": "mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
     "branch": "main",
@@ -54,12 +54,15 @@
   },
   "engineering": {
     "streaming_canonical_b2": {
-      "status": "IMPLEMENTED_IN_DRAFT_PR",
+      "status": "IMPLEMENTED_MERGED_PR_9",
       "evidence": "docs/plan/P24_b2_e1_streaming_loader.md, docs/results/b2_streaming_memory.md, tests/test_b2_stream.py",
-      "note": "engineering status only; no researcher decision implied"
+      "note": "engineering status only; no researcher decision implied",
+      "merge_sha": "5a65062e6a5d4e727567f65d01c77be158ecb76b"
     },
     "loko_a8": {
-      "status": "PLANNED"
+      "status": "BOUNDED_HARNESS_IMPLEMENTED_IN_DRAFT_PR",
+      "evidence": "docs/plan/P25_b2_e2_loko_harness.md; tests/test_b2_loko.py",
+      "scope": "Plan-only default plus one bounded CPU fold; production dispatcher and cross-seed aggregation remain unimplemented; no full sweep authorized or run"
     },
     "edsc": {
       "status": "PLANNED"
@@ -71,8 +74,10 @@
       "status": "PLANNED"
     },
     "github_actions_ci": {
-      "status": "INCLUDED_AS_UNVALIDATED_PROPOSAL",
-      "workflow": ".github/workflows/b2-readiness-ci.yml"
+      "status": "VERIFIED_SUCCESS_ON_PR_9_HEAD",
+      "workflow": ".github/workflows/b2-readiness-ci.yml",
+      "run_id": 39602354253,
+      "head_sha": "3f484a6f40e8f234fc33672833b36282393c51e2"
     }
   },
   "permitted_without_new_researcher_decisions": [
