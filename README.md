@@ -1,6 +1,6 @@
 # Payload-Aware Open-Set Interference Recognition for GEO Transponders
 
-**B2 production-readiness next phase (2026-10-21; proposed, not executed):** [P23 implementation/gate plan](docs/plan/P23_b2_production_readiness.md), [Claude Code Fable 5 master prompt](docs/agent_prompts/B2_PRODUCTION_READINESS_MASTER_PROMPT.md), [decision gate JSON](docs/plan/b2_readiness_gates_2026-10-21.json). Full production remains authorization-gated.
+**B2 production readiness (2026-10-22; E1 merged, bounded E2 harness implemented):** [P23 implementation/gate plan](docs/plan/P23_b2_production_readiness.md), [Claude Code Fable 5 master prompt](docs/agent_prompts/B2_PRODUCTION_READINESS_MASTER_PROMPT.md), [decision gate JSON](docs/plan/b2_readiness_gates_2026-10-21.json). Full production remains authorization-gated.
 
 
 GEO bent-pipe transponderindeki girişimi, operatörün downlink spektrum izlemesinden tanıyan derin öğrenme çalışması. Ders projesi; makaleye genişletilecek.
@@ -154,7 +154,7 @@ python scripts/check_b2_test_families.py --known data/b2-feat-pilot --test data/
 python -m geoml.b2_experiment --config configs/b2_feat.json --data data/b2-feat-pilot --unknown-data data/b2-test-pilot --out runs/b2-feat-pilot-os
 ```
 
-The pilot run is at chance and proves execution only. The matched ASI set, LOKO rotations and
+The pilot run is at chance and proves execution only. The matched ASI set is implemented below; full LOKO rotations and
 full production remain. See [P21](docs/plan/P21_b2_test_families.md) and the
 [pilot report](docs/results/b2_test_pilot.md).
 
@@ -208,4 +208,8 @@ This is an evolving research project, **not** a completed dual-polarization, eig
 - [Literature bibliography (BibTeX)](references/references.bib)
 - [Detailed current Stage A status](docs/plan/DURUM.md) and [pilot-only results](docs/results/pilot_A.md)
 
-**Current research boundary:** Stage A is single-polarization/five known classes, with a small pilot. B2-base/1 and B2-feat/1 connect the eight frozen known classes, the fifth channel and the two-output model. B2-features/1 and B2-observed-dev/1 provide a separate observed-receiver development stage with distinct artifacts and training conventions. Neither B2 stage includes final unknown/CID/matched test families or full-scale training. B1-dev/1 implements known-class holdout rejection with MSP and energy; B1-dev/2 adds unknown families, Mahalanobis and ranking metrics. D1-dev/1 adds calibrated dual-polarization observations and a controlled two-class leakage task. E1-dev/1 adds phase noise and two modulated-interference mechanisms in a separate three-class task. Full-data results and the unified eight-class dual-polarization open-set benchmark remain outstanding. The pilots are not evidence of field/deployment performance. The code repository does not currently specify a top-level license; third-party PDF/data licenses and redistribution conditions must be handled separately. Official primary-source links are preserved instead of automatically mirroring restricted documents.
+**Current research boundary:** Stage A is single-polarization/five known classes, with a small pilot. B2-base/1 and B2-feat/1 connect the eight frozen known classes, the fifth channel and the two-output model. B2-features/1 and B2-observed-dev/1 provide a separate observed-receiver development stage with distinct artifacts and training conventions. The separate canonical B2-test/1 and B2-match/1 artifacts supply test-only unknown/CID and level-matched evaluations. E1 streams these stages; P25 adds a bounded A8 harness. Full-scale training and production LOKO remain unexecuted. B1-dev/1 implements known-class holdout rejection with MSP and energy; B1-dev/2 adds unknown families, Mahalanobis and ranking metrics. D1-dev/1 adds calibrated dual-polarization observations and a controlled two-class leakage task. E1-dev/1 adds phase noise and two modulated-interference mechanisms in a separate three-class task. Full-data results and the unified eight-class dual-polarization open-set benchmark remain outstanding. The pilots are not evidence of field/deployment performance. The code repository does not currently specify a top-level license; third-party PDF/data licenses and redistribution conditions must be handled separately. Official primary-source links are preserved instead of automatically mirroring restricted documents.
+
+### A8 LOKO engineering harness (2026-10-22)
+
+See [P25](docs/plan/P25_b2_e2_loko_harness.md) and [verification](docs/results/b2_loko_harness.md). `python -m geoml.b2_loko --config configs/b2_feat.json --data data/b2-feat-pilot --out runs/b2-loko-plan` creates a deterministic plan only. One CPU smoke fold is available with `configs/b2_loko_smoke.json` and `--smoke-holdout cw`, on an existing artifact with <=2 groups/role. Production scheduling and seed aggregation remain open; no production authorization or benchmark completion is implied.

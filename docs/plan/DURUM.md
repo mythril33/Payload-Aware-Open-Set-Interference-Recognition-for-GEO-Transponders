@@ -2,6 +2,15 @@
 
 Son güncelleme: 2026-10-21 (B2-match/1 K17c eşleşmiş küme, maliyet profili, üretim kapısı; temel deney durumu 2026-10-10) · Bu dosya "şu an neredeyiz, ne eksik" sorusunun tek yanıtıdır; her oturum sonunda güncellenir.
 
+## Uygulama eki — 2026-10-22 (E2 ilk dilim: sınırlı LOKO harness)
+
+- Güncel `main` `5a65062`: E1, PR #9 ile birleşmiş; dal başı `3f484a6` için Actions `39602354253` başarılı olarak doğrulandı. Önceki E1/CI plan durumları güncellendi; araştırmacı kararları değişmedi.
+- [P25](P25_b2_e2_loko_harness.md): `geoml.b2_loko`, yedi temiz-dışı sınıf için üç tohumlu deterministik plan oluşturur. Varsayılan yalnız plan; yürütme tek fold/görünüm, CPU, rol başına en çok iki grup ve iki epok ile sınırlı.
+- Dışarıda tutulan sınıf ön işlemeden önce train/val-select/val-calib rollerinden çıkarılır; kalan yedi etiket açıkça yeniden numaralanır, `clean` sıfır kalır. Mahalanobis ve eşikler test çıkarımından önce sabitlenir. Kaynak shard doğrulamaları korunur; yeniden kullanım checkpoint ve türetilmiş dosya kimliklerini doğrular.
+- Testte aynı gruptaki yedi bilinen + bir dışarıda tutulan varyant birlikte raporlanır; ranking CI senaryo gruplarını eşleşmiş bootstrap ile örnekler. Paydalar ve örnek/grup sayıları açıktır; boş metrikler ve tek-grup CI null. Tohum belirsizliği dahil değildir.
+- Doğrulama: yeni 9 test **47,10 s**; tam paket **978 geçti, 1014,36 s (16 dk 54 s)**; syntax/strict gate kontrolü ve bağımsız inceleme tamamlandı. Ölçülen sınırlar: [sonuç notu](../results/b2_loko_harness.md). Sentetik fikstürler yürütme kanıtıdır; RF/model başarısı değildir.
+- **Kalan:** üretim LOKO dispatcher/çok-tohum birleştirme, EDSC/XGBoost, tam çift-pol A5. K18/K17d/OBS-CANCEL/2 ve tam üretim/GPU/LOKO onayları bekliyor; hiçbiri başlatılmadı, `benchmark_complete=false`. Dal taslak PR olarak sunulur, otomatik birleşme yok.
+
 ## Uygulama eki — 2026-10-21 (E1: kanonik `geoml.b2_experiment` için bellek sınırlı akış veri yolu)
 
 - **Başlangıç:** `main` `0f75dea` (PR #7 ve #8 birleşmiş); dal `feature/b2-e1-streaming-loader`. Temel paket bu tabanda yeniden koşuldu: **955 test geçti** (4 dk 16 s, 4 CPU). P23 iş paketi **E1** uygulandı; LOKO/EDSC/XGBoost/A5 (E2–E4) bu dilimde yok.
