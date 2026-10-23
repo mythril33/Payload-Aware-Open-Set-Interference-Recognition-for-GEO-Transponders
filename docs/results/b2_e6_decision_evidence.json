@@ -1,0 +1,201 @@
+{
+ "schema": "B2-E6-decision-evidence/1",
+ "benchmark_complete": false,
+ "approves_nothing": true,
+ "k17d": {
+  "n_test_groups": 500,
+  "missing_carrier_groups": 78,
+  "co_feed_drops": 35,
+  "cross_feed_drops": 43,
+  "cross_feed_max_abs_drift_db": 4.821637332766436e-16,
+  "co_feed_drift_db": {
+   "median": 0.7067109143485161,
+   "p90": 2.9268923287876056,
+   "max": 5.912131896846286
+  },
+  "matches_committed_summary": true,
+  "co_feed_groups_at_least_db": {
+   "0.5": 19,
+   "1.0": 15,
+   "3.0": 4
+  },
+  "share_of_test_groups_at_least_bin_width": 0.008,
+  "note": "co-feed drops scale the downlink ASI event; cross-feed drops do not change the co reference. The cross-feed value here is zero by construction of the audit formula; the physical bound (30 dB uplink coupling) is below 0.01 dB (P22 section 6)"
+ },
+ "k18": {
+  "views": {
+   "co": {
+    "embedding_dim": 128,
+    "ce": 2.081822395324707,
+    "p20_term": 1.0005830699810758e-06,
+    "p21b_term": 1.563411046845431e-08,
+    "p20_to_p21b_ratio": 64.0,
+    "dim_over_two": 64.0,
+    "p20_fraction_of_ce": 4.806284494912508e-07
+   },
+   "dual": {
+    "embedding_dim": 128,
+    "ce": 2.0804495811462402,
+    "p20_term": 2.5780992582440377e-05,
+    "p21b_term": 4.0282797272084284e-07,
+    "p20_to_p21b_ratio": 64.00000577990257,
+    "dim_over_two": 64.0,
+    "p20_fraction_of_ce": 1.2392029499814234e-05
+   },
+   "dual_residual": {
+    "embedding_dim": 128,
+    "ce": 2.080847978591919,
+    "p20_term": 1.4074759383220225e-06,
+    "p21b_term": 2.19918115362816e-08,
+    "p20_to_p21b_ratio": 64.0,
+    "dim_over_two": 64.0,
+    "p20_fraction_of_ce": 6.76395369965682e-07
+   }
+  },
+  "ratio_equals_half_embedding_dim": true,
+  "scope": "degenerate three-epoch pilot checkpoints and untrained initializations; cannot calibrate the weight"
+ },
+ "obs_cancel_2": {
+  "linewidth_hz": 150.0,
+  "snapshot_us": 42.67,
+  "obs_cancel_1_ceiling_db": 21.737914080416413,
+  "obs_cancel_1_stored_window_ceiling_db": 22.82035523692699,
+  "stored_window_note": "gain fitted on the full 4096-sample block, PSD stored over the interior after dropping edge_guard=512 samples per side (cancellation.py); seeded Monte Carlo",
+  "widest_planned_carrier_mbaud": 24.0,
+  "ceiling_64_symbols_at_widest_planned_carrier_db": 33.8,
+  "target_reachable_by_a_planned_carrier": false,
+  "formula": "residual power ~ 2*pi*linewidth*T/6 (ideal block mean, pure Wiener phase, no estimation noise)",
+  "cross_check": [
+   {
+    "duration_us": 42.667,
+    "analytic_db": 21.737914080416413,
+    "monte_carlo_db": 21.75773221316373
+   },
+   {
+    "duration_us": 6.4,
+    "analytic_db": 29.9770014898596,
+    "monte_carlo_db": 29.989462010037112
+   },
+   {
+    "duration_us": 1.78,
+    "analytic_db": 35.53460120660954,
+    "monte_carlo_db": 35.54612397085364
+   }
+  ],
+  "target_depth_db": 35.0,
+  "segment_duration_for_target_us": 2.013,
+  "min_symbol_rate_mbaud_for_target": {
+   "64_symbols": 31.8,
+   "128_symbols": 63.6
+  },
+  "ceiling_by_symbol_rate": [
+   {
+    "symbol_rate_mbaud": 1.0,
+    "segment_64_symbols": {
+     "duration_us": 42.67,
+     "ceiling_db": 21.7,
+     "meets_target": false
+    },
+    "segment_128_symbols": {
+     "duration_us": 42.67,
+     "ceiling_db": 21.7,
+     "meets_target": false
+    }
+   },
+   {
+    "symbol_rate_mbaud": 1.5,
+    "segment_64_symbols": {
+     "duration_us": 42.67,
+     "ceiling_db": 21.7,
+     "meets_target": false
+    },
+    "segment_128_symbols": {
+     "duration_us": 42.67,
+     "ceiling_db": 21.7,
+     "meets_target": false
+    }
+   },
+   {
+    "symbol_rate_mbaud": 3.6,
+    "segment_64_symbols": {
+     "duration_us": 17.78,
+     "ceiling_db": 25.5,
+     "meets_target": false
+    },
+    "segment_128_symbols": {
+     "duration_us": 35.56,
+     "ceiling_db": 22.5,
+     "meets_target": false
+    }
+   },
+   {
+    "symbol_rate_mbaud": 6.0,
+    "segment_64_symbols": {
+     "duration_us": 10.67,
+     "ceiling_db": 27.8,
+     "meets_target": false
+    },
+    "segment_128_symbols": {
+     "duration_us": 21.33,
+     "ceiling_db": 24.7,
+     "meets_target": false
+    }
+   },
+   {
+    "symbol_rate_mbaud": 10.0,
+    "segment_64_symbols": {
+     "duration_us": 6.4,
+     "ceiling_db": 30.0,
+     "meets_target": false
+    },
+    "segment_128_symbols": {
+     "duration_us": 12.8,
+     "ceiling_db": 27.0,
+     "meets_target": false
+    }
+   },
+   {
+    "symbol_rate_mbaud": 20.0,
+    "segment_64_symbols": {
+     "duration_us": 3.2,
+     "ceiling_db": 33.0,
+     "meets_target": false
+    },
+    "segment_128_symbols": {
+     "duration_us": 6.4,
+     "ceiling_db": 30.0,
+     "meets_target": false
+    }
+   },
+   {
+    "symbol_rate_mbaud": 28.8,
+    "segment_64_symbols": {
+     "duration_us": 2.22,
+     "ceiling_db": 34.6,
+     "meets_target": false
+    },
+    "segment_128_symbols": {
+     "duration_us": 4.44,
+     "ceiling_db": 31.6,
+     "meets_target": false
+    }
+   },
+   {
+    "symbol_rate_mbaud": 36.0,
+    "segment_64_symbols": {
+     "duration_us": 1.78,
+     "ceiling_db": 35.5,
+     "meets_target": true
+    },
+    "segment_128_symbols": {
+     "duration_us": 3.56,
+     "ceiling_db": 32.5,
+     "meets_target": false
+    }
+   }
+  ],
+  "added_canceller_hours_if_twice_obs_cancel_1": 7.95,
+  "raw_iq_stored": false,
+  "consequence": "the residual is computed at generation time from transient IQ, so any new receiver version requires regenerating every stage that carries the fifth channel"
+ }
+}
