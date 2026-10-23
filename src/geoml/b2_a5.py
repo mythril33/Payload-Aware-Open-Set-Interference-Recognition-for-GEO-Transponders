@@ -56,6 +56,7 @@ CONDITIONS = ("original", "MASK_ONLY", "RECEIVER_CONSISTENT")
 STAGES = ("known", "matched")
 E4_ADDED_FILES = ("geoml/b2_a5.py", "geoml/b2_a5_plan.py", "geoml/b2_a5_replay.py")
 CAPS = {"max_groups": 2, "max_classes": 2, "max_configurations": 1, "max_replays": 16, "max_cancellations": 24}
+STATE_CONTRACT = "B2-A5-scene-state/2"  # Checksummed envelope; legacy unsigned state is incompatible.
 DEFAULT_LABELS = {"known": ("clean", "unauthorized"), "matched": ("adjacent_satellite", "unauthorized")}
 AUTHORIZATION = {"full_b2_production": "NOT_AUTHORIZED_NOT_STARTED", "full_gpu_training": "NOT_AUTHORIZED_NOT_STARTED",
                  "full_loko_sweep": "NOT_AUTHORIZED_NOT_STARTED", "K18": "PENDING_RESEARCHER",
@@ -320,6 +321,11 @@ def _view_metrics(keys, outputs, original, diagnostics):
         pair_mask = np.isin(labels, [asi, unauthorized])
         out["asi_vs_unauthorized"] = {method: _pair_metrics(prediction, outputs["accepted"][method], labels, groups, pair_mask)
                                       for method in outputs["accepted"]}
+        if outputs is not original:
+            out["asi_vs_unauthorized"] = {
+                method: {key.replace("pair_accuracy", "pair_agreement_with_original_label"): value
+                         for key, value in values.items()}
+                for method, values in out["asi_vs_unauthorized"].items()}
     else:
         out["asi_vs_unauthorized"] = None
     out["residual"] = {key: _summary(values, groups) for key, values in diagnostics.items()}
@@ -452,10 +458,46 @@ class SceneState:
         meta_path, array_path = self._paths(group, label)
         if not meta_path.exists():
             return None
-        meta = json.loads(meta_path.read_text())
+        def unique(pairs):
+            values = {}
+            for key, value in pairs:
+                if key in values:
+                    raise ValueError(f"{meta_path}: duplicate metadata key {key}")
+                values[key] = value
+            return values
+        def reject(value):
+            raise ValueError(f"{meta_path}: nonfinite metadata constant {value}")
+        meta = json.loads(meta_path.read_text(), object_pairs_hook=unique, parse_constant=reject)
+        if not isinstance(meta, dict):
+            raise ValueError(f"{meta_path}: invalid metadata schema")
         if (meta.get("experiment_fingerprint") != self.identity or meta.get("scenario_id") != int(group)
                 or meta.get("label") != label):
             raise ValueError(f"{meta_path} is bound to a different scene or experiment identity; use a new output directory")
+        fields = {"state_contract", "experiment_fingerprint", "scenario_id", "label", "record", "parity", "work", "arrays_sha256", "metadata_sha256"}
+        if set(meta) != fields or meta.get("state_contract") != STATE_CONTRACT:
+            raise ValueError(f"{meta_path}: incompatible metadata schema; use a fresh output directory")
+        if meta["metadata_sha256"] != fingerprint({k:v for k,v in meta.items() if k != "metadata_sha256"}):
+            raise ValueError(f"{meta_path}: metadata checksum mismatch; use a fresh output directory")
+        work = meta["work"]
+        if (not isinstance(work, dict) or set(work) != {"replays", "cancellations", "recomputations"}
+                or any(type(v) is not int for v in work.values())
+                or work["replays"] not in (0, 1) or work["recomputations"] not in (0, 1)
+                or work["cancellations"] != work["replays"] + work["recomputations"]
+                or work["recomputations"] > work["replays"]):
+            raise ValueError(f"{meta_path}: invalid metadata logical work counts")
+        if work["replays"]:
+            if (not isinstance(meta["parity"], dict) or type(meta["parity"].get("exact")) is not bool
+                    or not isinstance(meta["arrays_sha256"], str) or len(meta["arrays_sha256"]) != 64
+                    or not isinstance(meta["record"], dict)
+                    or type(meta["record"].get("residual_recomputed")) is not bool
+                    or meta["record"].get("status") != "applied"
+                    or meta["record"]["residual_recomputed"] != bool(work["recomputations"])):
+                raise ValueError(f"{meta_path}: invalid metadata parity/recomputation binding")
+        elif (meta["parity"] is not None or meta["arrays_sha256"] is not None
+              or not isinstance(meta["record"], dict)
+              or meta["record"].get("status") not in ("not_applicable", "blocked")
+              or meta["record"].get("residual_recomputed") is not None):
+            raise ValueError(f"{meta_path}: invalid metadata for an unapplied scene")
         arrays = None
         if meta["arrays_sha256"] is not None:
             if not array_path.exists() or _file_hash(array_path) != meta["arrays_sha256"]:
@@ -477,8 +519,10 @@ class SceneState:
                 np.savez(stream, spec=arrays["spec"], residual=arrays["residual"])
             temporary.replace(array_path)
             digest = _file_hash(array_path)
-        _write_json(meta_path, {"experiment_fingerprint": self.identity, "scenario_id": int(group), "label": label,
-                                "record": record, "parity": parity, "work": work, "arrays_sha256": digest})
+        meta = _json_safe({"state_contract": STATE_CONTRACT, "experiment_fingerprint": self.identity,
+                          "scenario_id": int(group), "label": label, "record": record,
+                          "parity": parity, "work": work, "arrays_sha256": digest})
+        _write_json(meta_path, {**meta, "metadata_sha256": fingerprint(meta)})
 
 
 def _output_state(out: Path, identity: str, log=print):
@@ -604,6 +648,8 @@ def run_a5(config: A5Config, data, runs, out, *, matched_data=None, command_args
             del replay                                            # raw IQ is transient
         for key in work:
             work[key] += scene_work[key]
+        if work["replays"] > CAPS["max_replays"] or work["cancellations"] > CAPS["max_cancellations"]:
+            raise BudgetExceeded("resumed logical work exceeds invocation caps")
         records.append(record)
         rows.append({"stored": stored, "corruption": corruption, "conditions": conditions})
     if from_state:
@@ -755,7 +801,7 @@ def _identical_outputs(name, scored, applicable):
     return {"view_reads_residual": name == "dual_residual", "psd_identical": bool(spec_same),
             "residual_identical": bool(residual_same),
             "logits_identical": bool(np.array_equal(scored["MASK_ONLY"]["logits"], scored["RECEIVER_CONSISTENT"]["logits"])),
-            "note": "co/dual views never read the residual; with an unchanged co descriptor the residual is identical by construction"}
+            "note": "co/dual views never read the residual; an unchanged co descriptor reuses the replay residual without a cancellation call; equality to stored residual requires exact replay parity"}
 
 
 def report(result: dict) -> str:
