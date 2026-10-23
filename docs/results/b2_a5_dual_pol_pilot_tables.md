@@ -1,3 +1,5 @@
+Matrix coverage: **COMPLETE**; complete=True; completed=25/25, pending=0, failed=0, missing=0. Unexecuted invocation slots are not non-applicable samples.
+
 ### Receiver-level and baseline-input displacement (model independent; RC = RECEIVER_CONSISTENT)
 
 | Invocation | Applied / selected | Replays | Cancellations | Parity exact | Core depth Δ (dB) | Residual Δ (dB) | EDSC score Δ MASK_ONLY / RC (dB) | CFAR planned scenes changed | CFAR blind scenes changed | XGB features changed MASK_ONLY / RC |
