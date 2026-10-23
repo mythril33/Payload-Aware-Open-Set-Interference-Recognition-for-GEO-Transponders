@@ -4757,8 +4757,43 @@
     "branch": "feature/b2-e3a-edsc-baseline",
     "implementation_commit": "ec47a90b9e8f9ed756bee822d1c2b548830951ee",
     "pr_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/11",
-    "draft": true,
-    "merged": false,
-    "ci_evidence": "Latest head SHA, run/job links, full-suite counts/skips and outcome are recorded in the draft PR description after per-head verification"
+    "draft": false,
+    "merged": true,
+    "ci_evidence": "Exact head/run/job and test results recorded in github_actions_verification",
+    "implementation_merge_sha": "af5910c6e1598a90bf2afe864ca23acd0f381c02",
+    "delivery_pr_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/12",
+    "delivery_merged": true,
+    "delivery_merge_sha": "9300620c13ae81cf16b1ef6ec9e59f2a6026f53c",
+    "verified_remote_main": "9300620c13ae81cf16b1ef6ec9e59f2a6026f53c"
+  },
+  "github_actions_verification": {
+    "implementation": {
+      "pr": 11,
+      "head_sha": "ec47a90b9e8f9ed756bee822d1c2b548830951ee",
+      "run_id": 39921568709,
+      "job_id": 120307794277,
+      "conclusion": "success",
+      "passed": 1024,
+      "skipped": 0,
+      "failed": 0,
+      "pytest_seconds": 249.9,
+      "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39921568709",
+      "job_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39921568709/job/120307794277"
+    },
+    "delivery_records": {
+      "pr": 12,
+      "head_sha": "bb589b4b4290da63ffa923add8d893b655b8149c",
+      "synthetic_merge_sha_prefix": "9036bcf",
+      "run_id": 39922726893,
+      "job_id": 120311592843,
+      "conclusion": "success",
+      "passed": 1024,
+      "skipped": 0,
+      "failed": 0,
+      "pytest_seconds": 223.5,
+      "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39922726893",
+      "job_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39922726893/job/120311592843"
+    },
+    "local_remote_distinction": "Local E1 RSS test skipped due /proc/self/clear_refs restriction; remote1024passed0skips includes that test; no local skip rewritten as pass"
   }
 }
