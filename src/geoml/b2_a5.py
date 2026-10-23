@@ -61,7 +61,7 @@ CONDITIONS = ("original", "MASK_ONLY", "RECEIVER_CONSISTENT")
 STAGES = ("known", "matched")
 E4_ADDED_FILES = ("geoml/b2_a5.py", "geoml/b2_a5_plan.py", "geoml/b2_a5_replay.py")
 CAPS = {"max_groups": 2, "max_classes": 2, "max_configurations": 1, "max_replays": 16, "max_cancellations": 24}
-STATE_CONTRACT = "B2-A5-scene-state/2"  # Checksummed envelope; legacy unsigned state is incompatible.
+STATE_CONTRACT = "B2-A5-scene-state/2"  # checksummed envelope; earlier unsigned state is refused
 DEFAULT_LABELS = {"known": ("clean", "unauthorized"), "matched": ("adjacent_satellite", "unauthorized")}
 AUTHORIZATION = {"full_b2_production": "NOT_AUTHORIZED_NOT_STARTED", "full_gpu_training": "NOT_AUTHORIZED_NOT_STARTED",
                  "full_loko_sweep": "NOT_AUTHORIZED_NOT_STARTED", "K18": "PENDING_RESEARCHER",
@@ -460,13 +460,28 @@ class _InvocationLock:
             self.stream = None
 
 
-STATE_KEYS = ("experiment_fingerprint", "scenario_id", "label", "record", "parity", "work", "arrays_sha256")
+STATE_KEYS = ("state_contract", "experiment_fingerprint", "scenario_id", "label", "record", "parity", "work",
+              "arrays_sha256")
 OWN_TEMPORARIES = ("results.json.tmp", "results.json.sha256.tmp", "results.md.tmp", "a5_config.json.tmp")
 
 
+def _unique_pairs(pairs):
+    values = {}
+    for key, value in pairs:
+        if key in values:
+            raise ValueError(f"duplicate key {key}")
+        values[key] = value
+    return values
+
+
+def _reject_constant(value):
+    raise ValueError(f"nonfinite constant {value}")
+
+
 def _read_object(path: Path, what: str) -> dict:
+    """Strict JSON object: duplicate keys and NaN/Infinity constants are rejected, never silently resolved."""
     try:
-        value = json.loads(path.read_text())
+        value = json.loads(path.read_text(), object_pairs_hook=_unique_pairs, parse_constant=_reject_constant)
     except (OSError, ValueError) as error:
         raise ValueError(f"{path} is not a valid {what}; use a new output directory") from error
     if not isinstance(value, dict):
@@ -514,27 +529,47 @@ class SceneState:
         return stem.with_suffix(".json"), stem.with_suffix(".npz")
 
     def _payload(self, group, label, record, parity, work, arrays_sha256) -> dict:
-        return _json_safe({"experiment_fingerprint": self.identity, "scenario_id": int(group), "label": label,
-                           "record": record, "parity": parity, "work": work, "arrays_sha256": arrays_sha256})
+        return _json_safe({"state_contract": STATE_CONTRACT, "experiment_fingerprint": self.identity,
+                           "scenario_id": int(group), "label": label, "record": record, "parity": parity, "work": work,
+                           "arrays_sha256": arrays_sha256})
+
+    @staticmethod
+    def _check_work_binding(meta_path, meta) -> None:
+        """Logical work, parity, arrays and the record must tell one consistent story (a consistent re-sign is still caught)."""
+        work, record = meta["work"], meta["record"]
+        if (not isinstance(work, dict) or set(work) != {"replays", "cancellations", "recomputations"}
+                or any(type(value) is not int for value in work.values())
+                or work["replays"] not in (0, 1) or work["recomputations"] not in (0, 1)
+                or work["cancellations"] != work["replays"] + work["recomputations"]
+                or work["recomputations"] > work["replays"]):
+            raise ValueError(f"{meta_path}: invalid metadata logical work counts; use a new output directory")
+        if work["replays"]:
+            if (not isinstance(meta["parity"], dict) or type(meta["parity"].get("exact")) is not bool
+                    or not isinstance(meta["arrays_sha256"], str) or len(meta["arrays_sha256"]) != 64
+                    or not isinstance(record, dict) or record.get("status") != "applied"
+                    or type(record.get("residual_recomputed")) is not bool
+                    or record["residual_recomputed"] != bool(work["recomputations"])):
+                raise ValueError(f"{meta_path}: invalid metadata parity/recomputation binding (replayed arrays must exist "
+                                 "exactly for applied scenes); use a new output directory")
+        elif (meta["parity"] is not None or meta["arrays_sha256"] is not None or not isinstance(record, dict)
+              or record.get("status") not in ("not_applicable", "blocked") or record.get("residual_recomputed") is not None):
+            raise ValueError(f"{meta_path}: invalid metadata for an unapplied scene; use a new output directory")
 
     def load(self, group, label):
         meta_path, array_path = self._paths(group, label)
         if not meta_path.exists():
             return None
         meta = _read_object(meta_path, "A5 scene state")
-        if set(meta) != set(STATE_KEYS) | {"payload_sha256"} or not isinstance(meta["record"], dict):
-            raise ValueError(f"{meta_path} is not a valid A5 scene state; use a new output directory")
+        if set(meta) != set(STATE_KEYS) | {"metadata_sha256"} or meta["state_contract"] != STATE_CONTRACT:
+            raise ValueError(f"{meta_path}: incompatible metadata schema; use a new output directory")
         if (meta["experiment_fingerprint"] != self.identity or meta["scenario_id"] != int(group) or meta["label"] != label):
             raise ValueError(f"{meta_path} is bound to a different scene or experiment identity; use a new output directory")
-        payload = {key: meta[key] for key in STATE_KEYS}
-        if fingerprint(payload) != meta["payload_sha256"]:
-            raise ValueError(f"{meta_path} is missing or modified (payload digest); use a new output directory")
-        applied = meta["record"].get("status") == "applied"
-        if applied != (meta["arrays_sha256"] is not None):
-            raise ValueError(f"{meta_path} is inconsistent: replayed arrays must exist exactly for applied scenes; use a "
-                             "new output directory")
+        if fingerprint({key: meta[key] for key in STATE_KEYS}) != meta["metadata_sha256"]:
+            raise ValueError(f"{meta_path}: metadata checksum mismatch (the committed state was modified); use a new "
+                             "output directory")
+        self._check_work_binding(meta_path, meta)
         arrays = None
-        if applied:
+        if meta["arrays_sha256"] is not None:
             if not array_path.exists() or _file_hash(array_path) != meta["arrays_sha256"]:
                 raise ValueError(f"{array_path} is missing or modified; use a new output directory")
             with np.load(array_path, allow_pickle=False) as archive:
@@ -557,7 +592,7 @@ class SceneState:
             temporary.replace(array_path)
             digest = _file_hash(array_path)
         payload = self._payload(group, label, record, parity, work, digest)
-        _write_json(meta_path, {**payload, "payload_sha256": fingerprint(payload)})
+        _write_json(meta_path, {**payload, "metadata_sha256": fingerprint(payload)})
 
 
 def _output_state(out: Path, identity: str, log=print):
