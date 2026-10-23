@@ -185,7 +185,7 @@ def markdown(summary: dict) -> str:
                              f"{pct(c['prediction_change_vs_original'])} | {logit} | {pct(c['alarm_among_original_clean']['mean'])} (n={c['alarm_among_original_clean']['n']}) | "
                              f"{pct(c['alarm_among_original_event']['mean'])} (n={c['alarm_among_original_event']['n']}) |")
     return ("### Receiver-level and baseline-input displacement (model independent; RC = RECEIVER_CONSISTENT)\n\n" + "\n".join(receiver)
-            + "\n\n### Model-level paired conditions (stand-in checkpoints; execution evidence only)\n\n" + "\n".join(model) + "\n")
+            + "\n\n### Model-level paired conditions (frozen checkpoints supplied by the run directory; see the summary's interpretation block for what they are)\n\n" + "\n".join(model) + "\n")
 
 
 def main(argv=None):

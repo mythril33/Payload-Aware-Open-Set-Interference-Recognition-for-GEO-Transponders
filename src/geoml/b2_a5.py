@@ -24,6 +24,11 @@ import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+try:                                    # advisory lock; absent on platforms without fcntl
+    import fcntl
+except ImportError:                     # pragma: no cover
+    fcntl = None
+
 import numpy as np
 import scipy
 import torch
@@ -131,10 +136,18 @@ def _json_safe(value):
     return value
 
 
-def _write_json(path: Path, value) -> None:
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(_json_safe(value), indent=1, sort_keys=False, allow_nan=False) + "\n")
+def _durable_text(path: Path, text: str) -> None:
+    """Write-then-rename with the data flushed to disk before the rename, so a crash leaves old or complete content."""
+    temporary = path.with_name(path.name + ".tmp")
+    with open(temporary, "w") as stream:
+        stream.write(text)
+        stream.flush()
+        os.fsync(stream.fileno())
     temporary.replace(path)
+
+
+def _write_json(path: Path, value) -> None:
+    _durable_text(path, json.dumps(_json_safe(value), indent=1, sort_keys=False, allow_nan=False) + "\n")
 
 
 # ---------------------------------------------------------------- frozen models
@@ -410,20 +423,61 @@ def _reproduction_command(args) -> str:
 
 
 def _atomic_text(path: Path, text: str) -> None:
-    temporary = path.with_name(path.name + ".tmp")
-    temporary.write_text(text)
-    temporary.replace(path)
+    _durable_text(path, text)
+
+
+def _environment() -> dict:
+    """Library/platform identity of the process that wrote cached replay arrays (they are bit-comparable only within it)."""
+    return {"python": platform.python_version(), "numpy": np.__version__, "scipy": scipy.__version__,
+            "torch": str(torch.__version__), "machine": platform.machine(), "system": platform.system()}
+
+
+class _InvocationLock:
+    """Exclusive advisory lock on an output directory; the OS releases it if the process dies, so a crash never blocks resumption."""
+
+    def __init__(self, directory: Path):
+        self.stream = None
+        if fcntl is None:                                   # pragma: no cover
+            return
+        stream = open(directory / ".a5.lock", "a+")
+        try:
+            fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as error:
+            stream.close()
+            raise ValueError(f"another process is running this invocation ({directory}); wait for it or use a new "
+                             "output directory") from error
+        self.stream = stream
+
+    def release(self):
+        if self.stream is not None:
+            self.stream.close()
+            self.stream = None
+
+
+STATE_KEYS = ("experiment_fingerprint", "scenario_id", "label", "record", "parity", "work", "arrays_sha256")
+OWN_TEMPORARIES = ("results.json.tmp", "results.json.sha256.tmp", "results.md.tmp", "a5_config.json.tmp")
+
+
+def _read_object(path: Path, what: str) -> dict:
+    try:
+        value = json.loads(path.read_text())
+    except (OSError, ValueError) as error:
+        raise ValueError(f"{path} is not a valid {what}; use a new output directory") from error
+    if not isinstance(value, dict):
+        raise ValueError(f"{path} is not a valid {what}; use a new output directory")
+    return value
 
 
 class SceneState:
     """Verified per-scene progress of one invocation, so an interrupted run continues instead of restarting.
 
-    Every completed applicable scene stores its replayed PSD and recomputed residual (float16, the expensive
-    part) in ``state/``; a small JSON committed last carries the scene record, the parity report, the work done
-    and the SHA-256 of the arrays. A leftover ``*.tmp`` file or an array file without its JSON is an interrupted
-    write: it was never committed and is discarded. A committed entry that fails its binding or checksum was
-    modified and is rejected (fail closed), never silently recomputed over. Entries are bound to the full
-    experiment identity, so a changed configuration, artifact, checkpoint or source cannot reuse them.
+    Every completed scene stores its replayed PSD and recomputed residual (float16, the expensive part) in
+    ``state/``; a small JSON committed last carries the scene record, the parity report, the work done and the
+    SHA-256 of the arrays, and is itself covered by a digest of its whole payload and bound to the experiment
+    identity and to the library/platform environment that produced the arrays. A leftover ``*.tmp`` file or an
+    array file without its JSON is an interrupted write: it was never committed and is discarded. A committed
+    entry that fails its binding, digest or checksum was modified and is rejected (fail closed), never silently
+    recomputed over. The digests detect accidental or partial modification; they do not authenticate the writer.
     """
 
     def __init__(self, directory: Path, identity: str, log=print):
@@ -431,11 +485,16 @@ class SceneState:
         directory.mkdir(parents=True, exist_ok=True)
         marker = directory / "identity.json"
         if marker.exists():
-            stored = json.loads(marker.read_text())
+            stored = _read_object(marker, "A5 state marker")
             if stored.get("experiment_fingerprint") != identity:
                 raise ValueError(f"{directory} belongs to a different experiment identity; use a new output directory")
+            if stored.get("environment") != _environment():
+                raise ValueError(f"{directory} was written under a different library/platform environment; use a new "
+                                 "output directory")
         else:
-            _write_json(marker, {"experiment_fingerprint": identity, "contract": CONTRACT})
+            if any(path.name != "identity.json.tmp" for path in directory.iterdir()):
+                raise ValueError(f"{directory} is not an A5 state directory (no identity marker); use a new output directory")
+            _write_json(marker, {"experiment_fingerprint": identity, "contract": CONTRACT, "environment": _environment()})
         for leftover in sorted(directory.glob("*.tmp")):
             leftover.unlink()
             log(f"discarded interrupted write {leftover.name}")
@@ -448,16 +507,28 @@ class SceneState:
         stem = self.directory / f"scene-{int(group)}-{label}"
         return stem.with_suffix(".json"), stem.with_suffix(".npz")
 
+    def _payload(self, group, label, record, parity, work, arrays_sha256) -> dict:
+        return _json_safe({"experiment_fingerprint": self.identity, "scenario_id": int(group), "label": label,
+                           "record": record, "parity": parity, "work": work, "arrays_sha256": arrays_sha256})
+
     def load(self, group, label):
         meta_path, array_path = self._paths(group, label)
         if not meta_path.exists():
             return None
-        meta = json.loads(meta_path.read_text())
-        if (meta.get("experiment_fingerprint") != self.identity or meta.get("scenario_id") != int(group)
-                or meta.get("label") != label):
+        meta = _read_object(meta_path, "A5 scene state")
+        if set(meta) != set(STATE_KEYS) | {"payload_sha256"} or not isinstance(meta["record"], dict):
+            raise ValueError(f"{meta_path} is not a valid A5 scene state; use a new output directory")
+        if (meta["experiment_fingerprint"] != self.identity or meta["scenario_id"] != int(group) or meta["label"] != label):
             raise ValueError(f"{meta_path} is bound to a different scene or experiment identity; use a new output directory")
+        payload = {key: meta[key] for key in STATE_KEYS}
+        if fingerprint(payload) != meta["payload_sha256"]:
+            raise ValueError(f"{meta_path} is missing or modified (payload digest); use a new output directory")
+        applied = meta["record"].get("status") == "applied"
+        if applied != (meta["arrays_sha256"] is not None):
+            raise ValueError(f"{meta_path} is inconsistent: replayed arrays must exist exactly for applied scenes; use a "
+                             "new output directory")
         arrays = None
-        if meta["arrays_sha256"] is not None:
+        if applied:
             if not array_path.exists() or _file_hash(array_path) != meta["arrays_sha256"]:
                 raise ValueError(f"{array_path} is missing or modified; use a new output directory")
             with np.load(array_path, allow_pickle=False) as archive:
@@ -475,10 +546,12 @@ class SceneState:
             temporary = array_path.with_name(array_path.name + ".tmp")
             with open(temporary, "wb") as stream:
                 np.savez(stream, spec=arrays["spec"], residual=arrays["residual"])
+                stream.flush()
+                os.fsync(stream.fileno())
             temporary.replace(array_path)
             digest = _file_hash(array_path)
-        _write_json(meta_path, {"experiment_fingerprint": self.identity, "scenario_id": int(group), "label": label,
-                                "record": record, "parity": parity, "work": work, "arrays_sha256": digest})
+        payload = self._payload(group, label, record, parity, work, digest)
+        _write_json(meta_path, {**payload, "payload_sha256": fingerprint(payload)})
 
 
 def _output_state(out: Path, identity: str, log=print):
@@ -486,30 +559,33 @@ def _output_state(out: Path, identity: str, log=print):
 
     Returns the stored result, or ``None`` when the final write was interrupted (results without their
     checksum sidecar but with this identity): the result is then rebuilt from the verified per-scene state.
-    Anything else that does not verify is rejected.
+    Anything else that does not verify is rejected. Only this module's own temporary file names are discarded,
+    and only after the directory has been shown to be this experiment's output (or to hold no result at all).
     """
     results, sidecar = out / "results.json", out / "results.json.sha256"
-    for leftover in sorted(out.glob("*.tmp")):
-        leftover.unlink()
-        log(f"discarded interrupted write {leftover.name}")
-    if not results.exists() and not sidecar.exists():
-        return None
-    if not results.exists():
-        raise ValueError(f"{sidecar} has no results.json; use a new output directory")
-    try:
-        stored = json.loads(results.read_text())
-    except ValueError as error:
-        raise ValueError(f"{results} is incomplete or modified; use a new output directory") from error
-    if not isinstance(stored, dict) or stored.get("experiment_fingerprint") is None:
-        raise ValueError(f"{results} is incomplete or modified; use a new output directory")
-    if stored["experiment_fingerprint"] != identity:
-        raise ValueError(f"{results} was produced by a different experiment identity; use a new output directory")
-    if not sidecar.exists():
-        log("final result lacked its checksum (interrupted); rebuilding it from the verified per-scene state")
-        return None
-    if sidecar.read_text().strip() != _file_hash(results):
-        raise ValueError(f"{results} is incomplete or modified; use a new output directory")
-    return stored
+    stored, rebuild = None, False
+    if results.exists() or sidecar.exists():
+        if not results.exists():
+            raise ValueError(f"{sidecar} has no results.json; use a new output directory")
+        try:
+            stored = json.loads(results.read_text())
+        except ValueError as error:
+            raise ValueError(f"{results} is incomplete or modified; use a new output directory") from error
+        if not isinstance(stored, dict) or stored.get("experiment_fingerprint") is None:
+            raise ValueError(f"{results} is incomplete or modified; use a new output directory")
+        if stored["experiment_fingerprint"] != identity:
+            raise ValueError(f"{results} was produced by a different experiment identity; use a new output directory")
+        if not sidecar.exists():
+            log("final result lacked its checksum (interrupted); rebuilding it from the verified per-scene state")
+            stored, rebuild = None, True
+        elif sidecar.read_text().strip() != _file_hash(results):
+            raise ValueError(f"{results} is incomplete or modified; use a new output directory")
+    for name in OWN_TEMPORARIES:
+        leftover = out / name
+        if leftover.exists():
+            leftover.unlink()
+            log(f"discarded interrupted write {name}")
+    return None if rebuild else stored
 
 
 def _frozen_file_hashes(runs: Path, experiment: B2ExperimentConfig, views) -> dict:
@@ -529,8 +605,22 @@ def _scene_conditions(stored, corruption, arrays) -> dict:
 
 
 def run_a5(config: A5Config, data, runs, out, *, matched_data=None, command_args=None, log=print) -> dict:
+    """Evaluate one perturbation configuration; an interrupted invocation continues from verified state (P28 §11a)."""
+    held = []
+    try:
+        return _run_a5(config, data, runs, out, matched_data=matched_data, command_args=command_args, log=log, held=held)
+    finally:
+        for lock in held:
+            lock.release()
+
+
+def _run_a5(config, data, runs, out, *, matched_data, command_args, log, held) -> dict:
     started, clock = time.time(), time.perf_counter()
     data, runs, out = Path(data), Path(runs), Path(out)
+    for other in (data, runs) + (() if matched_data is None else (Path(matched_data),)):
+        here, there = out.resolve(), other.resolve()
+        if here == there or here in there.parents or there in here.parents:
+            raise ValueError(f"--out must be separate from the input directory {other}")
     if (config.stage == "matched") != (matched_data is not None):
         raise ValueError("the matched stage needs --matched-data (and only it)")
     plan_budget = config.plan_budget()
@@ -559,6 +649,7 @@ def run_a5(config: A5Config, data, runs, out, *, matched_data=None, command_args
         "matched": matched_identity, "request": source.request_fingerprint, "runs_config": experiment.resolved(),
         "frozen_files": frozen_files, "source_tree": implementation["files_sha256"]})
     out.mkdir(parents=True, exist_ok=True)
+    held.append(_InvocationLock(out))
     reused = _output_state(out, experiment_fingerprint, log)
     if reused is not None:
         log(f"reusing verified A5 result {experiment_fingerprint[:12]}")

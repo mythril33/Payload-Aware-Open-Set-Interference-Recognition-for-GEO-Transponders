@@ -4,15 +4,18 @@ Interruptions are simulated at every place a process can die: between scenes, du
 the last scene and the final result, and between the result and its checksum. Verified progress is reused;
 anything unverifiable is rejected rather than silently recomputed over.
 """
+import fcntl
 import json
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
 import b2_a5_support as support
 from geoml import b2_a5 as a5
+from geoml.artifacts import fingerprint
 
 ROOT = Path(__file__).parent.parent
 IGNORED = ("cost", "reproduction_command", "resume")
@@ -126,6 +129,10 @@ def test_modified_committed_state_fails_closed(tmp_path, monkeypatch):
     meta = json.loads(path.read_text())
     meta["record"]["corrupted_identity"] = "0" * 64
     path.write_text(json.dumps(meta))
+    with pytest.raises(ValueError, match="payload digest"):                       # any edit of the JSON payload is detected
+        _run(tmp_path / "out")
+    meta["payload_sha256"] = fingerprint({key: meta[key] for key in a5.STATE_KEYS})   # a consistent re-sign is caught by the recomputation
+    path.write_text(json.dumps(meta))
     with pytest.raises(ValueError, match="no longer matches its recomputed corruption"):
         _run(tmp_path / "out")
 
@@ -164,8 +171,121 @@ def test_not_applicable_scenes_are_recorded_as_progress_too(tmp_path, monkeypatc
     assert _same(resumed, reference) and resumed["resume"]["scenes_from_state"] >= 3
 
 
-def test_matrix_driver_is_syntactically_valid_and_resumes_by_skipping_finished_invocations():
+def _crashed_state(tmp_path, monkeypatch, scenes=2):
+    real = _interrupt_after(monkeypatch, scenes)
+    with pytest.raises(KeyboardInterrupt):
+        _run(tmp_path / "out")
+    monkeypatch.setattr(a5, "replay_scene", real)
+    return tmp_path / "out" / "state"
+
+
+def _edit(path, edit):
+    meta = json.loads(path.read_text())
+    edit(meta)
+    path.write_text(json.dumps(meta))
+
+
+def test_every_field_of_a_committed_scene_state_is_covered_by_its_digest(tmp_path, monkeypatch):
+    state = _crashed_state(tmp_path, monkeypatch)
+    pristine = tmp_path / "pristine"
+    shutil.copytree(tmp_path / "out", pristine)
+    edits = {"parity": lambda m: m["parity"]["spec"].update(exact=not m["parity"]["spec"]["exact"], max_abs_diff_db=0.1),
+             "work": lambda m: m["work"].update(replays=m["work"]["replays"] + 7),
+             "flags": lambda m: m["record"]["flags"].update(co_dropped_carrier_transmitted="edited"),
+             "recomputed": lambda m: m["record"].update(residual_recomputed="edited"),
+             "descriptors": lambda m: m["record"]["descriptors"]["co"].update(removed_indices=[99])}
+    for name, edit in edits.items():
+        shutil.rmtree(tmp_path / "out")
+        shutil.copytree(pristine, tmp_path / "out")
+        _edit(tmp_path / "out" / "state" / "scene-3200000-unauthorized.json", edit)
+        with pytest.raises(ValueError, match="payload digest"):
+            _run(tmp_path / "out")
+
+
+def test_array_presence_must_match_the_applied_status_even_when_resigned(tmp_path, monkeypatch):
+    state = _crashed_state(tmp_path, monkeypatch)
+
+    def drop_arrays(meta):
+        meta["arrays_sha256"] = None
+        meta["payload_sha256"] = fingerprint({key: meta[key] for key in a5.STATE_KEYS})
+
+    _edit(state / "scene-3200000-unauthorized.json", drop_arrays)
+    with pytest.raises(ValueError, match="arrays must exist exactly for applied scenes"):
+        _run(tmp_path / "out")
+
+
+def test_malformed_state_raises_value_errors_not_tracebacks(tmp_path, monkeypatch):
+    state = _crashed_state(tmp_path, monkeypatch)
+    pristine = tmp_path / "pristine"
+    shutil.copytree(tmp_path / "out", pristine)
+    cases = {"scene-3200000-clean.json": ["[]", "{}", "not json", json.dumps({"experiment_fingerprint": "x"})],
+             "identity.json": ["[]", "not json"]}
+    for name, contents in cases.items():
+        for content in contents:
+            shutil.rmtree(tmp_path / "out")
+            shutil.copytree(pristine, tmp_path / "out")
+            (tmp_path / "out" / "state" / name).write_text(content)
+            with pytest.raises(ValueError):
+                _run(tmp_path / "out")
+
+
+def test_state_written_under_another_environment_is_refused(tmp_path, monkeypatch):
+    state = _crashed_state(tmp_path, monkeypatch)
+    _edit(state / "identity.json", lambda m: m["environment"].update(numpy="0.0.0"))
+    with pytest.raises(ValueError, match="different library/platform environment"):
+        _run(tmp_path / "out")
+
+
+def test_only_own_temporaries_are_removed_and_only_from_a_matching_directory(tmp_path):
+    foreign = tmp_path / "foreign"
+    foreign.mkdir()
+    (foreign / "someone_elses.tmp").write_text("keep")
+    (foreign / "results.json").write_text(json.dumps({"experiment_fingerprint": "x" * 64}))
+    (foreign / "results.json.tmp").write_text("{")
+    with pytest.raises(ValueError, match="different experiment identity"):
+        _run(foreign)
+    assert (foreign / "someone_elses.tmp").read_text() == "keep" and (foreign / "results.json.tmp").exists()   # refused before any cleanup
+    stranger = tmp_path / "stranger"
+    (stranger / "state").mkdir(parents=True)
+    (stranger / "state" / "notes.txt").write_text("not ours")
+    with pytest.raises(ValueError, match="not an A5 state directory"):
+        _run(stranger)
+    assert (stranger / "state" / "notes.txt").exists()
+    (tmp_path / "mixed").mkdir()
+    (tmp_path / "mixed" / "someone_elses.tmp").write_text("keep")
+    _run(tmp_path / "mixed")
+    assert (tmp_path / "mixed" / "someone_elses.tmp").read_text() == "keep"          # foreign temporaries are never touched
+
+
+def test_output_must_be_separate_from_the_inputs(tmp_path):
+    ws = support.workspace()
+    config = _config()
+    for out in (ws / "runs", ws / "known", ws / "known" / "inner", ws):
+        with pytest.raises(ValueError, match="separate from the input directory"):
+            a5.run_a5(config, ws / "known", ws / "runs", out, log=lambda *_: None)
+
+
+def test_concurrent_invocation_on_the_same_output_is_refused_and_the_lock_is_released(tmp_path):
+    out = tmp_path / "out"
+    out.mkdir()
+    with open(out / ".a5.lock", "a+") as held:
+        fcntl.flock(held, fcntl.LOCK_EX | fcntl.LOCK_NB)                   # another process holds the invocation
+        with pytest.raises(ValueError, match="another process is running this invocation"):
+            _run(out)
+    result = _run(out)                                                      # the lock died with its holder: normal run
+    assert result["counts"]["physical_replays"] == 4
+    again = _run(out)                                                       # and it was released after this run too
+    assert again == result
+
+
+def test_matrix_driver_fails_loudly_instead_of_hiding_failed_or_missing_invocations(tmp_path):
     script = ROOT / "scripts" / "run_b2_a5_pilot_matrix.sh"
-    assert subprocess.run(["bash", "-n", str(script)]).returncode == 0
     text = script.read_text()
-    assert "results.json.sha256" in text and "unrestricted" not in text and "--train" not in text
+    assert subprocess.run(["bash", "-n", str(script)]).returncode == 0
+    assert "set -u -o pipefail" in text and "PIPESTATUS" in text and "MISSING" in text
+    assert "unrestricted" not in text and "--train" not in text and "--generate" not in text
+    for stand_in, expectation in (("/bin/false", "FAILED"), ("/bin/true", "MISSING")):   # fails loudly / exits 0 without producing results
+        done = subprocess.run(["bash", str(script), "none", "none", "none", str(tmp_path / Path(stand_in).name)],
+                              env={"PATH": "/usr/bin:/bin", "PYTHON": stand_in}, cwd=ROOT, capture_output=True, text=True)
+        assert done.returncode == 1 and expectation in done.stdout
+        assert done.stdout.count("MISSING") == 25 and "MATRIX_DONE expected=25 failed=1" in done.stdout

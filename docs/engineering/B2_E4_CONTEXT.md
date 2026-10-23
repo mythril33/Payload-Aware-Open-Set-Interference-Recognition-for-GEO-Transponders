@@ -64,6 +64,7 @@ Status vocabulary: `VERIFIED` (checked in this session against code/tests), `IMP
 | Provenance break from adding source files | additions-only rule (P28 §6) and no edits to existing sources |
 | Small populations mistaken for evidence | caps, pilot labelling, null CIs below two groups |
 | Pilot checkpoints are chance-level stand-ins | disclosed; outputs are interface checks, not recognition results |
+| `MASK_ONLY` shift equals the K17b training augmentation of the stand-ins | stated in P28 §2 and the results note; compare `MASK_ONLY` and `RECEIVER_CONSISTENT` shifts with this in mind |
 
 ## 6. Work packages, ownership, execution
 
@@ -87,15 +88,15 @@ re-review of `a595bcf`/`4b736a6` after the fixes and the resumability feature; s
 
 ## 8. Resume / handoff (how to continue an interrupted E4 job)
 
-State lives in Git (branch `claude/dazzling-maxwell-y0hw0q`, draft PR) and in re-creatable local artifacts under the git-ignored
+State lives in Git (branch `claude/dazzling-maxwell-y0hw0q`; PR #15 is merged, follow-ups are new PRs) and in re-creatable local artifacts under the git-ignored
 `data/` and `runs/`. Everything below is idempotent; re-running a command continues verified work and refuses modified work.
 
 | Interrupted step | Continue with | What is reused / rejected |
 |---|---|---|
 | Pilot generation (`geosim.b2_dataset`, `b2_matched_dataset`) | the same command and output directory | verified shards; a directory with a different request or an unverified partial shard is refused (use a fresh directory) |
 | Stand-in training (`geoml.b2_experiment`) | the same command with `--reuse` | checkpoints/scorers/calibrations whose provenance equals the data; mismatch is refused |
-| One A5 invocation (`python -m geoml.b2_a5 ...`) | the same command and `--out` | per-scene `out/state/` entries (verified, bound to the experiment fingerprint); uncommitted `*.tmp`/array files are discarded; modified entries are refused; a complete checksummed result is reused |
-| The pilot matrix | `scripts/run_b2_a5_pilot_matrix.sh` | finished invocations are skipped, an interrupted one resumes at scene level |
+| One A5 invocation (`python -m geoml.b2_a5 ...`) | the same command and `--out` | per-scene `out/state/` entries (payload digest + array SHA-256, bound to the experiment fingerprint and library environment); the invocation's own uncommitted `*.tmp`/array files are discarded; modified or foreign entries are refused (digests detect accidental modification, they do not authenticate); a second concurrent process is refused by a lock; a complete checksummed result is reused after its identity verifies |
+| The pilot matrix | `scripts/run_b2_a5_pilot_matrix.sh` | every invocation is handed to the CLI: finished ones are reused after identity verification, an interrupted one resumes at scene level, a changed identity is refused (use a fresh `OUT`); failures and missing results make the script exit non-zero |
 | Summary | `scripts/summarize_b2_a5_pilot.py` (pure function of the invocation results) | refuses mixed identities |
 
 Pilot environment (this session): `scripts/setup_cloud.sh`-equivalent venv at `/workspace/.venvs/geosim`; pilot data

@@ -40,7 +40,9 @@ frozen checkpoint, scorers and thresholds:
 | `MASK_ONLY` (weaker control) | stored | rebuilt from the corrupted belief | **stored, unchanged** |
 | `RECEIVER_CONSISTENT` (primary) | replayed (verified against the stored shard under the §5 parity policy; bit-equal when `exact`) | rebuilt from the corrupted belief | **recomputed**: frozen `cancel_planned_carriers(replayed calibrated co-pol IQ, corrupted co-pol belief, CancellationConfig of the source)` |
 
-`MASK_ONLY` is labelled as the weaker control and is never described as a consistent receiver response.
+`MASK_ONLY` is labelled as the weaker control and is never described as a consistent receiver response. Confound to remember for any
+checkpoint trained with the P18 K17b augmentation (15 % of training samples, ±0.5 MHz, masks only): a `MASK_ONLY` shift is then exactly the
+training augmentation, so `MASK_ONLY` versus `RECEIVER_CONSISTENT` on `shift_*` also differs in whether the perturbation was seen in training.
 Consequences that are reported, not hidden: the `co` and `dual` views do not read the residual, so their
 `MASK_ONLY` and `RECEIVER_CONSISTENT` outputs differ at most through the replayed PSD (identical when the §5 parity is
 exact; the result records `psd_identical`/`logits_identical`); only `dual_residual` differs through the residual, and
@@ -86,8 +88,8 @@ Every resulting descriptor must: be a nonempty list of `Carrier`; have finite po
 `geosim.cancellation._validate_plan`, which is called as the oracle of validity); yield a finite plan mask with
 at least one core bin (> −3 dB). Total power is **not** required to be 1. A descriptor failing a check is
 `blocked` with the validator's message and counted; the frozen canceller is never modified or bypassed.
-Additional informational flags: `exceeds_transponder_edge`, `dropped_carrier_transmitted` (replay-layer
-metadata, reporting only), `phantom_overlaps_physical_event`.
+Additional informational flags: `exceeds_transponder_edge`, `{co,cross}_dropped_carrier_transmitted` and
+`{co,cross}_phantom_overlaps_physical_event` (replay-layer metadata, reporting only).
 
 ## 5. Physical replay and parity
 
@@ -200,7 +202,15 @@ experiment fingerprint. That fingerprint covers the configuration, known/matched
 entry, or any binding to a different identity, is rejected (fail closed). A result without its checksum sidecar is rebuilt from the verified
 state without any replay; a complete checksummed result with the same fingerprint is reused as is. A resumed run reports the same logical
 totals as an uninterrupted one (`counts`) and, separately, what was done in this process (`resume`); caps apply to the logical totals.
-`scripts/run_b2_a5_pilot_matrix.sh` is resumable at invocation level the same way.
+Integrity: each state JSON carries a digest of its whole payload (scene record, parity report, work counts, array checksum), the arrays
+carry their own SHA-256, array files must exist exactly for applied scenes, and the state marker binds the library/platform environment
+(NumPy/SciPy/torch/Python/machine) under which the cached arrays were produced, so a resume after a library change is refused instead of
+mixing environments. The digests detect accidental or partial modification; they do not authenticate the writer. An exclusive advisory
+lock on the output directory (`.a5.lock`, released by the OS when the holder dies) refuses two concurrent invocations; only this module's own
+temporary file names are ever discarded, and a foreign directory is refused before anything is deleted. The output directory must be
+separate from the data and run directories. `scripts/run_b2_a5_pilot_matrix.sh` hands every invocation to the CLI (a finished one is
+reused only after its identity and checksum verify, an interrupted one resumes at scene level, a changed identity is refused), reports
+failing invocations and exits non-zero if any expected invocation lacks a verified result.
 
 ## 12. Exclusions and gates
 
@@ -213,5 +223,6 @@ receiver-consistent. Test-only unknown families (B2-test/1) are outside this sli
 | Date | Change |
 |---|---|
 | 2026-10-23 | Registered before implementation and before any A5 outcome inspection. |
+| 2026-10-23 | Hardening after review round 2 (no perturbation, RNG key, metric or cap change): state-payload digests, environment binding, output-directory lock and separation, own-temporary-only cleanup, driver pipefail/expected-result check, per-polarization flag names, K17b confound sentence in §2. The pilot matrix was re-run on the hardened code. |
 | 2026-10-23 | Post-review clarifications (independent red-team review of the implemented harness, before the final pilot record): `stale_plan` is a formula (initial-draw plan of id-1), not a history, and an invalid replacement is `blocked`; only applicable scenes are replayed and parity-checked; parity wording is conditional on the §5 policy; alarm columns are rates among original-clean/original-event scenes, not false-alarm/detection rates under counterfactuals; the experiment fingerprint also covers the run directory's frozen files and the full source tree; §11a resumability added. No perturbation definition, RNG key, metric definition or cap changed. |
 | 2026-10-23 | Implementation clarifications, added after three engineering wiring smokes of the runner (`drop_one`/`co_only` known, `shift_plus`/`cross_only` known, `authorize_intruder`/`both` matched; 4, 2 and 4 scenes; used only to check that the code runs) and **before** the recorded pilot matrix: (a) scope `both` is applicable only when the transformation is applicable to both descriptors; (b) additive observable diagnostics `spec_co_core_db`, `residual_core_db`, `cancellation_depth_core_db` over the bins above -3 dB of the ORIGINAL co-pol mask (fixed across conditions) next to the registered full-band diagnostics, because the full-band ratio is dominated by the noise floor; (c) `original`-condition fields `prediction_change_vs_original` and `max_abs_logit_difference_vs_original` are `null` (trivial); (d) `mask_only_vs_receiver_consistent` reports whether PSD, residual and logits are identical per view. No definition of §3-§9 changed. |
