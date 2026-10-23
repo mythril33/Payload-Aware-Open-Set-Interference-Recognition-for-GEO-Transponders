@@ -14,12 +14,15 @@ production run in this build: ``PRODUCTION_LAUNCH_ENABLED`` is False and every s
 
 Guarantees (each is exercised by tests/test_b2_production_supervisor.py on capped fixtures):
  * immutable source/config/environment lock created once and re-verified before every stage and attempt;
- * restart only under the identical plan, lock, ceilings and an intact hash-chained journal (``journal.jsonl``);
- * exit codes, elapsed/CPU time and peak RSS of every child from ``wait4``, journaled per attempt;
- * wall/CPU/RSS/attempt/disk ceilings enforced live and after the fact; first-shard throughput gate;
+ * restart only under the identical plan (incl. launcher), lock, ceilings and an intact, anchored, hash-chained journal
+   (``journal.jsonl`` + ``journal.head``) that belongs to this run.json/lock.json;
+ * exit codes, elapsed (monotonic) / CPU time and peak RSS of every child from ``wait4``, journaled per attempt, plus heartbeats;
+ * wall/CPU/RSS/attempt/disk ceilings enforced live and after the fact (a lost attempt is charged from its last heartbeat);
+   first-shard throughput gate; an unreadable host probe fails closed;
  * SIGINT/SIGTERM stop the child group cleanly and leave a resumable root; the child dies with the supervisor;
  * orphaned shard files are moved to ``quarantine/`` with hashes, never deleted; INVALID roots are never touched;
- * a completion marker is written only when all three stages audit COMPLETE with the exact planned inventory.
+ * a stage is complete only if its root audits COMPLETE with the exact planned inventory, was requested under the plan and
+   the last supervised attempt ended cleanly; the completion marker needs all three.
 Nothing here approves a researcher gate; ``benchmark_complete`` is always false.
 """
 from __future__ import annotations
@@ -53,13 +56,27 @@ FIXTURE_MAX_GROUPS = 2                    # hard cap on --limit-groups of every 
 FIXTURE_GROUPS_PER_SHARD = (1, 2)
 PRODUCTION_LAUNCH_ENABLED = False         # E7a: the full production launch is not implemented; flipping this is a code change
 EXIT_OK, EXIT_REFUSED, EXIT_FAILED, EXIT_BLOCKED, EXIT_INTERRUPTED = 0, 2, 3, 4, 6
-CEILING_KEYS = ("wall_hours", "core_hours", "max_attempts_per_stage", "max_rss_gib", "min_free_disk_gib", "grace_s")
-FIXTURE_CEILINGS = {"wall_hours": 1.0, "core_hours": 2.0, "max_attempts_per_stage": 2, "max_rss_gib": 4.0,
-                    "min_free_disk_gib": 1.0, "grace_s": 10.0}
+CEILING_KEYS = ("wall_hours", "core_hours", "max_failed_attempts_per_stage", "max_interruptions_per_stage", "max_rss_gib",
+                "min_free_disk_gib", "grace_s")
+INTEGER_CEILINGS = ("max_failed_attempts_per_stage", "max_interruptions_per_stage")
+FIXTURE_CEILINGS = {"wall_hours": 1.0, "core_hours": 2.0, "max_failed_attempts_per_stage": 2, "max_interruptions_per_stage": 10,
+                    "max_rss_gib": 4.0, "min_free_disk_gib": 1.0, "grace_s": 10.0}
+# A two-group fixture can never need more; a ceilings file may not stretch a fixture beyond these.
+FIXTURE_CEILING_LIMITS = {"wall_hours": 4.0, "core_hours": 16.0, "max_failed_attempts_per_stage": 5,
+                          "max_interruptions_per_stage": 50, "max_rss_gib": 16.0, "grace_s": 120.0}
 PRODUCTION_CEILINGS = {"wall_hours": float(pre.PROPOSED_CEILINGS["generation_wall_hours"]),
-                       "core_hours": float(pre.PROPOSED_CEILINGS["generation_core_hours"]), "max_attempts_per_stage": 2,
+                       "core_hours": float(pre.PROPOSED_CEILINGS["generation_core_hours"]), "max_failed_attempts_per_stage": 2,
+                       "max_interruptions_per_stage": 20,
                        "max_rss_gib": float(pre.PROPOSED_CEILINGS["generator_ram_gib_per_process"]),
                        "min_free_disk_gib": float(pre.PROPOSED_CEILINGS["working_disk_gib"]), "grace_s": 60.0}
+# A production plan may lower the proposed ceilings but never raise them: raising needs a researcher-approved record, and
+# the launch that would consume one does not exist in this build.
+PRODUCTION_CEILING_LIMITS = {key: PRODUCTION_CEILINGS[key] for key in
+                             ("wall_hours", "core_hours", "max_failed_attempts_per_stage", "max_interruptions_per_stage", "max_rss_gib")}
+PRODUCTION_CEILING_LIMITS["grace_s"] = 600.0
+MAX_TOTAL_ATTEMPTS_PER_STAGE = 60         # a backstop independent of the ceilings
+TIMING_LIMITS = {"tolerance": (0.0, 2.0), "startup_s": (0.0, 3600.0), "resume_verify_s_per_observation": (0.0, 1.0)}
+HEARTBEAT_DEFAULT = {"fixture": 10.0, "production": 60.0}
 DEFAULT_TIMING = {"enabled": True, "band_s_per_observation": [3.8, 5.0], "tolerance": 0.25, "startup_s": 30.0,
                   "resume_verify_s_per_observation": 0.01, "gate_shards": 1}
 ARTIFACT_BYTES_PER_OBSERVATION = pre.BUDGET["measured_artifact_bytes_per_observation"]
@@ -91,11 +108,17 @@ def digest(value):
 class Journal:
     """Append-only JSON-lines journal; every record carries its sequence number, the previous record's SHA-256 and its own.
 
-    The chain detects accidental modification, truncation and reordering. It is not authentication.
+    The chain detects accidental modification, gaps and reordering of records. A separate ``journal.head`` file (seq and
+    hash of the newest record, replaced atomically after every append) anchors the tail, so a missing, emptied or
+    tail-truncated journal is detected too; a crash between an append and its anchor update leaves a lag of one record,
+    which is accepted. Neither file is authenticated: both detect accidental modification only.
     """
+
+    HEAD_NAME = "journal.head"
 
     def __init__(self, path):
         self.path = Path(path)
+        self.head_path = self.path.with_name(self.HEAD_NAME)
         self.seq = 0
         self.head = None
 
@@ -128,16 +151,71 @@ class Journal:
             previous = record["sha256"]
         return records, problems
 
+    @staticmethod
+    def anchor_problems(path, records):
+        """Compare the verified records with journal.head: truncation, replacement and a missing anchor are problems."""
+        head_path = Path(path).with_name(Journal.HEAD_NAME)
+        count = len(records)
+        if not head_path.exists():
+            return [] if count <= 1 else ["journal.head is missing: the journal cannot be shown to be untruncated"]
+        try:
+            head = pre._strict_json(head_path.read_text())
+            seq, sha = head["seq"], head["sha256"]
+        except (OSError, ValueError, KeyError, TypeError):
+            return ["journal.head is unreadable or malformed"]
+        if isinstance(seq, bool) or not isinstance(seq, int) or seq < 1:
+            return ["journal.head holds an invalid sequence number"]
+        if seq > count:
+            return [f"journal has {count} records but its anchor is at {seq}: truncated, emptied or replaced"]
+        if records[seq - 1]["sha256"] != sha:
+            return ["journal.head does not match the journal: the journal was rewritten"]
+        if count - seq > 1:
+            return [f"journal has {count - seq} records beyond its anchor (at most one is explained by a crash)"]
+        return []
+
+    @classmethod
+    def load(cls, path):
+        """``read`` plus the tail anchor: (records, problems)."""
+        records, problems = cls.read(path)
+        return records, problems or cls.anchor_problems(path, records)
+
     def open(self):
-        records, problems = self.read(self.path)
+        records, problems = self.load(self.path)
         if problems:
-            raise SupervisorError("journal is damaged: " + "; ".join(problems) + " - inspect it, move it aside and decide; "
-                                  "the supervisor will not repair evidence", EXIT_REFUSED)
+            raise SupervisorError("journal is damaged: " + "; ".join(problems) + " - restore it from a backup or start a new "
+                                  "workdir; the supervisor never repairs, resets or continues over damaged evidence", EXIT_REFUSED)
         self.seq = len(records)
         self.head = records[-1]["sha256"] if records else None
         return records
 
+    def _tail_problem(self):
+        """Cheap check before every append: the file must still end with the record this supervisor wrote last."""
+        if self.seq == 0:
+            return None if not self.path.exists() or self.path.stat().st_size == 0 else "the journal appeared while the supervisor held none"
+        try:
+            with open(self.path, "rb") as stream:
+                stream.seek(0, os.SEEK_END)
+                position = size = stream.tell()
+                data = b""
+                while position > 0 and data.count(b"\n") < 2:         # read backwards until the last line is complete
+                    step = min(65536, position)
+                    position -= step
+                    stream.seek(position)
+                    data = stream.read(step) + data
+            lines = data.split(b"\n")
+            if lines and lines[-1] == b"":
+                lines.pop()
+            last = pre._strict_json(lines[-1].decode()) if lines and size else None
+        except (OSError, ValueError, UnicodeDecodeError):
+            return "the journal tail is unreadable"
+        if not isinstance(last, dict) or last.get("seq") != self.seq or last.get("sha256") != self.head:
+            return "the journal no longer ends with the record this supervisor wrote last"
+        return None
+
     def append(self, event, **fields):
+        problem = self._tail_problem()
+        if problem:
+            raise SupervisorError(f"journal damaged during the run: {problem}; nothing more is appended to it", EXIT_FAILED)
         record = {"seq": self.seq + 1, "time": utc_now(), "event": event, "schema": JOURNAL_SCHEMA, **fields, "prev": self.head}
         record["sha256"] = digest(record)
         first = not self.path.exists()
@@ -148,7 +226,17 @@ class Journal:
         if first:
             _fsync_directory(self.path.parent)
         self.seq, self.head = record["seq"], record["sha256"]
+        self._write_head(record)
         return record
+
+    def _write_head(self, record):
+        temporary = self.head_path.with_name(self.HEAD_NAME + ".tmp")
+        with open(temporary, "w") as stream:
+            stream.write(json.dumps({"seq": record["seq"], "sha256": record["sha256"]}))
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, self.head_path)
+        _fsync_directory(self.path.parent)
 
 
 def _fsync_directory(path):
@@ -159,21 +247,84 @@ def _fsync_directory(path):
         os.close(descriptor)
 
 
-def usage_from(records):
-    """Cumulative wall/CPU seconds and attempts per stage from the journal; an unterminated attempt counts as started."""
-    usage = {"wall_s": 0.0, "cpu_s": 0.0, "attempts": {stage: 0 for stage in STAGE_ORDER}, "open_attempt": None}
-    open_attempts = {}
+def check_run_journal(records, identity, lock):
+    """Problems if the journal does not belong to this run.json/lock.json (missing, emptied, foreign or re-planned)."""
+    if not records:
+        return ["journal.jsonl is missing or empty although run.json exists"]
+    problems = []
+    if records[0]["event"] != "supervisor_start" or records[0].get("restart") is not False:
+        problems.append("the first journal record is not the original supervisor_start")
     for record in records:
-        if record["event"] == "attempt_start":
+        if record["event"] != "supervisor_start":
+            continue
+        if record.get("plan_fingerprint") != identity["plan_fingerprint"]:
+            problems.append(f"record {record['seq']}: plan fingerprint differs from run.json")
+        if record.get("lock_fingerprint") != lock["lock_fingerprint"]:
+            problems.append(f"record {record['seq']}: lock fingerprint differs from lock.json")
+    return problems
+
+
+def usage_from(records):
+    """Cumulative wall/CPU seconds and per-stage attempt counts from the journal.
+
+    ``attempts`` counts every started attempt; ``failed_attempts`` only attempts that ended in a child failure or a
+    supervisor-enforced stop; operator interruptions and a lost supervisor are counted separately, so pausing a healthy
+    run does not consume the failure budget. ``last_attempt_end`` is the newest attempt_end per stage.
+    """
+    usage = {"wall_s": 0.0, "cpu_s": 0.0, "open_attempt": None, "open_attempt_heartbeat": None,
+             "attempts": {stage: 0 for stage in STAGE_ORDER}, "failed_attempts": {stage: 0 for stage in STAGE_ORDER},
+             "interruptions": {stage: 0 for stage in STAGE_ORDER}, "lost_attempts": {stage: 0 for stage in STAGE_ORDER},
+             "last_attempt_end": {stage: None for stage in STAGE_ORDER}}
+    open_attempts, beats = {}, {}
+    for record in records:
+        event = record["event"]
+        if event == "attempt_start":
             usage["attempts"][record["stage"]] += 1
             open_attempts[record["attempt_id"]] = record
-        elif record["event"] == "attempt_end":
+        elif event == "heartbeat":
+            beats[record["attempt_id"]] = record
+        elif event == "attempt_end":
+            stage, reason = record["stage"], record["reason"]
             open_attempts.pop(record["attempt_id"], None)
-            usage["wall_s"] += record["elapsed_s"]
-            usage["cpu_s"] += record["cpu_user_s"] + record["cpu_sys_s"]
+            usage["wall_s"] += max(0.0, record["elapsed_s"])
+            usage["cpu_s"] += max(0.0, record["cpu_user_s"] + record["cpu_sys_s"])
+            usage["last_attempt_end"][stage] = {"attempt_id": record["attempt_id"], "reason": reason,
+                                                "exit_code": record.get("exit_code")}
+            if reason == "interrupted":
+                usage["interruptions"][stage] += 1
+            elif reason == "supervisor_lost":
+                usage["lost_attempts"][stage] += 1
+            elif not (reason == "exited" and record.get("exit_code") == 0):
+                usage["failed_attempts"][stage] += 1
     if open_attempts:
         usage["open_attempt"] = list(open_attempts.values())[-1]
+        usage["open_attempt_heartbeat"] = beats.get(usage["open_attempt"]["attempt_id"])
     return usage
+
+
+def last_attempt_acceptable(usage, stage):
+    """A stage may be accepted as COMPLETE only if a supervised attempt exists and did not end in a failure.
+
+    Clean exit, an operator interruption or a lost supervisor are acceptable (the root audit still has to pass);
+    a non-zero exit, a supervisor-enforced stop or a failed wait are not, and neither is a root that no supervised
+    attempt produced (adoption).
+    """
+    last = usage["last_attempt_end"][stage]
+    if last is None:
+        return False, "no supervised attempt produced this root (adoption of foreign data is refused)"
+    if last["reason"] in ("interrupted", "supervisor_lost") or (last["reason"] == "exited" and last["exit_code"] == 0):
+        return True, ""
+    return False, (f"the last supervised attempt {last['attempt_id']} ended with reason {last['reason']!r}, exit code "
+                   f"{last['exit_code']}: a root that verifies COMPLETE is not accepted over a failed child without review")
+
+
+def plan_root_problems(plan, audit):
+    """A root whose request (group limit, shard size) is not the plan's was not produced under this plan."""
+    summary = audit.get("request_summary")
+    if audit["state"] in ("NOT_STARTED", "INVALID") or not summary:
+        return []
+    return [f"{key} is {summary.get(key)!r} in the root's request but {plan[key]!r} in the plan"
+            for key in ("limit_groups", "groups_per_shard") if summary.get(key) != plan[key]]
 
 
 # ---- plan ----------------------------------------------------------------------------------------------------
@@ -189,7 +340,7 @@ def expected_inventory(mode, limit_groups):
     return table
 
 
-def merge_ceilings(base, override):
+def merge_ceilings(base, override, *, fixture=False):
     if override is None:
         return dict(base)
     if not isinstance(override, dict) or set(override) - set(CEILING_KEYS):
@@ -198,8 +349,38 @@ def merge_ceilings(base, override):
     for key, value in override.items():
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
             raise SupervisorError(f"ceiling {key} must be a finite positive number", EXIT_REFUSED)
+        if key in INTEGER_CEILINGS and value != int(value):
+            raise SupervisorError(f"ceiling {key} must be a whole number", EXIT_REFUSED)
+        if fixture and key in FIXTURE_CEILING_LIMITS and value > FIXTURE_CEILING_LIMITS[key]:
+            raise SupervisorError(f"ceiling {key}={value} exceeds the fixture limit {FIXTURE_CEILING_LIMITS[key]}: a capped "
+                                  "two-group fixture never needs more and a ceilings file may not stretch it", EXIT_REFUSED)
+        if not fixture and key in PRODUCTION_CEILING_LIMITS and value > PRODUCTION_CEILING_LIMITS[key]:
+            raise SupervisorError(f"ceiling {key}={value} exceeds the proposed production ceiling {PRODUCTION_CEILING_LIMITS[key]}: "
+                                  "raising it needs a researcher-approved record", EXIT_REFUSED)
         merged[key] = value
-    merged["max_attempts_per_stage"] = int(merged["max_attempts_per_stage"])
+    for key in INTEGER_CEILINGS:
+        merged[key] = int(merged[key])
+    return merged
+
+
+def _validated_timing(timing):
+    merged = dict(DEFAULT_TIMING)
+    for key, value in (timing or {}).items():
+        if key not in DEFAULT_TIMING:
+            raise SupervisorError(f"unknown timing option {key!r}", EXIT_REFUSED)
+        merged[key] = value
+    low, high = merged["band_s_per_observation"]
+    if not (isinstance(low, (int, float)) and isinstance(high, (int, float)) and not isinstance(low, bool)
+            and not isinstance(high, bool) and math.isfinite(low) and math.isfinite(high) and 0 <= low < high):
+        raise SupervisorError("timing band must be two finite numbers 0 <= low < high", EXIT_REFUSED)
+    for key, (lo, hi) in TIMING_LIMITS.items():
+        value = merged[key]
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not lo <= value <= hi:
+            raise SupervisorError(f"timing {key} must be a finite number in [{lo}, {hi}]", EXIT_REFUSED)
+    if isinstance(merged["gate_shards"], bool) or not isinstance(merged["gate_shards"], int) or not 1 <= merged["gate_shards"] <= 4:
+        raise SupervisorError("timing gate_shards must be an integer 1..4", EXIT_REFUSED)
+    if not isinstance(merged["enabled"], bool):
+        raise SupervisorError("timing enabled must be true or false", EXIT_REFUSED)
     return merged
 
 
@@ -210,10 +391,22 @@ def expected_shards(plan, stage):
                for observations in plan["expected_observations"][stage].values())
 
 
-def build_plan(workdir, *, mode, max_groups=None, groups_per_shard=1, ceilings=None, timing=None):
-    """Validate and freeze the request. Capped fixtures need 1..2 groups; production has no limit but cannot be launched."""
+def build_plan(workdir, *, mode, max_groups=None, groups_per_shard=1, ceilings=None, timing=None, launcher="generators",
+               heartbeat_s=None):
+    """Validate and freeze the request. Capped fixtures need 1..2 groups; production has no limit but cannot be launched.
+
+    ``launcher`` names how children are started (``generators`` or ``child-wrapper:<name>:<sha256>`` for fixture
+    diagnostics) and is part of the run identity, so a stand-in workdir can never be mistaken for a real one.
+    """
     if mode not in ("fixture", "production"):
         raise SupervisorError("mode must be fixture or production", EXIT_REFUSED)
+    if not (launcher == "generators" or (mode == "fixture" and isinstance(launcher, str) and launcher.startswith("child-wrapper:"))):
+        raise SupervisorError("the launcher must be the real generators (a diagnostic wrapper is allowed for fixtures only)",
+                              EXIT_REFUSED)
+    heartbeat_s = HEARTBEAT_DEFAULT[mode] if heartbeat_s is None else heartbeat_s
+    if isinstance(heartbeat_s, bool) or not isinstance(heartbeat_s, (int, float)) or not math.isfinite(heartbeat_s) \
+            or not 0.05 <= heartbeat_s <= 3600:
+        raise SupervisorError("heartbeat_s must be a finite number of seconds in [0.05, 3600]", EXIT_REFUSED)
     if mode == "fixture":
         if isinstance(max_groups, bool) or not isinstance(max_groups, int) or not 1 <= max_groups <= FIXTURE_MAX_GROUPS:
             raise SupervisorError(f"a bounded run needs --max-groups 1..{FIXTURE_MAX_GROUPS}; unbounded generation is not "
@@ -229,20 +422,14 @@ def build_plan(workdir, *, mode, max_groups=None, groups_per_shard=1, ceilings=N
             raise SupervisorError("the production plan uses four groups per shard", EXIT_REFUSED)
         limit = None
         base_ceilings = PRODUCTION_CEILINGS
-    merged_timing = dict(DEFAULT_TIMING)
-    for key, value in (timing or {}).items():
-        if key not in DEFAULT_TIMING:
-            raise SupervisorError(f"unknown timing option {key!r}", EXIT_REFUSED)
-        merged_timing[key] = value
-    low, high = merged_timing["band_s_per_observation"]
-    if not (isinstance(low, (int, float)) and isinstance(high, (int, float)) and 0 <= low < high and math.isfinite(high)):
-        raise SupervisorError("timing band must be two finite numbers 0 <= low < high", EXIT_REFUSED)
+    merged_timing = _validated_timing(timing)
     inventory = expected_inventory(mode, limit)
     return {"schema": PLAN_SCHEMA, "mode": mode, "limit_groups": limit, "groups_per_shard": groups_per_shard,
             "roots": {stage: stage for stage in STAGE_ORDER}, "stage_order": list(STAGE_ORDER),
             "expected_observations": inventory,
             "total_observations": sum(sum(roles.values()) for roles in inventory.values()),
-            "ceilings": merge_ceilings(base_ceilings, ceilings), "timing": merged_timing,
+            "ceilings": merge_ceilings(base_ceilings, ceilings, fixture=mode == "fixture"), "timing": merged_timing,
+            "launcher": launcher, "heartbeat_s": float(heartbeat_s),
             "configs": {"b2": "configs/b2_base.json", "cancellation": "configs/cancellation.json"},
             "production_launch_enabled": PRODUCTION_LAUNCH_ENABLED, "benchmark_complete": False}
 
@@ -368,14 +555,23 @@ def pid_alive(pid):
             return True
 
 
-def proc_vmrss_kib(pid):
+def proc_status_kib(pid, field):
     try:
         for line in Path(f"/proc/{pid}/status").read_text().splitlines():
-            if line.startswith("VmRSS:"):
+            if line.startswith(field + ":"):
                 return int(line.split()[1])
     except (OSError, ValueError, IndexError):
         pass
     return None
+
+
+def proc_vmrss_kib(pid):
+    return proc_status_kib(pid, "VmRSS")
+
+
+def proc_vmhwm_kib(pid):
+    """Peak resident set of a live process; exec resets it, so for a child it is the child's own high-water mark."""
+    return proc_status_kib(pid, "VmHWM")
 
 
 def proc_cpu_s(pid):
@@ -391,70 +587,120 @@ class Outcome(dict):
 
 
 def run_child(argv, *, cwd, env, log_path, timeout_s, cpu_budget_s, rss_limit_kib, grace_s, interrupted, on_poll=None,
-              on_start=None, poll_s=POLL_S, sleep=time.sleep):
-    """Spawn ``argv`` in its own process group and supervise it; exit status and resources come from ``wait4``."""
+              on_start=None, on_heartbeat=None, heartbeat_s=None, poll_s=POLL_S, sleep=time.sleep):
+    """Spawn ``argv`` in its own process group and supervise it; exit status and resources come from ``wait4``.
+
+    Elapsed time and deadlines use the monotonic clock. A signal that arrived before the spawn raises (no log, no child).
+    ``peak_rss_kib`` is ``ru_maxrss`` (an upper bound: fork copies the supervisor's own peak into it); the live polling of
+    ``VmHWM`` (reset by exec) gives ``peak_rss_polled_kib``, a lower bound, and enforcement uses the polled value live and
+    ``ru_maxrss`` afterwards only when it exceeds what the supervisor itself held at the spawn.
+    """
     assert_bounded(argv)
+    if interrupted():
+        raise SupervisorError("interrupted before the child was started; nothing was spawned", EXIT_INTERRUPTED)
+    supervisor_hwm = proc_vmhwm_kib(os.getpid()) or 0
     log = open(log_path, "xb")
-    started = time.time()
+    started = time.monotonic()
     try:
         proc = subprocess.Popen(argv, cwd=cwd, env=env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True,
                                 preexec_fn=_die_with_parent)
     finally:
         log.close()
-    if on_start:
-        on_start(proc.pid)
-    reason, status, rusage, killed_at = "exited", None, None, None
+    reason, status, rusage, killed_at, polled_peak, last_beat = "exited", None, None, None, 0, started
+    try:
+        if on_start:
+            on_start(proc.pid)
 
-    def reap(block):
-        try:
-            pid, state, usage = os.wait4(proc.pid, 0 if block else os.WNOHANG)
-        except ChildProcessError:
-            return True, None, None
-        return pid != 0, state, usage
+        def reap(block):
+            try:
+                pid, state, usage = os.wait4(proc.pid, 0 if block else os.WNOHANG)
+            except ChildProcessError:
+                return True, None, None
+            return pid != 0, state, usage
 
-    def terminate(why):
-        nonlocal reason, killed_at
-        reason, killed_at = why, time.time()
+        def terminate(why):
+            nonlocal reason, killed_at
+            reason, killed_at = why, time.monotonic()
+            try:
+                os.killpg(proc.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+
+        while True:
+            done, state, usage = reap(False)
+            if done:
+                status, rusage = state, usage
+                break
+            now = time.monotonic()
+            peak = proc_vmhwm_kib(proc.pid)
+            if peak is not None:
+                polled_peak = max(polled_peak, peak)
+            if killed_at is not None:
+                if now - killed_at > grace_s:
+                    try:
+                        os.killpg(proc.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+            elif interrupted():
+                terminate("interrupted")
+            elif now - started > timeout_s:
+                terminate("timeout")
+            else:
+                cpu = proc_cpu_s(proc.pid)
+                if polled_peak > rss_limit_kib:
+                    terminate("rss_limit")
+                elif cpu is not None and cpu > cpu_budget_s:
+                    terminate("cpu_limit")
+                else:
+                    if on_heartbeat is not None and heartbeat_s and now - last_beat >= heartbeat_s:
+                        last_beat = now
+                        on_heartbeat({"elapsed_s": round(now - started, 3), "cpu_s": round(cpu or 0.0, 3),
+                                      "rss_kib": proc_vmrss_kib(proc.pid) or 0, "peak_rss_polled_kib": polled_peak})
+                    if on_poll is not None:
+                        verdict = on_poll(now - started)
+                        if verdict:
+                            terminate(verdict)
+            sleep(poll_s)
+    except BaseException:                                   # supervision failed (e.g. a damaged journal): never leave the child running
         try:
-            os.killpg(proc.pid, signal.SIGTERM)
+            os.killpg(proc.pid, signal.SIGKILL)
         except ProcessLookupError:
             pass
-
-    while True:
-        done, state, usage = reap(False)
-        if done:
-            status, rusage = state, usage
-            break
-        now = time.time()
-        if killed_at is not None:
-            if now - killed_at > grace_s:
-                try:
-                    os.killpg(proc.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
-        elif interrupted():
-            terminate("interrupted")
-        elif now - started > timeout_s:
-            terminate("timeout")
-        else:
-            rss, cpu = proc_vmrss_kib(proc.pid), proc_cpu_s(proc.pid)
-            if rss is not None and rss > rss_limit_kib:
-                terminate("rss_limit")
-            elif cpu is not None and cpu > cpu_budget_s:
-                terminate("cpu_limit")
-            elif on_poll is not None:
-                verdict = on_poll(now - started)
-                if verdict:
-                    terminate(verdict)
-        sleep(poll_s)
+        try:
+            os.wait4(proc.pid, 0)
+        except ChildProcessError:
+            pass
+        proc.returncode = -9
+        raise
+    elapsed = max(0.0, time.monotonic() - started)
+    stragglers = False                                      # nothing may outlive an attempt: the group is emptied once its leader is gone
+    try:
+        os.killpg(proc.pid, 0)
+        stragglers = True
+        os.killpg(proc.pid, signal.SIGKILL)
+    except (ProcessLookupError, PermissionError):
+        pass
     code = os.waitstatus_to_exitcode(status) if status is not None else None
     proc.returncode = code if code is not None else -1      # the pid was reaped here; keep Popen.__del__ quiet
-    outcome = Outcome(exit_code=code, reason=reason, elapsed_s=round(time.time() - started, 3),
+    if code is None and reason == "exited":
+        reason = "wait_failed"                              # e.g. an inherited SIGCHLD=SIG_IGN: the exit status is unknown
+    maxrss = int(getattr(rusage, "ru_maxrss", 0))
+    outcome = Outcome(exit_code=code, reason=reason, elapsed_s=round(elapsed, 3),
                       cpu_user_s=round(getattr(rusage, "ru_utime", 0.0), 3), cpu_sys_s=round(getattr(rusage, "ru_stime", 0.0), 3),
-                      peak_rss_kib=int(getattr(rusage, "ru_maxrss", 0)), pid=proc.pid, log=str(log_path))
+                      peak_rss_kib=maxrss, peak_rss_polled_kib=int(polled_peak), supervisor_peak_rss_kib=int(supervisor_hwm),
+                      stragglers_killed=stragglers, pid=proc.pid, log=str(log_path))
     if code is not None and code < 0:
         outcome["signal"] = signal.Signals(-code).name
     return outcome
+
+
+def rss_exceeded(outcome, limit_kib):
+    """Polled VmHWM counts as measured; ``ru_maxrss`` only when above what the supervisor itself held at the spawn.
+
+    fork copies the supervisor's own peak into the child's ``ru_maxrss``, so a large supervisor must not be blamed on its child.
+    """
+    return (outcome["peak_rss_polled_kib"] > limit_kib
+            or (outcome["peak_rss_kib"] > limit_kib and outcome["peak_rss_kib"] > outcome["supervisor_peak_rss_kib"]))
 
 
 class TimingGate:
@@ -537,7 +783,7 @@ def quarantine_orphans(root, audit, journal, stage):
 class Supervisor:
     def __init__(self, workdir, plan, *, launcher=default_launcher, lock_builder=pre.build_lock, allow_dirty=False,
                  disk_usage=shutil.disk_usage, gates=None, memo=None, audit_depth="checksum", poll_s=POLL_S,
-                 sleep=time.sleep, environ=None):
+                 sleep=time.sleep, environ=None, probe=pre.probe_resources):
         self.work = Path(workdir)
         self.plan = plan
         self.launcher = launcher
@@ -546,6 +792,7 @@ class Supervisor:
         self.disk_usage = disk_usage
         self.gates, self.memo = gates, memo
         self.audit_depth = audit_depth
+        self.probe = probe
         self.poll_s, self.sleep = poll_s, sleep
         self.environ = dict(os.environ if environ is None else environ)
         self.journal = Journal(self.work / "journal.jsonl")
@@ -583,9 +830,13 @@ class Supervisor:
         pre._write_new(path, json.dumps(self._identity(), indent=1, allow_nan=False) + "\n")
         return False
 
-    def _init_or_verify_lock(self, restart):
+    def _never_started(self):
+        """run.json (and maybe the lock) exist but nothing else: a crash before the first journal record."""
+        return {p.name for p in self.work.iterdir()} <= {"run.json", "lock.json", ".supervisor.lock"}
+
+    def _init_or_verify_lock(self, restart, never_started=False):
         path = self.work / "lock.json"
-        if restart:
+        if restart and (path.exists() or not never_started):
             self.lock = pre._read_json(path)
             self._check_lock()
             return
@@ -606,7 +857,7 @@ class Supervisor:
 
     # -- budgets -----------------------------------------------------------------------------------------------
     def _usage(self):
-        records, problems = Journal.read(self.journal.path)
+        records, problems = Journal.load(self.journal.path)
         if problems:
             raise SupervisorError("journal damaged during the run: " + "; ".join(problems), EXIT_FAILED)
         return usage_from(records)
@@ -632,6 +883,10 @@ class Supervisor:
                             roles={role: {k: info[k] for k in ("expected_shards", "committed", "missing")} for role, info in audit["roles"].items()},
                             problems=[{"code": p["code"], "severity": p["severity"]} for p in audit["problems"]],
                             hashed_bytes=audit["hashed_bytes"])
+        mismatches = plan_root_problems(self.plan, audit)
+        if mismatches:
+            raise SupervisorError(f"{stage} root was not produced under this plan ({'; '.join(mismatches)}); not touching it",
+                                  EXIT_FAILED)
         return audit
 
     def _prior_stages_intact(self, stage):
@@ -655,6 +910,18 @@ class Supervisor:
         done = sum(info["observations_committed"] for info in audit["roles"].values())
         return max(0, sum(self.plan["expected_observations"][stage].values()) - done)
 
+    def _check_attempt_budgets(self, usage, stage):
+        ceilings = self.plan["ceilings"]
+        if usage["failed_attempts"][stage] >= ceilings["max_failed_attempts_per_stage"]:
+            raise SupervisorError(f"attempt budget exhausted for {stage}: {usage['failed_attempts'][stage]} failed attempts "
+                                  f"(ceiling {ceilings['max_failed_attempts_per_stage']})", EXIT_FAILED)
+        paused = usage["interruptions"][stage] + usage["lost_attempts"][stage]
+        if paused >= ceilings["max_interruptions_per_stage"]:
+            raise SupervisorError(f"interruption budget exhausted for {stage}: {paused} interrupted or lost attempts "
+                                  f"(ceiling {ceilings['max_interruptions_per_stage']})", EXIT_FAILED)
+        if usage["attempts"][stage] >= MAX_TOTAL_ATTEMPTS_PER_STAGE:
+            raise SupervisorError(f"total attempt backstop reached for {stage} ({MAX_TOTAL_ATTEMPTS_PER_STAGE})", EXIT_FAILED)
+
     def _run_stage(self, stage):
         self.journal.append("stage_start", stage=stage)
         quarantined = False
@@ -675,13 +942,17 @@ class Supervisor:
                 quarantine_orphans(self._root(stage), audit, self.journal, stage)
                 quarantined = True
                 continue
+            usage = self._usage()
             if audit["state"] == "COMPLETE":
                 self._verify_inventory(stage, audit)
-                self.journal.append("stage_complete", stage=stage)
-                return
-            usage = self._usage()
-            if usage["attempts"][stage] >= self.plan["ceilings"]["max_attempts_per_stage"]:
-                raise SupervisorError(f"attempt budget exhausted for {stage}", EXIT_FAILED)
+                acceptable, why = last_attempt_acceptable(usage, stage)
+                if acceptable:
+                    self.journal.append("stage_complete", stage=stage)
+                    return
+                # A root that verifies but was not produced by a clean supervised attempt gets one (the generators treat a
+                # finished root as a no-op); it is accepted only if that attempt exits 0, and retried within the failure budget.
+                self.journal.append("stage_needs_supervised_attempt", stage=stage, reason=why)
+            self._check_attempt_budgets(usage, stage)
             self._check_budgets(usage, self._remaining_observations(audit, stage))
             outcome = self._attempt(stage, audit, usage)
             if outcome["reason"] == "interrupted":
@@ -691,7 +962,7 @@ class Supervisor:
             if outcome["exit_code"] != 0:
                 self.journal.append("attempt_failed", stage=stage, exit_code=outcome["exit_code"],
                                     signal=outcome.get("signal"))
-                continue                                       # re-audit; the attempt budget bounds the retries
+                continue                                       # re-audit; the failure budget bounds the retries
             after = self._audit(stage)
             if after["state"] != "COMPLETE":
                 raise SupervisorError(f"{stage} child exited 0 but the root is {after['state']}", EXIT_FAILED)
@@ -727,16 +998,22 @@ class Supervisor:
             self.journal.append("attempt_start", stage=stage, attempt_id=attempt_id, attempt=attempt_no, argv=argv, pid=pid,
                                 committed_observations=committed, remaining_shards=remaining_shards)
 
+        def on_heartbeat(beat):
+            self.journal.append("heartbeat", stage=stage, attempt_id=attempt_id, **beat)
+
         outcome = run_child(argv, cwd=str(REPO), env=env, log_path=logs / f"{attempt_id}.log",
                             timeout_s=ceilings["wall_hours"] * 3600 - usage["wall_s"],
                             cpu_budget_s=ceilings["core_hours"] * 3600 - usage["cpu_s"],
                             rss_limit_kib=int(ceilings["max_rss_gib"] * 2 ** 20), grace_s=ceilings["grace_s"],
                             interrupted=lambda: self.interrupt is not None, on_poll=gate, on_start=on_start,
+                            on_heartbeat=on_heartbeat, heartbeat_s=self.plan["heartbeat_s"],
                             poll_s=self.poll_s, sleep=self.sleep)
+        if gate.record is None and gate.active and outcome["reason"] == "exited":
+            gate.record = {"outcome": "not_evaluated", "band": list(self.plan["timing"]["band_s_per_observation"]),
+                           "note": "the attempt ended before the gate saw a committed shard; no throughput check was possible"}
         if gate.record is not None:
             self.journal.append("timing_gate", stage=stage, attempt_id=attempt_id, **gate.record)
-        peak_over = outcome["peak_rss_kib"] > ceilings["max_rss_gib"] * 2 ** 20
-        if peak_over and outcome["reason"] == "exited":
+        if rss_exceeded(outcome, ceilings["max_rss_gib"] * 2 ** 20) and outcome["reason"] == "exited":
             outcome["reason"] = "rss_limit"                    # the live poll can miss a short spike; wait4 cannot
         self.journal.append("attempt_end", stage=stage, attempt_id=attempt_id,
                             **{k: v for k, v in outcome.items() if k not in ("pid",)})
@@ -744,6 +1021,7 @@ class Supervisor:
 
     # -- run ---------------------------------------------------------------------------------------------------
     def _recover_unterminated(self, records):
+        """Close an attempt whose supervisor died; its resources are charged conservatively from the last heartbeat."""
         usage = usage_from(records)
         open_attempt = usage["open_attempt"]
         if open_attempt is None:
@@ -752,9 +1030,17 @@ class Supervisor:
         if isinstance(pid, int) and pid_alive(pid):
             raise SupervisorError(f"attempt {open_attempt['attempt_id']} has no end record and pid {pid} is still alive: "
                                   "refusing to start a second writer", EXIT_REFUSED)
+        beat = usage["open_attempt_heartbeat"]
+        slack = float(self.plan["heartbeat_s"]) + 1.0          # the child may have run this long after its last heartbeat
+        threads = max([1] + [int(value) for value in self.lock["environment"]["threads"].values()
+                             if value is not None and str(value).isdigit()])
+        elapsed = (beat["elapsed_s"] if beat else 0.0) + slack
+        cpu = (beat["cpu_s"] if beat else 0.0) + slack * threads
         self.journal.append("attempt_end", stage=open_attempt["stage"], attempt_id=open_attempt["attempt_id"],
-                            exit_code=None, reason="supervisor_lost", elapsed_s=0.0, cpu_user_s=0.0, cpu_sys_s=0.0,
-                            peak_rss_kib=0, note="the supervisor died without recording the end; resources unknown")
+                            exit_code=None, reason="supervisor_lost", elapsed_s=round(elapsed, 3), cpu_user_s=round(cpu, 3),
+                            cpu_sys_s=0.0, peak_rss_kib=beat["peak_rss_polled_kib"] if beat else 0, estimated=True,
+                            note="the supervisor died without recording the end; wall and CPU are an upper-bound estimate "
+                                 "from the last heartbeat plus one interval, not a measurement")
 
     def run(self, handler_signals=True):
         """Execute the staged run; returns the result dict (exit_code, status, reasons). Never raises for expected refusals."""
@@ -768,35 +1054,43 @@ class Supervisor:
                 self.interrupt = number
             for number in (signal.SIGINT, signal.SIGTERM):
                 old[number] = signal.signal(number, handle)
+            old[signal.SIGCHLD] = signal.signal(signal.SIGCHLD, signal.SIG_DFL)    # SIG_IGN would lose every child's status
         try:
             self._acquire()
             restart = self._init_or_verify_identity()
-            self._init_or_verify_lock(restart)
+            never_started = restart and self._never_started()
+            self._init_or_verify_lock(restart, never_started)
             records = self.journal.open()
+            if restart and not never_started:
+                problems = check_run_journal(records, self._identity(), self.lock)
+                if problems:
+                    raise SupervisorError("the journal does not belong to this run: " + "; ".join(problems[:6]), EXIT_REFUSED)
             self._journal_open = True
             self._recover_unterminated(records)
-            self.journal.append("supervisor_start", restart=restart, plan_fingerprint=digest(self.plan),
+            self.journal.append("supervisor_start", restart=bool(records), plan_fingerprint=digest(self.plan),
                                 lock_fingerprint=self.lock["lock_fingerprint"], mode=self.plan["mode"])
             failed = [c for c in dry_run_checks(self.plan, self.work, lock_builder=lambda: self.lock, gates=self.gates,
-                                                memo=self.memo, disk_usage=self.disk_usage)
-                      if c["status"] == pre.FAIL]
+                                                memo=self.memo, disk_usage=self.disk_usage, probe=self.probe)
+                      if c["status"] in (pre.FAIL, pre.NOT_RUN)]
             if failed:
-                raise SupervisorError("host/resource checks failed: " + "; ".join(f"{c['id']}: {c['message']}" for c in failed),
-                                      EXIT_FAILED)
+                raise SupervisorError("host/resource checks failed or could not be run (unknown is not safe): "
+                                      + "; ".join(f"{c['id']}: {c['message']}" for c in failed), EXIT_FAILED)
             self.journal.append("host_checked", ok=True)
             for stage in STAGE_ORDER:
                 self._run_stage(stage)
             self.journal.append("stages_complete", plan_fingerprint=digest(self.plan))
             return {"exit_code": EXIT_OK, "status": "STAGES_COMPLETE", "reasons": [], "benchmark_complete": False}
-        except SupervisorError as error:
-            event = "interrupted" if error.code == EXIT_INTERRUPTED else "run_failed"
+        except (SupervisorError, OSError) as error:         # an unexpected I/O failure is a failed run, never a traceback
+            code = error.code if isinstance(error, SupervisorError) else EXIT_FAILED
+            message = str(error) if isinstance(error, SupervisorError) else f"{type(error).__name__}: {error}"
+            event = "interrupted" if code == EXIT_INTERRUPTED else "run_failed"
             if self._journal_open:                          # a refusal before the journal was verified writes nothing
                 try:
-                    self.journal.append(event, reason=str(error), exit_code=error.code)
-                except OSError:
+                    self.journal.append(event, reason=message, exit_code=code)
+                except (OSError, SupervisorError):          # a damaged journal is never appended to, not even to say so
                     pass
-            return {"exit_code": error.code, "status": "INTERRUPTED" if error.code == EXIT_INTERRUPTED else "FAILED",
-                    "reasons": [str(error)], "benchmark_complete": False}
+            return {"exit_code": code, "status": "INTERRUPTED" if code == EXIT_INTERRUPTED else "FAILED",
+                    "reasons": [message], "benchmark_complete": False}
         finally:
             for number, handler in old.items():
                 signal.signal(number, handler)
@@ -817,30 +1111,41 @@ def load_run(workdir):
 
 
 def verify_workdir(workdir, *, depth="checksum", max_full=2, require_clean=None):
-    """Read-only: journal chain, lock, and every stage audit. Returns checks."""
+    """Read-only: journal chain and anchor, journal/run/lock identity, lock, and every stage audit. Returns checks."""
     work = Path(workdir)
     run = load_run(work)
     plan = run["plan"]
     checks = []
-    records, problems = Journal.read(work / "journal.jsonl")
-    checks.append(pre.check("workdir.journal", "Journal chain is intact", pre.FAIL if problems else pre.PASS,
-                            "; ".join(problems) or f"{len(records)} records, head {records[-1]['sha256'][:12] if records else 'none'}"))
     lock = pre._read_json(work / "lock.json")
+    records, problems = Journal.load(work / "journal.jsonl")
+    if not problems:
+        problems = check_run_journal(records, run, lock)
+    checks.append(pre.check("workdir.journal", "Journal chain, anchor and run identity are intact", pre.FAIL if problems else pre.PASS,
+                            "; ".join(problems) or f"{len(records)} records, head {records[-1]['sha256'][:12] if records else 'none'}"))
     lock_problems = pre.verify_lock(lock, require_clean=plan["mode"] != "fixture" if require_clean is None else require_clean)
     checks.append(pre.check("workdir.lock", "Source/config/environment equal the lock", pre.FAIL if lock_problems else pre.PASS,
                             "; ".join(lock_problems[:6]) or "identical", problems=lock_problems))
+    usage = usage_from(records)
     for stage in STAGE_ORDER:
         known = work / plan["roots"]["known"] if stage != "known" else None
         audit = pre.audit_artifact(work / plan["roots"][stage], stage, depth=depth, lock=lock, known=known, max_full=max_full,
                                    production=plan["mode"] == "production")
         item = pre.audit_check(audit)
         found = {role: info["observations_committed"] for role, info in audit["roles"].items()}
+        mismatches = plan_root_problems(plan, audit)
         if audit["state"] == "RESUMABLE":                      # e.g. every shard committed but the manifest is missing
             item = pre.check(item["id"], item["title"], pre.NOT_RUN,
                              f"stage is not COMPLETE ({item['message']}): the generator still has work to do", **audit)
-        if audit["state"] == "COMPLETE" and found != plan["expected_observations"][stage]:
+        if mismatches:
+            item = pre.check(item["id"], item["title"], pre.FAIL, "root was not produced under this plan: " + "; ".join(mismatches),
+                             **audit)
+        elif audit["state"] == "COMPLETE" and found != plan["expected_observations"][stage]:
             item = pre.check(item["id"], item["title"], pre.FAIL, f"inventory {found} differs from the plan "
                              f"{plan['expected_observations'][stage]}", **audit)
+        elif audit["state"] == "COMPLETE" and item["status"] == pre.PASS:
+            acceptable, why = last_attempt_acceptable(usage, stage)
+            if not acceptable:
+                item = pre.check(item["id"], item["title"], pre.FAIL, "root verifies COMPLETE but " + why, **audit)
         checks.append(item)
     return run, lock, records, checks
 
@@ -865,15 +1170,34 @@ def complete_workdir(workdir, *, gates=None, memo=None):
               "production_complete": False,
               "benchmark_complete": False, "production_authorized": authorized and plan["mode"] == "production",
               "plan_fingerprint": run["plan_fingerprint"], "lock_fingerprint": lock["lock_fingerprint"],
+              "child_launcher": plan["launcher"],
               "journal_head": records[-1]["sha256"], "observations": plan["expected_observations"],
               "stage_manifest_fingerprints": {s: pre._fingerprint(pre._read_json(work / plan["roots"][s] / "manifest.json"))
                                               for s in STAGE_ORDER},
-              "note": "data generation of the planned scope is complete and verified; this is not benchmark completion"}
+              "note": "data generation of the planned scope is complete and verified; this is not benchmark completion"
+                      + ("" if plan["launcher"] == "generators" else
+                         "; the children were started through a diagnostic wrapper, so the shards may not come from the real "
+                         "physics chain")}
     pre._write_new(work / "completion.json", json.dumps(marker, indent=1, allow_nan=False) + "\n")
     return marker
 
 
 # ---- command line ------------------------------------------------------------------------------------------------
+
+def launcher_name(wrapper):
+    """Run-identity string for the launcher: the real generators, or a hashed diagnostic wrapper under ``tests/``.
+
+    The wrapper is a fixture diagnostic (the test stand-in); only a script inside the repository's ``tests/`` directory may
+    be started in place of the generator CLIs, so the supervisor cannot be pointed at an arbitrary program.
+    """
+    if not wrapper:
+        return "generators"
+    path = Path(wrapper).resolve()
+    if not path.is_file() or (REPO / "tests").resolve() not in path.parents:
+        raise SupervisorError("--child-wrapper must be a script inside this repository's tests/ directory (fixture diagnostic)",
+                              EXIT_REFUSED)
+    return f"child-wrapper:{path.name}:{pre._file_hash(path)[:16]}"
+
 
 def _plan_from_args(args):
     ceilings = pre._read_json(args.ceilings) if getattr(args, "ceilings", None) else None
@@ -889,7 +1213,8 @@ def _plan_from_args(args):
     return build_plan(args.workdir, mode=mode, max_groups=args.max_groups,
                       groups_per_shard=args.groups_per_shard if args.groups_per_shard is not None
                       else (pre.PRODUCTION["groups_per_shard"] if args.production else 1),
-                      ceilings=ceilings, timing=timing)
+                      ceilings=ceilings, timing=timing, launcher=launcher_name(getattr(args, "child_wrapper", None)),
+                      heartbeat_s=getattr(args, "heartbeat_s", None))
 
 
 def _print(value):
@@ -910,6 +1235,7 @@ def main(argv=None):
         sp.add_argument("--timing-startup-s", type=float)
         sp.add_argument("--timing-tolerance", type=float)
         sp.add_argument("--no-timing-gate", action="store_true", help="fixture diagnostics only; refused for --production")
+        sp.add_argument("--heartbeat-s", type=float, help="seconds between heartbeat records of a running child")
         sp.add_argument("--child-wrapper", help="diagnostic wrapper script receiving '<stage> <generator args>' (fixtures only)")
     sub.choices["run"].add_argument("--execute", action="store_true", help="actually spawn children (default is a dry run)")
     sub.choices["run"].add_argument("--allow-dirty-fixture", action="store_true")

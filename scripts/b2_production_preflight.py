@@ -431,7 +431,7 @@ def audit_artifact(root, stage, *, depth="checksum", lock=None, known=None, prod
         raise ValueError("max_full must be None or a positive integer (zero would silently skip deep verification)")
     root = Path(root)
     result = {"stage": stage, "root": str(root), "depth": depth, "state": None, "problems": [], "roles": {},
-              "request_fingerprint": None, "hashed_bytes": 0, "leftover_temporaries": []}
+              "request_fingerprint": None, "request_summary": None, "hashed_bytes": 0, "leftover_temporaries": []}
 
     def problem(code, severity, message, **extra):
         result["problems"].append({"code": code, "severity": severity, "message": message, **extra})
@@ -479,6 +479,7 @@ def _audit(result, problem, root, stage, depth, lock, known, production, max_ful
         return result
     request_id = _fingerprint(request)
     result["request_fingerprint"] = request_id
+    result["request_summary"] = {key: request.get(key) for key in ("protocol", "limit_groups", "groups_per_shard", "roles")}
     diff = request_diff(expected, request)
     if diff:
         problem("generator_would_refuse_resume", "fail",

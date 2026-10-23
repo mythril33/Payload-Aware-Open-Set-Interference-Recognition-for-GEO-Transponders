@@ -632,7 +632,12 @@
       "production_executed": false,
       "gpu_training_executed": false,
       "full_loko_executed": false,
-      "gates_changed": false
+      "gates_changed": false,
+      "review_hardened": true,
+      "journal_anchor": "journal.head",
+      "tests_collected": 126,
+      "child_wrapper": "fixture diagnostic restricted to the repository's tests/ directory and hashed into the run identity",
+      "verification_script": "scripts/b2_e7a_capped_verification.py"
     },
     "k18_train_diagnostics": {
       "status": "E7A_DRAFT_DELIVERY",
@@ -647,7 +652,13 @@
       ],
       "tests": "tests/test_b2_train_diagnostics.py",
       "k18_status": "PENDING_RESEARCHER (unchanged)",
-      "provenance_note": "source edits change checkpoint source provenance (P28 section 6); earlier checkpoints are not relabelled as compatible"
+      "provenance_note": "source edits change checkpoint source provenance (P28 section 6); earlier checkpoints are not relabelled as compatible",
+      "results_fields": [
+        "train_diagnostics",
+        "best_epoch",
+        "best_val_macro_f1"
+      ],
+      "bit_identity_scope": "CPU fp32 (GPU parity untested; DR-05 probe item)"
     },
     "training_proposal": {
       "status": "PROPOSAL_NOT_FROZEN",
@@ -655,8 +666,9 @@
       "machine_readable": "docs/plan/b2_e7_training_proposal.json",
       "frozen": false,
       "approved": false,
-      "researcher_decisions": "R1-R9",
-      "configs_touched": false
+      "researcher_decisions": "R1-R10",
+      "configs_touched": false,
+      "p18_note": "values other than the P6 / TrainConfig defaults, and any data-driven epoch sizing, need a P18 section 10 entry before the first fit"
     }
   },
   "permitted_without_new_researcher_decisions": [

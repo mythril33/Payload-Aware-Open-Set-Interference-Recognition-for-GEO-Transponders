@@ -565,7 +565,9 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
                              matched, matched_out, view_calibrations, scorer, alarm_threshold, test, predictions),
                          "checkpoint_sha256": checkpoint_sha, "training_source_revision": fitted.get("source_revision"),
                          "n_parameters": fitted["n_parameters"], "history": fitted["history"],
-                         # K18, observation only: training-batch loss components; None for checkpoints that predate it
+                         # K18, observation only: training-batch loss components, plus the (zero-based) epoch whose weights the
+                         # evaluated checkpoint holds, so a reader of the summary can pick that epoch's ratios out of the block.
+                         "best_epoch": fitted.get("best_epoch"), "best_val_macro_f1": fitted.get("best_val_macro_f1"),
                          "train_diagnostics": fitted.get("train_diagnostics")}
         if matched_out is not None:
             selection = _select_representatives(matched)
