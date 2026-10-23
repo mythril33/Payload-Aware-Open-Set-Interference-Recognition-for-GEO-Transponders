@@ -10,7 +10,11 @@
    "title": "Existing CLIs cover all three production stages",
    "status": "PASS",
    "message": "geosim.b2_dataset (--roles, --limit-groups, --groups-per-shard, --cancellation, --config), geosim.b2_test_dataset and geosim.b2_matched_dataset (--known) exist with the flags the E5 plan names; no unrestricted launcher is supplied and none was run.",
-   "evidence": ["src/geosim/b2_dataset.py:608-631", "src/geosim/b2_test_dataset.py:422-445", "src/geosim/b2_matched_dataset.py:459-482"],
+   "evidence": [
+    "src/geosim/b2_dataset.py:608-631",
+    "src/geosim/b2_test_dataset.py:422-445",
+    "src/geosim/b2_matched_dataset.py:459-482"
+   ],
    "verified_by": "inspection: argparse definitions read at the cited lines"
   },
   {
@@ -18,15 +22,22 @@
    "title": "The plan's four groups per shard is not the generators' default (eight)",
    "status": "PASS",
    "message": "All three generators default GROUPS_PER_SHARD to 8, which would double the interruption loss (64/40/24 observations). The value is part of the request, so it cannot drift silently; `audit --production` rejects any root whose request is not the frozen production request.",
-   "evidence": ["src/geosim/b2_dataset.py:39", "src/geosim/b2_test_dataset.py:41", "src/geosim/b2_matched_dataset.py:49"],
-   "verified_by": "tests/test_b2_production_preflight.py::test_the_production_flag_rejects_every_pilot_request"
+   "evidence": [
+    "src/geosim/b2_dataset.py:39",
+    "src/geosim/b2_test_dataset.py:41",
+    "src/geosim/b2_matched_dataset.py:49"
+   ],
+   "verified_by": "tests/test_b2_production_preflight.py::test_production_gaps_name_each_unmet_condition_separately"
   },
   {
    "id": "audit.cross_stage_binding",
    "title": "Cross-stage source, config and known-root binding is enforced before use",
    "status": "PASS",
    "message": "The test-only and matched generators bind the known root's fingerprints and calibration but not its generator source hashes, so a stage built from different code still verifies on its own. The preflight audit with --known flags source, numpy/scipy, config and canceller drift between stages.",
-   "evidence": ["src/geosim/b2_test_dataset.py:46-60", "src/geosim/b2_matched_dataset.py:53-63"],
+   "evidence": [
+    "src/geosim/b2_test_dataset.py:46-60",
+    "src/geosim/b2_matched_dataset.py:53-63"
+   ],
    "verified_by": "tests/test_b2_production_preflight.py::test_test_and_matched_roots_must_bind_to_the_given_known_root_and_its_code"
   },
   {
@@ -34,7 +45,9 @@
    "title": "An interrupted known root resumes without rewriting verified shards",
    "status": "PASS",
    "message": "A kill between shards leaves a RESUMABLE root; the generator keeps committed shards byte-identical and the final arrays equal an uninterrupted run. Loss per interruption is bounded by one shard.",
-   "evidence": ["src/geosim/b2_dataset.py:435-477"],
+   "evidence": [
+    "src/geosim/b2_dataset.py:435-477"
+   ],
    "verified_by": "tests/test_b2_production_preflight.py::test_an_interrupted_root_is_resumable_and_the_generator_keeps_verified_shards"
   },
   {
@@ -42,23 +55,31 @@
    "title": "A kill between the data-file renames and the descriptor commit fails closed",
    "status": "PASS",
    "message": "Data files without a committed descriptor make the generator refuse the root (unverified partial shard). This is safe but not automatic: the audit reports NEEDS_QUARANTINE and recovery is a manual move of the orphan files to a quarantine directory (never deletion), after which the resume is bit-equal. An unattended supervisor must implement that runbook (see audit.stage_supervisor_missing).",
-   "evidence": ["src/geosim/b2_dataset.py:441-442", "src/geosim/b2_dataset.py:470-476"],
+   "evidence": [
+    "src/geosim/b2_dataset.py:441-442",
+    "src/geosim/b2_dataset.py:470-476"
+   ],
    "verified_by": "tests/test_b2_production_preflight.py::test_an_orphaned_shard_needs_quarantine_and_the_generator_refuses_it"
   },
   {
    "id": "audit.checksum_integrity",
    "title": "Modified shards, metadata and calibration are detected before use",
    "status": "PASS",
-   "message": "Checksum depth reads every committed shard and fails on a single flipped byte; the cheap structure depth cannot see byte flips and is labelled as such. Deep depth additionally runs the generator's own semantic validator on a bounded sample.",
-   "evidence": ["src/geosim/b2_dataset.py:368-382"],
-   "verified_by": "tests/test_b2_production_preflight.py::test_modified_shards_are_invalid_only_when_checksums_are_read"
+   "message": "Checksum depth reads every committed shard and fails on a single flipped byte; the cheap structure depth cannot see byte flips and is labelled as such. Deep depth additionally runs the generator's own semantic validator on a bounded sample. Manifest-level and root-level tampering is checked with the generators' own `_header` and exercised on all three stages.",
+   "evidence": [
+    "src/geosim/b2_dataset.py:368-382"
+   ],
+   "verified_by": "tests/test_b2_production_preflight.py::test_manifest_and_root_level_tampering_is_invalid_exactly_when_the_loaders_refuse"
   },
   {
    "id": "audit.source_config_lock",
    "title": "An immutable source/config/environment lock can be created and verified",
    "status": "PASS",
    "message": "The lock hashes every src/**/*.py and the bundled curves, the frozen configs, the gates file and the generator provenance, and records the git commit, tree cleanliness, Python/NumPy/SciPy versions and BLAS thread settings. Any drift is named; edited lock files fail their own fingerprint.",
-   "evidence": ["scripts/b2_production_preflight.py::build_lock", "src/geosim/dataset.py:130-134"],
+   "evidence": [
+    "scripts/b2_production_preflight.py::build_lock",
+    "src/geosim/dataset.py:130-134"
+   ],
    "verified_by": "tests/test_b2_production_preflight.py::test_lock_round_trips_and_names_every_kind_of_drift"
   },
   {
@@ -66,15 +87,21 @@
    "title": "A manifest's recorded git commit is not evidence of an unmodified source tree",
    "status": "PASS",
    "message": "The generators record `git rev-parse HEAD` without a dirty flag (\"unknown\" when git fails), and the request hashes only src/geosim/*.py and its data, not src/geoml or the configs. The lock covers the whole source tree and configs and can require a clean tree.",
-   "evidence": ["src/geosim/dataset.py:239-244", "src/geosim/dataset.py:130-134"],
-   "verified_by": "tests/test_b2_production_preflight.py::test_lock_refuses_dirty_trees_foreign_documents_and_edited_fingerprints"
+   "evidence": [
+    "src/geosim/dataset.py:239-244",
+    "src/geosim/dataset.py:130-134"
+   ],
+   "verified_by": "tests/test_b2_production_preflight.py::test_manifest_commit_carries_no_dirty_flag_while_the_lock_covers_the_whole_tree"
   },
   {
    "id": "audit.role_isolation_artifacts",
    "title": "Role/group isolation is checked on every committed shard",
    "status": "PASS",
    "message": "Group ids are checked against the frozen reserved ranges and for repetition across shards and roles; a request whose test role holds training groups, or a descriptor with a foreign group, is INVALID.",
-   "evidence": ["src/geosim/b2_protocol.py:32-34", "src/geosim/b2_protocol.py:55-60"],
+   "evidence": [
+    "src/geosim/b2_protocol.py:32-34",
+    "src/geosim/b2_protocol.py:55-60"
+   ],
    "verified_by": "tests/test_b2_production_preflight.py::test_a_tampered_request_or_a_role_crossing_is_invalid"
   },
   {
@@ -82,7 +109,10 @@
    "title": "The streaming trainer refuses wrong-role and test-only sources",
    "status": "PASS",
    "message": "fit_streaming requires known-kind sources of the train and val-select roles and disjoint scenario groups (E1 evidence, unchanged by E6).",
-   "evidence": ["src/geoml/b2_stream.py:293-309", "src/geoml/b2_stream.py:444-447"],
+   "evidence": [
+    "src/geoml/b2_stream.py:293-309",
+    "src/geoml/b2_stream.py:444-447"
+   ],
    "verified_by": "tests/test_b2_stream.py::test_fit_refuses_group_leakage_wrong_roles_and_test_only_sources"
   },
   {
@@ -90,7 +120,10 @@
    "title": "Streaming reads verify shards and fail closed on missing or damaged ones",
    "status": "PASS",
    "message": "Verification of 384-observation-per-role fixtures ran at about 430 observations/s (E1 note); this is a bounded-fixture measurement, not a production-size one (see audit.streaming_unmeasured_at_scale).",
-   "evidence": ["docs/results/b2_streaming_memory.md", "src/geoml/b2_stream.py:224-246"],
+   "evidence": [
+    "docs/results/b2_streaming_memory.md",
+    "src/geoml/b2_stream.py:224-246"
+   ],
    "verified_by": "tests/test_b2_stream.py::test_corrupted_missing_or_incomplete_shards_fail_closed_before_and_during_streaming"
   },
   {
@@ -98,7 +131,10 @@
    "title": "Raw IQ is transient; artifacts hold spec, mask, residual and index arrays only",
    "status": "PASS",
    "message": "The generator drops the IQ after the canceller and the reader rejects unexpected array keys. Consequence: the fifth channel exists only because it was computed at generation time, so a new receiver version needs regeneration of every residual-bearing stage.",
-   "evidence": ["src/geosim/b2_dataset.py:339-341", "src/geosim/b2_dataset.py:451-452"],
+   "evidence": [
+    "src/geosim/b2_dataset.py:339-341",
+    "src/geosim/b2_dataset.py:451-452"
+   ],
    "verified_by": "tests/test_b2_artifacts.py::test_feature_stage_stores_residual_from_co_iq_and_co_plan_only"
   },
   {
@@ -106,7 +142,9 @@
    "title": "A path/length/SHA-256 transfer manifest can be created and verified after a copy",
    "status": "PASS",
    "message": "Implements E5 plan step 5: missing, extra, resized and modified files are named; a restored backup must still be re-audited shard by shard before training.",
-   "evidence": ["scripts/b2_production_preflight.py::create_transfer_manifest"],
+   "evidence": [
+    "scripts/b2_production_preflight.py::create_transfer_manifest"
+   ],
    "verified_by": "tests/test_b2_production_preflight.py::test_transfer_manifest_detects_missing_extra_resized_and_modified_files"
   },
   {
@@ -114,7 +152,9 @@
    "title": "The merged E5 head passed GitHub Actions",
    "status": "PASS",
    "message": "Run 39991726439, job 120544881834, head 7108ee8af14abe85c99bf379a5709936a3225b99, Python 3.12.15: E4 step 107 passed in 135.82 s and the remaining suite 1132 passed in 240.41 s (1239 in total, no failures); the E5 PR description still said 'pending'.",
-   "evidence": ["https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39991726439"],
+   "evidence": [
+    "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39991726439"
+   ],
    "verified_by": "ci:39991726439 raw job log read in this session"
   },
   {
@@ -122,63 +162,89 @@
    "title": "No frozen production training configuration exists",
    "status": "FAIL",
    "message": "configs/b2_feat.json is the pilot configuration (3 epochs, width 8, seed 0). The '3 views x 3 seeds x 30 epochs' of the budget exists only in documents (an assumption), and the optimizer/scheduler/width that fix the embedding size, hence the K18 scale, are not frozen anywhere. Engineering can draft the file but its values are researcher choices that must precede the source/config lock.",
-   "evidence": ["configs/b2_feat.json", "docs/results/b2_production_budget.md:74", "docs/plan/B2_E5_PRODUCTION_EXECUTION_PLAN.md:37"]
+   "evidence": [
+    "configs/b2_feat.json",
+    "docs/results/b2_production_budget.md:74",
+    "docs/plan/B2_E5_PRODUCTION_EXECUTION_PLAN.md:37"
+   ]
   },
   {
    "id": "audit.k18_diagnostic_missing",
    "title": "The recommended train-only center/CE ratio diagnostic is not implemented",
    "status": "FAIL",
    "message": "P22 section 6 and the E5 memorandum recommend logging the center-loss/CE ratio per epoch on the train split. Both trainers log only the summed loss and validation macro-F1. Adding it edits src/geoml, so it must land before the production source lock and should follow the K18 decision.",
-   "evidence": ["src/geoml/train.py:270-291", "src/geoml/b2_stream.py:504", "docs/plan/P22_b2_matched_asi.md:117-119"]
+   "evidence": [
+    "src/geoml/train.py:270-291",
+    "src/geoml/b2_stream.py:504",
+    "docs/plan/P22_b2_matched_asi.md:117-119"
+   ]
   },
   {
    "id": "audit.stage_supervisor_missing",
    "title": "No production stage supervisor or external journal exists",
    "status": "FAIL",
    "message": "A roughly 26 h, three-stage, serial run needs ordering (known, then test-only, then matched), the orphan-quarantine runbook, per-attempt logs with real exit codes, elapsed/CPU/peak-RSS records and a first-shard timing gate. The E4 matrix runner is explicitly not a production dispatcher. The preflight audits and drills these states but does not drive generation.",
-   "evidence": ["docs/plan/B2_E5_PRODUCTION_EXECUTION_PLAN.md:80-86", "scripts/b2_a5_matrix.py"]
+   "evidence": [
+    "docs/plan/B2_E5_PRODUCTION_EXECUTION_PLAN.md:80-86",
+    "scripts/b2_a5_matrix.py"
+   ]
   },
   {
    "id": "audit.loko_dispatcher_missing",
    "title": "Full LOKO execution and multi-seed aggregation are not implemented",
    "status": "FAIL",
    "message": "geoml.b2_loko plans all folds but executes exactly one view, one fold on CPU under epoch/width/batch caps. Not needed to generate data; needed before DR-E5-06 could be exercised.",
-   "evidence": ["src/geoml/b2_loko.py:163-170"]
+   "evidence": [
+    "src/geoml/b2_loko.py:163-170"
+   ]
   },
   {
    "id": "audit.training_interruption_recovery",
    "title": "Interrupted training cannot resume; restart-versus-snapshot policy is undecided",
    "status": "BLOCKED",
    "message": "A checkpoint stores model weights (best epoch) only, not optimizer, scheduler, RNG or the data cursor. Either a separately reviewed snapshot is built, or an interrupted seed/view restarts from epoch 0 with the parent checkpoint hash recorded. That is a policy decision before GPU use.",
-   "evidence": ["src/geoml/train.py:285-292", "src/geoml/train.py:313-326", "docs/plan/B2_E5_PRODUCTION_EXECUTION_PLAN.md:88-92"]
+   "evidence": [
+    "src/geoml/train.py:285-292",
+    "src/geoml/train.py:313-326",
+    "docs/plan/B2_E5_PRODUCTION_EXECUTION_PLAN.md:88-92"
+   ]
   },
   {
    "id": "audit.streaming_unmeasured_at_scale",
    "title": "Streaming memory and throughput are unmeasured at production size",
    "status": "BLOCKED",
    "message": "E1 fixtures hold at most 384 observations per role; the production train role holds 12,000. The window-memory arithmetic is verified (12.06 MiB raw and 20.0 MiB preprocessed per 32-observation shard) but peak memory and per-epoch I/O at scale need the authorized data or a separately approved synthetic-layout fixture.",
-   "evidence": ["docs/results/b2_streaming_memory.md", "docs/plan/P24_b2_e1_streaming_loader.md:101"]
+   "evidence": [
+    "docs/results/b2_streaming_memory.md",
+    "docs/plan/P24_b2_e1_streaming_loader.md:101"
+   ]
   },
   {
    "id": "audit.wall_time_unmeasured_at_scale",
    "title": "Generation wall time is an extrapolation from a 60-observation matched profile",
    "status": "BLOCKED",
    "message": "23.0-30.2 h reproduces arithmetically from 3.8-5.0 s/observation, but the known stage's group mix differs from the matched profile and nothing was timed beyond 64 observations. A start-up gate that compares the first committed shards with the band (stop if outside) belongs to the authorized run, not to this preflight.",
-   "evidence": ["docs/results/b2_production_budget.md:12-40"]
+   "evidence": [
+    "docs/results/b2_production_budget.md:12-40"
+   ]
   },
   {
    "id": "audit.compute_hosts_undesignated",
    "title": "Production host, GPU and backup target are not designated",
    "status": "BLOCKED",
    "message": "The E5 numbers (36 h wall, 42 core-h, 25 GiB working disk, a separate 9 GB backup, 8/16 GiB host RAM, 8-12 GiB VRAM) are proposals. No host, GPU or backup location has been named or authorized, so host probes can only prove an unrelated machine unsuitable.",
-   "evidence": ["docs/plan/B2_E5_PRODUCTION_EXECUTION_PLAN.md:27-43"]
+   "evidence": [
+    "docs/plan/B2_E5_PRODUCTION_EXECUTION_PLAN.md:27-43"
+   ]
   },
   {
    "id": "audit.pr_head_ci",
    "title": "GitHub Actions on this E6 pull-request head",
    "status": "NOT_RUN",
    "message": "Recorded in the draft PR description after publication; CI for any other head, including the merged E5 head, does not certify it.",
-   "evidence": ["pull request description"]
+   "evidence": [
+    "pull request description"
+   ]
   }
  ]
 }

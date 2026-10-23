@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import inspect
 import json
 import math
 import os
@@ -28,7 +29,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from datetime import datetime
 from pathlib import Path
+
+import numpy as np
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
@@ -38,7 +42,7 @@ from geosim.b2_protocol import (BASE_ROLES, LABELS, ROLE_COUNTS, ROLE_STARTS, B2
                                 role_for_group, scenario_ids)
 from geosim.b2_scenarios import MATCHED_LABELS, TEST_FAMILIES  # noqa: E402
 from geosim.cancellation import CancellationConfig  # noqa: E402
-from geosim.dataset import _atomic_json, _file_hash, _fingerprint, _generator_provenance  # noqa: E402
+from geosim.dataset import _file_hash, _fingerprint, _generator_provenance  # noqa: E402
 from geosim.event_dataset import _strict_json  # noqa: E402
 
 SCHEMA = "B2-production-preflight/1"
@@ -99,8 +103,8 @@ def verdict(checks):
 
 def report(checks, **extra):
     """Strict-JSON report; the preflight never grants authorization and never completes the benchmark."""
-    return {"schema": SCHEMA, "benchmark_complete": False, "production_authorized": False, **verdict(checks),
-            "checks": checks, **extra}
+    return {**extra, "schema": SCHEMA, "benchmark_complete": False, "production_authorized": False, **verdict(checks),
+            "checks": checks}
 
 
 def _read_json(path):
@@ -165,11 +169,12 @@ def check_inventory(plan_markdown=None, groups_per_shard=PRODUCTION["groups_per_
                      PASS if shared else FAIL, "the 500 test-only groups are the known test groups; the 150 matched groups "
                      "are disjoint from every known role"))
     bound = {row["stage"] + ":" + row["role"]: row["max_loss_observations"] for row in rows}
+    wanted_bound = {f"{stage}:{role}": groups_per_shard * variants for stage, role, _, variants, _ in PLAN_INVENTORY}
     out.append(check("inventory.interruption_bound", "Interruption loses at most one shard per stage",
-                     PASS if bound == {"B2-feat/1:train": 32, "B2-feat/1:val-select": 32, "B2-feat/1:val-calib": 32,
-                                       "B2-feat/1:test": 32, "B2-test/1:test": 20, "B2-match/1:test-matched": 12}
-                     or groups_per_shard != PRODUCTION["groups_per_shard"] else FAIL,
-                     "32 known / 20 test-only / 12 matched observations at four groups per shard", bound=bound))
+                     PASS if bound == wanted_bound else FAIL,
+                     f"{groups_per_shard} groups per shard bound the loss to {groups_per_shard * len(LABELS)} known / "
+                     f"{groups_per_shard * len(TEST_FAMILIES)} test-only / {groups_per_shard * len(MATCHED_LABELS)} matched "
+                     "observations", bound=bound))
     if plan_markdown is not None:
         parsed = {(stage, groups, variants, observations) for stage, groups, variants, observations
                   in parse_plan_inventory(plan_markdown)}
@@ -211,8 +216,11 @@ def check_estimates():
     close = all(abs(hours[name] - BUDGET["documented_wall_hours"][name]) <= BUDGET["wall_tolerance_hours"] for name in hours)
     out.append(check("estimates.wall", "Single-process wall-time range reproduces from the per-observation costs",
                      PASS if close else FAIL,
-                     "estimate only; no full-scale generation was timed", recomputed_hours=hours,
-                     documented_hours=BUDGET["documented_wall_hours"]))
+                     "recomputed " + " / ".join(f"{hours[name]:.2f}" for name in hours) + " h versus documented "
+                     + " / ".join(f"{BUDGET['documented_wall_hours'][name]}" for name in hours)
+                     + f" h (tolerance {BUDGET['wall_tolerance_hours']} h; the documented test-only rows differ by up to "
+                     "0.12 h from the same per-observation costs); estimate only, no full-scale generation was timed",
+                     recomputed_hours=hours, documented_hours=BUDGET["documented_wall_hours"]))
     core = hours["high"] * BUDGET["cpu_to_wall_ratio"]
     out.append(check("estimates.reservation", "Reserved wall/core hours cover the high estimate with margin",
                      PASS if BUDGET["reserved_wall_hours"] >= hours["high"] * 1.15
@@ -225,14 +233,48 @@ def check_estimates():
                      PASS if (passes, loko) == (3_240_000, 7_560_000) else FAIL,
                      "arithmetic only: 30 epochs and 3 main seeds are plan assumptions, not frozen in a config",
                      main_sample_passes=passes, loko_sample_passes=loko))
+    from geoml import data as geoml_data
     shard = PRODUCTION["groups_per_shard"] * len(LABELS)
+    pool = inspect.signature(geoml_data.preprocess).parameters["time_pool"].default
+    channels = geoml_data.VIEW_CHANNELS["dual_residual"]
+    prepared = channels * (128 // pool) * 512 * 4                # float32 model input per observation
     out.append(check("estimates.window_memory", "E1 window memory arithmetic at four groups per shard",
-                     PASS if round(shard * 395264 / 2 ** 20, 2) == 12.06 and shard * 5 * 64 * 512 * 4 / 2 ** 20 == 20.0
-                     else FAIL, "12.06 MiB raw and 20.0 MiB preprocessed per 32-observation shard", shard=shard))
+                     PASS if round(shard * storage["float16_bytes_per_observation"] / 2 ** 20, 2) == 12.06
+                     and shard * prepared / 2 ** 20 == 20.0 else FAIL,
+                     f"{shard * storage['float16_bytes_per_observation'] / 2 ** 20:.2f} MiB raw and "
+                     f"{shard * prepared / 2 ** 20:.1f} MiB preprocessed ({channels} channels, time_pool {pool}) per "
+                     f"{shard}-observation shard", shard=shard))
     return out
 
 
 # ---- researcher gates --------------------------------------------------------------------------------------
+
+def _text(value):
+    return isinstance(value, str) and bool(value.strip())
+
+
+def _instant(value):
+    try:
+        return _text(value) and datetime.fromisoformat(value.strip().replace("Z", "+00:00")) is not None
+    except ValueError:
+        return False
+
+
+def approval_problems(approval, needs_ceilings):
+    """Structural checks only: the tool cannot judge whether a human really approved, only that a record exists."""
+    if not isinstance(approval, dict):
+        return ["no approval record"]
+    problems = [f"{name} must be a non-empty string" for name in ("approved_by", "decision", "record")
+                if not _text(approval.get(name))]
+    if not _instant(approval.get("approved_at")):
+        problems.append("approved_at must be an ISO-8601 timestamp")
+    if needs_ceilings:
+        for name in CEILING_FIELDS:
+            value = approval.get(name)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
+                problems.append(f"{name} must be a finite positive number")
+    return problems
+
 
 def check_gates(gates, memo):
     """Read-only: reports gate states, never changes them, and refuses an approval without provenance."""
@@ -254,14 +296,10 @@ def check_gates(gates, memo):
                              "approval material is attached to a pending gate" if ambiguous
                              else f"{status}: needs an explicit researcher decision", gate_status=status))
         elif status in APPROVED_STATUSES:
-            wanted = APPROVAL_FIELDS + (CEILING_FIELDS if key.startswith("full_") else ())
-            missing = [name for name in wanted if not isinstance(approval, dict) or approval.get(name) in (None, "")]
-            ceilings_ok = not key.startswith("full_") or all(
-                isinstance(approval.get(name), (int, float)) and not isinstance(approval.get(name), bool)
-                and approval[name] > 0 for name in CEILING_FIELDS if isinstance(approval, dict) and name in approval)
-            out.append(check(f"gates.{key}", f"Gate {key}", PASS if not missing and ceilings_ok else FAIL,
-                             "approved with provenance" if not missing and ceilings_ok
-                             else f"approval lacks {missing or 'positive numeric ceilings'}", gate_status=status))
+            problems = approval_problems(approval, key.startswith("full_"))
+            out.append(check(f"gates.{key}", f"Gate {key}", FAIL if problems else PASS,
+                             "approved with provenance" if not problems else "approval is incomplete: " + "; ".join(problems),
+                             gate_status=status))
         else:
             out.append(check(f"gates.{key}", f"Gate {key}", FAIL, f"unknown status {status!r}"))
         if twin.get("status") != status:
@@ -389,6 +427,8 @@ def audit_artifact(root, stage, *, depth="checksum", lock=None, known=None, prod
     """
     if stage not in STAGES or depth not in ("structure", "checksum", "full"):
         raise ValueError("stage must be known/test/matched and depth structure/checksum/full")
+    if max_full is not None and (isinstance(max_full, bool) or not isinstance(max_full, int) or max_full < 1):
+        raise ValueError("max_full must be None or a positive integer (zero would silently skip deep verification)")
     root = Path(root)
     result = {"stage": stage, "root": str(root), "depth": depth, "state": None, "problems": [], "roles": {},
               "request_fingerprint": None, "hashed_bytes": 0, "leftover_temporaries": []}
@@ -399,6 +439,36 @@ def audit_artifact(root, stage, *, depth="checksum", lock=None, known=None, prod
     if not root.is_dir() or not any(root.iterdir()):
         result["state"] = "NOT_STARTED"
         return result
+    try:
+        _audit(result, problem, root, stage, depth, lock, known, production, max_full)
+    except (AttributeError, KeyError, TypeError, IndexError, ValueError, OSError) as error:
+        # Wrong-typed JSON (a list where an object is expected, ...) must not crash the audit into a false PASS or a traceback.
+        problem("malformed_artifact", "fail", f"unexpected structure while auditing ({type(error).__name__}: {error}); "
+                "the root is unusable")
+        result["state"] = "INVALID"
+    return result
+
+
+def production_gaps(stage, request):
+    """Names of the frozen production-request conditions this request does not meet (empty = production request)."""
+    module = _module(stage)
+    known_stage = stage == "known"
+    canceller = module._stage(request)[2] if known_stage else module._cancellation_of(request)[0]
+    gaps = []
+    if request.get("limit_groups") is not None:
+        gaps.append("limit_groups")
+    if request.get("groups_per_shard") != PRODUCTION["groups_per_shard"]:
+        gaps.append("groups_per_shard")
+    if canceller is None or canceller.version != PRODUCTION["canceller_version"]:
+        gaps.append("canceller")
+    if known_stage and request.get("roles") != list(BASE_ROLES):
+        gaps.append("roles")
+    if known_stage and request.get("protocol") != PRODUCTION["known_protocol"]:
+        gaps.append("protocol")
+    return gaps
+
+
+def _audit(result, problem, root, stage, depth, lock, known, production, max_full):
     module = _module(stage)
     try:
         request = _read_json(root / "request.json")
@@ -419,14 +489,10 @@ def audit_artifact(root, stage, *, depth="checksum", lock=None, known=None, prod
     if stage != "known" and request.get("protocol") != STAGES[stage]["protocol"]:
         problem("protocol_name", "fail", f"request protocol {request.get('protocol')!r} is not {STAGES[stage]['protocol']}")
     if production:
-        known_stage = stage == "known"
-        canceller = (module._stage(request)[2] if known_stage else module._cancellation_of(request)[0])
-        if (request.get("limit_groups") is not None or request.get("groups_per_shard") != PRODUCTION["groups_per_shard"]
-                or canceller is None or canceller.version != PRODUCTION["canceller_version"]
-                or (known_stage and (request.get("roles") != list(BASE_ROLES)
-                                     or request.get("protocol") != PRODUCTION["known_protocol"]))):
+        gaps = production_gaps(stage, request)
+        if gaps:
             problem("not_production_request", "fail", "request is not the full frozen production request "
-                    "(all roles, no group limit, four groups per shard, obs-cancel/1 feature stage)")
+                    "(all roles, no group limit, four groups per shard, obs-cancel/1 feature stage)", unmet=gaps)
     if lock is not None:
         mismatches = [name for name, same in (
             ("generator source", request.get("source_sha256") == lock["generator_provenance"]),
@@ -508,6 +574,12 @@ def audit_artifact(root, stage, *, depth="checksum", lock=None, known=None, prod
             info["observations_committed"] += descriptor["n_samples"]
         result["roles"][role] = info
     _audit_manifest(result, root, stage, request, request_id, committed, problem)
+    if (root / "manifest.json").is_file() and all(
+            info["committed"] == info["expected_shards"] for info in result["roles"].values()):
+        try:
+            module._header(root)         # the loaders' own manifest/request/root-level validation
+        except (*_READ_ERRORS, AttributeError) as error:
+            problem("manifest_header", "fail", f"the generator's own manifest validation rejects this root: {error}")
     if depth == "full" and calibration_metadata is not None:
         _audit_full(result, root, stage, module, request, committed, calibration_metadata, max_full, problem)
     if known is not None and stage != "known":
@@ -584,11 +656,16 @@ def _audit_binding(root, stage, request, known, problem):
 
 
 def audit_check(result):
-    status = {"INVALID": FAIL, "NEEDS_QUARANTINE": BLOCKED}.get(result["state"], PASS)
+    status = {"INVALID": FAIL, "NEEDS_QUARANTINE": BLOCKED, "NOT_STARTED": NOT_RUN}.get(result["state"], PASS)
     committed = sum(info["committed"] for info in result["roles"].values())
     expected = sum(info["expected_shards"] for info in result["roles"].values())
+    note = ""
+    if result["state"] == "NOT_STARTED":
+        note = "; nothing was verified (absent or empty root: check the path)"
+    elif result["depth"] == "structure" and status == PASS:
+        note = "; structure depth does not read checksums and cannot detect modified bytes"
     return check(f"artifact.{result['stage']}", f"{result['stage']} artifact root", status,
-                 f"{result['state']}: {committed}/{expected} shards committed", **result)
+                 f"{result['state']}: {committed}/{expected} shards committed{note}", **result)
 
 
 # ---- transfer manifest -------------------------------------------------------------------------------------
@@ -637,9 +714,9 @@ def _meminfo_gib(path="/proc/meminfo"):
 
 def atomic_rename_probe(directory):
     """Write, fsync and os.replace one scratch file on the target filesystem (the generator's commit primitive)."""
-    probe = Path(directory) / f".b2_preflight_probe_{os.getpid()}"
+    probe = None
     try:
-        probe.mkdir()
+        probe = Path(tempfile.mkdtemp(prefix=".b2_preflight_probe_", dir=directory))      # never a pre-existing directory
         source, target = probe / "a.tmp", probe / "a"
         with open(source, "wb") as stream:
             stream.write(b"x" * 4096)
@@ -655,7 +732,8 @@ def atomic_rename_probe(directory):
     except OSError:
         return False
     finally:
-        shutil.rmtree(probe, ignore_errors=True)
+        if probe is not None:
+            shutil.rmtree(probe, ignore_errors=True)
 
 
 def probe_resources(root, ceilings=PROPOSED_CEILINGS, *, disk_usage=shutil.disk_usage, memory_gib=_meminfo_gib,
@@ -698,6 +776,8 @@ def resume_drill(workdir, generate, load_arrays, *, groups=2):
     if groups != 2:
         raise ValueError("the drill is capped at exactly two groups of one role (two one-group shards)")
     work = Path(workdir)
+    if work.exists() and any(work.iterdir()):
+        raise ValueError("drill workdir must be new or empty (it writes five sub-directories)")
     work.mkdir(parents=True, exist_ok=True)
     original = work / "original"
     generate(original)
@@ -772,7 +852,6 @@ def resume_drill(workdir, generate, load_arrays, *, groups=2):
 
 
 def np_equal(left, right):
-    import numpy as np
     return bool(np.array_equal(left, right))
 
 
@@ -836,19 +915,26 @@ def render_markdown(checks):
 
 # ---- command line ------------------------------------------------------------------------------------------
 
+def _write_new(path, text):
+    """Exclusive creation: an existing file is never replaced, even by a racing writer."""
+    try:
+        with open(path, "x") as stream:
+            stream.write(text)
+    except FileExistsError:
+        raise ValueError(f"{path} already exists; refusing to overwrite evidence") from None
+
+
 def _emit(value, out=None):
-    text = json.dumps(value, indent=1, allow_nan=False)
+    text = json.dumps(value, indent=1, allow_nan=False) + "\n"
     if out:
-        path = Path(out)
-        if path.exists():
-            raise ValueError(f"{path} already exists; refusing to overwrite evidence")
-        _atomic_json(path, value)
+        _write_new(out, text)
     else:
-        print(text)
+        sys.stdout.write(text)
 
 
 def _exit_code(summary, allow_blocked=False):
-    return {FAIL: 3, BLOCKED: 0 if allow_blocked else 4}.get(summary["verdict"], 0)
+    """0 PASS, 3 FAIL, 4 BLOCKED (0 if allowed), 5 NOT_RUN: a verdict that verified nothing is not a success."""
+    return {FAIL: 3, BLOCKED: 0 if allow_blocked else 4, NOT_RUN: 5}.get(summary["verdict"], 0)
 
 
 def main(argv=None):
@@ -922,10 +1008,7 @@ def main(argv=None):
             if args.host_root:
                 checks += probe_resources(args.host_root)
             if args.markdown:
-                path = Path(args.markdown)
-                if path.exists():
-                    raise ValueError(f"{path} already exists; refusing to overwrite")
-                path.write_text(render_markdown(checks))
+                _write_new(args.markdown, render_markdown(checks))
     except (ValueError, OSError, KeyError, TypeError) as error:
         parser.exit(2, f"error: {error}\n")
     result = report(checks)
@@ -933,7 +1016,8 @@ def main(argv=None):
         _emit(result, getattr(args, "out", None))
     except (ValueError, OSError) as error:
         parser.exit(2, f"error: {error}\n")
-    return _exit_code(result, args.allow_blocked)
+    # An audit's BLOCKED means the generator would refuse the root; only the informational commands may waive it.
+    return _exit_code(result, args.allow_blocked and args.command in ("gates", "checklist", "inventory"))
 
 
 if __name__ == "__main__":

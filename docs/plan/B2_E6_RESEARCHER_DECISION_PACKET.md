@@ -6,7 +6,7 @@ Date: 2026-10-23. Base: merged `main` `59ed11d60ace609a826f6379491c9a8dbd26d64d`
 their own words (templates in §6). It refines the E5 [memorandum](B2_E5_RESEARCHER_DECISIONS.md); where it differs the
 difference is stated. All numbers are reproduced by `scripts/b2_e6_decision_evidence.py` into
 [`docs/results/b2_e6_decision_evidence.json`](../results/b2_e6_decision_evidence.json) from committed evidence only (no new
-experiment, no data generation, no training). Machine-checked readiness status: the
+experiment, no data generation, no training). Readiness status (computed checks plus audited findings with named verifiers): the
 [production-readiness checklist](B2_E6_PRODUCTION_READINESS_CHECKLIST.md) and the [preflight contract (P29)](P29_b2_e6_production_preflight.md).
 
 ## 1. What must be decided, in what order
@@ -46,7 +46,7 @@ training budget, GPU use or the LOKO scope.
 
 **Evidence (recomputed from the 78 committed audit rows).** Of 500 test groups, 78 (15.6 %) drop a carrier: 35 on the co feed, 43 on
 the cross feed. Only co-feed drops move the downlink event level: median 0.71 dB, 90th percentile 2.93 dB, maximum 5.91 dB;
-cross-feed drift is below 1e-15 dB. Affected groups by size: 19 are at least 0.5 dB, 15 at least 1 dB, and **4 (0.8 % of the 500)
+cross-feed drift is zero by construction of the audit formula (the physical bound through the 30 dB uplink coupling is below 0.01 dB, P22). Affected groups by size: 19 are at least 0.5 dB, 15 at least 1 dB, and **4 (0.8 % of the 500)
 at least 3 dB**, the width of one matched bin. K17c's level-matched set (B2-match/1) is generated separately and is not affected;
 K17d concerns the natural near-family `adjacent_satellite_downlink` row and its pairing with the known uplink ASI.
 
@@ -63,30 +63,35 @@ now, not after seeing outcomes). Only option B alters generation and must be dec
 
 **Evidence.** `obs-cancel/1` fits one complex gain per 4096-sample snapshot (42.7 us). For a block-constant estimate and Wiener
 phase noise of the frozen 150 Hz effective linewidth (100 Hz satellite + 50 Hz receiver) the depth ceiling is
-`-10 log10(2 pi dv T / 6)` = **21.7 dB** at 42.7 us. The formula was checked against a seeded Monte Carlo (agreement within
-0.05 dB at 42.7, 6.4 and 1.78 us). New finding: the proposed acceptance criterion "depth >= 35 dB" with 64-128-symbol segments
-needs a segment of at most **2.01 us**, i.e. at least **31.8 Mbaud** with 64 symbols (63.6 Mbaud with 128, impossible inside the
-36 MHz band). The ceiling per carrier rate with the proposed segments (capped at one snapshot):
+`-10 log10(2 pi dv T / 6)` = **21.7 dB** over the full block; the stored PSD drops 512 samples per side (`edge_guard`), which
+gives **22.8 dB** for the stored window (seeded Monte Carlo, same assumptions). The formula was checked against a seeded Monte
+Carlo (agreement within 0.05 dB at 42.7, 6.4 and 1.78 us). The E5 memorandum already stated the formula, the 25.5 versus 35.5 dB
+figures and that 35 dB is "not universal", and scoped the target to a 36 Mbaud, 64-symbol reference, which is feasible. What E6
+adds is where that reference sits relative to the frozen scenes: a 35 dB ceiling needs a segment of at most **2.01 us**, i.e. at
+least **31.8 Mbaud** with 64 symbols (63.6 Mbaud with 128, impossible inside the 36 MHz band), whereas the widest carrier the frozen
+plan generator can place is **24 Mbaud** (`rs x (1 + roll-off + 5 % guard) <= 0.95 x 36 MHz`; the natural ASI family reaches 28.8
+Mbaud). At 24 Mbaud the 64-symbol ceiling is 33.8 dB. So 35 dB is unreachable for every carrier of the frozen scenes; the 36 Mbaud
+column below is a synthetic reference only. The ceiling per carrier rate with the proposed segments (capped at one snapshot):
 
 | Symbol rate (Mbaud) | 1 / 1.5 | 3.6 | 6 | 10 | 20 | 28.8 | 36 |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | 64-symbol segment, ceiling dB | 21.7 | 25.5 | 27.8 | 30.0 | 33.0 | 34.6 | **35.5** |
 | 128-symbol segment, ceiling dB | 21.7 | 22.5 | 24.7 | 27.0 | 30.0 | 31.6 | 32.5 |
 
-So a single universal 35 dB target is attainable only for the widest carriers; the frozen scenario generator spans narrower ones
-(the natural ASI alone spans 1-28.8 Mbaud, P22 section 7). The ceiling is the phase-noise term only (ideal block mean, no
+So a universal 35 dB target is reachable only at the synthetic 36 Mbaud reference; the frozen scenes span 1-24 Mbaud (natural ASI up to
+28.8 Mbaud, P22 section 7). The ceiling is the phase-noise term only (ideal block mean, no
 estimation noise); real decision-directed tracking is worse. The ceiling bounds sensitivity to weak in-band events, not validity.
 Cost: the canceller adds 1.34 s per observation; a tracker at the proposed at-most-2x runtime adds at most about 7.95 h over
 21,350 observations.
 
 | Option | Description | Scientific consequence | Engineering consequence |
 |---|---|---|---|
-| **A (recommended)** | Keep `obs-cancel/1` as the primary receiver; state the 21.7-25 dB ceiling in every residual-based result | Frozen, consistent with all pilots; results are lower bounds on residual visibility for weak events | None before DR-04 |
+| **A (recommended)** | Keep `obs-cancel/1` as the primary receiver; state the 21.7-25 dB ceiling (22.8 dB for the stored window) in every residual-based result | Frozen, consistent with all pilots; results are lower bounds on residual visibility for weak events | None before DR-04 |
 | B | Authorize a **separate** versioned design/validation study with rate-dependent acceptance criteria (target = ceiling formula minus a stated margin per carrier rate; no universal 35 dB), preregistered synthetic feasibility, no test-family tuning | Could raise the ceiling for wide carriers (64-symbol segments: +3.8 dB at 3.6 Mbaud, up to +13.8 dB at 36 Mbaud) but not for carriers of about 1.5 Mbaud or less, where one segment already spans a snapshot | Study cost not in any budget; a later switch to the new receiver means a second full generation |
 | C | Adopt a tracker as the **primary** receiver before production | Changes the receiver for the headline benchmark | Needs the study first; delays DR-04; new artifact stage name and P18 section 10 entry |
 
-**Approval must state:** A, B or C. If B, the revised criteria (the 35 dB wording of P22 section 6 and the E5 memorandum is withdrawn as
-infeasible for most carriers) and an explicit statement that the study's outputs are not mixed with B2-feat/1 fingerprints.
+**Approval must state:** A, B or C. If B, the revised criteria (the universal 35 dB wording of P22 section 6 is infeasible for every carrier of the frozen scenes
+and would be replaced; the E5 memorandum's 36 Mbaud, 64-symbol reference criterion remains a synthetic-feasibility target) and an explicit statement that the study's outputs are not mixed with B2-feat/1 fingerprints.
 
 ## 5. Proposed resource ceilings and the start-up gate for DR-04 (proposals only)
 

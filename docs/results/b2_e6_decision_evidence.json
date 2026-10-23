@@ -20,7 +20,7 @@
    "3.0": 4
   },
   "share_of_test_groups_at_least_bin_width": 0.008,
-  "note": "co-feed drops scale the downlink ASI event; cross-feed drops do not change the co reference"
+  "note": "co-feed drops scale the downlink ASI event; cross-feed drops do not change the co reference. The cross-feed value here is zero by construction of the audit formula; the physical bound (30 dB uplink coupling) is below 0.01 dB (P22 section 6)"
  },
  "k18": {
   "views": {
@@ -59,6 +59,11 @@
   "linewidth_hz": 150.0,
   "snapshot_us": 42.67,
   "obs_cancel_1_ceiling_db": 21.737914080416413,
+  "obs_cancel_1_stored_window_ceiling_db": 22.82035523692699,
+  "stored_window_note": "gain fitted on the full 4096-sample block, PSD stored over the interior after dropping edge_guard=512 samples per side (cancellation.py); seeded Monte Carlo",
+  "widest_planned_carrier_mbaud": 24.0,
+  "ceiling_64_symbols_at_widest_planned_carrier_db": 33.8,
+  "target_reachable_by_a_planned_carrier": false,
   "formula": "residual power ~ 2*pi*linewidth*T/6 (ideal block mean, pure Wiener phase, no estimation noise)",
   "cross_check": [
    {

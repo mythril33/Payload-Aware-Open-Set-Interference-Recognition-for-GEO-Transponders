@@ -3,7 +3,7 @@
 Date: 2026-10-23. Base `main` `59ed11d`. `benchmark_complete=false`. This is an engineering contract for a **read-only
 validator**; it grants no authorization, edits no frozen protocol (P18/P19-P22/P28 are untouched) and generates no benchmark data.
 Tool: [`scripts/b2_production_preflight.py`](../../scripts/b2_production_preflight.py); tests:
-[`tests/test_b2_production_preflight.py`](../../tests/test_b2_production_preflight.py); machine-checked
+[`tests/test_b2_production_preflight.py`](../../tests/test_b2_production_preflight.py); readiness
 [checklist](B2_E6_PRODUCTION_READINESS_CHECKLIST.md) and [audit findings](b2_e6_audit_findings.json); researcher
 [decision packet](B2_E6_RESEARCHER_DECISION_PACKET.md); measured [evidence](../results/b2_e6_preflight_evidence.md).
 
@@ -19,15 +19,15 @@ so "would the generator resume this root?" is answered by the generator's own de
 
 PASS = verified here by a test or an inspected location; FAIL = a verified defect, gap or mismatch that engineering can fix
 without a researcher decision (or a root that must not be used); BLOCKED = needs a researcher decision, authorization,
-hardware or a measurement, or an operator action; NOT_RUN. Exit 0 = PASS (or BLOCKED with `--allow-blocked`), 3 = FAIL,
-4 = BLOCKED, 2 = usage or refused overwrite. Reports are strict JSON (`B2-production-preflight/1`) with
+hardware or a measurement, or an operator action; NOT_RUN. Exit 0 = PASS, 3 = FAIL, 4 = BLOCKED, 5 = NOT_RUN (nothing was verified, e.g. an absent or mistyped root), 2 = usage error or refused overwrite;
+`--allow-blocked` waives BLOCKED only for `gates`, `checklist` and `inventory`, never for an `audit`. Reports are strict JSON (`B2-production-preflight/1`) with
 `benchmark_complete=false` and `production_authorized=false` fixed; the tool cannot emit anything else. Output files are never overwritten.
 
 ## 3. Commands
 
 | Command | Reads / writes | Purpose |
 |---|---|---|
-| `inventory` | nothing | Role/stage inventory derived from the frozen constants equals the E5 plan table (21,350 = 18,400 + 2,500 + 450); role id ranges are disjoint and reserved; interruption bound (32/20/12 observations per shard at four groups per shard); plan arithmetic (storage, wall/core hours, sample-passes, window memory) reproduces |
+| `inventory` | frozen constants, E5 plan, geoml preprocessing defaults | Role/stage inventory derived from the frozen constants equals the E5 plan table (21,350 = 18,400 + 2,500 + 450); role id ranges are disjoint and reserved; interruption bound (32/20/12 observations per shard at four groups per shard); plan arithmetic (storage, wall/core hours, sample-passes, window memory) reproduces |
 | `gates` | gates JSON + E5 memorandum JSON | Every gate is BLOCKED while pending; an approval without `approved_by`/`approved_at`/`decision`/`record` (and, for `full_*`, positive wall/core/disk ceilings), an approval attached to a pending gate, an unknown status, a gates/memorandum disagreement or `benchmark_complete=true` is FAIL |
 | `lock-create --out F` | repo; writes `F` | Immutable `B2-production-lock/1`: git commit and tree cleanliness, SHA-256 of every `src/**/*.py` and `src/geosim/data/*`, the generator provenance, frozen configs and gates file, parsed physical/canceller configs, Python/NumPy/SciPy/torch/xgboost versions, BLAS and hash-seed environment, the frozen production request choices. Refuses a dirty tree unless `--allow-dirty` |
 | `lock-verify --lock F [--require-clean]` | repo | Names every drift (source file added/modified/removed, config, generator, environment, commit, thread settings, edited lock) |

@@ -24,6 +24,9 @@ SYMBOL_RATES_MBAUD = (1.0, 1.5, 3.6, 6.0, 10.0, 20.0, 28.8, 36.0)
 CANCELLER_SECONDS_PER_OBSERVATION = 1.34          # docs/results/b2_production_budget.md section 1.1
 OBSERVATIONS = 21350
 MATCHED_BIN_WIDTH_DB = 3.0                          # bins 4-7 / 7-10 / 10-13 dB (P22 section 2)
+EDGE_GUARD_SAMPLES = 512                            # CancellationConfig.edge_guard: monitor samples dropped per side
+BLOCK_SAMPLES = 4096                                # monitor samples per snapshot
+MAX_PLANNED_CARRIER_MBAUD = 24.0                    # widest symbol rate with rs*(1+rolloff+guard) <= 0.95*36 MHz (geosim.plan)
 
 
 def k17d(path=RESULTS / "k17d_drift_audit.json"):
@@ -41,7 +44,9 @@ def k17d(path=RESULTS / "k17d_drift_audit.json"):
                 abs(computed[key] - stored[key]) < 1e-12 for key in computed),
             "co_feed_groups_at_least_db": {str(t): int((x >= t).sum()) for t in (0.5, 1.0, MATCHED_BIN_WIDTH_DB)},
             "share_of_test_groups_at_least_bin_width": float((x >= MATCHED_BIN_WIDTH_DB).sum() / audit["n_test_groups"]),
-            "note": "co-feed drops scale the downlink ASI event; cross-feed drops do not change the co reference"}
+            "note": "co-feed drops scale the downlink ASI event; cross-feed drops do not change the co reference. The "
+                    "cross-feed value here is zero by construction of the audit formula; the physical bound (30 dB uplink "
+                    "coupling) is below 0.01 dB (P22 section 6)"}
 
 
 def k18(path=RESULTS / "k18_scale_audit.json"):
@@ -70,6 +75,15 @@ def monte_carlo_ceiling_db(duration_s, n=20000, steps=256, seed=0, linewidth_hz=
     return float(-10 * np.log10(np.mean(np.abs(1 - np.exp(1j * error)) ** 2)))
 
 
+def guarded_window_ceiling_db(n=8000, seed=0, linewidth_hz=LINEWIDTH_HZ):
+    """Ceiling when the gain is fitted on the whole block but the stored PSD drops ``edge_guard`` samples per side."""
+    rng = np.random.default_rng(seed)
+    increments = rng.standard_normal((n, BLOCK_SAMPLES)) * np.sqrt(2 * np.pi * linewidth_hz * SNAPSHOT_S / BLOCK_SAMPLES)
+    phase = np.cumsum(increments, axis=1)
+    error = (phase - phase.mean(axis=1, keepdims=True))[:, EDGE_GUARD_SAMPLES:BLOCK_SAMPLES - EDGE_GUARD_SAMPLES]
+    return float(-10 * np.log10(np.mean(np.abs(1 - np.exp(1j * error)) ** 2)))
+
+
 def obs_cancel(n=20000):
     cross_check = [{"duration_us": round(t * 1e6, 3), "analytic_db": ceiling_db(t), "monte_carlo_db": monte_carlo_ceiling_db(t, n)}
                    for t in (SNAPSHOT_S, 6.4e-6, 1.78e-6)]
@@ -82,7 +96,14 @@ def obs_cancel(n=20000):
             row[f"segment_{symbols}_symbols"] = {"duration_us": round(duration * 1e6, 2), "ceiling_db": round(ceiling_db(duration), 1),
                                                  "meets_target": ceiling_db(duration) >= TARGET_DEPTH_DB}
         table.append(row)
+    widest = MAX_PLANNED_CARRIER_MBAUD
     return {"linewidth_hz": LINEWIDTH_HZ, "snapshot_us": round(SNAPSHOT_S * 1e6, 2), "obs_cancel_1_ceiling_db": ceiling_db(SNAPSHOT_S),
+            "obs_cancel_1_stored_window_ceiling_db": guarded_window_ceiling_db(max(n // 2, 1000)),
+            "stored_window_note": "gain fitted on the full 4096-sample block, PSD stored over the interior after dropping "
+                                  "edge_guard=512 samples per side (cancellation.py); seeded Monte Carlo",
+            "widest_planned_carrier_mbaud": widest,
+            "ceiling_64_symbols_at_widest_planned_carrier_db": round(ceiling_db(min(64 / (widest * 1e6), SNAPSHOT_S)), 1),
+            "target_reachable_by_a_planned_carrier": ceiling_db(64 / (widest * 1e6)) >= TARGET_DEPTH_DB,
             "formula": "residual power ~ 2*pi*linewidth*T/6 (ideal block mean, pure Wiener phase, no estimation noise)",
             "cross_check": cross_check, "target_depth_db": TARGET_DEPTH_DB, "segment_duration_for_target_us": round(needed * 1e6, 3),
             "min_symbol_rate_mbaud_for_target": {"64_symbols": round(64 / needed / 1e6, 1), "128_symbols": round(128 / needed / 1e6, 1)},

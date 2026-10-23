@@ -6,6 +6,7 @@ beyond a handful of stand-in observations and no gate is ever approved.
 import copy
 import importlib.util
 import json
+import os
 import shutil
 from pathlib import Path
 from types import SimpleNamespace
@@ -574,3 +575,197 @@ def test_lock_create_refuses_a_dirty_tree_without_the_explicit_flag(tmp_path, mo
     assert refused.value.code == 2 and not (tmp_path / "lock.json").exists()
     assert pre.main(["lock-create", "--allow-dirty", "--out", str(tmp_path / "lock.json")]) == 0
     assert strict((tmp_path / "lock.json").read_text())["git"]["clean"] is False
+
+
+# ---- independent-review regressions ------------------------------------------------------------------------
+
+READERS = {"known": known_ds.read_b2_manifest, "test": test_ds.read_b2_test_manifest,
+           "matched": matched_ds.read_b2_matched_manifest}
+
+
+def edit_json(path, mutate):
+    document = json.loads(Path(path).read_text())
+    mutate(document)
+    Path(path).write_text(json.dumps(document))
+
+
+MANIFEST_MUTATIONS = {
+    "benchmark_complete": lambda root, stage: edit_json(root / "manifest.json", lambda d: d.update(benchmark_complete=True)),
+    "artifact_version": lambda root, stage: edit_json(root / "manifest.json", lambda d: d.update(artifact_version=2)),
+    "protocol": lambda root, stage: edit_json(root / "manifest.json", lambda d: d.update(protocol="B2-other/1")),
+    "config": lambda root, stage: edit_json(root / "manifest.json", lambda d: d["config"].update(bandwidth=1.0)),
+    "calibration": lambda root, stage: edit_json(root / "manifest.json", lambda d: d["calibration"].update(n_pilots=1)),
+    "calibration_descriptor": lambda root, stage: edit_json(root / "calibration.json", lambda d: d.update(extra=1)),
+    "foreign_role_directory": lambda root, stage: (root / ("test-matched" if stage == "known" else "train")).mkdir(),
+}
+
+
+@pytest.mark.parametrize("stage", ["known", "test", "matched"])
+@pytest.mark.parametrize("mutation", sorted(MANIFEST_MUTATIONS))
+def test_manifest_and_root_level_tampering_is_invalid_exactly_when_the_loaders_refuse(stages, stage, mutation):
+    original = getattr(stages, stage)
+    assert pre.audit_artifact(original, stage)["state"] == "COMPLETE"
+    root = stages.tmp / f"mut-{stage}-{mutation}"
+    shutil.copytree(original, root)
+    MANIFEST_MUTATIONS[mutation](root, stage)
+    with pytest.raises(ValueError):
+        READERS[stage](root)                                                         # the loaders refuse this root ...
+    for depth in ("checksum", "full"):
+        audit = pre.audit_artifact(root, stage, depth=depth, max_full=None)
+        assert audit["state"] == "INVALID", (depth, audit["problems"])               # ... so the audit may not say PASS
+        assert pre.audit_check(audit)["status"] == pre.FAIL
+
+
+WRONG_TYPES = {
+    "manifest_list": lambda root: (root / "manifest.json").write_text("[]"),
+    "manifest_roles_list": lambda root: edit_json(root / "manifest.json", lambda d: d.update(roles=[])),
+    "manifest_role_entry_list": lambda root: edit_json(root / "manifest.json", lambda d: d["roles"].update(train=[])),
+    "descriptor_list": lambda root: (root / "train/shard-00000.json").write_text("[]"),
+    "descriptor_hashes_list": lambda root: edit_json(root / "train/shard-00000.json", lambda d: d.update(sha256=[])),
+    "calibration_list": lambda root: (root / "calibration.json").write_text("[]"),
+}
+
+
+@pytest.mark.parametrize("mutation", sorted(WRONG_TYPES))
+def test_wrong_typed_json_is_reported_as_invalid_never_as_a_crash_or_a_pass(stages, mutation):
+    root = stages.tmp / f"types-{mutation}"
+    shutil.copytree(stages.known, root)
+    WRONG_TYPES[mutation](root)
+    audit = pre.audit_artifact(root, "known", depth="full", max_full=None)
+    assert audit["state"] == "INVALID" and audit["problems"]
+    assert pre.audit_check(audit)["status"] == pre.FAIL
+
+
+def test_a_missing_or_mistyped_root_verifies_nothing_and_does_not_exit_zero(tmp_path, capsys):
+    audit = pre.audit_artifact(tmp_path / "typo", "known", production=True)
+    assert audit["state"] == "NOT_STARTED" and pre.audit_check(audit)["status"] == pre.NOT_RUN
+    assert "check the path" in pre.audit_check(audit)["message"]
+    assert pre.main(["audit", "--stage", "known", "--root", str(tmp_path / "typo"), "--production"]) == 5
+    (tmp_path / "plain-file").write_text("x")
+    assert pre.audit_artifact(tmp_path / "plain-file", "known")["state"] == "NOT_STARTED"
+    capsys.readouterr()
+
+
+def test_the_structure_depth_pass_says_it_cannot_see_modified_bytes(stages):
+    message = pre.audit_check(pre.audit_artifact(stages.known, "known", depth="structure"))["message"]
+    assert "cannot detect modified bytes" in message
+    assert "cannot detect" not in pre.audit_check(pre.audit_artifact(stages.known, "known"))["message"]
+
+
+def test_report_flags_cannot_be_overridden_by_a_caller():
+    result = pre.report([], production_authorized=True, benchmark_complete=True, note="kept")
+    assert result["production_authorized"] is False and result["benchmark_complete"] is False and result["note"] == "kept"
+
+
+@pytest.mark.parametrize("approval,needle", [
+    ({"approved_by": "  ", "approved_at": "2026-10-24T00:00:00Z", "decision": "x", "record": "r"}, "approved_by"),
+    ({"approved_by": True, "approved_at": "2026-10-24T00:00:00Z", "decision": "x", "record": "r"}, "approved_by"),
+    ({"approved_by": "me", "approved_at": "tomorrow", "decision": "x", "record": "r"}, "approved_at"),
+    ({"approved_by": "me", "approved_at": 0, "decision": "x", "record": "r"}, "approved_at"),
+    ({"approved_by": "me", "approved_at": "2026-10-24T00:00:00Z", "decision": [], "record": "r"}, "decision"),
+    ({"approved_by": "me", "approved_at": "2026-10-24T00:00:00Z", "decision": "x", "record": ""}, "record"),
+    ("approved", "no approval record"), (None, "no approval record"), ([], "no approval record")])
+def test_an_approval_record_must_be_a_real_structured_record(approval, needle):
+    assert any(needle in problem for problem in pre.approval_problems(approval, False))
+
+
+@pytest.mark.parametrize("value", [float("inf"), float("nan"), True, 0, -1, "36", None, [36]])
+def test_generation_ceilings_must_be_finite_positive_numbers(value):
+    good = {"approved_by": "me", "approved_at": "2026-10-24T00:00:00+00:00", "decision": "x", "record": "r",
+            "wall_hours": 36, "core_hours": 42.5, "working_disk_gib": 25, "backup_disk_gb": 9}
+    assert pre.approval_problems(good, True) == []
+    for name in pre.CEILING_FIELDS:
+        bad = dict(good, **{name: value})
+        assert any(name in problem for problem in pre.approval_problems(bad, True)), (name, value)
+    assert pre.approval_problems({k: v for k, v in good.items() if k != "wall_hours"}, True)
+
+
+def test_production_gaps_name_each_unmet_condition_separately(stages):
+    from geosim.b2_protocol import BASE_ROLES
+    for stage, root in (("known", stages.known), ("test", stages.test), ("matched", stages.matched)):
+        base = json.loads((root / "request.json").read_text())
+        base.update(limit_groups=None, groups_per_shard=pre.PRODUCTION["groups_per_shard"])
+        if stage == "known":
+            base["roles"] = list(BASE_ROLES)
+        assert pre.production_gaps(stage, base) == [], stage
+        for field, value, gap in (("limit_groups", 2, "limit_groups"), ("groups_per_shard", 8, "groups_per_shard")):
+            assert pre.production_gaps(stage, dict(base, **{field: value})) == [gap]
+        without = {key: value for key, value in base.items() if key not in ("cancellation", "fifth_channel")}
+        assert pre.production_gaps(stage, without) == ["canceller"]
+        if stage == "known":
+            assert pre.production_gaps(stage, dict(base, roles=["train", "test"])) == ["roles"]
+            assert pre.production_gaps(stage, dict(base, protocol="B2-base/1")) == ["protocol"]
+
+
+def test_the_generators_default_to_eight_groups_per_shard_not_the_plans_four():
+    assert known_ds.GROUPS_PER_SHARD == test_ds.GROUPS_PER_SHARD == matched_ds.GROUPS_PER_SHARD == 8
+    assert pre.PRODUCTION["groups_per_shard"] == 4
+    other = {item["id"]: item for item in pre.check_inventory(groups_per_shard=8)}["inventory.interruption_bound"]
+    assert other["status"] == pre.PASS and "64 known / 40 test-only / 24 matched" in other["message"]
+
+
+def test_manifest_commit_carries_no_dirty_flag_while_the_lock_covers_the_whole_tree(stages):
+    from geosim.dataset import _generator_provenance as real_provenance
+    manifest = json.loads((stages.known / "manifest.json").read_text())
+    assert isinstance(manifest["commit"], str) and not any("dirty" in key for key in manifest)
+    assert all("/" not in name or name.startswith("data/") for name in real_provenance())      # geosim top level + data only
+    lock = pre.build_lock()
+    assert "src/geoml/b2_a5.py" in lock["source_sha256"] and "clean" in lock["git"]
+    assert not any(name.startswith("geoml") for name in lock["generator_provenance"])
+
+
+def refingerprint(lock):
+    body = {key: value for key, value in lock.items() if key != "lock_fingerprint"}
+    return {**body, "lock_fingerprint": pre._fingerprint(body)}
+
+
+def test_lock_verify_cli_isolates_the_commit_check_from_the_fingerprint_check(tmp_path, capsys):
+    lock = pre.build_lock()
+    lock["git"]["commit"] = "0" * 40
+    path = tmp_path / "lock.json"
+    path.write_text(json.dumps(refingerprint(lock)))
+    capsys.readouterr()
+    assert pre.main(["lock-verify", "--lock", str(path)]) == 3
+    problems = strict(capsys.readouterr().out)["checks"][0]["evidence"]["problems"]
+    assert len(problems) == 1 and "git commit" in problems[0]
+
+
+def test_allow_blocked_never_waives_an_audit_that_the_generator_would_refuse(stages, capsys):
+    root = stages.tmp / "orphan-cli"
+    shutil.copytree(stages.known, root)
+    for name in ("manifest.json", "train/shard-00001.json"):
+        (root / name).unlink()
+    capsys.readouterr()
+    assert pre.main(["--allow-blocked", "audit", "--stage", "known", "--root", str(root)]) == 4
+    assert pre.main(["--allow-blocked", "gates"]) == 0
+    capsys.readouterr()
+
+
+def test_the_rename_probe_never_touches_a_pre_existing_directory(tmp_path):
+    bystander = tmp_path / f".b2_preflight_probe_{os.getpid()}"
+    bystander.mkdir()
+    (bystander / "keep.txt").write_text("evidence")
+    assert pre.atomic_rename_probe(tmp_path) is True
+    assert (bystander / "keep.txt").read_text() == "evidence"
+    assert sorted(path.name for path in tmp_path.iterdir()) == [bystander.name]
+
+
+def test_the_drill_refuses_a_non_empty_workdir_and_deep_sampling_must_be_positive(tmp_path, stages):
+    (tmp_path / "busy").mkdir()
+    (tmp_path / "busy" / "x").write_text("x")
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("must not generate")
+    with pytest.raises(ValueError, match="new or empty"):
+        pre.resume_drill(tmp_path / "busy", forbidden, forbidden)
+    for bad in (0, -1, True, 1.5):
+        with pytest.raises(ValueError, match="positive integer"):
+            pre.audit_artifact(stages.known, "known", depth="full", max_full=bad)
+
+
+def test_output_files_are_created_exclusively(tmp_path):
+    target = tmp_path / "evidence.json"
+    pre._write_new(target, "{}\n")
+    with pytest.raises(ValueError, match="already exists"):
+        pre._write_new(target, "other")
+    assert target.read_text() == "{}\n"
