@@ -6,6 +6,7 @@ anything unverifiable is rejected rather than silently recomputed over.
 """
 import fcntl
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -129,9 +130,9 @@ def test_modified_committed_state_fails_closed(tmp_path, monkeypatch):
     meta = json.loads(path.read_text())
     meta["record"]["corrupted_identity"] = "0" * 64
     path.write_text(json.dumps(meta))
-    with pytest.raises(ValueError, match="payload digest"):                       # any edit of the JSON payload is detected
+    with pytest.raises(ValueError, match="metadata checksum"):                       # any edit of the JSON payload is detected
         _run(tmp_path / "out")
-    meta["payload_sha256"] = fingerprint({key: meta[key] for key in a5.STATE_KEYS})   # a consistent re-sign is caught by the recomputation
+    meta["metadata_sha256"] = fingerprint({key: meta[key] for key in a5.STATE_KEYS})   # a consistent re-sign is caught by the recomputation
     path.write_text(json.dumps(meta))
     with pytest.raises(ValueError, match="no longer matches its recomputed corruption"):
         _run(tmp_path / "out")
@@ -198,7 +199,7 @@ def test_every_field_of_a_committed_scene_state_is_covered_by_its_digest(tmp_pat
         shutil.rmtree(tmp_path / "out")
         shutil.copytree(pristine, tmp_path / "out")
         _edit(tmp_path / "out" / "state" / "scene-3200000-unauthorized.json", edit)
-        with pytest.raises(ValueError, match="payload digest"):
+        with pytest.raises(ValueError, match="metadata checksum"):
             _run(tmp_path / "out")
 
 
@@ -207,7 +208,7 @@ def test_array_presence_must_match_the_applied_status_even_when_resigned(tmp_pat
 
     def drop_arrays(meta):
         meta["arrays_sha256"] = None
-        meta["payload_sha256"] = fingerprint({key: meta[key] for key in a5.STATE_KEYS})
+        meta["metadata_sha256"] = fingerprint({key: meta[key] for key in a5.STATE_KEYS})
 
     _edit(state / "scene-3200000-unauthorized.json", drop_arrays)
     with pytest.raises(ValueError, match="arrays must exist exactly for applied scenes"):
@@ -278,14 +279,21 @@ def test_concurrent_invocation_on_the_same_output_is_refused_and_the_lock_is_rel
     assert again == result
 
 
-def test_matrix_driver_fails_loudly_instead_of_hiding_failed_or_missing_invocations(tmp_path):
+def test_matrix_wrapper_never_masks_a_python_status_or_a_zero_exit_without_results(tmp_path):
+    """The shell wrapper is a thin `exec` of the Python orchestrator, so no pipeline can hide an exit status."""
     script = ROOT / "scripts" / "run_b2_a5_pilot_matrix.sh"
     text = script.read_text()
     assert subprocess.run(["bash", "-n", str(script)]).returncode == 0
-    assert "set -u -o pipefail" in text and "PIPESTATUS" in text and "MISSING" in text
-    assert "unrestricted" not in text and "--train" not in text and "--generate" not in text
-    for stand_in, expectation in (("/bin/false", "FAILED"), ("/bin/true", "MISSING")):   # fails loudly / exits 0 without producing results
-        done = subprocess.run(["bash", str(script), "none", "none", "none", str(tmp_path / Path(stand_in).name)],
-                              env={"PATH": "/usr/bin:/bin", "PYTHON": stand_in}, cwd=ROOT, capture_output=True, text=True)
-        assert done.returncode == 1 and expectation in done.stdout
-        assert done.stdout.count("MISSING") == 25 and "MATRIX_DONE expected=25 failed=1" in done.stdout
+    assert "set -euo pipefail" in text and "exec " in text and "tail" not in text
+    assert "--train" not in text and "--generate" not in text and "unrestricted" not in text
+    package = tmp_path / "stub" / "geoml"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text("")
+    (package / "b2_a5.py").write_text("raise SystemExit(0)\n")      # exits 0 without producing results.json
+    out = tmp_path / "out"
+    done = subprocess.run(["bash", str(script), "none", "none", "none", str(out), "--only", "known_none_both"],
+                          env={**os.environ, "PYTHON": sys.executable, "PYTHONPATH": str(package.parent)},
+                          cwd=ROOT, capture_output=True, text=True, timeout=30)
+    assert done.returncode == 1 and "MATRIX_FAILED" in done.stdout and "missing=1" in done.stdout
+    status = json.loads((out / "matrix_status.json").read_text())
+    assert status["matrix_status"] == "FAILED" and not status["matrix_complete"] and status["totals"]["completed"] == 0

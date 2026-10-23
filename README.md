@@ -266,3 +266,9 @@ The measured recovery subset completed9/25,16pending, with32exact replay parity 
 local regression was1220passed+1environment RSS skip, followed by7final affected summary tests.
 The tiny CPU stand-in checkpoints and paired counterfactual metrics establish execution only; no result here establishes
 robustness or recognition performance. K18/K17d/OBS-CANCEL/2 remain pending and `benchmark_complete=false`.
+
+That nine-invocation record is preserved as [partial recovery record](docs/results/b2_a5_postmerge_partial_pilot.md) (with its
+[review](docs/research/b2_e4_postmerge_review.md)). A follow-up reconciliation unified the two parallel hardenings (one checksummed
+`B2-A5-scene-state/2` format, the matrix wrapper over `scripts/b2_a5_matrix.py`) and re-ran the complete 25-invocation inventory on the
+unified code: `COMPLETE 25/25`, 90 exact replay-parity checks, full local suite 1228 passed; see the
+[bounded pilot](docs/results/b2_a5_dual_pol_pilot.md). Same limits: stand-in checkpoints, two groups per stage, execution evidence only.

@@ -240,7 +240,13 @@ def markdown(summary: dict) -> str:
                 model.append(f"| `{inv['name']}` | {view} | {name} | {c['n_scenes']} | {pct(c['agreement_with_original_label'])} | "
                              f"{pct(c['prediction_change_vs_original'])} | {logit} | {pct(c['alarm_among_original_clean']['mean'])} (n={c['alarm_among_original_clean']['n']}) | "
                              f"{pct(c['alarm_among_original_event']['mean'])} (n={c['alarm_among_original_event']['n']}) |")
-    return ("### Receiver-level and baseline-input displacement (model independent; RC = RECEIVER_CONSISTENT)\n\n" + "\n".join(receiver)
+    coverage = summary["matrix_coverage"]
+    counts = coverage.get("totals", {})
+    banner = (f"Matrix coverage: **{coverage['matrix_status']}**; complete={coverage['matrix_complete']}; "
+              f"completed={counts.get('completed', 'unknown')}/{counts.get('inventory', 'unknown')}, "
+              f"pending={counts.get('pending', 'unknown')}, failed={counts.get('failed', 'unknown')}, "
+              f"missing={counts.get('missing', 'unknown')}. Unexecuted invocation slots are not non-applicable samples.\n\n")
+    return (banner + "### Receiver-level and baseline-input displacement (model independent; RC = RECEIVER_CONSISTENT)\n\n" + "\n".join(receiver)
             + "\n\n### Model-level paired conditions (frozen checkpoints supplied by the run directory; see the summary's interpretation block for what they are)\n\n" + "\n".join(model) + "\n")
 
 

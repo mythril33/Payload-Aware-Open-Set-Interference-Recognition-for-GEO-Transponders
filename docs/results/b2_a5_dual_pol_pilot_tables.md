@@ -1,3 +1,5 @@
+Matrix coverage: **COMPLETE**; complete=True; completed=25/25, pending=0, failed=0, missing=0. Unexecuted invocation slots are not non-applicable samples.
+
 ### Receiver-level and baseline-input displacement (model independent; RC = RECEIVER_CONSISTENT)
 
 | Invocation | Applied / selected | Replays | Cancellations | Parity exact | Core depth Δ (dB) | Residual Δ (dB) | EDSC score Δ MASK_ONLY / RC (dB) | CFAR planned scenes changed | CFAR blind scenes changed | XGB features changed MASK_ONLY / RC |
@@ -28,7 +30,7 @@
 | `matched_phantom_both` | 4 / 4 | 4 | 8 | True | -0.00 | -0.93 | +0.40 / -0.64 | 2 | 0 | 10 / 15 of 26 |
 | `matched_phantom_co_only` | 4 / 4 | 4 | 8 | True | -0.00 | -0.93 | +0.40 / -0.64 | 2 | 0 | 9 / 14 of 26 |
 
-### Model-level paired conditions (stand-in checkpoints; execution evidence only)
+### Model-level paired conditions (frozen checkpoints supplied by the run directory; see the summary's interpretation block for what they are)
 
 | Invocation | View | Condition | n | Agreement | Changed | max abs Δlogit | Alarm among original-clean | Alarm among original-event |
 |---|---|---|---|---|---|---|---|---|

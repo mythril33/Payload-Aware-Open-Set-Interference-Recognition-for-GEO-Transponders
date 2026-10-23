@@ -30,7 +30,7 @@ fresh known-data generation (64 observations,274.449s,574192KiB peak RSS)
 and matched-data generation (6 observations,31.947s,562816KiB peak RSS).
 Only the documented3-epoch CPU stand-in setup is permitted; the A5 runner
 itself still fits nothing. Pilot measurements and checkpoint identities
-are reported in [the results note](../results/b2_a5_dual_pol_pilot.md).
+are reported in [the partial recovery record](../results/b2_a5_postmerge_partial_pilot.md); the later 25-invocation record on the unified code is [the results note](../results/b2_a5_dual_pol_pilot.md).
 The selected nine finished with exit3/PARTIAL:32applied and4non-applicable
 scene-slots,32replays/56cancellations, all32parity checks exact. Matrix wall
 was272.103641s and maximum process RSS742884KiB. All16 unselected
@@ -58,7 +58,7 @@ training and full LOKO remain `NOT_AUTHORIZED`, and
 
 Status vocabulary: `VERIFIED` (checked in this session against code/tests), `IMPLEMENTED`, `BOUNDED_PILOT`,
 `PLANNED`, `BLOCKED`, `APPROVAL_REQUIRED`. Updated as the work lands; the final state is in
-[the pilot note](../results/b2_a5_dual_pol_pilot.md) and DURUM.
+[the pilot note](../results/b2_a5_dual_pol_pilot.md), the [partial recovery record](../results/b2_a5_postmerge_partial_pilot.md) and DURUM.
 Here, "this session" and the original branch/environment refer to the
 pre-merge implementation session, not the recovery environment above.
 
@@ -136,7 +136,7 @@ re-review of `a595bcf`/`4b736a6` after the fixes and the resumability feature; s
 | B — plan perturbations | frozen A5 semantics, masks, applicability | `src/geoml/b2_a5_plan.py`, `tests/test_b2_a5_plan.py` |
 | C — evaluation & metrics | frozen-model paired evaluation, bootstrap, caps | `src/geoml/b2_a5.py`, `configs/b2_a5_smoke.json`, `tests/test_b2_a5_eval.py` |
 | D — QA & CI | negative tests, strict JSON, workflow | `tests/test_b2_a5_negative.py`, `.github/workflows/b2-readiness-ci.yml` (additive) |
-| E — red team | read-only review | `docs/research/b2_e4_red_team_review.md` |
+| E — red team | read-only review | `docs/research/b2_e4_red_team_review.md` (implementation session), `docs/research/b2_e4_postmerge_review.md` (post-merge recovery) |
 
 ## 7. Researcher authorization status
 
@@ -153,7 +153,7 @@ State lives in Git (branch `claude/dazzling-maxwell-y0hw0q`; PR #15 is merged, f
 |---|---|---|
 | Pilot generation (`geosim.b2_dataset`, `b2_matched_dataset`) | the same command and output directory | verified shards; a directory with a different request or an unverified partial shard is refused (use a fresh directory) |
 | Stand-in training (`geoml.b2_experiment`) | the same command with `--reuse` | checkpoints/scorers/calibrations whose provenance equals the data; mismatch is refused |
-| One A5 invocation (`python -m geoml.b2_a5 ...`) | the same command and `--out` | per-scene `out/state/` entries (payload digest + array SHA-256, bound to the experiment fingerprint and library environment); the invocation's own uncommitted `*.tmp`/array files are discarded; modified or foreign entries are refused (digests detect accidental modification, they do not authenticate); a second concurrent process is refused by a lock; a complete checksummed result is reused after its identity verifies |
+| One A5 invocation (`python -m geoml.b2_a5 ...`) | the same command and `--out` | per-scene `out/state/` entries (`B2-A5-scene-state/2` metadata checksum + array SHA-256, bound to the experiment fingerprint and library environment); the invocation's own uncommitted `*.tmp`/array files are discarded; modified or foreign entries are refused (digests detect accidental modification, they do not authenticate); a second concurrent process is refused by a lock; a complete checksummed result is reused after its identity verifies |
 | The pilot matrix | `scripts/run_b2_a5_pilot_matrix.sh` | every invocation is handed to the CLI: finished ones are reused after identity verification, an interrupted one resumes at scene level, a changed identity is refused (use a fresh `OUT`); failures and missing results make the script exit non-zero |
 | Summary | `scripts/summarize_b2_a5_pilot.py` (pure function of the invocation results) | refuses mixed identities |
 
