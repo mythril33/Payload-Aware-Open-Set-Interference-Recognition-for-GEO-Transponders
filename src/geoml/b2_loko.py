@@ -240,6 +240,7 @@ def run_smoke(config, data, out, *, holdout, reuse=False, bootstrap=200, log=pri
               "plan_fingerprint": plan["plan_fingerprint"], "experiment_fingerprint": experiment_id,
               "data_fingerprint": identity, "config": config.resolved(), "source": source,
               "checkpoint_sha256": checkpoint_sha, "history": fitted["history"],
+              "train_diagnostics": fitted.get("train_diagnostics"),       # K18, observation only
               "n_mahalanobis_training": len(filtered["train"]), "methods": methods,
               "denominators": {"known_acceptance": "all seven retained test variants per scenario",
                   "accepted_known_accuracy": "accepted retained known test variants only; null when empty",

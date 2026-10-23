@@ -564,7 +564,9 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
                          "matched": None if matched_out is None else _matched_metrics(
                              matched, matched_out, view_calibrations, scorer, alarm_threshold, test, predictions),
                          "checkpoint_sha256": checkpoint_sha, "training_source_revision": fitted.get("source_revision"),
-                         "n_parameters": fitted["n_parameters"], "history": fitted["history"]}
+                         "n_parameters": fitted["n_parameters"], "history": fitted["history"],
+                         # K18, observation only: training-batch loss components; None for checkpoints that predate it
+                         "train_diagnostics": fitted.get("train_diagnostics")}
         if matched_out is not None:
             selection = _select_representatives(matched)
             methods[view]["matched"]["representatives"] = {**selection,

@@ -338,6 +338,11 @@ def test_runner_streams_a_disk_artifact_with_frozen_roles_thresholds_and_compati
         assert values["alarm"]["n_clean_calibration"] == 3
         assert sum(sum(row) for row in values["confusion"]) == 24
         assert values["plan_consistency"]["n_samples"] == 24
+    for view in config.views:                                                         # K18: observation-only training diagnostics
+        block = result["methods"][view]["train_diagnostics"]
+        assert block["schema"] == "B2-train-diagnostics/1" and block["split"] == "train" and block["affects_training"] is False
+        assert len(block["epochs"]) == 1 and block["epochs"][0]["n_samples"] == 24
+        assert block["epochs"][0]["center_to_ce_ratio"] is not None and block["epochs"][0]["n_plan_samples"] == 24
     assert len(json.loads((out / "predictions.json").read_text())) == 24
     summary = json.loads((out / "results_summary.json").read_text())
     assert summary["summary_rule"]["dropped_keys"] == list(__import__("geoml.b2_experiment", fromlist=["x"]).SUMMARY_DROPPED)
@@ -347,6 +352,7 @@ def test_runner_streams_a_disk_artifact_with_frozen_roles_thresholds_and_compati
     # Frozen thresholds and checkpoints are reused unchanged; a different window policy changes the fingerprint only.
     again = run_b2_experiment(config, artifact, out, reuse=True, log=logs.append)
     assert again["methods"]["co"]["checkpoint_sha256"] == result["methods"]["co"]["checkpoint_sha256"]
+    assert again["methods"]["co"]["train_diagnostics"] == result["methods"]["co"]["train_diagnostics"]   # via the checkpoint
     for view in config.views:
         for method in config.methods:
             assert again["methods"][view]["rejection"][method]["calibration"] == result["methods"][view]["rejection"][method]["calibration"]
