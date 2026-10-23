@@ -60,5 +60,16 @@ jobs:
           PY
       - name: Compile sources (syntax check)
         run: python -m compileall -q src tests scripts
+      - name: E4 A5 plan-corruption checks (bounded, CPU only)
+        run: |
+          # Pure plan transformations, real-physics replay parity on one 8-scene test group generated inside
+          # the test fixture (never the full dataset), receiver invariants, and the leakage/negative matrix on
+          # deterministic stand-in physics. No model is trained for production and nothing is uploaded.
+          python -m pytest -q tests/test_b2_a5_plan.py tests/test_b2_a5_replay.py tests/test_b2_a5_eval.py \
+            tests/test_b2_a5_negative.py tests/test_b2_a5_resume.py tests/test_b2_a5_summary.py
       - name: Run repository tests on bounded CI runner
-        run: python -m pytest -q
+        run: |
+          # The E4 A5 files already ran in the previous step; everything else (and any new test) runs here.
+          python -m pytest -q --ignore=tests/test_b2_a5_plan.py --ignore=tests/test_b2_a5_replay.py \
+            --ignore=tests/test_b2_a5_eval.py --ignore=tests/test_b2_a5_negative.py --ignore=tests/test_b2_a5_resume.py \
+            --ignore=tests/test_b2_a5_summary.py

@@ -1,0 +1,8 @@
+{
+  "perturbation": "drop_one",
+  "scope": "co_only",
+  "stage": "known",
+  "n_groups": 2,
+  "labels": ["clean", "unauthorized"],
+  "views": ["co", "dual", "dual_residual"]
+}

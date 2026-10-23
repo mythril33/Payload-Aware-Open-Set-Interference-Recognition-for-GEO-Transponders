@@ -1,6 +1,6 @@
 # Payload-Aware Open-Set Interference Recognition for GEO Transponders
 
-**B2 production readiness (2026-10-23; E1/E2/E3a merged, bounded E3b implemented):** [P23 implementation/gate plan](docs/plan/P23_b2_production_readiness.md), [P26 EDSC](docs/plan/P26_b2_e3a_edsc_baseline.md), [P27 XGBoost](docs/plan/P27_b2_e3b_xgboost_baseline.md), [decision gate JSON](docs/plan/b2_readiness_gates_2026-10-21.json). Full production remains authorization-gated.
+**B2 production readiness (2026-10-23; E1-E3b merged, bounded E4 implemented):** [P23 implementation/gate plan](docs/plan/P23_b2_production_readiness.md), [P26 EDSC](docs/plan/P26_b2_e3a_edsc_baseline.md), [P27 XGBoost](docs/plan/P27_b2_e3b_xgboost_baseline.md), [P28 dual-pol A5](docs/plan/P28_b2_e4_dual_pol_a5.md), [decision gate JSON](docs/plan/b2_readiness_gates_2026-10-21.json). Full production remains authorization-gated.
 
 
 GEO bent-pipe transponderindeki girişimi, operatörün downlink spektrum izlemesinden tanıyan derin öğrenme çalışması. Ders projesi; makaleye genişletilecek.
@@ -237,3 +237,18 @@ then freezes clean-only val-calib alarms before test scoring. The binary
 MSP/OSCR reports are separate. See [P27](docs/plan/P27_b2_e3b_xgboost_baseline.md)
 and [bounded results](docs/results/b2_xgb_baseline.md). Tiny pilot values do
 not establish recognition quality or population Pfa; no production run is implied.
+
+### E4 dual-pol A5 operator-plan corruption
+
+`python -m geoml.b2_a5 --config configs/b2_a5_smoke.json --data data/b2-feat-pilot --runs runs/b2-feat-pilot --out runs/b2-a5-smoke`
+asks how frozen recognizers behave when the *operator plan* is wrong (shifted, stale, with a dropped or phantom carrier,
+or authorizing an observed intruder) while the *received signal* stays physically identical. The scene is replayed with
+the source artifact's own request and verified calibration (the `none` replay must equal the stored shard), the
+co and/or cross belief is corrupted, both masks are rebuilt, and the residual is recomputed by the frozen `obs-cancel/1` from the
+co-pol IQ and the corrupted co belief (`RECEIVER_CONSISTENT`); the stored-residual `MASK_ONLY` run is only the weaker control.
+Checkpoints, scorers and thresholds come from a `geoml.b2_experiment` run directory and are never trained, fitted or
+recalibrated here; counterfactual outputs are descriptive agreement with the original label, not accuracy. Execution is capped
+(2 groups, 2 classes, one perturbation configuration, 16 replays, 24 cancellations) and CPU only. See
+[P28](docs/plan/P28_b2_e4_dual_pol_a5.md), [context](docs/engineering/B2_E4_CONTEXT.md) and the
+[bounded pilot](docs/results/b2_a5_dual_pol_pilot.md); the pilot checkpoints are chance-level stand-ins, so nothing here
+is a robustness or recognition result.

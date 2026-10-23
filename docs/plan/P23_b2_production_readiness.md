@@ -55,6 +55,8 @@ A gate's proposal is **not** approval. Record the researcher's explicit decision
 
 ### E4 — Full A5 dual-pol operator-plan corruption
 
+**Status (2026-10-23): bounded harness implemented** — [P28](P28_b2_e4_dual_pol_a5.md), `geoml.b2_a5*`, tests `tests/test_b2_a5_*.py`; capped CPU pilot only, checkpoints are chance-level stand-ins, no production authorization implied (see [results](../results/b2_a5_dual_pol_pilot.md)).
+
 - Go beyond the existing A1 mask-only shortcut. Perturb **both** operator plan descriptors and reconstruct both masks under shifts (±0.5 MHz), dropped carrier, phantom carrier, and unauthorized-as-authorized cases as applicable. On the 5-channel path **recompute the observation-based cancellation residual from the perturbed plan**; merely altering saved masks is an explicitly labeled weaker control.
 - Freeze checkpoints/calibrators, do not retrain on tests, never modify the physical received observation, preserve group IDs and prohibit simulator-truth inputs. Test independent perturbation of co/cross plans and confirm changed residual/unchanged observation, provenance and deterministic replay.
 
