@@ -294,7 +294,7 @@
       "merge_sha": "ff81cae1b4e2563cc88271566665e9feae7cd44e"
     },
     "dual_pol_a5_plan_corruption": {
-      "status": "MERGED_ENGINEERING_BOUNDED_PARTIAL_EVIDENCE_VERIFIED_UNIFIED_HARDENING_PENDING_MERGE",
+      "status": "MERGED_UNIFIED_ENGINEERING_COMPLETE_BOUNDED_EVIDENCE",
       "merged_pr": 15,
       "merge_sha": "4b736a6c425ab532e7c8e1bccc7c906f86ebe0be",
       "protocol": "B2-A5-eval/1",
@@ -324,29 +324,14 @@
       },
       "postmerge_engineering_commit": "2ee03c53ea2183e1b227f09d428701215cfb2090",
       "execution_plan": "docs/engineering/B2_E4_POSTMERGE_EXECUTION.json",
-      "pilot_evidence_status": "NINE_OF_TWENTY_FIVE_PARTIAL_SIXTEEN_PENDING",
+      "pilot_evidence_status": "UNIFIED_TWENTY_FIVE_OF_TWENTY_FIVE_COMPLETE_SEPARATE_RECOVERY_PRESERVED",
       "evidence": "docs/plan/P28_b2_e4_dual_pol_a5.md; docs/results/b2_a5_postmerge_partial_pilot.md (parallel recovery record, PARTIAL 9/25); docs/results/b2_a5_dual_pol_pilot.md (complete 25-invocation record on the unified code); tests/test_b2_a5_*.py",
       "review": "docs/research/b2_e4_postmerge_review.md (recovery session); docs/research/b2_e4_red_team_review.md (implementation session)",
-      "full_matrix_complete": false,
+      "full_matrix_complete": true,
       "recognition_performance_validated": false,
       "full_generation_executed": false,
       "gpu_training_executed": false,
       "review_status": "NO_REMAINING_MATERIAL_CODE_OR_NUMERICAL_EVIDENCE_FINDING",
-      "pilot_counts": {
-        "invocations_complete": 9,
-        "inventory": 25,
-        "pending": 16,
-        "failed": 0,
-        "missing": 0,
-        "selected_scene_slots": 36,
-        "applied_scene_slots": 32,
-        "not_applicable_scene_slots": 4,
-        "blocked_scene_slots": 0,
-        "physical_replays": 32,
-        "cancellation_evaluations": 56,
-        "receiver_recomputations": 24,
-        "exact_parity_checks": 32
-      },
       "validation": {
         "full_local": {
           "command": [
@@ -477,7 +462,50 @@
           "peak_rss_kib_max": 1072184,
           "scope": "two groups per stage, chance-level stand-in checkpoints; execution evidence only"
         },
-        "github_actions": "pending: recorded in the follow-up PR description after the run"
+        "github_actions": {
+          "head_sha": "176faf5bb2f69d096557f3b3f90db96f55eb132e",
+          "run_id": 39967494290,
+          "job_id": 120461084118,
+          "conclusion": "success",
+          "e4_passed": 107,
+          "remaining_passed": 1121,
+          "skipped": 0,
+          "failed": 0,
+          "source": "decoded raw job logs independently inspected during E5"
+        }
+      },
+      "recovery_pilot_counts": {
+        "invocations_complete": 9,
+        "inventory": 25,
+        "pending": 16,
+        "failed": 0,
+        "missing": 0,
+        "selected_scene_slots": 36,
+        "applied_scene_slots": 32,
+        "not_applicable_scene_slots": 4,
+        "blocked_scene_slots": 0,
+        "physical_replays": 32,
+        "cancellation_evaluations": 56,
+        "receiver_recomputations": 24,
+        "exact_parity_checks": 32
+      },
+      "pilot_counts": {
+        "invocations_complete": 25,
+        "inventory": 25,
+        "pending": 0,
+        "failed": 0,
+        "missing": 0,
+        "selected_scene_slots": 100,
+        "applied_scene_slots": 90,
+        "not_applicable_scene_slots": 10,
+        "blocked_scene_slots": 0,
+        "physical_replays": 90,
+        "cancellation_evaluations": 154,
+        "receiver_recomputations": 64,
+        "exact_parity_checks": 90,
+        "scored_sample_evaluations": 870,
+        "unique_physical_scenes": 8,
+        "scope": "unified fixture only; not pooled with recovery"
       }
     },
     "github_actions_ci": {
@@ -528,6 +556,23 @@
           "scope": "GitHub evidence for E2 head only; no E3a CI claim"
         }
       }
+    },
+    "scientific_results_atlas": {
+      "status": "E5_DRAFT_DELIVERY",
+      "figures": 22,
+      "formats": [
+        "png_300dpi",
+        "svg",
+        "pdf"
+      ],
+      "manifest": "docs/results/b2_figure_manifest.json",
+      "review": "docs/research/b2_e5_unified_scientific_review.md",
+      "execution_plan": "docs/plan/B2_E5_PRODUCTION_EXECUTION_PLAN.md",
+      "decision_memorandum": "docs/plan/B2_E5_RESEARCHER_DECISIONS.md",
+      "production_executed": false,
+      "gpu_training_executed": false,
+      "full_loko_executed": false,
+      "recognition_performance_validated": false
     }
   },
   "permitted_without_new_researcher_decisions": [
@@ -557,8 +602,8 @@
   ],
   "integrity_note": "Proposed researcher decisions are not approvals. Preserve frozen semantics and strictly segregate train, val-select, val-calib, test and test-matched.",
   "verified_remote_main": {
-    "sha": "4b736a6c425ab532e7c8e1bccc7c906f86ebe0be",
+    "sha": "79a17ccb0ba9967cc8a31156faab49510e360b3e",
     "date": "2026-10-23",
-    "note": "PR14 XGBoost merged as ff81cae1b4e2563cc88271566665e9feae7cd44e; PR15 E4 merged; approvals unchanged"
+    "note": "PR18 merged; raw run39967494290 logs successful; decisions unchanged"
   }
 }

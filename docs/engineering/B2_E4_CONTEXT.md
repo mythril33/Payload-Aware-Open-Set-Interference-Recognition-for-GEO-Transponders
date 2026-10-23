@@ -1,5 +1,8 @@
 # B2 E4 context pack — dual-pol A5 operator-plan corruption
 
+> E5 current-status update (2026-10-23): PR #18 merged as `79a17cc`; raw Actions run39967494290 logs confirm107E4+1121other tests passed. Unified evidence is complete25/25; the9/25recovery remains a separate historical fixture. See [E5 context ledger](B2_E5_CONTEXT_LEDGER.md) and the E5 scientific atlas/review. Earlier recovery/implementation snapshots below are historical, not current merge/CI/coverage status. Research/compute gates and benchmark_complete=false are unchanged.
+
+
 ## Current post-merge evidence recovery — 2026-10-23
 
 This section supersedes the historical implementation-session snapshot below.

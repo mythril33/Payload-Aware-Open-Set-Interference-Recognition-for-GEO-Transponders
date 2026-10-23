@@ -1,5 +1,8 @@
 # P23 — B2 Production Readiness: bounded engineering plan and researcher gates
 
+> E5 current-status update (2026-10-23): PR #18 merged as `79a17cc`; raw Actions run39967494290 logs confirm107E4+1121other tests passed. Unified evidence is complete25/25; the9/25recovery remains a separate historical fixture. See [E5 execution plan](B2_E5_PRODUCTION_EXECUTION_PLAN.md) and the E5 scientific atlas/review. Earlier recovery/implementation snapshots below are historical, not current merge/CI/coverage status. Research/compute gates and benchmark_complete=false are unchanged.
+
+
 **Date:** 2026-10-21  
 **Starting point:** `main` at `ff1418f2936c5c01c1f171c38c6804b9023cd064` (PR #7 merged).  
 **Status (updated 2026-10-23):** Bounded E1/E2/E3a/E3b/E4 engineering has merged; the full benchmark remains incomplete and unapproved. The original plan and its starting-point evidence are retained below. Post-merge E4 evidence recovery is a separate bounded task; this document does not modify frozen P18 or authorize full production.

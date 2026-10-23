@@ -1,0 +1,82 @@
+{
+  "schema": "B2-E5-validation/1",
+  "benchmark_complete": false,
+  "base_main": "79a17ccb0ba9967cc8a31156faab49510e360b3e",
+  "python": "3.12.14",
+  "environment": {
+    "OMP_NUM_THREADS": "2",
+    "OPENBLAS_NUM_THREADS": "2",
+    "MKL_NUM_THREADS": "2",
+    "CUDA_VISIBLE_DEVICES": "",
+    "MPLBACKEND": "Agg",
+    "MPLCONFIGDIR": "/tmp/b2-e5-mpl",
+    "XDG_CACHE_HOME": "/tmp/b2-e5-cache"
+  },
+  "full_local": {
+    "command": "OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 MKL_NUM_THREADS=2 CUDA_VISIBLE_DEVICES= MPLBACKEND=Agg MPLCONFIGDIR=/tmp/b2-e5-mpl XDG_CACHE_HOME=/tmp/b2-e5-cache /workspace/.venvs/geosim/bin/python -m pytest -q -rs",
+    "passed": 1238,
+    "skipped": 1,
+    "failed": 0,
+    "pytest_seconds": 360.38,
+    "exit_code": 0,
+    "log_sha256": "da6bdc7954379e8b67737a7454bf1df38d75ea2e00c905f8df2d6049c9930b5e",
+    "skip": "tests/test_b2_stream.py:421: runner cannot reset peak RSS via /proc/self/clear_refs",
+    "scope": "Full feasible suite; final orphan ownership guard and figure identity/reporting edits followed launch; final affected tests below cover this delta; final-head GitHub CI is separate"
+  },
+  "final_affected_local": {
+    "command": "OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 MKL_NUM_THREADS=2 CUDA_VISIBLE_DEVICES= MPLBACKEND=Agg MPLCONFIGDIR=/tmp/b2-e5-mpl XDG_CACHE_HOME=/tmp/b2-e5-cache /workspace/.venvs/geosim/bin/python -m pytest -q tests/test_b2_a5_state_integrity.py tests/test_b2_a5_resume.py tests/test_b2_scientific_figures.py",
+    "passed": 37,
+    "skipped": 0,
+    "failed": 0,
+    "pytest_seconds": 50.57,
+    "exit_code": 0,
+    "log_sha256": "e72899b9d95e1947c068f80ef1d24fcc99edce6a3fc79fbaaced606c4e21633d"
+  },
+  "independent": {
+    "baseline_E4": [
+      {
+        "passed": 56,
+        "pytest_seconds": 39.0
+      },
+      {
+        "passed": 85,
+        "pytest_seconds": 104.01
+      }
+    ],
+    "final_affected": {
+      "passed": 37,
+      "failed": 0,
+      "skipped": 0,
+      "pytest_seconds": 49.46,
+      "source_hash_guard_stable": true
+    },
+    "source_report": "docs/research/b2_e5_unified_scientific_review.md",
+    "figures": 22,
+    "outputs": 66,
+    "all_hashes_verified": true,
+    "source_locks": 12,
+    "physical_tile_values_checked": 8192
+  },
+  "frozen_files_and_decisions": "Compared byte-for-byte/equality with origin/main; unchanged",
+  "final_file_sha256": {
+    "src/geoml/b2_a5.py": "64e24110cc7f08b45a5cb86827040b4ffbf46deacaa88596a7259f6852fa555f",
+    "scripts/plot_b2_scientific_results.py": "667250bc68fa91b612e0057af7ba3b4cf149bb9ae275e11d6f9f8ee48c36a177",
+    "tests/test_b2_a5_state_integrity.py": "ff3df56bd4d000ad8536bc422aeaf8fc6837bc0e76a0aa075b987012c1d2d93f",
+    "tests/test_b2_scientific_figures.py": "8fee88c078102bee6e6a5c59cf07cccb81660f83a7c81ccb7da3deaab5cf2393",
+    "docs/results/b2_figure_manifest.json": "74ad2f7619890254cf841df04826564234f1f30c9bdc2a919dcd0399521c0cd7"
+  },
+  "historical_CI": {
+    "run_id": 39967494290,
+    "job_id": 120461084118,
+    "head_sha": "176faf5bb2f69d096557f3b3f90db96f55eb132e",
+    "conclusion": "success",
+    "passed": 1228,
+    "failed": 0,
+    "skipped": 0,
+    "source": "decoded raw job logs"
+  },
+  "new_PR_CI": "Exact immutable head/run/job and raw log result recorded in draft PR description after publication; historical CI does not certify the E5 head",
+  "full_generation_run": false,
+  "gpu_training_run": false,
+  "full_loko_run": false
+}

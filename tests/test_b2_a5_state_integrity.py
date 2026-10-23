@@ -8,6 +8,28 @@ from geoml.artifacts import fingerprint
 from geoml.b2_a5 import SceneState
 
 
+def test_foreign_state_temporaries_survive_resume(tmp_path):
+    SceneState(tmp_path, "a" * 64, log=lambda *_: None)
+    foreign = ["operator_notes.tmp", "scene-3200000-foreign.json.tmp", "scene-notes.npz", "scene-3200000-foreign.npz"]
+    owned = ["identity.json.tmp", "scene-3200000-clean.npz.tmp", "scene-3200000-clean.json.tmp", "scene-3200000-clean.npz"]
+    for name in foreign + owned:
+        (tmp_path / name).write_text("preserve unless module-owned")
+    SceneState(tmp_path, "a" * 64, log=lambda *_: None)
+    assert all((tmp_path / name).exists() for name in foreign)
+    assert all(not (tmp_path / name).exists() for name in owned)
+
+
+@pytest.mark.parametrize("payload", ['"metric": NaN', '"metric": Infinity',
+                                    '"metric": 1e999', '"metric": 0, "metric": 1'])
+def test_completed_result_reuse_requires_strict_finite_json(tmp_path, payload):
+    from geoml.b2_a5 import _file_hash, _output_state
+    path = tmp_path / "results.json"
+    path.write_text('{"experiment_fingerprint": "identity", ' + payload + '}')
+    (tmp_path / "results.json.sha256").write_text(_file_hash(path))
+    with pytest.raises(ValueError, match="incomplete or modified"):
+        _output_state(tmp_path, "identity")
+
+
 def saved(tmp_path):
     state = SceneState(tmp_path, "a" * 64, log=lambda *_: None)
     state.save(3200000, "clean", record={"status": "applied", "residual_recomputed": False},

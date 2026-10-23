@@ -1,5 +1,14 @@
 # Proje durumu ve eksik kaydı
 
+## Uygulama eki — 2026-10-23 (E5: bilimsel atlas ve üretim hazırlığı)
+
+- Gerçek `origin/main` **79a17ccb0ba9967cc8a31156faab49510e360b3e**, PR #18 birleşmiş. Run39967494290/job120461084118 ham günlükleri: **107 +1121 =1228 geçti**, sıfır hata/atlama; E4 onarımı tekrarlanmadı.
+- [Bilimsel atlas](../results/B2_SCIENTIFIC_RESULTS_ATLAS.md): **22 figür/66 PNG300dpi+SVG+PDF**, kaynak SHA256, rol/aşama/grup/gözlem/birim, sürümler ve komut içeren [manifest](../results/b2_figure_manifest.json). Mevcut doğrulanmış fizik pilotundan küçük gösterim özeti çıkarıldı; yeni RF üretimi/eğitim yok. Tekrar üretim testi var.
+- Birleşik **25/25,90 replay,154 iptal,64 yeniden hesaplama,870 skor değerlendirmesi** ile korunmuş **9/25** kaydı farklı kimliklerdir, birleştirilmedi. Her kayıt yalnız8 benzersiz fiziksel sahne kullanır. BOUNDED_PILOT/ENGINEERING_VALIDATION; tanıma/sağlamlık veya popülasyon Pfa iddiası yok.
+- [Yeni bağımsız salt okunur inceleme](../research/b2_e5_unified_scientific_review.md): temel birleşik E4 üzerinde141test geçti. İlgisiz durum geçici/NPZ dosyalarının silinmesi ve tamamlanmış sonuçta gevşek JSON okuması bulundu; yalnız sahipli dosya adları ve sıkı/sonlu JSON düzeltildi. Donmuş fizik, roller, kayıp, iptal sürümü ve metrik aritmetiği değişmedi. Tarihsel kanıt yeni kaynakla koşulmuş gibi yeniden etiketlenmedi.
+- [Üretim planı](B2_E5_PRODUCTION_EXECUTION_PLAN.md) tam **21350** gözlem; yaklaşık23–30saat/8.7GB veri,25GiB çalışma alanı ve yedek önerisi. GPU bütçesi varsayım; ölçülmüş değil. [Altı ayrı araştırmacı kararı](B2_E5_RESEARCHER_DECISIONS.md) öneri durumunda.
+- Tam yerel test ve son etkilenen dosya kontrolleri [teslim doğrulama kaydında](../results/b2_e5_validation.json). Yeni PR taslak; otomatik birleştirme yok. **K18/K17d/OBS-CANCEL/2 bekliyor; tam üretim/GPU/LOKO yetkisiz; benchmark_complete=false.** Aşağıdaki ekler tarihsel kayıtlardır; güncel E4 durumu25/25'tir.
+
 ## Uygulama eki — 2026-10-23 (E4: çift-pol A5 operatör-planı bozma)
 
 - E4, kullanıcının onayladığı **mühendislik hazırlığı ve sınırlı doğrulama** kapsamında uygulandı; [taslak PR #15](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/15) araştırmacı tarafından `4b736a6` birleştirme commit'iyle `main`'e alındı (kod commit'i `a595bcf`, ağaç aynı). Sözleşme [P28](P28_b2_e4_dual_pol_a5.md) (`B2-A5-eval/1`, `B2-A5-plan/1`) kod, replay ve herhangi bir A5 çıktısı görülmeden önce `b58c658` ile kaydedildi; uygulama sonrası netleştirmeler P28 §13'te ve P18 §10'da günlüklendi. Donmuş fiziksel örnekleme, rol, sınıf, artefakt sürümü, `obs-cancel/1` ve araştırmacı kapıları değişmedi.
