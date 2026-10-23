@@ -558,7 +558,7 @@
       }
     },
     "scientific_results_atlas": {
-      "status": "E5_DRAFT_DELIVERY",
+      "status": "E5_MERGED_PR_19",
       "figures": 22,
       "formats": [
         "png_300dpi",
@@ -572,7 +572,37 @@
       "production_executed": false,
       "gpu_training_executed": false,
       "full_loko_executed": false,
-      "recognition_performance_validated": false
+      "recognition_performance_validated": false,
+      "merge_commit": "59ed11d60ace609a826f6379491c9a8dbd26d64d",
+      "ci": {
+        "pr": 19,
+        "head_sha": "7108ee8af14abe85c99bf379a5709936a3225b99",
+        "run_id": 39991726439,
+        "job_id": 120544881834,
+        "conclusion": "success",
+        "e4_tests": {
+          "passed": 107,
+          "pytest_seconds": 135.82
+        },
+        "remaining_tests": {
+          "passed": 1132,
+          "pytest_seconds": 240.41
+        },
+        "source": "raw job log read in E6",
+        "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39991726439"
+      }
+    },
+    "production_preflight": {
+      "status": "E6_DRAFT_DELIVERY",
+      "contract": "docs/plan/P29_b2_e6_production_preflight.md",
+      "tool": "scripts/b2_production_preflight.py",
+      "checklist": "docs/plan/B2_E6_PRODUCTION_READINESS_CHECKLIST.md",
+      "decision_packet": "docs/plan/B2_E6_RESEARCHER_DECISION_PACKET.md",
+      "audit_findings": "docs/plan/b2_e6_audit_findings.json",
+      "production_executed": false,
+      "gpu_training_executed": false,
+      "full_loko_executed": false,
+      "gates_changed": false
     }
   },
   "permitted_without_new_researcher_decisions": [
@@ -602,8 +632,8 @@
   ],
   "integrity_note": "Proposed researcher decisions are not approvals. Preserve frozen semantics and strictly segregate train, val-select, val-calib, test and test-matched.",
   "verified_remote_main": {
-    "sha": "79a17ccb0ba9967cc8a31156faab49510e360b3e",
+    "sha": "59ed11d60ace609a826f6379491c9a8dbd26d64d",
     "date": "2026-10-23",
-    "note": "PR18 merged; raw run39967494290 logs successful; decisions unchanged"
+    "note": "PR19 merged; E5 head 7108ee8 run 39991726439 raw logs: 107 + 1132 passed; decisions unchanged"
   }
 }

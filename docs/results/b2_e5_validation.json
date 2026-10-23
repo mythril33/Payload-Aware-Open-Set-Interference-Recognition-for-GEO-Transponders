@@ -75,7 +75,18 @@
     "skipped": 0,
     "source": "decoded raw job logs"
   },
-  "new_PR_CI": "Exact immutable head/run/job and raw log result recorded in draft PR description after publication; historical CI does not certify the E5 head",
+  "new_PR_CI": {
+    "pr": 19,
+    "head_sha": "7108ee8af14abe85c99bf379a5709936a3225b99",
+    "run_id": 39991726439,
+    "job_id": 120544881834,
+    "conclusion": "success",
+    "e4_tests_passed": 107,
+    "remaining_tests_passed": 1132,
+    "failed": 0,
+    "source": "raw job log read in E6 (the original value was a pointer to the PR description, which said pending)",
+    "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39991726439"
+  },
   "full_generation_run": false,
   "gpu_training_run": false,
   "full_loko_run": false
