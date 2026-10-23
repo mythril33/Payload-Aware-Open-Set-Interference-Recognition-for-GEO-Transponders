@@ -148,7 +148,7 @@ def test_none_condition_reproduces_the_original_exactly(tmp_path):
         for name in ("MASK_ONLY", "RECEIVER_CONSISTENT"):
             metrics = result["views"][view]["conditions"][name]
             assert metrics["prediction_change_vs_original"]["mean"] == 0.0
-            assert metrics["max_abs_logit_difference_vs_original"] < 1e-4
+            assert metrics["max_abs_logit_difference_vs_original"] == 0.0
 
 
 def test_not_applicable_scenes_are_counted_and_excluded_from_the_paired_population(tmp_path):
@@ -232,7 +232,7 @@ def test_reuse_is_verified_deterministic_and_refuses_stale_or_incomplete_output(
     again = a5.run_a5(_config(), ws / "known", ws / "runs", tmp_path / "out", log=logs.append)
     assert again == first and any("reusing verified A5 result" in line for line in logs)
     fresh = _run(tmp_path, name="fresh")
-    drop = lambda r: {k: v for k, v in r.items() if k not in ("cost", "reproduction_command")}
+    drop = lambda r: {k: v for k, v in r.items() if k not in ("cost", "reproduction_command", "resume")}
     assert drop(fresh) == drop(first)                                                  # same identities, same result
     assert fresh["experiment_fingerprint"] == first["experiment_fingerprint"]
     with pytest.raises(ValueError, match="different experiment identity"):
@@ -240,10 +240,6 @@ def test_reuse_is_verified_deterministic_and_refuses_stale_or_incomplete_output(
     (tmp_path / "out" / "results.json").write_text((tmp_path / "out" / "results.json").read_text().replace("BOUNDED", "BOUNDEX"))
     with pytest.raises(ValueError, match="incomplete or modified"):
         a5.run_a5(_config(), ws / "known", ws / "runs", tmp_path / "out", log=lambda *_: None)
-    (tmp_path / "partial").mkdir()
-    (tmp_path / "partial" / "results.json.tmp").write_text("{}")
-    with pytest.raises(ValueError, match="incomplete derived output"):
-        a5.run_a5(_config(), ws / "known", ws / "runs", tmp_path / "partial", log=lambda *_: None)
     (tmp_path / "orphan").mkdir()
     (tmp_path / "orphan" / "results.json").write_text("{}")
     with pytest.raises(ValueError, match="incomplete or modified"):
@@ -324,3 +320,23 @@ def test_baseline_inputs_are_recomputed_from_the_counterfactual_streams_without_
     features = cross["xgboost_features_26"]["displacement_vs_original"]["RECEIVER_CONSISTENT"]
     assert features["n_features"] == 26 and features["n_features_changed"] >= 1 and features["mean_abs_by_feature"]["cross_core_fraction"] > 0
     assert features["mean_abs_by_feature"]["co_core_fraction"] == 0.0 and features["mean_abs_by_feature"]["residual_band_level_db"] == 0.0
+
+
+def test_recorded_reproduction_command_reproduces_the_same_experiment(tmp_path):
+    import shlex
+    ws = support.workspace()
+    config = tmp_path / "base.json"
+    config.write_text(json.dumps({"perturbation": "drop_one", "scope": "co_only", "n_groups": 1, "labels": ["clean", "unauthorized"],
+                                  "views": ["co"]}))
+    a5.main(["--config", str(config), "--data", str(ws / "known"), "--runs", str(ws / "runs"), "--out", str(tmp_path / "first"),
+             "--perturbation", "shift_plus", "--scope", "cross_only"])
+    first = _strict(tmp_path / "first" / "results.json")
+    argv = shlex.split(first["reproduction_command"].replace("\\\n", " "))      # bash line continuations
+    assert argv[:3] == ["python", "-m", "geoml.b2_a5"] and "--perturbation" in argv and argv[argv.index("--scope") + 1] == "cross_only"
+    argv[argv.index("--out") + 1] = str(tmp_path / "again")
+    a5.main(argv[3:])
+    again = _strict(tmp_path / "again" / "results.json")
+    assert again["experiment_fingerprint"] == first["experiment_fingerprint"]
+    assert again["configuration"] == first["configuration"] == json.loads((tmp_path / "again" / "a5_config.json").read_text())
+    api = _run(tmp_path, _config(n_groups=1), name="api")                      # programmatic call: cites the resolved config file
+    assert f"--config {tmp_path / 'api' / 'a5_config.json'}" in api["reproduction_command"]

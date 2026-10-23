@@ -162,6 +162,9 @@ def open_replay_source(root, stage: str = "known", role: str = "test") -> Replay
             protocol, _, cancellation, _ = _known._stage(request)
             if protocol != FEATURE_PROTOCOL or cancellation is None:
                 raise ReplayError(f"replay requires the {FEATURE_PROTOCOL} stage (stored residual and cancellation settings)")
+            if role != "test":
+                raise ReplayError("A5 replays the frozen evaluation role 'test' only (P28); train and validation "
+                                  "roles are never replayed")
             if role not in manifest["roles"]:
                 raise ReplayError(f"role {role!r} was not generated in this artifact")
             calibration, _ = _known._calibration(root, manifest["request_fingerprint"], protocol)
@@ -370,12 +373,12 @@ def reporting_flags(replay: PhysicalReplay, corruption: PlanCorruption) -> dict:
         removed = entry.get("removed_indices") or []
         if removed:
             flags[f"{name}_dropped_carrier_transmitted"] = bool(replay.active_carriers[pol][removed[0]])
-    added = (corruption.descriptors.get("co") or {}).get("added") or []
-    if corruption.perturbation == "phantom" and added and "f_lo" in replay.event:
-        carrier = added[0]
-        half = carrier["symbol_rate"] * (1 + carrier["alpha"]) / 2
-        flags["phantom_overlaps_physical_event"] = bool(carrier["f0"] + half >= replay.event["f_lo"]
-                                                       and carrier["f0"] - half <= replay.event["f_hi"])
+        added = entry.get("added") or []
+        if corruption.perturbation == "phantom" and added and "f_lo" in replay.event:
+            carrier = added[0]          # the physical event is injected on the co path and leaks into the cross feed
+            half = carrier["symbol_rate"] * (1 + carrier["alpha"]) / 2
+            flags[f"{name}_phantom_overlaps_physical_event"] = bool(carrier["f0"] + half >= replay.event["f_lo"]
+                                                                   and carrier["f0"] - half <= replay.event["f_hi"])
     return flags
 
 

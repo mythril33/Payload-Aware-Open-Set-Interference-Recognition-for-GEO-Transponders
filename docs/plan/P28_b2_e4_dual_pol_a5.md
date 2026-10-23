@@ -38,11 +38,12 @@ frozen checkpoint, scorers and thresholds:
 |---|---|---|---|
 | `original` | stored | stored (from the true plan) | stored |
 | `MASK_ONLY` (weaker control) | stored | rebuilt from the corrupted belief | **stored, unchanged** |
-| `RECEIVER_CONSISTENT` (primary) | replayed (verified equal to stored) | rebuilt from the corrupted belief | **recomputed**: frozen `cancel_planned_carriers(replayed calibrated co-pol IQ, corrupted co-pol belief, CancellationConfig of the source)` |
+| `RECEIVER_CONSISTENT` (primary) | replayed (verified against the stored shard under the §5 parity policy; bit-equal when `exact`) | rebuilt from the corrupted belief | **recomputed**: frozen `cancel_planned_carriers(replayed calibrated co-pol IQ, corrupted co-pol belief, CancellationConfig of the source)` |
 
 `MASK_ONLY` is labelled as the weaker control and is never described as a consistent receiver response.
 Consequences that are reported, not hidden: the `co` and `dual` views do not read the residual, so their
-`MASK_ONLY` and `RECEIVER_CONSISTENT` outputs are identical by construction; only `dual_residual` differs, and
+`MASK_ONLY` and `RECEIVER_CONSISTENT` outputs differ at most through the replayed PSD (identical when the §5 parity is
+exact; the result records `psd_identical`/`logits_identical`); only `dual_residual` differs through the residual, and
 only when the co-pol belief changes. For `cross_only` scope the co-pol residual is identical in all conditions.
 
 Mask pipeline: `geosim.plan.plan_mask_db(belief_carriers)` then `float16`, the same convention as the stored
@@ -65,7 +66,7 @@ descriptor transformations are applicable.
 | `drop_one` | remove carrier `i = rng.integers(len(plan))` from the descriptor; remaining powers unchanged, **no** renormalization; the carrier is still transmitted | descriptor has fewer than 2 carriers |
 | `phantom` | append `geosim.interferers.random_unauthorized(rng, plan, 36 MHz, 0.0)`: one extra declared carrier in a free gap of the belief, PSD equal to the plan mean; it is not transmitted | `InfeasibleCarrierError` (no free gap) |
 | `authorize_intruder` | append the physically present unauthorized carrier (`f0`, `symbol_rate`, `alpha`, `mod`, `power = 10**(-c_over_i_db/10)`) to the selected descriptor(s) | scene label is not `unauthorized` (known and matched stages); the carrier description comes only from the replay layer's controlled **test intervention**, exactly like `plan_shortcut` |
-| `stale_plan` | replace the selected descriptor by `geosim.scenario.default_plan(2*(scenario_id-1)+polarization, 36 MHz)`: the plan the operator held for the *preceding* scenario id (pure function of the seed; no observation or label of another group is read) | the replacement equals the original, or is rejected by §4 |
+| `stale_plan` | replace the selected descriptor by `geosim.scenario.default_plan(2*(scenario_id-1)+polarization, 36 MHz)`: the initial-draw plan of the *preceding scenario id* (a pure function of the seed; no observation or label of another group is read). It is a formula, not history: the preceding id may lie outside the reserved B2 roles, and that group's own plan may have needed redraws, so the replacement is not necessarily the plan that group held | the replacement equals the original (`not_applicable`); a replacement rejected by §4 is `blocked` |
 
 `authorize_intruder` is restricted to `unauthorized` because that is the frozen A5 definition; an analogous
 "authorized ASI" intervention is **not** part of `B2-A5-plan/1` (PLANNED, new perturbation name required).
@@ -99,14 +100,15 @@ Replay reconstructs a scene with the artifact's own request, never with new sett
 - generator-source drift (`geosim` source hashes recorded in the request versus the current tree) fails closed:
   regenerate the pilot in a fresh directory, never relax the check.
 
-Before any A5 number is produced the `none` replay of every selected scene is compared with the stored shard
+Before any A5 number is produced the `none` replay of every **applicable** selected scene (scenes where the perturbation is not
+applicable are not replayed and not parity-checked; they are counted) is compared with the stored shard
 (arrays and metadata): scenario id, label, role, plan-consistency, plans, activity, stored masks (exact),
 stored PSD and stored residual. Policy: float16 arrays must be **equal**; on a different machine/library build
 at most `PARITY_ATOL_DB = 0.125` dB (two float16 ulps at |x| in [64,128)) maximum absolute difference is
 tolerated and reported with `exact=false`; anything larger raises and aborts (`fail closed`, no
 receiver-consistent claim). Raw IQ is transient, never stored, never committed.
 
-Physical invariants (each has a test): **A** received IQ identical for every belief; **B** `cross_only`
+Physical invariants (each has a test): **A** received IQ identical for every belief (it holds by construction: `replay_scene` has no belief parameter; the tests hash the IQ before and after and spy on the simulator); **B** `cross_only`
 leaves the co residual identical (the canceller is not even invoked); **C** a changed co belief is recomputed
 by the frozen canceller (call counted, output equal to a direct call); **D** `none` equals the stored fifth
 channel; **E** the canceller receives only IQ, co-pol belief and its config; **F** replay never receives a
@@ -155,7 +157,9 @@ plan-consistency head predicted-positive rate and descriptive agreement; for the
 unauthorized 2×2 with clean / other-known / rejected predictions kept in the denominator; and residual
 diagnostics from observable data only: `residual_total_db`, `cancellation_depth_db = spec_co_total_db −
 residual_total_db` (mean linear power over time and the full 96 MHz band, then dB) and its displacement.
-Rates are `null` with counts when the denominator is empty; intervals are the scenario-group bootstrap of
+`clean_false_alarm` / `event_detection` are alarm rates among scenes whose ORIGINAL label is clean / not clean; under a counterfactual
+condition they are **not** false-alarm or detection rates whenever the intervention changes what an alarm means (for example a transmitted
+carrier removed from the plan is observationally unplanned, P18 §7a). Rates are `null` with counts when the denominator is empty; intervals are the scenario-group bootstrap of
 `geoml.metrics.cluster_ci` (2000 resamples, seed 0, groups resampled together) and `null` below two groups.
 Training-seed uncertainty is separate and absent here (single frozen checkpoint). Unknown-family
 metrics (AUROC/OSCR) are not produced: the known and matched stages contain no unknown families.
@@ -180,11 +184,23 @@ recognition and open-set rejection tasks are never compared with one another.
 ## 11. Artifact identity
 
 `results.json` (strict JSON, no NaN/Infinity) records: contract names; source artifact stage, fingerprint and
-request fingerprint; B2 protocol; HEAD Git SHA and current source hashes; calibration and cancellation
+request fingerprint; B2 protocol; HEAD Git SHA, the full current source-file hashes and library versions; calibration and cancellation
 identities; checkpoint hash per view; scorer/threshold identities; perturbation, scope, modes and scene ids;
 original and corrupted plan identities (`sha256` of canonical JSON); applicable/non-applicable/blocked counts
 with reasons; parity report; counts of replays, cancellations and scored samples; elapsed time, peak RSS and
 the reproduction command; `benchmark_complete=false`.
+
+### 11a. Resumability and reuse
+
+An interrupted invocation continues instead of restarting. Each completed applicable scene writes its replayed PSD and recomputed
+residual (float16), parity report and work counts under `out/state/`, JSON committed last with the SHA-256 of the arrays and bound to the
+experiment fingerprint. That fingerprint covers the configuration, known/matched artifact identities, request, the run directory's
+`config.json` and frozen-file hashes (checkpoints, scorers, rejection calibrations, run results) and the full source tree. On restart
+`*.tmp` files and array files without their JSON (never committed) are discarded; committed entries are verified and reused; a modified
+entry, or any binding to a different identity, is rejected (fail closed). A result without its checksum sidecar is rebuilt from the verified
+state without any replay; a complete checksummed result with the same fingerprint is reused as is. A resumed run reports the same logical
+totals as an uninterrupted one (`counts`) and, separately, what was done in this process (`resume`); caps apply to the logical totals.
+`scripts/run_b2_a5_pilot_matrix.sh` is resumable at invocation level the same way.
 
 ## 12. Exclusions and gates
 
@@ -197,4 +213,5 @@ receiver-consistent. Test-only unknown families (B2-test/1) are outside this sli
 | Date | Change |
 |---|---|
 | 2026-10-23 | Registered before implementation and before any A5 outcome inspection. |
+| 2026-10-23 | Post-review clarifications (independent red-team review of the implemented harness, before the final pilot record): `stale_plan` is a formula (initial-draw plan of id-1), not a history, and an invalid replacement is `blocked`; only applicable scenes are replayed and parity-checked; parity wording is conditional on the §5 policy; alarm columns are rates among original-clean/original-event scenes, not false-alarm/detection rates under counterfactuals; the experiment fingerprint also covers the run directory's frozen files and the full source tree; §11a resumability added. No perturbation definition, RNG key, metric definition or cap changed. |
 | 2026-10-23 | Implementation clarifications, added after three engineering wiring smokes of the runner (`drop_one`/`co_only` known, `shift_plus`/`cross_only` known, `authorize_intruder`/`both` matched; 4, 2 and 4 scenes; used only to check that the code runs) and **before** the recorded pilot matrix: (a) scope `both` is applicable only when the transformation is applicable to both descriptors; (b) additive observable diagnostics `spec_co_core_db`, `residual_core_db`, `cancellation_depth_core_db` over the bins above -3 dB of the ORIGINAL co-pol mask (fixed across conditions) next to the registered full-band diagnostics, because the full-band ratio is dominated by the noise floor; (c) `original`-condition fields `prediction_change_vs_original` and `max_abs_logit_difference_vs_original` are `null` (trivial); (d) `mask_only_vs_receiver_consistent` reports whether PSD, residual and logits are identical per view. No definition of §3-§9 changed. |

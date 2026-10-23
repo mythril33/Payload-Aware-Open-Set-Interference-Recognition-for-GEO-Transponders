@@ -1,0 +1,8 @@
+{
+  "perturbation": "drop_one",
+  "scope": "co_only",
+  "stage": "matched",
+  "n_groups": 2,
+  "labels": ["adjacent_satellite", "unauthorized"],
+  "views": ["co", "dual", "dual_residual"]
+}

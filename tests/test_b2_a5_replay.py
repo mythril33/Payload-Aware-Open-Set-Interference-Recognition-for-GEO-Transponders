@@ -12,6 +12,8 @@ import pytest
 from geoml import b2_a5_replay as rp
 from geoml.b2_a5_plan import corrupt_operator_plan, rebuild_masks
 from geosim import b2_dataset as ds
+from geosim import b2_matched_dataset as md
+from geosim.b2_protocol import B2Config
 from geosim import b2_scenarios as scenes
 from geosim.cancellation import CancellationConfig, cancel_planned_carriers
 
@@ -254,3 +256,27 @@ def test_authorize_intruder_declares_the_physical_intruder_and_it_is_cancelled(s
     after = _band_db(conditions["RECEIVER_CONSISTENT"].residual, event["f_lo"], event["f_hi"])
     assert after < before - 5.0                       # the declared carrier is now cancelled instead of left behind
     assert np.array_equal(conditions["MASK_ONLY"].residual, stored.residual)        # the weaker control cannot show this
+
+
+@pytest.fixture(scope="module")
+def matched_source(artifact, tmp_path_factory):
+    root = tmp_path_factory.mktemp("a5-real-matched") / "matched"
+    md.generate_b2_matched_dataset(root, artifact, B2Config(), limit_groups=1, groups_per_shard=1, cancellation=CancellationConfig())
+    return rp.open_replay_source(root, "matched")
+
+
+def test_matched_stage_replays_the_real_physics_exactly_and_authorizes_the_intruder(matched_source):
+    group = matched_source.groups[0]
+    assert matched_source.role == "test-matched" and matched_source.protocol == "B2-match/1"
+    replay = rp.replay_scene(matched_source, "unauthorized", group)
+    stored = matched_source.stored(group, "unauthorized")
+    assert rp.check_parity(replay, stored)["exact"] is True
+    assert replay.intervention_context() == stored.intervention_context() and "intruder" in stored.intervention_context()
+    corruption = _corruption(replay, "authorize_intruder", "co_only")
+    assert corruption.applied
+    conditions = rp.build_conditions(replay, stored, corruption, rp.FrozenReceiver(matched_source.cancellation))
+    event = replay.event
+    before = _band_db(stored.residual, event["f_lo"], event["f_hi"])
+    after = _band_db(conditions["RECEIVER_CONSISTENT"].residual, event["f_lo"], event["f_hi"])
+    assert after < before - 5.0 and np.array_equal(conditions["MASK_ONLY"].residual, stored.residual)
+    assert _corruption(rp.replay_scene(matched_source, "adjacent_satellite", group), "authorize_intruder", "co_only").status == "not_applicable"

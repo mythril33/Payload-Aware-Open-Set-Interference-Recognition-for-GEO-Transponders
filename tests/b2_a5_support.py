@@ -93,6 +93,23 @@ def workspace() -> Path:
     return _WORKSPACE
 
 
+_SECOND = None
+
+
+def second_known() -> Path:
+    """A valid, different known artifact (other cancellation settings) for binding negatives."""
+    global _SECOND
+    if _SECOND is None:
+        root = workspace().parent / (workspace().name + "-second")
+        atexit.register(shutil.rmtree, root, ignore_errors=True)
+        with pytest.MonkeyPatch.context() as mp:
+            install_fakes(mp)
+            ds.generate_b2_dataset(root, roles=BASE_ROLES, limit_groups=2, groups_per_shard=1,
+                                   cancellation=CancellationConfig(iterations=2))
+        _SECOND = root
+    return _SECOND
+
+
 def copy_of(name: str, tmp_path: Path) -> Path:
     target = tmp_path / name
     shutil.copytree(workspace() / name, target)

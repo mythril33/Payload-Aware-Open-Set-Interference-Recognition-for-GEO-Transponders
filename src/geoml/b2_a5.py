@@ -25,6 +25,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 import numpy as np
+import scipy
 import torch
 
 from geosim.b2_protocol import LABELS, role_for_group
@@ -34,7 +35,7 @@ from geosim.dataset import _file_hash
 from .artifacts import fingerprint
 from . import cfar
 from .b2_a5_plan import CONTRACT as PLAN_CONTRACT
-from .b2_a5_plan import PERTURBATIONS, SCOPES, corrupt_operator_plan
+from .b2_a5_plan import PERTURBATIONS, SCOPES, corrupt_operator_plan, rebuild_masks
 from .b2_a5_replay import (Budget, BudgetExceeded, FrozenReceiver, ObservedInputs, ReplayError, ReplaySource,
                            SceneObservation, build_conditions, check_parity, open_replay_source, replay_scene,
                            reporting_flags)
@@ -397,27 +398,134 @@ def _selected_scenes(source: ReplaySource, config: A5Config):
 
 
 def _reproduction_command(args) -> str:
-    parts = ["python -m geoml.b2_a5", f"--config {args['config']}", f"--data {args['data']}", f"--runs {args['runs']}",
-             f"--out {args['out']}"]
+    """The CLI call that reproduces this exact invocation (config file plus any overrides that were passed)."""
+    parts = ["python -m geoml.b2_a5", f"--config {args['config']}"]
+    for flag, key in (("--perturbation", "perturbation"), ("--scope", "scope")):
+        if args.get(key):
+            parts.append(f"{flag} {args[key]}")
+    parts += [f"--data {args['data']}", f"--runs {args['runs']}", f"--out {args['out']}"]
     if args.get("matched_data"):
         parts.append(f"--matched-data {args['matched_data']}")
     return " \\\n    ".join(parts)
 
 
-def _output_state(out: Path, identity: str):
-    """Reuse only a complete, checksummed result with the same experiment identity (P28 §11)."""
+def _atomic_text(path: Path, text: str) -> None:
+    temporary = path.with_name(path.name + ".tmp")
+    temporary.write_text(text)
+    temporary.replace(path)
+
+
+class SceneState:
+    """Verified per-scene progress of one invocation, so an interrupted run continues instead of restarting.
+
+    Every completed applicable scene stores its replayed PSD and recomputed residual (float16, the expensive
+    part) in ``state/``; a small JSON committed last carries the scene record, the parity report, the work done
+    and the SHA-256 of the arrays. A leftover ``*.tmp`` file or an array file without its JSON is an interrupted
+    write: it was never committed and is discarded. A committed entry that fails its binding or checksum was
+    modified and is rejected (fail closed), never silently recomputed over. Entries are bound to the full
+    experiment identity, so a changed configuration, artifact, checkpoint or source cannot reuse them.
+    """
+
+    def __init__(self, directory: Path, identity: str, log=print):
+        self.directory, self.identity, self.log = directory, identity, log
+        directory.mkdir(parents=True, exist_ok=True)
+        marker = directory / "identity.json"
+        if marker.exists():
+            stored = json.loads(marker.read_text())
+            if stored.get("experiment_fingerprint") != identity:
+                raise ValueError(f"{directory} belongs to a different experiment identity; use a new output directory")
+        else:
+            _write_json(marker, {"experiment_fingerprint": identity, "contract": CONTRACT})
+        for leftover in sorted(directory.glob("*.tmp")):
+            leftover.unlink()
+            log(f"discarded interrupted write {leftover.name}")
+        for orphan in sorted(directory.glob("scene-*.npz")):
+            if not orphan.with_suffix(".json").exists():
+                orphan.unlink()
+                log(f"discarded uncommitted arrays {orphan.name}")
+
+    def _paths(self, group, label):
+        stem = self.directory / f"scene-{int(group)}-{label}"
+        return stem.with_suffix(".json"), stem.with_suffix(".npz")
+
+    def load(self, group, label):
+        meta_path, array_path = self._paths(group, label)
+        if not meta_path.exists():
+            return None
+        meta = json.loads(meta_path.read_text())
+        if (meta.get("experiment_fingerprint") != self.identity or meta.get("scenario_id") != int(group)
+                or meta.get("label") != label):
+            raise ValueError(f"{meta_path} is bound to a different scene or experiment identity; use a new output directory")
+        arrays = None
+        if meta["arrays_sha256"] is not None:
+            if not array_path.exists() or _file_hash(array_path) != meta["arrays_sha256"]:
+                raise ValueError(f"{array_path} is missing or modified; use a new output directory")
+            with np.load(array_path, allow_pickle=False) as archive:
+                arrays = {key: archive[key] for key in archive.files}
+            if (set(arrays) != {"spec", "residual"} or arrays["spec"].shape != (2, 128, 512) or arrays["spec"].dtype != np.float16
+                    or arrays["residual"].shape != (128, 512) or arrays["residual"].dtype != np.float16
+                    or not np.isfinite(arrays["spec"]).all() or not np.isfinite(arrays["residual"]).all()):
+                raise ValueError(f"{array_path} does not hold a valid replayed observation; use a new output directory")
+        return {**meta, "arrays": arrays}
+
+    def save(self, group, label, *, record, parity, work, arrays):
+        meta_path, array_path = self._paths(group, label)
+        digest = None
+        if arrays is not None:
+            temporary = array_path.with_name(array_path.name + ".tmp")
+            with open(temporary, "wb") as stream:
+                np.savez(stream, spec=arrays["spec"], residual=arrays["residual"])
+            temporary.replace(array_path)
+            digest = _file_hash(array_path)
+        _write_json(meta_path, {"experiment_fingerprint": self.identity, "scenario_id": int(group), "label": label,
+                                "record": record, "parity": parity, "work": work, "arrays_sha256": digest})
+
+
+def _output_state(out: Path, identity: str, log=print):
+    """Reuse only a complete, checksummed result with this experiment identity (P28 §11).
+
+    Returns the stored result, or ``None`` when the final write was interrupted (results without their
+    checksum sidecar but with this identity): the result is then rebuilt from the verified per-scene state.
+    Anything else that does not verify is rejected.
+    """
     results, sidecar = out / "results.json", out / "results.json.sha256"
-    leftovers = sorted(path.name for path in out.glob("*.tmp")) if out.exists() else []
-    if leftovers:
-        raise ValueError(f"incomplete derived output ({leftovers}); use a new output directory")
+    for leftover in sorted(out.glob("*.tmp")):
+        leftover.unlink()
+        log(f"discarded interrupted write {leftover.name}")
     if not results.exists() and not sidecar.exists():
         return None
-    if not results.exists() or not sidecar.exists() or sidecar.read_text().strip() != _file_hash(results):
+    if not results.exists():
+        raise ValueError(f"{sidecar} has no results.json; use a new output directory")
+    try:
+        stored = json.loads(results.read_text())
+    except ValueError as error:
+        raise ValueError(f"{results} is incomplete or modified; use a new output directory") from error
+    if not isinstance(stored, dict) or stored.get("experiment_fingerprint") is None:
         raise ValueError(f"{results} is incomplete or modified; use a new output directory")
-    stored = json.loads(results.read_text())
-    if stored.get("experiment_fingerprint") != identity:
+    if stored["experiment_fingerprint"] != identity:
         raise ValueError(f"{results} was produced by a different experiment identity; use a new output directory")
+    if not sidecar.exists():
+        log("final result lacked its checksum (interrupted); rebuilding it from the verified per-scene state")
+        return None
+    if sidecar.read_text().strip() != _file_hash(results):
+        raise ValueError(f"{results} is incomplete or modified; use a new output directory")
     return stored
+
+
+def _frozen_file_hashes(runs: Path, experiment: B2ExperimentConfig, views) -> dict:
+    """SHA-256 of every frozen file an evaluation reads, so reuse cannot outlive a changed run directory."""
+    names = ["config.json", "results.json"]
+    for view in views:
+        names += [f"model_{view}.pt", f"mahalanobis_{view}.npz"] + [f"rejection_{view}_{m}.json" for m in experiment.methods]
+    return {name: _sha256(runs / name) for name in names if (runs / name).exists()}
+
+
+def _scene_conditions(stored, corruption, arrays) -> dict:
+    """The three observations of a scene rebuilt from cached replay arrays (identical to a fresh replay)."""
+    masks = rebuild_masks(corruption.plans)
+    return {"original": SceneObservation(stored.spec, stored.mask, stored.residual),
+            "MASK_ONLY": SceneObservation(stored.spec, masks, stored.residual),
+            "RECEIVER_CONSISTENT": SceneObservation(arrays["spec"], masks, arrays["residual"])}
 
 
 def run_a5(config: A5Config, data, runs, out, *, matched_data=None, command_args=None, log=print) -> dict:
@@ -444,39 +552,62 @@ def run_a5(config: A5Config, data, runs, out, *, matched_data=None, command_args
     if source.config.to_dict() != manifest["config"] or source.cancellation.to_dict() != manifest.get("cancellation"):
         raise ReplayError("replay source physics or cancellation differ from the known artifact")
     scenes = _selected_scenes(source, config)
-    models_identity = {view: _sha256(runs / f"model_{view}.pt") for view in config.views if (runs / f"model_{view}.pt").exists()}
     implementation = _source_identity()
+    frozen_files = _frozen_file_hashes(runs, experiment, config.views)
     experiment_fingerprint = fingerprint({
         "contract": CONTRACT, "plan_contract": PLAN_CONTRACT, "config": config.to_dict(), "data": identity,
-        "matched": matched_identity, "request": source.request_fingerprint, "checkpoints": models_identity,
-        "e4_sources": {name: implementation["files_sha256"][name] for name in E4_ADDED_FILES}})
+        "matched": matched_identity, "request": source.request_fingerprint, "runs_config": experiment.resolved(),
+        "frozen_files": frozen_files, "source_tree": implementation["files_sha256"]})
     out.mkdir(parents=True, exist_ok=True)
-    reused = _output_state(out, experiment_fingerprint)
+    reused = _output_state(out, experiment_fingerprint, log)
     if reused is not None:
         log(f"reusing verified A5 result {experiment_fingerprint[:12]}")
         return reused
-    loaded = load_frozen_views(runs, experiment, identity, sources, config.views, log)
+    loaded = load_frozen_views(runs, experiment, identity, sources, config.views, log)   # fail closed before any state is written
     frozen = loaded["views"]
+    state = SceneState(out / "state", experiment_fingerprint, log)
+    _atomic_text(out / "a5_config.json", json.dumps(config.to_dict(), indent=1) + "\n")
     budget = Budget(CAPS["max_replays"], CAPS["max_cancellations"])
     receiver = FrozenReceiver(source.cancellation, budget)
-    records, parity, rows = [], [], []
+    records, parity, rows, from_state, work = [], [], [], 0, {"replays": 0, "cancellations": 0, "recomputations": 0}
     for group, label in scenes:
         stored = source.stored(group, label)
         corruption = corrupt_operator_plan(
             stored.original_plans(), perturbation=config.perturbation, scope=config.scope, scenario_id=group,
             allowed_intervention_context=stored.intervention_context() if config.perturbation == "authorize_intruder" else None)
         record = {"scenario_id": group, "label": label, **corruption.to_dict(), "flags": {}, "residual_recomputed": None}
+        cached = state.load(group, label)
+        if cached is not None:                                   # verified progress of an interrupted run
+            expected = {k: record[k] for k in ("original_identity", "corrupted_identity", "status", "reason", "co_changed", "cross_changed")}
+            if {k: cached["record"][k] for k in expected} != expected:
+                raise ValueError(f"cached scene {group}/{label} no longer matches its recomputed corruption; use a new output directory")
+            record = cached["record"]
+            conditions = None if cached["arrays"] is None else _scene_conditions(stored, corruption, cached["arrays"])
+            if conditions is not None:
+                parity.append(cached["parity"])
+            from_state += 1
+            scene_work = cached["work"]
+        elif not corruption.applied:
+            conditions, scene_work = None, {"replays": 0, "cancellations": 0, "recomputations": 0}
+            state.save(group, label, record=record, parity=None, work=scene_work, arrays=None)
+        else:
+            replay = replay_scene(source, label, group, budget)
+            report_parity = {"scenario_id": group, "label": label, **check_parity(replay, stored)}
+            calls_before = receiver.calls
+            built = build_conditions(replay, stored, corruption, receiver)
+            record["flags"], record["residual_recomputed"] = reporting_flags(replay, corruption), built["residual_recomputed"]
+            conditions = {name: built[name] for name in CONDITIONS}
+            scene_work = {"replays": 1, "cancellations": 1 + (receiver.calls - calls_before), "recomputations": receiver.calls - calls_before}
+            state.save(group, label, record=record, parity=report_parity, work=scene_work,
+                       arrays={"spec": conditions["RECEIVER_CONSISTENT"].spec, "residual": conditions["RECEIVER_CONSISTENT"].residual})
+            parity.append(report_parity)
+            del replay                                            # raw IQ is transient
+        for key in work:
+            work[key] += scene_work[key]
         records.append(record)
-        if not corruption.applied:
-            rows.append({"stored": stored, "corruption": corruption, "conditions": None})
-            continue
-        replay = replay_scene(source, label, group, budget)
-        parity.append({"scenario_id": group, "label": label, **check_parity(replay, stored)})
-        conditions = build_conditions(replay, stored, corruption, receiver)
-        record["flags"] = reporting_flags(replay, corruption)
-        record["residual_recomputed"] = conditions["residual_recomputed"]
         rows.append({"stored": stored, "corruption": corruption, "conditions": conditions})
-        del replay                                            # raw IQ is transient
+    if from_state:
+        log(f"resumed {from_state}/{len(rows)} scenes from verified state; computed {len(rows) - from_state} now")
     applicable = [row for row in rows if row["conditions"] is not None]
     populations = {"selected": len(rows), "applied": len(applicable),
                    "not_applicable": _tally(records, "not_applicable"), "blocked": _tally(records, "blocked")}
@@ -494,20 +625,19 @@ def run_a5(config: A5Config, data, runs, out, *, matched_data=None, command_args
         entry = {"available": True, "identity": view.identity,
                  "original_selected_population": _original_summary(original_all, keys_all, config.stage)}
         if applicable:
-            keep = [i for i, r in enumerate(rows) if r["conditions"] is not None]
-            original = _take(original_all, keep)
-            entry["paired_population"] = {"n_scenes": len(keep)}
+            entry["paired_population"] = {"n_scenes": len(applicable)}
             original_core = np.stack([r["stored"].mask[0] > CORE_DB for r in applicable])
             entry["conditions"], scored_outputs = {}, {}
             for condition in CONDITIONS:
                 observations = [r["conditions"][condition] for r in applicable]
-                outputs = original if condition == "original" else score_observed(
+                # Every condition of the paired population is scored with the same batching (incl. `original`).
+                outputs = original_all if (condition == "original" and len(applicable) == len(rows)) else score_observed(
                     view, ObservedInputs.stack(observations), keys_app, config.stage)
-                scored_outputs[condition] = outputs
-                if condition != "original":
+                if not (condition == "original" and len(applicable) == len(rows)):
                     scored += len(observations)
+                scored_outputs[condition] = outputs
                 diagnostics = _residual_diagnostics(observations, original_core)
-                entry["conditions"][condition] = _view_metrics(keys_app, outputs, original, diagnostics)
+                entry["conditions"][condition] = _view_metrics(keys_app, outputs, scored_outputs["original"], diagnostics)
                 entry["conditions"][condition]["_residual_raw"] = diagnostics
             _residual_displacement(entry["conditions"], keys_app.group)
             entry["mask_only_vs_receiver_consistent"] = _identical_outputs(name, scored_outputs, applicable)
@@ -533,8 +663,10 @@ def run_a5(config: A5Config, data, runs, out, *, matched_data=None, command_args
                    "request_fingerprint": source.request_fingerprint, "receiver_calibration": source.manifest["calibration"],
                    "cancellation": source.cancellation.to_dict(), "generation_config": manifest["config"],
                    "generator_source_matches_artifact": True},
-        "implementation": {"git_sha": implementation["revision"], "e4_source_files_sha256": {
-            name: implementation["files_sha256"][name] for name in E4_ADDED_FILES}},
+        "implementation": {"git_sha": implementation["revision"], "source_tree_fingerprint": fingerprint(implementation["files_sha256"]),
+                           "source_files_sha256": implementation["files_sha256"],
+                           "e4_source_files_sha256": {name: implementation["files_sha256"][name] for name in E4_ADDED_FILES},
+                           "frozen_run_files_sha256": frozen_files},
         "frozen_models": {name: (frozen[name].identity if name in frozen else {"available": False,
                           "reason": loaded["unavailable"].get(name)}) for name in config.views},
         "experiment_reference": {"runs_config": experiment.resolved(), "labels": list(LABELS)},
@@ -543,29 +675,33 @@ def run_a5(config: A5Config, data, runs, out, *, matched_data=None, command_args
                            "max_abs_diff_db": max((max(p[k]["max_abs_diff_db"] for k in ("spec", "mask", "residual"))
                                                     for p in parity), default=None)},
         "views": views,
-        "counts": {"physical_replays": budget.replays, "cancellation_evaluations": budget.cancellations,
-                   "receiver_recomputations": receiver.calls, "scored_samples": scored,
+        "counts": {"physical_replays": work["replays"], "cancellation_evaluations": work["cancellations"],
+                   "receiver_recomputations": work["recomputations"], "scored_samples": scored,
                    "scenes_selected": len(rows), "scenes_applicable": len(applicable)},
         "label_policy": {"layers": ["original physical label", "original operator-relative target (plan_consistency)",
                                     "counterfactual operator-plan intervention", "frozen classifier output"],
                          "counterfactual_metric_name": "agreement_with_original_label (descriptive, not accuracy)",
+                         "alarm_rates": "clean_false_alarm / event_detection are alarm rates among scenes whose ORIGINAL label is clean / not clean; "
+                                        "under a counterfactual condition they are not false-alarm or detection rates when the intervention changes what an alarm means",
                          "mask_only": "weaker control: stored residual, rebuilt masks; never receiver-consistent",
                          "co_dual_views": "co and dual views do not read the residual; MASK_ONLY and RECEIVER_CONSISTENT differ only through the replayed PSD"},
         "baselines": baseline if baseline is not None else {"status": "INPUTS_RECOMPUTED_NO_MODEL", "methods": None,
                                                              "note": "empty paired population"},
-        "cost": {"elapsed_s": elapsed, "peak_rss_kib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss, "cpu_count": 0,
-                 "device": "cpu", "python": platform.python_version(), "numpy": np.__version__, "torch": str(torch.__version__),
-                 "started_unix": started},
-        "reproduction_command": _reproduction_command(command_args or {"config": "<config>", "data": str(data), "runs": str(runs),
-                                                                       "out": str(out), "matched_data": matched_data}),
+        "resume": {"scenes_selected": len(rows), "scenes_from_state": from_state, "scenes_computed_now": len(rows) - from_state,
+                   "replays_now": budget.replays, "cancellations_now": budget.cancellations,
+                   "note": "counts above are the logical invocation total; a resumed run reports the same totals as an uninterrupted one"},
+        "cost": {"elapsed_s": elapsed, "peak_rss_kib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss, "cpu_count": os.cpu_count(),
+                 "device": "cpu", "python": platform.python_version(), "numpy": np.__version__, "scipy": scipy.__version__,
+                 "torch": str(torch.__version__), "started_unix": started},
+        "reproduction_command": _reproduction_command(command_args or {"config": str(out / "a5_config.json"), "data": str(data),
+                                                                       "runs": str(runs), "out": str(out), "matched_data": matched_data}),
         "limitations": ["bounded pilot: at most two scenario groups and two classes; no population-level inference",
                         "checkpoints are whatever the run directory supplies; the pilot ones are chance-level stand-ins",
                         "counterfactual outputs are descriptive agreement, not accuracy",
                         "simulator-only evidence; no field data"]}
-    result["cost"]["cpu_count"] = os.cpu_count()
     _write_json(out / "results.json", result)
-    (out / "results.json.sha256").write_text(_file_hash(out / "results.json") + "\n")
-    (out / "results.md").write_text(report(result))
+    _atomic_text(out / "results.json.sha256", _file_hash(out / "results.json") + "\n")
+    _atomic_text(out / "results.md", report(result))
     log(f"wrote {out / 'results.json'}")
     return json.loads((out / "results.json").read_text())
 
@@ -630,8 +766,10 @@ def report(result: dict) -> str:
              f"not applicable {result['populations']['not_applicable']}; blocked {result['populations']['blocked']}.",
              f"Replays {result['counts']['physical_replays']}, cancellations {result['counts']['cancellation_evaluations']}, "
              f"scored samples {result['counts']['scored_samples']}; parity all-exact: {result['parity_summary']['all_exact']}.", "",
-             "Counterfactual columns are **agreement with the original label**, not accuracy. MASK_ONLY is the weaker control.", "",
-             "| View | Condition | n | Agreement with original label | Prediction changed | Clean false alarm | Event detection |",
+             "Counterfactual columns are **agreement with the original label**, not accuracy. MASK_ONLY is the weaker control. "
+             "Alarm columns are alarm rates among scenes whose ORIGINAL label is clean / not clean; under a counterfactual "
+             "condition they are not false-alarm or detection rates.", "",
+             "| View | Condition | n | Agreement with original label | Prediction changed | Alarm among original-clean | Alarm among original-event |",
              "|---|---|---|---|---|---|---|"]
     def pct(rate):
         return "n/a" if rate is None or rate.get("mean") is None else f"{100 * rate['mean']:.1f}% (n={rate['n_samples']})"
@@ -665,8 +803,8 @@ def main(argv=None):
             raw["scope"] = args.scope
         config = A5Config(**{**raw, "labels": tuple(raw.get("labels", ())), "views": tuple(raw.get("views", VIEWS))})
         run_a5(config, args.data, args.runs, args.out, matched_data=args.matched_data,
-               command_args={"config": args.config, "data": args.data, "runs": args.runs, "out": args.out,
-                             "matched_data": args.matched_data})
+               command_args={"config": args.config, "perturbation": args.perturbation, "scope": args.scope,
+                             "data": args.data, "runs": args.runs, "out": args.out, "matched_data": args.matched_data})
     except (ValueError, FileNotFoundError, TypeError) as error:
         parser.exit(2, f"error: {error}\n")
 

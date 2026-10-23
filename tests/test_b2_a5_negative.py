@@ -158,8 +158,9 @@ def test_wrong_artifact_stage_fails_closed(tmp_path):
         rp.open_replay_source(base, "known", "test")
     with pytest.raises(rp.ReplayError, match="stage must be one of"):
         rp.open_replay_source(ws / "known", "test-only", "test")
-    with pytest.raises(rp.ReplayError, match="was not generated"):
-        rp.open_replay_source(ws / "known", "known", "val-select" if False else "test-matched")
+    for role in ("test-matched", "train", "val-select", "val-calib"):
+        with pytest.raises(rp.ReplayError, match="'test' only"):
+            rp.open_replay_source(ws / "known", "known", role)
     with pytest.raises(rp.ReplayError):
         rp.open_replay_source(ws / "known", "matched", "test")           # a known artifact is not a matched artifact
 
@@ -266,6 +267,14 @@ def test_tampered_or_swapped_frozen_state_fails_closed(tmp_path):
     (missing / "config.json").unlink()
     with pytest.raises(FileNotFoundError):
         _run(ws / "known", missing, tmp_path, _config(views=("co",)))
+
+
+def test_matched_artifact_bound_to_another_valid_known_dataset_is_refused_by_the_binding_check(tmp_path):
+    ws = support.workspace()
+    other = support.second_known()                 # valid and verified, but a different known dataset (other canceller settings)
+    config = _config(stage="matched", perturbation="authorize_intruder", labels=("unauthorized",))
+    with pytest.raises(rp.ReplayError, match="not bound to this known dataset, physics and cancellation"):
+        a5.run_a5(config, other, ws / "runs", tmp_path / "x", matched_data=ws / "matched", log=lambda *_: None)
 
 
 def test_matched_artifact_must_be_bound_to_the_same_known_data(tmp_path):

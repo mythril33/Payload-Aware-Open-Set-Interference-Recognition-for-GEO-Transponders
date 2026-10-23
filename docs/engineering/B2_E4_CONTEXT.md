@@ -82,3 +82,23 @@ tree, strict file ownership below); Agent E was run as an independent read-only 
 `FULL B2 PRODUCTION NOT AUTHORIZED — NOT STARTED` · `FULL GPU TRAINING NOT AUTHORIZED — NOT STARTED` ·
 `FULL LOKO NOT AUTHORIZED — NOT STARTED` · K18, K17d, OBS-CANCEL/2 `PENDING_RESEARCHER` ·
 `benchmark_complete=false`. The researcher authorized E4 engineering preparation and bounded validation only.
+
+## 8. Resume / handoff (how to continue an interrupted E4 job)
+
+State lives in Git (branch `claude/dazzling-maxwell-y0hw0q`, draft PR) and in re-creatable local artifacts under the git-ignored
+`data/` and `runs/`. Everything below is idempotent; re-running a command continues verified work and refuses modified work.
+
+| Interrupted step | Continue with | What is reused / rejected |
+|---|---|---|
+| Pilot generation (`geosim.b2_dataset`, `b2_matched_dataset`) | the same command and output directory | verified shards; a directory with a different request or an unverified partial shard is refused (use a fresh directory) |
+| Stand-in training (`geoml.b2_experiment`) | the same command with `--reuse` | checkpoints/scorers/calibrations whose provenance equals the data; mismatch is refused |
+| One A5 invocation (`python -m geoml.b2_a5 ...`) | the same command and `--out` | per-scene `out/state/` entries (verified, bound to the experiment fingerprint); uncommitted `*.tmp`/array files are discarded; modified entries are refused; a complete checksummed result is reused |
+| The pilot matrix | `scripts/run_b2_a5_pilot_matrix.sh` | finished invocations are skipped, an interrupted one resumes at scene level |
+| Summary | `scripts/summarize_b2_a5_pilot.py` (pure function of the invocation results) | refuses mixed identities |
+
+Pilot environment (this session): `scripts/setup_cloud.sh`-equivalent venv at `/workspace/.venvs/geosim`; pilot data
+`data/b2-feat-pilot` (`geosim.b2_dataset --config configs/b2_base.json --cancellation configs/cancellation.json --limit-groups 2
+--groups-per-shard 1`), `data/b2-match-pilot` (`geosim.b2_matched_dataset ... --known data/b2-feat-pilot --limit-groups 2`), run directory
+`runs/b2-feat-pilot` (`geoml.b2_experiment --config configs/b2_feat.json`, trained on the unmodified `main` source before the E4 files
+existed; E4 allow-lists exactly three added files). A new session without these directories regenerates them with the commands above
+(about 5 + 1 minutes of generation and 10 s of training on 4 CPUs); no full-scale generation, GPU training or LOKO sweep is involved.

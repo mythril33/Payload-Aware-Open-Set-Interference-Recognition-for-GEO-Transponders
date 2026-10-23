@@ -126,7 +126,9 @@ def test_intervention_context_is_whitelisted():
         _apply("authorize_intruder", context={"label": "unauthorized", "intruder": {"f0": 0.0}})
 
 
-def test_stale_plan_is_the_plan_of_the_preceding_scenario_id():
+def test_stale_plan_is_the_default_plan_of_the_preceding_scenario_id_seed():
+    """Formula, not history: default_plan(2*(id-1)+pol). The preceding id may lie outside the reserved roles and that
+    group's own placement may have needed redraws, so this is not necessarily the plan that group held (P28 section 3)."""
     original = _original()
     result = _apply("stale_plan", "both")
     assert result.applied
@@ -137,9 +139,10 @@ def test_stale_plan_is_the_plan_of_the_preceding_scenario_id():
     assert _apply("stale_plan", "both", original=same).status == "not_applicable"
 
 
-@pytest.mark.parametrize("perturbation", [p for p in ap.PERTURBATIONS if p not in ("none", "authorize_intruder")])
+@pytest.mark.parametrize("perturbation", [p for p in ap.PERTURBATIONS if p != "none"])
 def test_scope_both_is_exactly_the_union_of_the_two_single_feed_scopes(perturbation):
-    co, cross, both = (_apply(perturbation, scope) for scope in ap.SCOPES[:3])
+    context = _intruder_context() if perturbation == "authorize_intruder" else None
+    co, cross, both = (_apply(perturbation, scope, context=context) for scope in ap.SCOPES[:3])
     assert co.applied and cross.applied and both.applied
     assert both.plans.co == co.plans.co and both.plans.cross == cross.plans.cross
     assert co.plans.cross == co.original.cross and cross.plans.co == cross.original.co     # one feed never touches the other
