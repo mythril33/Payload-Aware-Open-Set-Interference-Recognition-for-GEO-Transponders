@@ -3,7 +3,7 @@
  "as_of": "2026-10-23",
  "base_main": "755b474b7a2c506ec03441a7d15ed365c47addb1",
  "benchmark_complete": false,
- "note": "Manual audit of the 21,350-observation production plan against the merged code. PASS needs a named test or an inspected location; FAIL is a verified engineering gap or mismatch; BLOCKED needs a researcher decision, authorization, hardware or a measurement; NOT_RUN was not executed. Nothing here approves a gate. E7a update (2026-10-23): the supervisor and the K18 diagnostic findings are resolved for bounded fixtures; production launch stays unimplemented. E7a review update: independent multi-lens review of the supervisor, K18 diagnostics, training proposal and documentation; the material findings are fixed with regression tests (P30 section 9). Items touched by E7a cite line numbers at the E7a head; untouched items cite 755b474.",
+ "note": "Manual audit of the 21,350-observation production plan against the merged code. PASS needs a named test or an inspected location; FAIL is a verified engineering gap or mismatch; BLOCKED needs a researcher decision, authorization, hardware or a measurement; NOT_RUN was not executed. Nothing here approves a gate. E7a update (2026-10-23): the supervisor and the K18 diagnostic findings are resolved for bounded fixtures; production launch stays unimplemented. E7a review update: independent multi-lens review of the supervisor, K18 diagnostics, training proposal and documentation; the material findings are fixed with regression tests (P30 section 9). Items touched by E7a cite line numbers at the E7a head; untouched items cite 755b474. Main moved to 5d3f1a3 when PR #21 (the first, pre-review E7a state) was merged; this round is its follow-up. The audit base for items not touched by E7a stays 755b474.",
  "items": [
   {
    "id": "audit.generator_cli",
@@ -166,6 +166,16 @@
     "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40004028017"
    ],
    "verified_by": "ci:40004028017 raw job log read in E7a"
+  },
+  {
+   "id": "audit.e7a_first_state_ci",
+   "title": "The merged first E7a state (PR #21) passed GitHub Actions",
+   "status": "PASS",
+   "message": "Run 40017354368, job 120633134928, head 5903637d28d3607b606c78f06adfc8c47573edce: repository step 1412 passed, 7 skipped (the K18 golden tests skip on that runner's CPU by design) in 689.49 s, E4 step success. This certifies the pre-review state only; the follow-up with the review fixes needs its own run.",
+   "evidence": [
+    "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40017354368"
+   ],
+   "verified_by": "ci:40017354368 job log tail read in E7a"
   },
   {
    "id": "audit.production_training_config_missing",

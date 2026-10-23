@@ -1,6 +1,6 @@
 # P30 — B2/1 fail-closed production supervisor (E7a)
 
-Date: 2026-10-23. Base `main` `755b474b7a2c506ec03441a7d15ed365c47addb1`. `benchmark_complete=false`.
+Date: 2026-10-23. First state merged as PR #21 (`main` `5d3f1a3`); this revision adds the independent-review hardening (section 9). `benchmark_complete=false`.
 Tool: [`scripts/b2_production_supervisor.py`](../../scripts/b2_production_supervisor.py) (separate from the E4 matrix runner);
 tests: [`tests/test_b2_production_supervisor.py`](../../tests/test_b2_production_supervisor.py) with the stand-in child
 [`tests/b2_supervisor_standin.py`](../../tests/b2_supervisor_standin.py). It builds on the read-only

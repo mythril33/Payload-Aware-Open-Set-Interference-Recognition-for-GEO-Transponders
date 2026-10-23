@@ -621,7 +621,7 @@
       }
     },
     "production_supervisor": {
-      "status": "E7A_DRAFT_DELIVERY",
+      "status": "E7A_FIRST_STATE_MERGED_PR_21_REVIEW_FIXES_IN_FOLLOW_UP_DRAFT",
       "contract": "docs/plan/P30_b2_e7a_production_supervisor.md",
       "tool": "scripts/b2_production_supervisor.py",
       "tests": "tests/test_b2_production_supervisor.py",
@@ -638,7 +638,20 @@
       "tests_collected": 127,
       "child_wrapper": "fixture diagnostic restricted to the repository's tests/ directory and hashed into the run identity",
       "verification_script": "scripts/b2_e7a_capped_verification.py",
-      "verification_commit": "dd5d9655f191d27558e0f185a954e93ca68eff80"
+      "verification_commit": "dd5d9655f191d27558e0f185a954e93ca68eff80",
+      "first_state_ci": {
+        "pr": 21,
+        "head_sha": "5903637d28d3607b606c78f06adfc8c47573edce",
+        "run_id": 40017354368,
+        "job_id": 120633134928,
+        "conclusion": "success",
+        "repository_step": {
+          "passed": 1412,
+          "skipped": 7,
+          "pytest_seconds": 689.49
+        },
+        "scope": "pre-review state only"
+      }
     },
     "k18_train_diagnostics": {
       "status": "E7A_DRAFT_DELIVERY",
@@ -699,8 +712,8 @@
   ],
   "integrity_note": "Proposed researcher decisions are not approvals. Preserve frozen semantics and strictly segregate train, val-select, val-calib, test and test-matched.",
   "verified_remote_main": {
-    "sha": "755b474b7a2c506ec03441a7d15ed365c47addb1",
+    "sha": "5d3f1a3ed9235afee19a7984aa8bb2751faf5023",
     "date": "2026-10-23",
-    "note": "PR20 merged; E6 head 8703a52 run 40004028017 raw log: remaining suite 1226 passed (+107 E4 = 1333); decisions unchanged"
+    "note": "PR21 merged the first (pre-review) E7a state 5903637; its run 40017354368 passed (1412 passed, 7 skipped + E4 step); decisions unchanged"
   }
 }
