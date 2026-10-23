@@ -1,0 +1,3310 @@
+{
+  "schema": "B2-scientific-figure-manifest/1",
+  "benchmark_complete": false,
+  "production_authorized": false,
+  "script_sha256": "667250bc68fa91b612e0057af7ba3b4cf149bb9ae275e11d6f9f8ee48c36a177",
+  "source_lock_sha256": "9fe18c5a2509ca14ae6ed8c22d0af964715c8851e8ffc7ece8c11631b9885c68",
+  "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+  "rendering": "Agg; DejaVu Sans; fixed SVG salt; no timestamps; PNG 300 dpi; vector SVG/PDF",
+  "package_versions": {
+    "python": "3.12.14",
+    "numpy": "2.5.4",
+    "matplotlib": "3.11.2",
+    "scipy": "1.18.1",
+    "pillow": "13.0.0"
+  },
+  "figures": [
+    {
+      "id": "A1_physical_spectrograms",
+      "evidence_class": "BOUNDED_PILOT",
+      "dataset_stage": "B2-feat/1",
+      "role": "test",
+      "n_scenes": 2,
+      "n_groups": 1,
+      "units": "MHz, s, dB(power/Hz)",
+      "dataset_identity": "dcffb26470837a5340277d5ca9af7e3f7377cad9c809e5fd37d05769c95bb83b",
+      "model_status": "none",
+      "caption": "Paired lowest test group; linear-power pooling 8 snapshots x 4 bins; shared scale. Simulation observations.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_physical_figure_data.json",
+          "sha256": "107777a62823c816744b8873f2c63a6e95848a4026bd0b74aef8fe83f4e76e6f"
+        }
+      ],
+      "plotted_values": {
+        "scenario_id": 3200000,
+        "display_shape": [
+          16,
+          128
+        ],
+        "color_limits_db": [
+          -114.84116256966723,
+          -74.60672304308882
+        ]
+      },
+      "outputs": [
+        {
+          "path": "A1_physical_spectrograms.png",
+          "sha256": "e638d608842f082696bc19f3530c2751ac5b51fc33c46c6b8de2d9d9afb8a013",
+          "bytes": 288383
+        },
+        {
+          "path": "A1_physical_spectrograms.svg",
+          "sha256": "112468c34053620459930255b552c6503f3b81aab5115d3f773cd487cffb9771",
+          "bytes": 105909
+        },
+        {
+          "path": "A1_physical_spectrograms.pdf",
+          "sha256": "28bf2ddbc3087404a35bdfb49bcc5e5098451e1415cb3551e64887f3c5504360",
+          "bytes": 37220
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "A2_psd_plan_residual",
+      "evidence_class": "BOUNDED_PILOT",
+      "dataset_stage": "B2-feat/1",
+      "role": "test",
+      "n_scenes": 2,
+      "n_groups": 1,
+      "units": "MHz; PSD dB(power/Hz); mask relative dB",
+      "dataset_identity": "dcffb26470837a5340277d5ca9af7e3f7377cad9c809e5fd37d05769c95bb83b",
+      "model_status": "none",
+      "caption": "Same two scenes as A1; masks have a separate relative scale; residual uses observed IQ and co plan only.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_physical_figure_data.json",
+          "sha256": "107777a62823c816744b8873f2c63a6e95848a4026bd0b74aef8fe83f4e76e6f"
+        }
+      ],
+      "plotted_values": {
+        "scenario_id": 3200000,
+        "time_pool": "linear power"
+      },
+      "outputs": [
+        {
+          "path": "A2_psd_plan_residual.png",
+          "sha256": "1b27b7bd7b1c0603c7e67ec3b9d20ff8119cccb6700136bc3846ee8a04847614",
+          "bytes": 483337
+        },
+        {
+          "path": "A2_psd_plan_residual.svg",
+          "sha256": "821b8ae9c35f9e7b16c617f2336061970acede2ed272a85907d8a2714be2d296",
+          "bytes": 147414
+        },
+        {
+          "path": "A2_psd_plan_residual.pdf",
+          "sha256": "ebe712e8473449081795054de0dca5b2b4b299a84c9d763062e51b4412a046cb",
+          "bytes": 44864
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "A3_cancellation_by_class",
+      "evidence_class": "BOUNDED_PILOT",
+      "dataset_stage": "B2-feat/1",
+      "role": "offline diagnostic: four roles",
+      "n_scenes": 64,
+      "n_groups": 8,
+      "units": "dB",
+      "dataset_identity": "325317b75dfaea64bd4872d09afd7511ffaf441dfd9e219153217081a9027831",
+      "model_status": "none",
+      "caption": "8 scenes/class; mean over 37 active planned-carrier cores/class, not mean full-band depth. No model fitting.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_feat_cancellation_check.json",
+          "sha256": "79233bfb0452741db1f2edf544bd541741974b14166611a0e404222244d33f5e"
+        }
+      ],
+      "plotted_values": {
+        "clean": {
+          "n": 8,
+          "n_active_carriers": 37,
+          "mean_depth_db": 16.466462125859636,
+          "min_depth_db": 14.197426688304304,
+          "mean_gap_floor_shift_db": -0.09081332454106672,
+          "median_decision_snr_db": 16.44869965591065
+        },
+        "cw": {
+          "n": 8,
+          "n_active_carriers": 37,
+          "mean_depth_db": 15.525060034995784,
+          "min_depth_db": 4.508050329129745,
+          "mean_gap_floor_shift_db": -0.05106674974344827,
+          "median_decision_snr_db": 15.802110895231678
+        },
+        "swept_cw": {
+          "n": 8,
+          "n_active_carriers": 37,
+          "mean_depth_db": 15.649529404702637,
+          "min_depth_db": 11.697185063369261,
+          "mean_gap_floor_shift_db": -0.059069887794183984,
+          "median_decision_snr_db": 16.189479127340423
+        },
+        "unauthorized": {
+          "n": 8,
+          "n_active_carriers": 37,
+          "mean_depth_db": 16.289206552877154,
+          "min_depth_db": 14.167375542755408,
+          "mean_gap_floor_shift_db": -0.039377156315115514,
+          "median_decision_snr_db": 16.090220802791222
+        },
+        "overdrive": {
+          "n": 8,
+          "n_active_carriers": 37,
+          "mean_depth_db": 13.325301647915666,
+          "min_depth_db": 11.151370986061266,
+          "mean_gap_floor_shift_db": -0.032837518797469656,
+          "median_decision_snr_db": 12.823013707987691
+        },
+        "cross_pol": {
+          "n": 8,
+          "n_active_carriers": 37,
+          "mean_depth_db": 12.778685414571573,
+          "min_depth_db": 8.96797341150436,
+          "mean_gap_floor_shift_db": -0.0236870165338523,
+          "median_decision_snr_db": 12.000877083207286
+        },
+        "adjacent_satellite": {
+          "n": 8,
+          "n_active_carriers": 37,
+          "mean_depth_db": 15.325490065770955,
+          "min_depth_db": 6.823076530456362,
+          "mean_gap_floor_shift_db": -0.0808228544362457,
+          "median_decision_snr_db": 15.231186831886191
+        },
+        "carrier_under_carrier": {
+          "n": 8,
+          "n_active_carriers": 37,
+          "mean_depth_db": 15.189315583106884,
+          "min_depth_db": 6.205347742328641,
+          "mean_gap_floor_shift_db": -0.08676204898171136,
+          "median_decision_snr_db": 16.02219940219759
+        }
+      },
+      "outputs": [
+        {
+          "path": "A3_cancellation_by_class.png",
+          "sha256": "77288c868466b6069a67b94ed967be213ad897659d1989731a1551ae8b5e5976",
+          "bytes": 115087
+        },
+        {
+          "path": "A3_cancellation_by_class.svg",
+          "sha256": "0aa7ff33974fd7cfcd67003a66927e6c3badc4175545d7b065321fb65bda44ce",
+          "bytes": 49716
+        },
+        {
+          "path": "A3_cancellation_by_class.pdf",
+          "sha256": "482510f38ed493091d7bf51db105b9f9744a9d38b2e8cd839ff0c5d156ccbc9c",
+          "bytes": 18928
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "A4_npr_amplifiers",
+      "evidence_class": "ENGINEERING_VALIDATION",
+      "dataset_stage": "standalone NPR diagnostic",
+      "role": "offline physics",
+      "n_scenes": null,
+      "n_groups": null,
+      "units": "dB",
+      "dataset_identity": "seed=0; 524288 samples; one notched waveform",
+      "model_status": "none",
+      "caption": "Measured simulation points only. Hollow squares: inputs exceed OpenDPD measured support; no interpolation or CI.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/npr_check.json",
+          "sha256": "9c8402cd68664d8c3085a36843c46f42f657c129555c57552767277976bd2fdc"
+        }
+      ],
+      "plotted_values": {
+        "dvbs2_nl": {
+          "rows": [
+            {
+              "ibo_db": 0.0,
+              "npr_db": 8.515038101668233,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 1.0,
+              "npr_db": 8.985559161072809,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 2.0,
+              "npr_db": 9.505706302597032,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 3.0,
+              "npr_db": 10.075993041429356,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 4.0,
+              "npr_db": 10.69647515341611,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 5.0,
+              "npr_db": 11.369492040787964,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 6.0,
+              "npr_db": 12.09888978651811,
+              "linear_npr_db": 53.63452530742974,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 7.0,
+              "npr_db": 12.891760044580032,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 8.0,
+              "npr_db": 13.755572079911522,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 9.0,
+              "npr_db": 14.69764415877571,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 10.0,
+              "npr_db": 15.723183357269763,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 11.0,
+              "npr_db": 16.836702816725506,
+              "linear_npr_db": 53.63452530742974,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 12.0,
+              "npr_db": 18.038838559678098,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 13.0,
+              "npr_db": 19.329820797822357,
+              "linear_npr_db": 53.63452530742974,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 14.0,
+              "npr_db": 20.714972100992664,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            }
+          ],
+          "slope_db_per_db_ibo_10_14": 1.2476695468542658
+        },
+        "dvbs2_lin": {
+          "rows": [
+            {
+              "ibo_db": 0.0,
+              "npr_db": 8.7917488008707,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 1.0,
+              "npr_db": 9.610111850944483,
+              "linear_npr_db": 53.63452530742974,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 2.0,
+              "npr_db": 10.488241187681675,
+              "linear_npr_db": 53.63452530742974,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 3.0,
+              "npr_db": 11.42540675616572,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 4.0,
+              "npr_db": 12.431432686941175,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 5.0,
+              "npr_db": 13.547457089954486,
+              "linear_npr_db": 53.634525307429755,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 6.0,
+              "npr_db": 14.820514196163181,
+              "linear_npr_db": 53.63452530742974,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 7.0,
+              "npr_db": 16.318546272175535,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 8.0,
+              "npr_db": 18.084345733242234,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 9.0,
+              "npr_db": 20.116909645766377,
+              "linear_npr_db": 53.634525307429755,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 10.0,
+              "npr_db": 22.203948663254746,
+              "linear_npr_db": 53.63452530742974,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 11.0,
+              "npr_db": 23.674342290662263,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 12.0,
+              "npr_db": 23.752229526933974,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 13.0,
+              "npr_db": 22.816645246910806,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 14.0,
+              "npr_db": 21.79188199096423,
+              "linear_npr_db": 53.634525307429755,
+              "input_beyond_measured": null
+            }
+          ],
+          "slope_db_per_db_ibo_10_14": -0.1681830388332479
+        },
+        "saleh": {
+          "rows": [
+            {
+              "ibo_db": 0.0,
+              "npr_db": 9.37770652884621,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 1.0,
+              "npr_db": 10.157164913345234,
+              "linear_npr_db": 53.634525307429755,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 2.0,
+              "npr_db": 10.999824166382865,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 3.0,
+              "npr_db": 11.903716315227662,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 4.0,
+              "npr_db": 12.864096983147588,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 5.0,
+              "npr_db": 13.87282240160318,
+              "linear_npr_db": 53.63452530742974,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 6.0,
+              "npr_db": 14.917972136830976,
+              "linear_npr_db": 53.63452530742974,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 7.0,
+              "npr_db": 15.984098555732762,
+              "linear_npr_db": 53.63452530742974,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 8.0,
+              "npr_db": 17.053580956378433,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 9.0,
+              "npr_db": 18.109396430235837,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 10.0,
+              "npr_db": 19.13900549639799,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 11.0,
+              "npr_db": 20.138139930274875,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 12.0,
+              "npr_db": 21.112769084736804,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 13.0,
+              "npr_db": 22.078135486835656,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 14.0,
+              "npr_db": 23.05525715886443,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            }
+          ],
+          "slope_db_per_db_ibo_10_14": 0.9772498881493662
+        },
+        "rapp_p2": {
+          "rows": [
+            {
+              "ibo_db": 0.0,
+              "npr_db": 14.48034660697777,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 1.0,
+              "npr_db": 15.637217529651927,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 2.0,
+              "npr_db": 16.979644110625358,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 3.0,
+              "npr_db": 18.525037848908852,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 4.0,
+              "npr_db": 20.289586717292863,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 5.0,
+              "npr_db": 22.28731170926902,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 6.0,
+              "npr_db": 24.528440478360643,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 7.0,
+              "npr_db": 27.017048929061104,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 8.0,
+              "npr_db": 29.748275782778446,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 9.0,
+              "npr_db": 32.70548825874603,
+              "linear_npr_db": 53.634525307429755,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 10.0,
+              "npr_db": 35.85699677201291,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 11.0,
+              "npr_db": 39.14969105191286,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 12.0,
+              "npr_db": 42.493674700095134,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 13.0,
+              "npr_db": 45.73214529738655,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 14.0,
+              "npr_db": 48.6122876591849,
+              "linear_npr_db": 53.634525307429755,
+              "input_beyond_measured": null
+            }
+          ],
+          "slope_db_per_db_ibo_10_14": 3.2093036019817656
+        },
+        "opendpd_apa": {
+          "rows": [
+            {
+              "ibo_db": 0.0,
+              "npr_db": 24.485061204730517,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.45320892333984375
+            },
+            {
+              "ibo_db": 1.0,
+              "npr_db": 22.746862263044303,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.36954307556152344
+            },
+            {
+              "ibo_db": 2.0,
+              "npr_db": 21.257085058421197,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.2859058380126953
+            },
+            {
+              "ibo_db": 3.0,
+              "npr_db": 20.068503972171175,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.20599746704101562
+            },
+            {
+              "ibo_db": 4.0,
+              "npr_db": 19.243418444297305,
+              "linear_npr_db": 53.63452530742974,
+              "input_beyond_measured": 0.13701629638671875
+            },
+            {
+              "ibo_db": 5.0,
+              "npr_db": 18.82605582583524,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.08179664611816406
+            },
+            {
+              "ibo_db": 6.0,
+              "npr_db": 18.810318779127243,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.04298591613769531
+            },
+            {
+              "ibo_db": 7.0,
+              "npr_db": 19.20585092204306,
+              "linear_npr_db": 53.634525307429726,
+              "input_beyond_measured": 0.0189971923828125
+            },
+            {
+              "ibo_db": 8.0,
+              "npr_db": 19.952002859555748,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.006786346435546875
+            },
+            {
+              "ibo_db": 9.0,
+              "npr_db": 20.968269628561238,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.00189971923828125
+            },
+            {
+              "ibo_db": 10.0,
+              "npr_db": 22.131808567297536,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.000370025634765625
+            },
+            {
+              "ibo_db": 11.0,
+              "npr_db": 23.366011061551426,
+              "linear_npr_db": 53.634525307429755,
+              "input_beyond_measured": 6.4849853515625e-05
+            },
+            {
+              "ibo_db": 12.0,
+              "npr_db": 24.648384637156745,
+              "linear_npr_db": 53.634525307429755,
+              "input_beyond_measured": 1.33514404296875e-05
+            },
+            {
+              "ibo_db": 13.0,
+              "npr_db": 26.03691434791291,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.0
+            },
+            {
+              "ibo_db": 14.0,
+              "npr_db": 27.565772499463257,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.0
+            }
+          ],
+          "slope_db_per_db_ibo_10_14": 1.3538831150692912
+        },
+        "opendpd_dpa": {
+          "rows": [
+            {
+              "ibo_db": 0.0,
+              "npr_db": 26.660324775825927,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.5153102874755859
+            },
+            {
+              "ibo_db": 1.0,
+              "npr_db": 24.88128340093133,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.4342632293701172
+            },
+            {
+              "ibo_db": 2.0,
+              "npr_db": 23.328775415625653,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.3502960205078125
+            },
+            {
+              "ibo_db": 3.0,
+              "npr_db": 22.092509662606417,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.2669353485107422
+            },
+            {
+              "ibo_db": 4.0,
+              "npr_db": 21.25125013799785,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.18913841247558594
+            },
+            {
+              "ibo_db": 5.0,
+              "npr_db": 20.875835328874427,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.12302780151367188
+            },
+            {
+              "ibo_db": 6.0,
+              "npr_db": 21.019032232646847,
+              "linear_npr_db": 53.63452530742974,
+              "input_beyond_measured": 0.07158851623535156
+            },
+            {
+              "ibo_db": 7.0,
+              "npr_db": 21.67260769273147,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.03623390197753906
+            },
+            {
+              "ibo_db": 8.0,
+              "npr_db": 22.885064179369827,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.01534271240234375
+            },
+            {
+              "ibo_db": 9.0,
+              "npr_db": 24.62946363028062,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.005237579345703125
+            },
+            {
+              "ibo_db": 10.0,
+              "npr_db": 26.88239470192755,
+              "linear_npr_db": 53.634525307429755,
+              "input_beyond_measured": 0.0013580322265625
+            },
+            {
+              "ibo_db": 11.0,
+              "npr_db": 29.523894333234594,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.0002288818359375
+            },
+            {
+              "ibo_db": 12.0,
+              "npr_db": 32.35271939829731,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 4.76837158203125e-05
+            },
+            {
+              "ibo_db": 13.0,
+              "npr_db": 35.11808847620764,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 7.62939453125e-06
+            },
+            {
+              "ibo_db": 14.0,
+              "npr_db": 37.8072153901062,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": 0.0
+            }
+          ],
+          "slope_db_per_db_ibo_10_14": 2.7443835519330335
+        }
+      },
+      "outputs": [
+        {
+          "path": "A4_npr_amplifiers.png",
+          "sha256": "45165e899dfec286a3f00b2c8c4a2aa812949b9e3dffaee5ef5d626dcb275f8d",
+          "bytes": 153865
+        },
+        {
+          "path": "A4_npr_amplifiers.svg",
+          "sha256": "cdb7cdf3a94c46f53ecadb91d65adc9c4a9ca14298ffc1260f6ef6c2ccde7a89",
+          "bytes": 64457
+        },
+        {
+          "path": "A4_npr_amplifiers.pdf",
+          "sha256": "6682f018edb02834ecbd55ad3a7e90ad1f70a011a6c5ce87e6aaca3a4d0032b9",
+          "bytes": 23220
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "A5_asi_cuc_observability",
+      "evidence_class": "BOUNDED_PILOT",
+      "dataset_stage": "standalone A1-chain diagnostics",
+      "role": "offline truth diagnostic only",
+      "n_scenes": {
+        "ASI": 120,
+        "CuC": 144
+      },
+      "n_groups": {
+        "ASI": 120,
+        "CuC": 24
+      },
+      "units": "dB",
+      "dataset_identity": "ASI seeds 610000..610119; CuC seeds 600000..600023, six levels; separate populations",
+      "model_status": "none",
+      "caption": "Truth defines diagnostic C/I and event band only; these are not detector scores or model inputs. No pooled population.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/asi_visibility.json",
+          "sha256": "b4a60b756a76700aa3e65be4e40f06fba4781c5799e0f1d119ce7008b2049a1a"
+        },
+        {
+          "path": "docs/results/cuc_visibility.json",
+          "sha256": "05b5ff7457283aec21c87b9256cde05cac1569814910c654c11389e6d87ee218"
+        }
+      ],
+      "plotted_values": {
+        "asi_visibility.json": {
+          "n_rows": 120,
+          "n_groups": 120
+        },
+        "cuc_visibility.json": {
+          "n_rows": 144,
+          "n_groups": 24
+        }
+      },
+      "outputs": [
+        {
+          "path": "A5_asi_cuc_observability.png",
+          "sha256": "23fc84191c1fae368e7eae0549b2ef260849c917e41fba9e94c168c66e6ca753",
+          "bytes": 252934
+        },
+        {
+          "path": "A5_asi_cuc_observability.svg",
+          "sha256": "3e938703a5348b166e1219e439dbf86aae6d213b65f124742c2b25ff7406ccd4",
+          "bytes": 119967
+        },
+        {
+          "path": "A5_asi_cuc_observability.pdf",
+          "sha256": "125165aaa9936fc46cf139f37e7e1d9c689a8ad4bde09c9e45570251f3e8e8c2",
+          "bytes": 25838
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "B1_cancellation_displacement",
+      "evidence_class": "BOUNDED_PILOT",
+      "dataset_stage": "B2-A5-eval/1 on B2-feat/1",
+      "role": "test, known stage only",
+      "n_scenes": {
+        "known_authorize_intruder_both": 2,
+        "known_authorize_intruder_co_only": 2,
+        "known_authorize_intruder_cross_only": 2,
+        "known_drop_one_both": 4,
+        "known_drop_one_co_only": 4,
+        "known_drop_one_cross_only": 4,
+        "known_none_both": 4,
+        "known_phantom_both": 4,
+        "known_phantom_co_only": 4,
+        "known_phantom_cross_only": 4,
+        "known_shift_minus_both": 4,
+        "known_shift_minus_co_only": 4,
+        "known_shift_minus_cross_only": 4,
+        "known_shift_plus_both": 4,
+        "known_shift_plus_co_only": 4,
+        "known_shift_plus_cross_only": 4,
+        "known_stale_plan_both": 4,
+        "known_stale_plan_co_only": 4,
+        "known_stale_plan_cross_only": 4
+      },
+      "n_groups": 2,
+      "units": "dB",
+      "dataset_identity": {
+        "known_data_fingerprint": "6c2b95ed84cc0e51e614cc2311d32b646959c4697e5f4ffbbb0076b2942f59e2",
+        "stage_identity": {
+          "request_fingerprint": "87f80561c86b4ec1ade80498eca8ee562410f660b48500ab8529fe238b36f96f",
+          "matched_data_fingerprint": null
+        }
+      },
+      "model_status": "three-epoch chance-level stand-ins",
+      "caption": "Original-mask core depth: corrupted minus paired original; 2 groups/cell; authorize_intruder n=2, other cells n=4; grey=unregistered.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_a5_dual_pol_pilot.json",
+          "sha256": "88bf7d2af40876c09b233697a68788a0d337d468adce996a5882e4b20f804b2d"
+        }
+      ],
+      "plotted_values": {
+        "MASK_ONLY": [
+          [
+            null,
+            null,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "RECEIVER_CONSISTENT": [
+          [
+            null,
+            null,
+            0.0
+          ],
+          [
+            -8.190665392664123,
+            0.0,
+            -8.190665392664123
+          ],
+          [
+            -8.007409380379375,
+            0.0,
+            -8.007409380379375
+          ],
+          [
+            -6.1599260637779025,
+            0.0,
+            -6.1599260637779025
+          ],
+          [
+            3.7834811159598303e-06,
+            0.0,
+            3.7834811159598303e-06
+          ],
+          [
+            -0.000348386312424509,
+            0.0,
+            -0.000348386312424509
+          ],
+          [
+            -12.955914181277642,
+            0.0,
+            -12.955914181277642
+          ]
+        ]
+      },
+      "outputs": [
+        {
+          "path": "B1_cancellation_displacement.png",
+          "sha256": "3e60ec14b6fdd053fa5a5f932a31cdebb920d562fb3d5b40780253f2c8f3440c",
+          "bytes": 217100
+        },
+        {
+          "path": "B1_cancellation_displacement.svg",
+          "sha256": "e2aa496ab6a487c94e734a4f319c2e5c7a32877ff97d459c5d23ae9d84d5a5f7",
+          "bytes": 80699
+        },
+        {
+          "path": "B1_cancellation_displacement.pdf",
+          "sha256": "17f9f1328a3c89ce9a8feb4b273a4bbb95df2953d3e680064905456c2ec988a8",
+          "bytes": 24766
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "B2_residual_displacement",
+      "evidence_class": "BOUNDED_PILOT",
+      "dataset_stage": "B2-A5-eval/1 on B2-feat/1",
+      "role": "test, known stage only",
+      "n_scenes": {
+        "known_authorize_intruder_both": 2,
+        "known_authorize_intruder_co_only": 2,
+        "known_authorize_intruder_cross_only": 2,
+        "known_drop_one_both": 4,
+        "known_drop_one_co_only": 4,
+        "known_drop_one_cross_only": 4,
+        "known_none_both": 4,
+        "known_phantom_both": 4,
+        "known_phantom_co_only": 4,
+        "known_phantom_cross_only": 4,
+        "known_shift_minus_both": 4,
+        "known_shift_minus_co_only": 4,
+        "known_shift_minus_cross_only": 4,
+        "known_shift_plus_both": 4,
+        "known_shift_plus_co_only": 4,
+        "known_shift_plus_cross_only": 4,
+        "known_stale_plan_both": 4,
+        "known_stale_plan_co_only": 4,
+        "known_stale_plan_cross_only": 4
+      },
+      "n_groups": 2,
+      "units": "dB",
+      "dataset_identity": {
+        "known_data_fingerprint": "6c2b95ed84cc0e51e614cc2311d32b646959c4697e5f4ffbbb0076b2942f59e2",
+        "stage_identity": {
+          "request_fingerprint": "87f80561c86b4ec1ade80498eca8ee562410f660b48500ab8529fe238b36f96f",
+          "matched_data_fingerprint": null
+        }
+      },
+      "model_status": "three-epoch chance-level stand-ins",
+      "caption": "Full-band residual power: corrupted minus paired original; 2 groups/cell; authorize_intruder n=2, other cells n=4; grey=unregistered.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_a5_dual_pol_pilot.json",
+          "sha256": "88bf7d2af40876c09b233697a68788a0d337d468adce996a5882e4b20f804b2d"
+        }
+      ],
+      "plotted_values": {
+        "MASK_ONLY": [
+          [
+            null,
+            null,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "RECEIVER_CONSISTENT": [
+          [
+            null,
+            null,
+            0.0
+          ],
+          [
+            5.534915927425061,
+            0.0,
+            5.534915927425061
+          ],
+          [
+            5.5334032505318795,
+            0.0,
+            5.5334032505318795
+          ],
+          [
+            6.949659507688956,
+            0.0,
+            6.949659507688956
+          ],
+          [
+            -0.2447165593670988,
+            0.0,
+            -0.2447165593670988
+          ],
+          [
+            -0.8664042344923715,
+            0.0,
+            -0.8664042344923715
+          ],
+          [
+            9.256334188765116,
+            0.0,
+            9.256334188765116
+          ]
+        ]
+      },
+      "outputs": [
+        {
+          "path": "B2_residual_displacement.png",
+          "sha256": "209c727dce677e854b6d92d9aad0aa8fccd22e151191dfdce889bc2407d8a3c0",
+          "bytes": 228665
+        },
+        {
+          "path": "B2_residual_displacement.svg",
+          "sha256": "f20911fee4670c07012580f093b0dbbe97d715bc43ac153f76d0b10d0a28295e",
+          "bytes": 83838
+        },
+        {
+          "path": "B2_residual_displacement.pdf",
+          "sha256": "ca6357e52e5ec69a19fad78b81536385db355825f75f862376d323353299af3c",
+          "bytes": 25331
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "B3_edsc_input_score",
+      "evidence_class": "BOUNDED_PILOT",
+      "dataset_stage": "B2-A5-eval/1 on B2-feat/1",
+      "role": "test, known stage only",
+      "n_scenes": {
+        "known_authorize_intruder_both": 2,
+        "known_authorize_intruder_co_only": 2,
+        "known_authorize_intruder_cross_only": 2,
+        "known_drop_one_both": 4,
+        "known_drop_one_co_only": 4,
+        "known_drop_one_cross_only": 4,
+        "known_none_both": 4,
+        "known_phantom_both": 4,
+        "known_phantom_co_only": 4,
+        "known_phantom_cross_only": 4,
+        "known_shift_minus_both": 4,
+        "known_shift_minus_co_only": 4,
+        "known_shift_minus_cross_only": 4,
+        "known_shift_plus_both": 4,
+        "known_shift_plus_co_only": 4,
+        "known_shift_plus_cross_only": 4,
+        "known_stale_plan_both": 4,
+        "known_stale_plan_co_only": 4,
+        "known_stale_plan_cross_only": 4
+      },
+      "n_groups": 2,
+      "units": "dB",
+      "dataset_identity": {
+        "known_data_fingerprint": "6c2b95ed84cc0e51e614cc2311d32b646959c4697e5f4ffbbb0076b2942f59e2",
+        "stage_identity": {
+          "request_fingerprint": "87f80561c86b4ec1ade80498eca8ee562410f660b48500ab8529fe238b36f96f",
+          "matched_data_fingerprint": null
+        }
+      },
+      "model_status": "three-epoch chance-level stand-ins",
+      "caption": "EDSC score recomputed from inputs; no baseline fitting, threshold evaluation or robustness claim; n per cell as B1.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_a5_dual_pol_pilot.json",
+          "sha256": "88bf7d2af40876c09b233697a68788a0d337d468adce996a5882e4b20f804b2d"
+        }
+      ],
+      "plotted_values": {
+        "MASK_ONLY": [
+          [
+            null,
+            null,
+            0.0
+          ],
+          [
+            0.3855147171298867,
+            0.0,
+            0.3855147171298867
+          ],
+          [
+            0.38687312988119515,
+            0.0,
+            0.38687312988119515
+          ],
+          [
+            0.14732648901310696,
+            0.0,
+            0.14732648901310696
+          ],
+          [
+            0.2930653837089068,
+            0.0,
+            0.2930653837089068
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            2.6951647413162334,
+            0.0,
+            2.6951647413162334
+          ]
+        ],
+        "RECEIVER_CONSISTENT": [
+          [
+            null,
+            null,
+            0.0
+          ],
+          [
+            6.630975855254725,
+            0.0,
+            6.630975855254725
+          ],
+          [
+            6.657321808786367,
+            0.0,
+            6.657321808786367
+          ],
+          [
+            7.94722856836384,
+            0.0,
+            7.94722856836384
+          ],
+          [
+            -0.06069669125793453,
+            0.0,
+            -0.06069669125793453
+          ],
+          [
+            -1.1735057855104003,
+            0.0,
+            -1.1735057855104003
+          ],
+          [
+            12.941373891971391,
+            0.0,
+            12.941373891971391
+          ]
+        ]
+      },
+      "outputs": [
+        {
+          "path": "B3_edsc_input_score.png",
+          "sha256": "04d2a80b8e1231b17d1fc482a6b8753f670018d8d80a5c67532269f9b8fb3700",
+          "bytes": 218385
+        },
+        {
+          "path": "B3_edsc_input_score.svg",
+          "sha256": "30570d638d11e80e363e8d068422e65a91dd80f2963794139639e5b39317361b",
+          "bytes": 79339
+        },
+        {
+          "path": "B3_edsc_input_score.pdf",
+          "sha256": "aba665f204f68437c6aedd986fe0960afe41b3629aad2bb187c6fcc1469facbf",
+          "bytes": 24810
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "B4_cfar_input_sensitivity",
+      "evidence_class": "BOUNDED_PILOT",
+      "dataset_stage": "B2-A5-eval/1 on B2-feat/1",
+      "role": "test, known stage only",
+      "n_scenes": {
+        "known_authorize_intruder_both": 2,
+        "known_authorize_intruder_co_only": 2,
+        "known_authorize_intruder_cross_only": 2,
+        "known_drop_one_both": 4,
+        "known_drop_one_co_only": 4,
+        "known_drop_one_cross_only": 4,
+        "known_none_both": 4,
+        "known_phantom_both": 4,
+        "known_phantom_co_only": 4,
+        "known_phantom_cross_only": 4,
+        "known_shift_minus_both": 4,
+        "known_shift_minus_co_only": 4,
+        "known_shift_minus_cross_only": 4,
+        "known_shift_plus_both": 4,
+        "known_shift_plus_co_only": 4,
+        "known_shift_plus_cross_only": 4,
+        "known_stale_plan_both": 4,
+        "known_stale_plan_co_only": 4,
+        "known_stale_plan_cross_only": 4
+      },
+      "n_groups": 2,
+      "units": "scene count",
+      "dataset_identity": {
+        "known_data_fingerprint": "6c2b95ed84cc0e51e614cc2311d32b646959c4697e5f4ffbbb0076b2942f59e2",
+        "stage_identity": {
+          "request_fingerprint": "87f80561c86b4ec1ade80498eca8ee562410f660b48500ab8529fe238b36f96f",
+          "matched_data_fingerprint": null
+        }
+      },
+      "model_status": "three-epoch chance-level stand-ins",
+      "caption": "Maximum per-statistic changed-scene count (not union); denominators in manifest; blind CFAR reads PSD only.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_a5_dual_pol_pilot.json",
+          "sha256": "88bf7d2af40876c09b233697a68788a0d337d468adce996a5882e4b20f804b2d"
+        }
+      ],
+      "plotted_values": {
+        "ca_cfar_planned": [
+          [
+            2,
+            2
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            4,
+            4
+          ],
+          [
+            4,
+            4
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            4,
+            4
+          ],
+          [
+            4,
+            4
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "ca_cfar_blind": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      },
+      "outputs": [
+        {
+          "path": "B4_cfar_input_sensitivity.png",
+          "sha256": "dcb4d4b551052c2fd4aebe351921e4f83d7ec75bf6e87e360f068e1f7d56ed8d",
+          "bytes": 444700
+        },
+        {
+          "path": "B4_cfar_input_sensitivity.svg",
+          "sha256": "939227d45675f7655ccb9a5a80a6c739a0de6fead851171bd380bcd8bc5b3ca6",
+          "bytes": 135933
+        },
+        {
+          "path": "B4_cfar_input_sensitivity.pdf",
+          "sha256": "6764dbc7520711f611b85d71fc63e95dcb82f145ff342746cc354d1945cb8ee3",
+          "bytes": 21914
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "B5_xgboost_feature_displacement",
+      "evidence_class": "BOUNDED_PILOT",
+      "dataset_stage": "B2-A5-eval/1 on B2-feat/1",
+      "role": "test, known stage only",
+      "n_scenes": {
+        "known_authorize_intruder_both": 2,
+        "known_authorize_intruder_co_only": 2,
+        "known_authorize_intruder_cross_only": 2,
+        "known_drop_one_both": 4,
+        "known_drop_one_co_only": 4,
+        "known_drop_one_cross_only": 4,
+        "known_none_both": 4,
+        "known_phantom_both": 4,
+        "known_phantom_co_only": 4,
+        "known_phantom_cross_only": 4,
+        "known_shift_minus_both": 4,
+        "known_shift_minus_co_only": 4,
+        "known_shift_minus_cross_only": 4,
+        "known_shift_plus_both": 4,
+        "known_shift_plus_co_only": 4,
+        "known_shift_plus_cross_only": 4,
+        "known_stale_plan_both": 4,
+        "known_stale_plan_co_only": 4,
+        "known_stale_plan_cross_only": 4
+      },
+      "n_groups": 2,
+      "units": "changed feature count / 26",
+      "dataset_identity": {
+        "known_data_fingerprint": "6c2b95ed84cc0e51e614cc2311d32b646959c4697e5f4ffbbb0076b2942f59e2",
+        "stage_identity": {
+          "request_fingerprint": "87f80561c86b4ec1ade80498eca8ee562410f660b48500ab8529fe238b36f96f",
+          "matched_data_fingerprint": null
+        }
+      },
+      "model_status": "three-epoch chance-level stand-ins",
+      "caption": "Counts of feature dimensions changed anywhere in the invocation; no feature magnitudes or trained XGBoost A5 scores available.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_a5_dual_pol_pilot.json",
+          "sha256": "88bf7d2af40876c09b233697a68788a0d337d468adce996a5882e4b20f804b2d"
+        }
+      ],
+      "plotted_values": [
+        [
+          3,
+          11
+        ],
+        [
+          0,
+          8
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          10,
+          15
+        ],
+        [
+          9,
+          14
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          10,
+          15
+        ],
+        [
+          9,
+          14
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          10,
+          15
+        ],
+        [
+          9,
+          14
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          10,
+          15
+        ],
+        [
+          9,
+          14
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          10,
+          15
+        ],
+        [
+          9,
+          14
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "outputs": [
+        {
+          "path": "B5_xgboost_feature_displacement.png",
+          "sha256": "6bb063c69a5ec4f8df6fec240a4ad1fda83dc3fc0389e6073dbd02f848ccae49",
+          "bytes": 282057
+        },
+        {
+          "path": "B5_xgboost_feature_displacement.svg",
+          "sha256": "75e1c4c37b9ca8fe63ac375a86429dd45ffac0e9bfab4dd9ba76d6bd3a27d727",
+          "bytes": 94302
+        },
+        {
+          "path": "B5_xgboost_feature_displacement.pdf",
+          "sha256": "7109c5a0244a3b6f86f547a433de2d57a181e67df0a4524cb7a94ad8f1deb455",
+          "bytes": 20895
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "B6_unknown_score_displacement",
+      "evidence_class": "BOUNDED_PILOT",
+      "dataset_stage": "B2-A5-eval/1 on B2-feat/1",
+      "role": "test, known stage only",
+      "n_scenes": {
+        "known_authorize_intruder_both": 2,
+        "known_authorize_intruder_co_only": 2,
+        "known_authorize_intruder_cross_only": 2,
+        "known_drop_one_both": 4,
+        "known_drop_one_co_only": 4,
+        "known_drop_one_cross_only": 4,
+        "known_none_both": 4,
+        "known_phantom_both": 4,
+        "known_phantom_co_only": 4,
+        "known_phantom_cross_only": 4,
+        "known_shift_minus_both": 4,
+        "known_shift_minus_co_only": 4,
+        "known_shift_minus_cross_only": 4,
+        "known_shift_plus_both": 4,
+        "known_shift_plus_co_only": 4,
+        "known_shift_plus_cross_only": 4,
+        "known_stale_plan_both": 4,
+        "known_stale_plan_co_only": 4,
+        "known_stale_plan_cross_only": 4
+      },
+      "n_groups": 2,
+      "units": "native score units, separate scales",
+      "dataset_identity": {
+        "known_data_fingerprint": "6c2b95ed84cc0e51e614cc2311d32b646959c4697e5f4ffbbb0076b2942f59e2",
+        "stage_identity": {
+          "request_fingerprint": "87f80561c86b4ec1ade80498eca8ee562410f660b48500ab8529fe238b36f96f",
+          "matched_data_fingerprint": null
+        }
+      },
+      "model_status": "three-epoch chance-level stand-ins",
+      "caption": "dual_residual stand-in: corrupted minus original unknown score; higher=more unknown-like. No unknown-family metrics in E4.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_a5_dual_pol_pilot.json",
+          "sha256": "88bf7d2af40876c09b233697a68788a0d337d468adce996a5882e4b20f804b2d"
+        }
+      ],
+      "plotted_values": {
+        "msp": [
+          [
+            null,
+            null,
+            0.0
+          ],
+          [
+            0.00013026729967122175,
+            7.528402088197161e-05,
+            0.00015467708500901955
+          ],
+          [
+            8.939394735441031e-05,
+            6.15793251999841e-05,
+            5.840122047989782e-05
+          ],
+          [
+            1.9707190883039294e-05,
+            -2.5101402119309668e-05,
+            2.3350607836758464e-06
+          ],
+          [
+            4.472398018043333e-05,
+            -2.5670066716165785e-05,
+            2.0152306420717636e-05
+          ],
+          [
+            2.7740860670255607e-06,
+            -3.329499551507631e-06,
+            8.38677360337492e-07
+          ],
+          [
+            0.0001485452069606985,
+            0.0001308573945115743,
+            1.3078536124727647e-05
+          ]
+        ],
+        "energy": [
+          [
+            null,
+            null,
+            0.0
+          ],
+          [
+            -5.149920851277301e-05,
+            0.0008552643684744954,
+            -2.4232473407104216e-05
+          ],
+          [
+            0.0001876155852771344,
+            0.00048251433121460074,
+            0.0002443874689116443
+          ],
+          [
+            -1.63833697879312e-05,
+            -2.7404799661678858e-05,
+            -8.340498064030033e-05
+          ],
+          [
+            4.934514706311788e-05,
+            4.264939124609679e-05,
+            7.961109747589568e-05
+          ],
+          [
+            -7.527787632644056e-05,
+            3.725632552686875e-06,
+            -7.471031342753953e-05
+          ],
+          [
+            -0.0001018017020461004,
+            0.00030262580471851486,
+            0.0005890494760867337
+          ]
+        ],
+        "mahalanobis": [
+          [
+            null,
+            null,
+            0.0
+          ],
+          [
+            -272.97646371712835,
+            351.1733670869529,
+            138.1029596303578
+          ],
+          [
+            499.00568290751823,
+            -214.3609336847047,
+            -332.9741048596804
+          ],
+          [
+            -347.8052707191256,
+            -60.40845702804157,
+            -378.5531380043582
+          ],
+          [
+            -29.561068988002376,
+            -19.71664430967826,
+            -66.66270877163726
+          ],
+          [
+            98.93150922345183,
+            -0.5088046083963604,
+            100.9245996138826
+          ],
+          [
+            -146.31091064704736,
+            -284.5916557823033,
+            87.12947357746265
+          ]
+        ]
+      },
+      "outputs": [
+        {
+          "path": "B6_unknown_score_displacement.png",
+          "sha256": "279551e852131db6453b191cd650ee02d5152a0b1896087176725bfac6c98e5f",
+          "bytes": 372139
+        },
+        {
+          "path": "B6_unknown_score_displacement.svg",
+          "sha256": "2f77962ba8031db0c71c4212f9701e2b853f7a1e5c5faa4e25406ba421d81f08",
+          "bytes": 127118
+        },
+        {
+          "path": "B6_unknown_score_displacement.pdf",
+          "sha256": "66cf331410843f451b3dd0c90477b046b1ea240ed7a8cda248843468eaa3f249",
+          "bytes": 27604
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "B7_mask_receiver_model_input_effect",
+      "evidence_class": "BOUNDED_PILOT",
+      "dataset_stage": "B2-A5-eval/1 on B2-feat/1",
+      "role": "test, known stage only",
+      "n_scenes": {
+        "known_authorize_intruder_both": 2,
+        "known_authorize_intruder_co_only": 2,
+        "known_authorize_intruder_cross_only": 2,
+        "known_drop_one_both": 4,
+        "known_drop_one_co_only": 4,
+        "known_drop_one_cross_only": 4,
+        "known_none_both": 4,
+        "known_phantom_both": 4,
+        "known_phantom_co_only": 4,
+        "known_phantom_cross_only": 4,
+        "known_shift_minus_both": 4,
+        "known_shift_minus_co_only": 4,
+        "known_shift_minus_cross_only": 4,
+        "known_shift_plus_both": 4,
+        "known_shift_plus_co_only": 4,
+        "known_shift_plus_cross_only": 4,
+        "known_stale_plan_both": 4,
+        "known_stale_plan_co_only": 4,
+        "known_stale_plan_cross_only": 4
+      },
+      "n_groups": 2,
+      "units": "logit units",
+      "dataset_identity": {
+        "known_data_fingerprint": "6c2b95ed84cc0e51e614cc2311d32b646959c4697e5f4ffbbb0076b2942f59e2",
+        "stage_identity": {
+          "request_fingerprint": "87f80561c86b4ec1ade80498eca8ee562410f660b48500ab8529fe238b36f96f",
+          "matched_data_fingerprint": null
+        }
+      },
+      "model_status": "three-epoch chance-level stand-ins",
+      "caption": "Output displacement from changed inputs; masks/residual are separate interventions. These stand-ins cannot establish robustness.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_a5_dual_pol_pilot.json",
+          "sha256": "88bf7d2af40876c09b233697a68788a0d337d468adce996a5882e4b20f804b2d"
+        }
+      ],
+      "plotted_values": {
+        "MASK_ONLY": [
+          [
+            0.0008219778537750244,
+            0.003991506993770599,
+            0.0007651448249816895
+          ],
+          [
+            0.0008219778537750244,
+            0.003996275365352631,
+            0.0007456131279468536
+          ],
+          [
+            0.0,
+            6.103888154029846e-05,
+            6.050430238246918e-05
+          ],
+          [
+            0.001527935266494751,
+            0.0056832656264305115,
+            0.0016955360770225525
+          ],
+          [
+            0.001527935266494751,
+            0.0028188079595565796,
+            0.0012830793857574463
+          ],
+          [
+            0.0,
+            0.0058747753500938416,
+            0.0008783452212810516
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002564437687397003,
+            0.005476228892803192,
+            0.0016845278441905975
+          ],
+          [
+            0.002564437687397003,
+            0.004010379314422607,
+            0.0010913871228694916
+          ],
+          [
+            0.0,
+            0.002824738621711731,
+            0.0006599836051464081
+          ],
+          [
+            0.0031086131930351257,
+            0.0052102431654930115,
+            0.0022459104657173157
+          ],
+          [
+            0.0031086131930351257,
+            0.0034385845065116882,
+            0.003075242042541504
+          ],
+          [
+            0.0,
+            0.006758265197277069,
+            0.002947252243757248
+          ],
+          [
+            0.0024920180439949036,
+            0.005340743809938431,
+            0.002395693212747574
+          ],
+          [
+            0.0024920180439949036,
+            0.003550715744495392,
+            0.002233743667602539
+          ],
+          [
+            0.0,
+            0.008458700031042099,
+            0.0025030411779880524
+          ],
+          [
+            0.004247847944498062,
+            0.006953537464141846,
+            0.003938836045563221
+          ],
+          [
+            0.004247847944498062,
+            0.008960716426372528,
+            0.0031508728861808777
+          ],
+          [
+            0.0,
+            0.005899077281355858,
+            0.0018796585500240326
+          ]
+        ],
+        "RECEIVER_CONSISTENT": [
+          [
+            0.0008219778537750244,
+            0.003991506993770599,
+            0.000798102468252182
+          ],
+          [
+            0.0008219778537750244,
+            0.003996275365352631,
+            0.0007669180631637573
+          ],
+          [
+            0.0,
+            6.103888154029846e-05,
+            6.050430238246918e-05
+          ],
+          [
+            0.001527935266494751,
+            0.0056832656264305115,
+            0.0015460625290870667
+          ],
+          [
+            0.001527935266494751,
+            0.0028188079595565796,
+            0.0008453279733657837
+          ],
+          [
+            0.0,
+            0.0058747753500938416,
+            0.0008783452212810516
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.002564437687397003,
+            0.005476228892803192,
+            0.0017275549471378326
+          ],
+          [
+            0.002564437687397003,
+            0.004010379314422607,
+            0.0011327341198921204
+          ],
+          [
+            0.0,
+            0.002824738621711731,
+            0.0006599836051464081
+          ],
+          [
+            0.0031086131930351257,
+            0.0052102431654930115,
+            0.002117469906806946
+          ],
+          [
+            0.0031086131930351257,
+            0.0034385845065116882,
+            0.0026434510946273804
+          ],
+          [
+            0.0,
+            0.006758265197277069,
+            0.002947252243757248
+          ],
+          [
+            0.0024920180439949036,
+            0.005340743809938431,
+            0.0022644158452749252
+          ],
+          [
+            0.0024920180439949036,
+            0.003550715744495392,
+            0.0025795623660087585
+          ],
+          [
+            0.0,
+            0.008458700031042099,
+            0.0025030411779880524
+          ],
+          [
+            0.004247847944498062,
+            0.006953537464141846,
+            0.0038103079423308372
+          ],
+          [
+            0.004247847944498062,
+            0.008960716426372528,
+            0.0019523538649082184
+          ],
+          [
+            0.0,
+            0.005899077281355858,
+            0.0018796585500240326
+          ]
+        ]
+      },
+      "outputs": [
+        {
+          "path": "B7_mask_receiver_model_input_effect.png",
+          "sha256": "9596f1c5d3cdffb632c8efea3936c2e84cf364ebc1241ed9dd619155669d0099",
+          "bytes": 619938
+        },
+        {
+          "path": "B7_mask_receiver_model_input_effect.svg",
+          "sha256": "6fdde0c3e2abf4eee1392205f857ad08e6ba5cc278dc76a06ec007768542a72e",
+          "bytes": 189401
+        },
+        {
+          "path": "B7_mask_receiver_model_input_effect.pdf",
+          "sha256": "da754fd1946f57eb9d569a0e884d3b534e30cc8ddd3ffb03918a5d0ff3ff9ade",
+          "bytes": 27368
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "B8_replay_parity",
+      "evidence_class": "ENGINEERING_VALIDATION",
+      "dataset_stage": "B2-A5-eval/1",
+      "role": "known test and matched shown by invocation",
+      "n_scenes": {
+        "checked_scene_slots": 90,
+        "unique_physical_scenes": 8
+      },
+      "n_groups": {
+        "known": 2,
+        "matched": 2
+      },
+      "units": "scene-slot count; dB",
+      "dataset_identity": {
+        "known_data_fingerprint": "6c2b95ed84cc0e51e614cc2311d32b646959c4697e5f4ffbbb0076b2942f59e2",
+        "stages": {
+          "known": {
+            "request_fingerprint": "87f80561c86b4ec1ade80498eca8ee562410f660b48500ab8529fe238b36f96f",
+            "matched_data_fingerprint": null
+          },
+          "matched": {
+            "request_fingerprint": "6cee02705cc1de0149cc51cc5f3887ad0a0acf1cf96f7324571db7777a983be4",
+            "matched_data_fingerprint": "406166d86becc7e8231facf704130041e2ac651f86a4761005440072582ec09b"
+          }
+        }
+      },
+      "model_status": "none",
+      "caption": "Same-machine parity only; K and M are distinct populations. Raw IQ hashes are not persisted; no cross-machine certificate.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_a5_dual_pol_pilot.json",
+          "sha256": "88bf7d2af40876c09b233697a68788a0d337d468adce996a5882e4b20f804b2d"
+        }
+      ],
+      "plotted_values": {
+        "names": [
+          "K:authorize_intruder_both",
+          "K:authorize_intruder_co_only",
+          "K:authorize_intruder_cross_only",
+          "K:drop_one_both",
+          "K:drop_one_co_only",
+          "K:drop_one_cross_only",
+          "K:none_both",
+          "K:phantom_both",
+          "K:phantom_co_only",
+          "K:phantom_cross_only",
+          "K:shift_minus_both",
+          "K:shift_minus_co_only",
+          "K:shift_minus_cross_only",
+          "K:shift_plus_both",
+          "K:shift_plus_co_only",
+          "K:shift_plus_cross_only",
+          "K:stale_plan_both",
+          "K:stale_plan_co_only",
+          "K:stale_plan_cross_only",
+          "M:authorize_intruder_both",
+          "M:authorize_intruder_co_only",
+          "M:drop_one_both",
+          "M:drop_one_co_only",
+          "M:phantom_both",
+          "M:phantom_co_only"
+        ],
+        "checked": [
+          2,
+          2,
+          2,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          2,
+          2,
+          4,
+          4,
+          4,
+          4
+        ],
+        "max_abs_diff_db": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "outputs": [
+        {
+          "path": "B8_replay_parity.png",
+          "sha256": "ea5daed74975aae5782b3d138c6bdae417288a4f883cd0ab53a60dd8d349093b",
+          "bytes": 285537
+        },
+        {
+          "path": "B8_replay_parity.svg",
+          "sha256": "04ad9e16319d22f83247e9eabc622e132acf44df40de1f57c0caf8a88291dcf1",
+          "bytes": 108668
+        },
+        {
+          "path": "B8_replay_parity.pdf",
+          "sha256": "b3a65dc017da507245b88f4e6bcddd800ea5f0b38a94fd519b563e471cf51f24",
+          "bytes": 22809
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "B9_matched_receiver_displacement",
+      "evidence_class": "BOUNDED_PILOT",
+      "dataset_stage": "B2-A5-eval/1 on B2-match/1",
+      "role": "test-matched only",
+      "n_scenes": {
+        "matched_authorize_intruder_both": 2,
+        "matched_authorize_intruder_co_only": 2,
+        "matched_drop_one_both": 4,
+        "matched_drop_one_co_only": 4,
+        "matched_phantom_both": 4,
+        "matched_phantom_co_only": 4
+      },
+      "n_groups": 2,
+      "units": "dB",
+      "dataset_identity": {
+        "request_fingerprint": "6cee02705cc1de0149cc51cc5f3887ad0a0acf1cf96f7324571db7777a983be4",
+        "matched_data_fingerprint": "406166d86becc7e8231facf704130041e2ac651f86a4761005440072582ec09b"
+      },
+      "model_status": "no model inference used in these physical displacement values",
+      "caption": "Separate matched population: ASI/unauthorized, 2 groups; authorize_intruder applies to unauthorized only; not pooled with known.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_a5_dual_pol_pilot.json",
+          "sha256": "88bf7d2af40876c09b233697a68788a0d337d468adce996a5882e4b20f804b2d"
+        }
+      ],
+      "plotted_values": {
+        "cancellation_depth_core_db_displacement": [
+          [
+            0.0,
+            -9.043951811804618e-05
+          ],
+          [
+            0.0,
+            -9.043951811804618e-05
+          ],
+          [
+            0.0,
+            -8.461037326677193
+          ],
+          [
+            0.0,
+            -8.461037326677193
+          ],
+          [
+            0.0,
+            -5.538477573452383e-05
+          ],
+          [
+            0.0,
+            -5.538477573452383e-05
+          ]
+        ],
+        "residual_total_db_displacement": [
+          [
+            0.0,
+            -2.017565572626374
+          ],
+          [
+            0.0,
+            -2.017565572626374
+          ],
+          [
+            0.0,
+            5.155605565020579
+          ],
+          [
+            0.0,
+            5.155605565020579
+          ],
+          [
+            0.0,
+            -0.9296345737749974
+          ],
+          [
+            0.0,
+            -0.9296345737749974
+          ]
+        ]
+      },
+      "outputs": [
+        {
+          "path": "B9_matched_receiver_displacement.png",
+          "sha256": "fb4d741d3ea20fac61182498f1c7af78648a15c3aed97b5f844960e09700239b",
+          "bytes": 210790
+        },
+        {
+          "path": "B9_matched_receiver_displacement.svg",
+          "sha256": "9c0383da894c7cf90e37da7d10a6d23b1db1c2d1742bcf11bbec457508d61fe8",
+          "bytes": 79792
+        },
+        {
+          "path": "B9_matched_receiver_displacement.pdf",
+          "sha256": "54c64de0517aeaae1ce7b6ae5fb9b2c2f5c87ee4088334e1d06786d6dd85f895",
+          "bytes": 23286
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "C1_binary_baselines",
+      "evidence_class": "BOUNDED_PILOT",
+      "dataset_stage": "B2-feat/1, B2-binary-anomaly/1",
+      "role": "test",
+      "n_scenes": 16,
+      "n_groups": 2,
+      "units": "fraction; n=2/class",
+      "dataset_identity": {
+        "known": "dcffb26470837a5340277d5ca9af7e3f7377cad9c809e5fd37d05769c95bb83b",
+        "unknown": "3b49f0b324e5a5e9653760d1fc99bfcfa81c08871dd71fad119793c19aae8d8c",
+        "matched": "0bb04632b4fa8d4e2db1346f3f8cd2df306398d60d4bc7a50c6e3919d89aa434"
+      },
+      "model_status": "16-round bounded XGBoost; deterministic EDSC/CFAR; two clean calibration scenes",
+      "caption": "clean column=alarm on clean; others=event alarm. One common fixture and calibration rule; no population-Pfa claim or ranking.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_xgb_baseline.json",
+          "sha256": "b81f22d851e9584a88bbcf5378a3a88bd4e3462ea549604c38c4cd4a9438fe6a"
+        }
+      ],
+      "plotted_values": [
+        [
+          0.5,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ],
+        [
+          0.5,
+          0.5,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          0.5,
+          0.5,
+          1.0,
+          1.0,
+          0.5,
+          1.0,
+          0.5,
+          1.0
+        ],
+        [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          0.0,
+          1.0,
+          1.0
+        ]
+      ],
+      "outputs": [
+        {
+          "path": "C1_binary_baselines.png",
+          "sha256": "38ad9f92060bd92a9277d917a0ef4cfc9e67fea43bc278852ba6e7d4e4cdd0a0",
+          "bytes": 164267
+        },
+        {
+          "path": "C1_binary_baselines.svg",
+          "sha256": "3d647e33cbbfa202eb89f0ad12ca4c753bc2be0ad3ad322258c77798e60969e3",
+          "bytes": 59072
+        },
+        {
+          "path": "C1_binary_baselines.pdf",
+          "sha256": "9eda23fac6001ae991ad09059e83f2e688349dcc4c4e88e52c0a2fa130f34f6c",
+          "bytes": 21577
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "C2_neural_open_set",
+      "evidence_class": "BOUNDED_PILOT",
+      "dataset_stage": "B2-feat/1 + B2-test/1",
+      "role": "test; near families only",
+      "n_scenes": {
+        "known": 16,
+        "unknown_near": 6
+      },
+      "n_groups": 2,
+      "units": "fraction",
+      "dataset_identity": {
+        "known": "325317b75dfaea64bd4872d09afd7511ffaf441dfd9e219153217081a9027831",
+        "unknown": "deb51a01e48406513377fbb4e3772c450b002f83f2765f56392b8c5ed11ba151"
+      },
+      "model_status": "chance-level three-epoch neural stand-ins; three post-hoc scorers",
+      "caption": "Unknown positive; AP prevalence=6/22; OSCR known denominator=16. CID excluded, wideband noise separate; no intervals inferred.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_full_pilot.json",
+          "sha256": "82c3cc440cec1f0ef75923bb1bb8013ef24b122f84e59521bd766378556c512e"
+        }
+      ],
+      "plotted_values": {
+        "unknown_auroc": [
+          [
+            0.5520833333333333,
+            0.5520833333333333,
+            0.53125
+          ],
+          [
+            0.6041666666666666,
+            0.5,
+            0.53125
+          ],
+          [
+            0.41666666666666663,
+            0.45833333333333337,
+            0.53125
+          ]
+        ],
+        "unknown_ap": [
+          [
+            0.36052738684317637,
+            0.4902894491129786,
+            0.5271929824561403
+          ],
+          [
+            0.3953314659197012,
+            0.2945436507936508,
+            0.35859563123495014
+          ],
+          [
+            0.2601851851851852,
+            0.3201680672268908,
+            0.4040165773911904
+          ]
+        ],
+        "oscr": [
+          [
+            0.0625,
+            0.08333333333333333,
+            0.052083333333333336
+          ],
+          [
+            0.09375,
+            0.07291666666666666,
+            0.07291666666666666
+          ],
+          [
+            0.0625,
+            0.07291666666666667,
+            0.08333333333333333
+          ]
+        ]
+      },
+      "outputs": [
+        {
+          "path": "C2_neural_open_set.png",
+          "sha256": "e843971dd135259d2fd17c9c39d69c6d3d2227a5c17740a14dcf9b871a649414",
+          "bytes": 193417
+        },
+        {
+          "path": "C2_neural_open_set.svg",
+          "sha256": "5e846397eed4c773d22a79ed80928a40c3ef3bcbe41b8cc3b9db95acfcaf0b5b",
+          "bytes": 80217
+        },
+        {
+          "path": "C2_neural_open_set.pdf",
+          "sha256": "9bb273488e936366b25bf16dced954def57cdd32be3707fddd7c7758d84d9427",
+          "bytes": 23479
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "C3_xgboost_multiclass_confusion",
+      "evidence_class": "BOUNDED_PILOT",
+      "dataset_stage": "B2-feat/1",
+      "role": "test",
+      "n_scenes": 16,
+      "n_groups": 2,
+      "units": "scene count",
+      "dataset_identity": "dcffb26470837a5340277d5ca9af7e3f7377cad9c809e5fd37d05769c95bb83b",
+      "model_status": "bounded trained XGBoost, 16 train scenes; not production",
+      "caption": "All 16 scenes, 2/class; no rejection filter. Stored count matrix, separately audited at E3b; no raw predictions committed here.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_xgb_baseline.json",
+          "sha256": "b81f22d851e9584a88bbcf5378a3a88bd4e3462ea549604c38c4cd4a9438fe6a"
+        }
+      ],
+      "plotted_values": {
+        "row_labels": [
+          "clean",
+          "cw",
+          "swept_cw",
+          "unauthorized",
+          "overdrive",
+          "cross_pol",
+          "adjacent_satellite",
+          "carrier_under_carrier"
+        ],
+        "column_labels": [
+          "clean",
+          "cw",
+          "swept_cw",
+          "unauthorized",
+          "overdrive",
+          "cross_pol",
+          "adjacent_satellite",
+          "carrier_under_carrier"
+        ],
+        "counts": [
+          [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0
+          ]
+        ],
+        "denominator": "all evaluated labelled scenes; no accepted-only filter"
+      },
+      "outputs": [
+        {
+          "path": "C3_xgboost_multiclass_confusion.png",
+          "sha256": "9edc6561c0b2e72f55e98112551f62ed9e6a2e05cff712c1c43a2b403a7dc41c",
+          "bytes": 256318
+        },
+        {
+          "path": "C3_xgboost_multiclass_confusion.svg",
+          "sha256": "b652ef44036e659d08eab5656feea64654c4604908e94f4bbc240b45add320af",
+          "bytes": 77669
+        },
+        {
+          "path": "C3_xgboost_multiclass_confusion.pdf",
+          "sha256": "7e86fa124c40e2f585715bf0066b31fde45c92a9e2e0f18295cb670635320b68",
+          "bytes": 22354
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "C4_observed_dev_raw_confusion",
+      "evidence_class": "BOUNDED_PILOT",
+      "dataset_stage": "B2-observed-dev/1 (P21b)",
+      "role": "test",
+      "n_scenes": 8,
+      "n_groups": 1,
+      "units": "scene count",
+      "dataset_identity": "separate P21b raw prediction record; not P20/E4",
+      "model_status": "three-epoch development stand-ins",
+      "caption": "Recomputed from raw predictions; 1 scene/class, one group. P21b receiver/loss differs from canonical P20; no cross-fixture comparison.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_observed_predictions.json",
+          "sha256": "2c9b61b493e0045c711fa961bcc0a5c50ee8afe02dcb304652ae7ab29e09caca"
+        },
+        {
+          "path": "docs/results/b2_observed_pilot.json",
+          "sha256": "59a52ad3c712153dd758286093eeeb42ed98a920ffcd6f2f20d9e5291f3bf5cb"
+        }
+      ],
+      "plotted_values": {
+        "dual": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        "b2": [
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "outputs": [
+        {
+          "path": "C4_observed_dev_raw_confusion.png",
+          "sha256": "6d075493ee7b993fb56c41c036015808aa10c9a630fe84d46bfe5106866eff6b",
+          "bytes": 416166
+        },
+        {
+          "path": "C4_observed_dev_raw_confusion.svg",
+          "sha256": "c82d1c9ba808387140691572c8ee41fb955521b940ea65600342b947c20d9cd5",
+          "bytes": 113714
+        },
+        {
+          "path": "C4_observed_dev_raw_confusion.pdf",
+          "sha256": "8f7b383ff45376c129f7489ad431c52bc889448147960866ad9875080a29a659",
+          "bytes": 24803
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "C5_streaming_real",
+      "evidence_class": "ENGINEERING_VALIDATION",
+      "dataset_stage": "B2-feat/1",
+      "role": "verify/load four roles; fit and infer train only",
+      "n_scenes": {
+        "train": 16,
+        "val-select": 16,
+        "val-calib": 16,
+        "test": 16
+      },
+      "n_groups": {
+        "train": 2,
+        "val-select": 2,
+        "val-calib": 2,
+        "test": 2
+      },
+      "units": "MiB; seconds",
+      "dataset_identity": "325317b75dfaea64bd4872d09afd7511ffaf441dfd9e219153217081a9027831",
+      "model_status": "bounded timing experiment",
+      "caption": "Single measurements, import baseline included; real_artifact. Hardware/package context in source; no extrapolated GPU speed.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_streaming_memory_pilot.json",
+          "sha256": "c3615c48382b4b602226561df09852ad35bd7c574ec39a0fcab25a92e6620c08"
+        }
+      ],
+      "plotted_values": [
+        {
+          "mode": "legacy",
+          "window_shards": null,
+          "peak_rss_mib": 925.546875,
+          "total_s": 2.916421329000059
+        },
+        {
+          "mode": "streaming",
+          "window_shards": 1,
+          "peak_rss_mib": 869.33203125,
+          "total_s": 2.733399832000032
+        },
+        {
+          "mode": "streaming",
+          "window_shards": 4,
+          "peak_rss_mib": 884.50390625,
+          "total_s": 4.10633166999969
+        }
+      ],
+      "outputs": [
+        {
+          "path": "C5_streaming_real.png",
+          "sha256": "fabedfcb08638558cf6a901200715b0521869d541be038b4c32e86da4474d461",
+          "bytes": 144200
+        },
+        {
+          "path": "C5_streaming_real.svg",
+          "sha256": "43ee3d93190d2d17f16ab5cc59baf2f55f41aed7a0d3fefb0b0fd8da8cb99bdf",
+          "bytes": 55232
+        },
+        {
+          "path": "C5_streaming_real.pdf",
+          "sha256": "9571ab019879b414d165fb335430a17532a8dfd99e928fa4d5578bbeb356df52",
+          "bytes": 20006
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "C6_streaming_layout",
+      "evidence_class": "ENGINEERING_VALIDATION",
+      "dataset_stage": "B2-feat/1",
+      "role": "verify/load four roles; fit and infer train only",
+      "n_scenes": {
+        "train": 384,
+        "val-select": 384,
+        "val-calib": 384,
+        "test": 384
+      },
+      "n_groups": {
+        "train": 48,
+        "val-select": 48,
+        "val-calib": 48,
+        "test": 48
+      },
+      "units": "MiB; seconds",
+      "dataset_identity": "15bd4ca27f6984201ffd263306098d39cc13cd6a52cd8180d1a4db709cf793a7",
+      "model_status": "bounded timing experiment",
+      "caption": "Single measurements, import baseline included; synthetic_layout_fixture. Hardware/package context in source; no extrapolated GPU speed.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_streaming_memory_synthetic_48.json",
+          "sha256": "94480568f41b238f89fc86663536c0e48526a74c497853ae64113ad35de4a54e"
+        }
+      ],
+      "plotted_values": [
+        {
+          "mode": "legacy",
+          "window_shards": null,
+          "peak_rss_mib": 3005.1796875,
+          "total_s": 39.53502976899995
+        },
+        {
+          "mode": "streaming",
+          "window_shards": 1,
+          "peak_rss_mib": 1039.9609375,
+          "total_s": 24.622066331000042
+        },
+        {
+          "mode": "streaming",
+          "window_shards": 4,
+          "peak_rss_mib": 1229.5859375,
+          "total_s": 26.4440075120001
+        }
+      ],
+      "outputs": [
+        {
+          "path": "C6_streaming_layout.png",
+          "sha256": "aee0e359d8c38e47dc117cd21488288b4255124bcf2296a1c4d9a04c7db1b9d9",
+          "bytes": 148100
+        },
+        {
+          "path": "C6_streaming_layout.svg",
+          "sha256": "a9d89fbd94bd98e60af17bd74240c099beee2f68905d6fccf79a06a436aa4c34",
+          "bytes": 56146
+        },
+        {
+          "path": "C6_streaming_layout.pdf",
+          "sha256": "38e981639a5e5b1f83d871e53c0db2cd83dae573f75b0bd2b3e9acadb1ffaf5b",
+          "bytes": 19937
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "C7_xgboost_open_set",
+      "evidence_class": "BOUNDED_PILOT",
+      "dataset_stage": "B2-feat/1 + B2-test/1",
+      "role": "test only",
+      "n_scenes": {
+        "pulsed": {
+          "known": 16,
+          "unknown": 2
+        },
+        "intermittent_bursts": {
+          "known": 16,
+          "unknown": 2
+        },
+        "adjacent_satellite_downlink": {
+          "known": 16,
+          "unknown": 2
+        },
+        "wideband_noise": {
+          "known": 16,
+          "unknown": 2
+        },
+        "pooled_near": {
+          "known": 16,
+          "unknown": 6
+        }
+      },
+      "n_groups": 2,
+      "units": "fraction",
+      "dataset_identity": {
+        "known": "dcffb26470837a5340277d5ca9af7e3f7377cad9c809e5fd37d05769c95bb83b",
+        "unknown": "3b49f0b324e5a5e9653760d1fc99bfcfa81c08871dd71fad119793c19aae8d8c",
+        "matched": "0bb04632b4fa8d4e2db1346f3f8cd2df306398d60d4bc7a50c6e3919d89aa434"
+      },
+      "model_status": "bounded trained XGBoost; classifier MSP 1-max(P)",
+      "caption": "Unknown positive; AP prevalence=2/18 per family,6/22 near pool. CID excluded; wideband noise separate. Same groups, overlapping rows.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_xgb_baseline.json",
+          "sha256": "b81f22d851e9584a88bbcf5378a3a88bd4e3462ea549604c38c4cd4a9438fe6a"
+        }
+      ],
+      "plotted_values": {
+        "unknown_auroc": [
+          0.671875,
+          0.625,
+          0.546875,
+          0.625,
+          0.6145833333333334
+        ],
+        "unknown_aupr": [
+          0.225,
+          0.3269230769230769,
+          0.19642857142857142,
+          0.2159090909090909,
+          0.4131944444444445
+        ],
+        "oscr_auc": [
+          0.328125,
+          0.34375,
+          0.296875,
+          0.3125,
+          0.3229166666666667
+        ]
+      },
+      "outputs": [
+        {
+          "path": "C7_xgboost_open_set.png",
+          "sha256": "25a76dc31e6bba6985b4ae534aa8ed3d24dc645aa7b3a1063bf772db0033db3e",
+          "bytes": 160331
+        },
+        {
+          "path": "C7_xgboost_open_set.svg",
+          "sha256": "adf2f5e9602b5da6891636de3f951314ebb5d4da2ecfd159b8cdf24d49ffe854",
+          "bytes": 70512
+        },
+        {
+          "path": "C7_xgboost_open_set.pdf",
+          "sha256": "97b1731cd22c0d8d6a2895498168bbb18c79e0d4ace0278ac2ded28a632a9ad0",
+          "bytes": 16021
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    },
+    {
+      "id": "C8_binary_unknown_rankings",
+      "evidence_class": "BOUNDED_PILOT",
+      "dataset_stage": "B2-binary-anomaly/1",
+      "role": "test, near pool",
+      "n_scenes": {
+        "known": 16,
+        "unknown": 6
+      },
+      "n_groups": 2,
+      "units": "fraction",
+      "dataset_identity": {
+        "known": "dcffb26470837a5340277d5ca9af7e3f7377cad9c809e5fd37d05769c95bb83b",
+        "unknown": "3b49f0b324e5a5e9653760d1fc99bfcfa81c08871dd71fad119793c19aae8d8c",
+        "matched": "0bb04632b4fa8d4e2db1346f3f8cd2df306398d60d4bc7a50c6e3919d89aa434"
+      },
+      "model_status": "binary anomaly scores; not multiclass rejection",
+      "caption": "Unknown positive against all known (including interference). AP prevalence=6/22; binary scores do not provide OSCR or class predictions.",
+      "uncertainty": "none displayed; descriptive measured values only",
+      "sources": [
+        {
+          "path": "docs/results/b2_xgb_baseline.json",
+          "sha256": "b81f22d851e9584a88bbcf5378a3a88bd4e3462ea549604c38c4cd4a9438fe6a"
+        }
+      ],
+      "plotted_values": {
+        "unknown_auroc": [
+          0.37499999999999994,
+          0.34374999999999994,
+          0.27083333333333337,
+          0.5416666666666666
+        ],
+        "unknown_aupr": [
+          0.2938311688311688,
+          0.2806117858749438,
+          0.21744372758304648,
+          0.327859477124183
+        ]
+      },
+      "outputs": [
+        {
+          "path": "C8_binary_unknown_rankings.png",
+          "sha256": "a4d4cfa319245112d01de873729e0cd361c76e60407a02920f6abf6dcda66236",
+          "bytes": 132689
+        },
+        {
+          "path": "C8_binary_unknown_rankings.svg",
+          "sha256": "2d5eb9fbcb0a9180384038f1010592d37963287a8981071e2cfb7a25b29ef13b",
+          "bytes": 50731
+        },
+        {
+          "path": "C8_binary_unknown_rankings.pdf",
+          "sha256": "33db335e1ac670dcc347f69d45615eb09eddf2cced15d4294e34a36348261497",
+          "bytes": 15739
+        }
+      ],
+      "png_dpi": 300,
+      "regeneration_command": "python scripts/plot_b2_scientific_results.py",
+      "package_versions": {
+        "python": "3.12.14",
+        "numpy": "2.5.4",
+        "matplotlib": "3.11.2",
+        "scipy": "1.18.1",
+        "pillow": "13.0.0"
+      }
+    }
+  ]
+}

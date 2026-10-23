@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
+import re
 import os
 import platform
 import resource
@@ -478,10 +480,18 @@ def _reject_constant(value):
     raise ValueError(f"nonfinite constant {value}")
 
 
+def _finite_float(value):
+    number = float(value)
+    if not math.isfinite(number):
+        raise ValueError(f"nonfinite number {value}")
+    return number
+
+
 def _read_object(path: Path, what: str) -> dict:
     """Strict JSON object: duplicate keys and NaN/Infinity constants are rejected, never silently resolved."""
     try:
-        value = json.loads(path.read_text(), object_pairs_hook=_unique_pairs, parse_constant=_reject_constant)
+        value = json.loads(path.read_text(), object_pairs_hook=_unique_pairs, parse_constant=_reject_constant,
+                           parse_float=_finite_float)
     except (OSError, ValueError) as error:
         raise ValueError(f"{path} is not a valid {what}; use a new output directory") from error
     if not isinstance(value, dict):
@@ -517,9 +527,15 @@ class SceneState:
                 raise ValueError(f"{directory} is not an A5 state directory (no identity marker); use a new output directory")
             _write_json(marker, {"experiment_fingerprint": identity, "contract": CONTRACT, "environment": _environment()})
         for leftover in sorted(directory.glob("*.tmp")):
+            scene_temp = re.fullmatch(r"scene-[0-9]+-([a-z_]+)\.(json|npz)\.tmp", leftover.name)
+            if leftover.name != "identity.json.tmp" and not (scene_temp and scene_temp[1] in LABELS):
+                continue
             leftover.unlink()
             log(f"discarded interrupted write {leftover.name}")
         for orphan in sorted(directory.glob("scene-*.npz")):
+            scene_array = re.fullmatch(r"scene-[0-9]+-([a-z_]+)\.npz", orphan.name)
+            if not (scene_array and scene_array[1] in LABELS):
+                continue
             if not orphan.with_suffix(".json").exists():
                 orphan.unlink()
                 log(f"discarded uncommitted arrays {orphan.name}")
@@ -609,7 +625,7 @@ def _output_state(out: Path, identity: str, log=print):
         if not results.exists():
             raise ValueError(f"{sidecar} has no results.json; use a new output directory")
         try:
-            stored = json.loads(results.read_text())
+            stored = _read_object(results, "A5 completed result")
         except ValueError as error:
             raise ValueError(f"{results} is incomplete or modified; use a new output directory") from error
         if not isinstance(stored, dict) or stored.get("experiment_fingerprint") is None:

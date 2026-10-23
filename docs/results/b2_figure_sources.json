@@ -1,0 +1,17 @@
+{
+  "schema": "B2-figure-source-lock/1",
+  "sources": {
+    "b2_physical_figure_data.json": "107777a62823c816744b8873f2c63a6e95848a4026bd0b74aef8fe83f4e76e6f",
+    "b2_feat_cancellation_check.json": "79233bfb0452741db1f2edf544bd541741974b14166611a0e404222244d33f5e",
+    "npr_check.json": "9c8402cd68664d8c3085a36843c46f42f657c129555c57552767277976bd2fdc",
+    "asi_visibility.json": "b4a60b756a76700aa3e65be4e40f06fba4781c5799e0f1d119ce7008b2049a1a",
+    "cuc_visibility.json": "05b5ff7457283aec21c87b9256cde05cac1569814910c654c11389e6d87ee218",
+    "b2_a5_dual_pol_pilot.json": "88bf7d2af40876c09b233697a68788a0d337d468adce996a5882e4b20f804b2d",
+    "b2_xgb_baseline.json": "b81f22d851e9584a88bbcf5378a3a88bd4e3462ea549604c38c4cd4a9438fe6a",
+    "b2_full_pilot.json": "82c3cc440cec1f0ef75923bb1bb8013ef24b122f84e59521bd766378556c512e",
+    "b2_observed_predictions.json": "2c9b61b493e0045c711fa961bcc0a5c50ee8afe02dcb304652ae7ab29e09caca",
+    "b2_observed_pilot.json": "59a52ad3c712153dd758286093eeeb42ed98a920ffcd6f2f20d9e5291f3bf5cb",
+    "b2_streaming_memory_pilot.json": "c3615c48382b4b602226561df09852ad35bd7c574ec39a0fcab25a92e6620c08",
+    "b2_streaming_memory_synthetic_48.json": "94480568f41b238f89fc86663536c0e48526a74c497853ae64113ad35de4a54e"
+  }
+}

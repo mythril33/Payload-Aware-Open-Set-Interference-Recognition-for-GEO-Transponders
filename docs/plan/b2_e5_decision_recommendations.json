@@ -1,0 +1,48 @@
+{
+  "schema": "B2-E5-decision-memorandum/1",
+  "benchmark_complete": false,
+  "decisions": {
+    "K18": {
+      "status": "PENDING_RESEARCHER",
+      "authority": "explicit researcher decision required",
+      "record": "docs/plan/B2_E5_RESEARCHER_DECISIONS.md#dr-e5-01--k18-primary-loss-convention",
+      "approved_by": null,
+      "approved_at": null
+    },
+    "K17d": {
+      "status": "PENDING_RESEARCHER",
+      "authority": "explicit researcher decision required",
+      "record": "docs/plan/B2_E5_RESEARCHER_DECISIONS.md#dr-e5-02--k17d-asi-level-drift",
+      "approved_by": null,
+      "approved_at": null
+    },
+    "OBS-CANCEL-2": {
+      "status": "PENDING_RESEARCHER",
+      "authority": "explicit researcher decision required",
+      "record": "docs/plan/B2_E5_RESEARCHER_DECISIONS.md#dr-e5-03--obs-cancel2-phase-tracking",
+      "approved_by": null,
+      "approved_at": null
+    },
+    "full_generation": {
+      "status": "NOT_AUTHORIZED",
+      "authority": "explicit researcher decision required",
+      "record": "docs/plan/B2_E5_RESEARCHER_DECISIONS.md#dr-e5-04--full-data-production-authorization",
+      "approved_by": null,
+      "approved_at": null
+    },
+    "full_gpu_training": {
+      "status": "NOT_AUTHORIZED",
+      "authority": "explicit researcher decision required",
+      "record": "docs/plan/B2_E5_RESEARCHER_DECISIONS.md#dr-e5-05--gpu-training-authorization",
+      "approved_by": null,
+      "approved_at": null
+    },
+    "full_loko_sweep": {
+      "status": "NOT_AUTHORIZED",
+      "authority": "explicit researcher decision required",
+      "record": "docs/plan/B2_E5_RESEARCHER_DECISIONS.md#dr-e5-06--full-loko-sweep-authorization",
+      "approved_by": null,
+      "approved_at": null
+    }
+  }
+}
