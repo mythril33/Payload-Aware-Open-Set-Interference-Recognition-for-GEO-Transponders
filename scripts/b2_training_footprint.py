@@ -377,8 +377,8 @@ def streaming_window_record(view, groups_per_shard, window_shards, time_pool=Non
         "shard_preprocessed_bytes": metric(shard_obs * pre, "bytes", base, "shard observations x preprocessed bytes"),
         "window_steady_resident_bytes": metric(window_obs * (pre + copy), "bytes", base,
                                                "float32 window inputs + plan-shift float16 copy; excludes per-sample Carrier plan objects, one mini-batch and its augmented copy"),
-        "window_build_peak_bytes": metric(window_obs * (raw + pre), "bytes", base,
-                                          "upper bound while a window is built: all raw shards plus the float32 inputs; preprocessing temporaries are bounded by PREPROCESS_CHUNK=16 observations and not added"),
+        "window_build_peak_bytes": metric(window_obs * (raw + 2 * pre), "bytes", base,
+                                          "while a window is built: all raw shards stay resident, and the per-shard float32 tensors coexist with their torch.cat result (two float32 copies; measured 159.7 MiB above the raw shards for a 4 x 32-observation dual_residual window versus 80 MiB for one copy); preprocessing temporaries are bounded by PREPROCESS_CHUNK=16 observations and not added"),
         "train_observations": metric(train_obs, "observations", base, "ROLE_COUNTS['train'] groups x 8 labels"),
         "train_shards_per_epoch": metric(shards, "shards", base, "ceil(1500 groups / groups_per_shard)"),
         "train_windows_per_epoch": metric(windows, "windows", base, "ceil(shards / window_shards)"),
@@ -588,7 +588,10 @@ def run_child(spec, cap_s):
     lines = [line for line in completed.stdout.splitlines() if line.startswith(CHILD_PREFIX)]
     if completed.returncode != 0 or not lines:
         return None, "error", (completed.stderr or "no output").strip()[-400:]
-    return json.loads(lines[-1][len(CHILD_PREFIX):]), "ok", None
+    try:
+        return json.loads(lines[-1][len(CHILD_PREFIX):]), "ok", None
+    except ValueError as error:
+        return None, "error", f"malformed child output: {error}"
 
 
 def _none_metric(unit, how, note):
@@ -761,8 +764,27 @@ def build_document(request, measure=True, run=None, log=lambda message: None):
 # ---------------------------------------------------------------------------------------------------------
 # CLI
 
+def validate_child_spec(spec):
+    """The hidden --child mode is bound by exactly the same caps as the public request."""
+    if not isinstance(spec, dict) or not {"view", "width", "batch", "warm_steps", "measure", "threads"} <= set(spec):
+        raise FootprintError("child spec must be an object with view, width, batch, warm_steps, measure and threads")
+    if not isinstance(spec["measure"], bool):
+        raise FootprintError("child spec measure must be true or false")
+    validate_request(views=[spec["view"]], widths=[spec["width"]], batches=[spec["batch"]], warm_steps=spec["warm_steps"],
+                     threads=spec["threads"])
+    deadline = spec.get("soft_deadline_s")
+    if deadline is not None and (isinstance(deadline, bool) or not isinstance(deadline, (int, float)) or not math.isfinite(deadline)
+                                 or not 0 < deadline <= MAX_TIME_CAP_S):
+        raise FootprintError(f"child soft_deadline_s must be in (0, {MAX_TIME_CAP_S:g}] seconds")
+    return spec
+
+
 def _child_main(raw):
-    spec = json.loads(raw)
+    try:
+        spec = validate_child_spec(json.loads(raw))
+    except (ValueError, FootprintError) as error:
+        sys.stderr.write(f"refused child spec: {error}\n")
+        return 2
     result = probe(spec["view"], spec["width"], spec["batch"], warm_steps=spec["warm_steps"], measure=spec["measure"],
                    soft_deadline_s=spec.get("soft_deadline_s"), threads=spec["threads"])
     print(CHILD_PREFIX + json.dumps(_plain(result), allow_nan=False))

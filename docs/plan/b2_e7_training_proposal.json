@@ -6,7 +6,7 @@
   "benchmark_complete": false,
   "date": "2026-10-23",
   "base_commit": "755b474b7a2c506ec03441a7d15ed365c47addb1",
-  "source_citation_note": "All file:line citations: line numbers refer to commit 755b474; src/geoml/train.py and src/geoml/b2_stream.py were being edited by another work package in the same checkout while this was written.",
+  "source_citation_note": "All file:line citations: line numbers refer to commit 755b474; the K18 diagnostic edits of this pull request shift later line numbers in src/geoml/train.py and src/geoml/b2_stream.py.",
   "statement": "A reviewable candidate production-training specification. It is not frozen, not approved and not written into any config. Approving any part of it does not authorize full generation, GPU use, training or LOKO; those remain separate gates.",
   "configs_touched": false,
   "gate_status_mirrored_from": "docs/plan/b2_readiness_gates_2026-10-21.json (read only)",
@@ -221,7 +221,7 @@
           "note": "compare best val-select macro-F1 and best_epoch under a selection rule registered in advance (tolerance not decided here); each candidate is a full re-scheduled fit"
         }
       ],
-      "consequence": "A sizing run MUST NOT go through geoml.b2_experiment as it is: the runner evaluates the test role (and val-calib thresholds) in the same invocation (b2_experiment.py:479-499, no train-only flag at :766-775). It would have to call geoml.b2_stream.fit_streaming on the train and val-select sources only; no such driver exists. If best_epoch sits at the last epoch the budget was probably too short; if it sits early the late low-learning-rate epochs add little. Neither statement is evidence yet: no B2 production data exists.",
+      "consequence": "A sizing run MUST NOT go through geoml.b2_experiment as it is: the runner evaluates the test role (and val-calib thresholds) in the same invocation (b2_experiment.py:479-499, no train-only flag at :766-775). It would have to call geoml.b2_stream.fit_streaming on the train and val-select sources only; no such driver exists. If best_epoch sits at the last epoch the budget was probably too short; if it sits early the late low-learning-rate epochs add little. Neither statement is evidence yet: no B2 production data exists. P18 section 5 says 'P6 settings, no search': a data-driven sizing run is a search, so it needs a P18 section 10 entry (and the rule registered before any data is looked at) in addition to R4.",
       "approval": null,
       "approval_group": "R4"
     },
@@ -257,7 +257,8 @@
         ],
         "eps": 1e-08,
         "param_groups": 1,
-        "decay_applies_to": "all parameters: convolutions, BatchNorm affine, linear heads, auxiliary head and the CenterLoss centres"
+        "decay_applies_to": "all parameters: convolutions, BatchNorm affine, linear heads, auxiliary head and the CenterLoss centres",
+        "effective_beta1_with_OneCycleLR": "cycled 0.95 -> 0.85 -> 0.95 (cycle_momentum=True overwrites the constructor value 0.9 when the scheduler is constructed; measured over an 11,250-step schedule)"
       },
       "basis": "repository_default",
       "source": "src/geoml/train.py:29,31,248-249; src/geoml/b2_stream.py:453-454; P6_modeller.md:39; betas/eps are the torch defaults (torch 2.14.1 in the verification environment)",
@@ -274,7 +275,7 @@
           "note": "P20_b2_cancellation_residual.md:132-133 records that the centres share the AdamW decay instead (a frozen convention of that stage); needs a source edit"
         }
       ],
-      "consequence": "Decoupled weight decay 1e-4 also shrinks the centre-loss centres towards zero, which weakens the centre term slightly and interacts with K18. Betas and eps are library defaults, not repository values: the production lock must pin the torch version.",
+      "consequence": "Decoupled weight decay 1e-4 also shrinks the centre-loss centres towards zero, which weakens the centre term slightly and interacts with K18. Betas and eps are library defaults, not repository values: the production lock must pin the torch version. The constructor betas (0.9, 0.999) are never the effective first moment during a fit: OneCycleLR cycles beta1 between 0.95 and 0.85.",
       "approval": null,
       "approval_group": "R6"
     },
@@ -330,14 +331,18 @@
         "precision": "fp32",
         "autocast": false,
         "data_loader_workers": 0,
-        "deterministic_algorithms": false
+        "deterministic_algorithms": false,
+        "cudnn_allow_tf32": "torch 2.14.1 default True: convolutions run in TF32 on Ampere or newer GPUs unless the lock pins the flag",
+        "matmul_allow_tf32": "torch 2.14.1 default False",
+        "repository_sets_tf32_flags": false
       },
       "basis": "repository_default",
-      "source": "git grep at the base commit finds no autocast, GradScaler, DataLoader, num_workers, cudnn.deterministic or use_deterministic_algorithms in src/ or scripts/; b2_experiment.py:772 (--device default cpu, 'cuda' must be passed)",
-      "needs_researcher_approval": false,
+      "source": "git grep at the base commit finds no autocast, GradScaler, DataLoader, num_workers, cudnn.deterministic or use_deterministic_algorithms in src/ or scripts/; b2_experiment.py:772 (--device default cpu, 'cuda' must be passed); torch.backends.cudnn.allow_tf32 / matmul.allow_tf32 read in the verification venv (torch 2.14.1); no TF32 flag is set anywhere in src/ or scripts/",
+      "needs_researcher_approval": true,
       "alternatives": [],
-      "consequence": "All footprint numbers are fp32. A GPU run is not bit-reproducible, so a fit restarted from epoch 0 is a new draw of the same seed and configuration, not a replay. Data loading is synchronous in the training process (see expected_sample_passes_and_wall_clock).",
-      "approval": null
+      "consequence": "All footprint numbers are fp32. A GPU run is not bit-reproducible, so a fit restarted from epoch 0 is a new draw of the same seed and configuration, not a replay. Data loading is synchronous in the training process (see expected_sample_passes_and_wall_clock). cuDNN TF32 is on by default in torch 2.14.1, so the same configuration gives numerically different results on an Ampere or newer GPU depending on this flag; it is part of R6 and must be pinned by the lock.",
+      "approval": null,
+      "approval_group": "R6"
     },
     "loss_composition": {
       "value": "cross-entropy (unweighted, mean) + center_loss_weight x centre loss + plan_loss_weight x plan BCE (auxiliary head, independent of the label)",
@@ -469,7 +474,7 @@
           "note": "one window = the whole train role = uniform permutation like the legacy path, but 12.6 GB of float32 inputs plus plan-shift copy resident (analytic)"
         }
       ],
-      "consequence": "BLOCKED SHUFFLE (P24 section 5): whole shards are permuted per epoch, samples are permuted inside a window, the 8 paired variants of a group always share a window, and a mini-batch can draw from at most window_shards x groups_per_shard = 16 scenario groups (4 x 4; 32 at 8 groups per shard), plus carried remainder rows only if the window size is not a multiple of the batch (128 and the final 96-observation window are multiples of 8 and 32, so none here). BatchNorm statistics and the augmentation RNG stream therefore differ from a uniform permutation. window_shards enters the experiment fingerprint. Analytic window memory at (4 groups, 4 shards): 128 MiB steady, 128.2 MiB while building; at (8 groups, 4 shards): 256 MiB.",
+      "consequence": "BLOCKED SHUFFLE (P24 section 5): whole shards are permuted per epoch, samples are permuted inside a window, the 8 paired variants of a group always share a window, and a mini-batch can draw from at most window_shards x groups_per_shard = 16 scenario groups (4 x 4; 32 at 8 groups per shard), plus carried remainder rows only if the window size is not a multiple of the batch (128 and the final 96-observation window are multiples of 8 and 32, so none here). BatchNorm statistics and the augmentation RNG stream therefore differ from a uniform permutation. window_shards enters the experiment fingerprint. Analytic window memory at (4 groups, 4 shards): 128 MiB steady, 208.3 MiB while building (raw shards plus the per-shard float32 tensors and their torch.cat result; measured 159.7 MiB above the resident raw shards for a 4 x 32-observation window); at (8 groups, 4 shards): 256 MiB steady, 416.5 MiB while building.",
       "approval": null,
       "approval_group": "R7"
     },
@@ -488,11 +493,12 @@
         "regularization": 0.1
       },
       "basis": "existing_config",
-      "source": "configs/b2_feat.json:16; src/geoml/b2_experiment.py:495,510; P18_b2_protocol.md:115",
-      "needs_researcher_approval": false,
+      "source": "configs/b2_feat.json:16; src/geoml/b2_experiment.py:495,510; P20_b2_cancellation_residual.md:92 ('Mahalanobis statistics (regularization 0.1)'); P18_b2_protocol.md:115 names the role (train) but gives no number",
+      "needs_researcher_approval": true,
       "alternatives": [],
-      "consequence": "Frozen; fitted per (view, seed) model after the checkpoint is chosen; never sees val or test data.",
-      "approval": null
+      "consequence": "Stated in P20 section 6 and in the pilot config; no P18 line carries the number 0.1, so R10 asks for an explicit confirmation rather than calling it frozen. Fitted per (view, seed) model after the checkpoint is chosen; never sees val or test data.",
+      "approval": null,
+      "approval_group": "R10"
     },
     "calibration": {
       "value": {
@@ -502,11 +508,12 @@
         "quantile": "higher empirical quantile, inclusive acceptance"
       },
       "basis": "existing_config",
-      "source": "configs/b2_feat.json:14-15; src/geoml/b2_experiment.py:175,516-518,535; src/geoml/calibration.py:100-110; P18_b2_protocol.md:94,148-149",
-      "needs_researcher_approval": false,
+      "source": "configs/b2_feat.json:14-15; src/geoml/b2_experiment.py:175,516-518,535; src/geoml/calibration.py:100-110; P18_b2_protocol.md:94 (val-calib, known classes only) and :149 (clean Pfa 5 %); the 0.95 known-acceptance target is stated in P20_b2_cancellation_residual.md:90-93 and the config, not in P18",
+      "needs_researcher_approval": true,
       "alternatives": [],
-      "consequence": "Frozen. Thresholds come from 1,200 val-calib observations (150 clean for the alarm threshold); the test role is evaluated once with them.",
-      "approval": null
+      "consequence": "Thresholds come from 1,200 val-calib observations (150 clean for the alarm threshold); the test role is evaluated once with them. The clean Pfa 5 % is in P18:149; the 0.95 known-acceptance target is not a P18 number (P20 and the pilot config state it), so R10 asks for an explicit confirmation rather than calling it frozen.",
+      "approval": null,
+      "approval_group": "R10"
     },
     "test_evaluation_coupling": {
       "value": "the runner evaluates the test role (and the bound B2-test/1 and B2-match/1 sets, if given) immediately after each view's training, inside the same invocation",
@@ -626,7 +633,7 @@
           "seconds_per_epoch": 78.4,
           "minutes_per_30_epoch_fit": 39.2,
           "hours_for_nine_fits": 5.88,
-          "basis": "assumed: P24 section 2 read estimate (34 s per epoch) + 12,000 obs / 270 obs/s measured preprocessing in E1 on a different, loaded CPU"
+          "basis": "assumed: P24 section 2 read estimate (34 s per epoch) + 12,000 obs / 270 obs/s measured preprocessing in E1 on a different, loaded CPU; omits the val-select read (about 4 s per epoch), val-select preprocessing (about 4.4 s) and K17b re-preprocessing of 15 % of the rows (about 6.7 s): about 93 s per epoch, 7.0 h for nine fits, roughly 1.9x the reservation"
         },
         "cpu_only_fallback_hours_per_fit_compute_only": {
           "basis": "assumed: measured warm CPU step rate (dual_residual, batch 32, this run) x assumed 30 epochs; excludes loader and evaluation",
@@ -679,7 +686,9 @@
         "time_pool",
         "level"
       ],
-      "sentence": "R2: I choose model width [8 | 16 | 32] and time_pool [2 | 1] with the per-sample carrier reference (level 'carrier')."
+      "sentence": "R2: I choose model width [8 | 16 | 32] and time_pool [2 | 1] with the per-sample carrier reference (level 'carrier').",
+      "p18_section_10_if_not_p6_default": true,
+      "p18_note": "P18 section 5: 'P6 settings, no search'. Choosing the P6 / TrainConfig default closes the item; any other value (or, for R4, a data-driven sizing rule) needs a P18 section 10 entry and a version name before the first fit."
     },
     {
       "id": "R3",
@@ -688,7 +697,7 @@
         "center_loss_weight",
         "plan_loss_weight"
       ],
-      "sentence": "R3: K18: I choose option [A | B | C | D]; centre-loss weight [..], plan-BCE weight [..]; add the train-only centre/CE diagnostic: [yes | no]. (Wording as in B2_E6_RESEARCHER_DECISION_PACKET.md section 6.)"
+      "sentence": "R3: K18: I choose option [A | B | C | D]; centre-loss weight [..], plan-BCE weight [..]; keep the train-only centre/CE diagnostic already implemented in both trainers (observation-only, always on): [keep | remove before the source lock]. (Wording adapted from B2_E6_RESEARCHER_DECISION_PACKET.md section 6, which predates the implementation.)"
     },
     {
       "id": "R4",
@@ -697,7 +706,9 @@
         "epochs",
         "epochs_selection_procedure"
       ],
-      "sentence": "R4: I fix the budget at [N] epochs for every fit (fixed-length OneCycle schedule, no early stopping); N is [taken unchanged from P6 | chosen by the pre-registered train/val-select sizing rule: ...] and no test, test-only, matched or val-calib result informs it."
+      "sentence": "R4: I fix the budget at [N] epochs for every fit (fixed-length OneCycle schedule, no early stopping); N is [taken unchanged from P6 | chosen by the pre-registered train/val-select sizing rule: ...] and no test, test-only, matched or val-calib result informs it.",
+      "p18_section_10_if_not_p6_default": true,
+      "p18_note": "P18 section 5: 'P6 settings, no search'. Choosing the P6 / TrainConfig default closes the item; any other value (or, for R4, a data-driven sizing rule) needs a P18 section 10 entry and a version name before the first fit."
     },
     {
       "id": "R5",
@@ -705,7 +716,9 @@
       "parameters": [
         "batch_size"
       ],
-      "sentence": "R5: I fix the batch size at [8 | 32 | ...]."
+      "sentence": "R5: I fix the batch size at [8 | 32 | ...].",
+      "p18_section_10_if_not_p6_default": true,
+      "p18_note": "P18 section 5: 'P6 settings, no search'. Choosing the P6 / TrainConfig default closes the item; any other value (or, for R4, a data-driven sizing rule) needs a P18 section 10 entry and a version name before the first fit."
     },
     {
       "id": "R6",
@@ -714,9 +727,12 @@
         "optimizer",
         "learning_rate_schedule",
         "gradient_clipping",
-        "mirror_roll_augmentation"
+        "mirror_roll_augmentation",
+        "precision_and_determinism"
       ],
-      "sentence": "R6: I approve AdamW (peak lr [1e-3], weight decay [1e-4] on all parameters including BatchNorm, biases and centres, torch default betas/eps) with OneCycleLR (torch defaults: pct_start 0.3, cosine, div_factor 25, final_div_factor 1e4, momentum cycling 0.85-0.95), no gradient clipping, fp32, mirror (p = 0.5) plus one circular time roll per batch, on the pinned torch version."
+      "sentence": "R6: I approve AdamW (peak lr [1e-3], weight decay [1e-4] on all parameters including BatchNorm, biases and centres, constructor betas (0.9, 0.999) whose first moment OneCycleLR cycles 0.95 -> 0.85 -> 0.95, eps 1e-8) with OneCycleLR (torch defaults: pct_start 0.3, cosine, div_factor 25, final_div_factor 1e4, momentum cycling 0.85-0.95), no gradient clipping, fp32 with torch.backends.cudnn.allow_tf32 [True (torch default) | False] and matmul TF32 off, no deterministic flags, mirror (p = 0.5) plus one circular time roll per batch, on the pinned torch version.",
+      "p18_section_10_if_not_p6_default": true,
+      "p18_note": "P18 section 5: 'P6 settings, no search'. Choosing the P6 / TrainConfig default closes the item; any other value (or, for R4, a data-driven sizing rule) needs a P18 section 10 entry and a version name before the first fit."
     },
     {
       "id": "R7",
@@ -742,6 +758,16 @@
         "interruption_policy"
       ],
       "sentence": "R9: an interrupted fit [restarts from epoch 0 with the parent checkpoint hash recorded | resumes from a reviewed snapshot implemented before long training]."
+    },
+    {
+      "id": "R10",
+      "title": "Confirmation of the calibration and Mahalanobis constants",
+      "parameters": [
+        "mahalanobis_fit",
+        "calibration"
+      ],
+      "sentence": "R10: I confirm known-class acceptance target [0.95], clean alarm Pfa [0.05] and Mahalanobis regularization [0.1] for the production run, as in the pilot config and P20 section 6 (the clean Pfa 5 % is also P18:149).",
+      "note": "These numbers appear in P20 prose and configs/b2_feat.json, not in P18; a different value would be a change to frozen text and needs a P18 section 10 entry."
     }
   ],
   "not_decided_here": [
@@ -753,8 +779,9 @@
     "The cross-seed aggregation rule for reporting (P6: averaged; P18: seed uncertainty separate); only 'report per seed, bootstrap separately' is stated by the plan.",
     "The tolerance and candidate list of any epoch-sizing rule (R4).",
     "Which P18 section 8 ablation names the three views correspond to.",
-    "Whether the observation-only train-time diagnostics being added by another work package (center/CE ratio) are accepted: that is R3, not decided here.",
-    "Any change to configs/, protocol documents P18-P28, src/ or the gates file: this work package touched none of them."
+    "Whether the observation-only train-time diagnostics (center/CE ratio), already implemented unconditionally in both trainers, are kept: that is R3, not decided here. Removing them is a further src/geoml edit that changes the source hashes again.",
+    "Any change to configs/, protocol documents P18-P28 or the decisions in the gates file: this work package changed none of them. Its only src/geoml edits are the observation-only K18 diagnostics, which change the checkpoint source hashes.",
+    "The numbers 0.95 (known acceptance), 0.05 (clean Pfa) and 0.1 (Mahalanobis regularization) are stated in P20 prose and the pilot config, not as P18 numbers: R10 asks the researcher to confirm them."
   ],
   "evidence": {
     "footprint_run": {
@@ -1114,7 +1141,7 @@
           "shard_raw_bytes": 12648448,
           "shard_preprocessed_bytes": 20971520,
           "window_steady_resident_bytes": 134217728,
-          "window_build_peak_bytes": 134479872,
+          "window_build_peak_bytes": 218365952,
           "train_observations": 12000,
           "train_shards_per_epoch": 375,
           "train_windows_per_epoch": 94,
@@ -1132,7 +1159,7 @@
           "shard_raw_bytes": 25296896,
           "shard_preprocessed_bytes": 41943040,
           "window_steady_resident_bytes": 268435456,
-          "window_build_peak_bytes": 268959744,
+          "window_build_peak_bytes": 436731904,
           "train_observations": 12000,
           "train_shards_per_epoch": 188,
           "train_windows_per_epoch": 47,

@@ -27,8 +27,11 @@ three views: 64 at the pilot width 8 (D = 128) and 128 at width 16 (D = 256). On
 center term is 1.0e-6 to 2.6e-5 against a cross-entropy of about 2.08 (at most 1.2e-5 of CE), negligible in **both** conventions;
 the pilots therefore cannot calibrate the weight, in either direction. Two facts the E5 memorandum did not state:
 (i) the effective strength depends on the production width, which is not frozen anywhere (`audit.production_training_config_missing`);
-(ii) the recommended train-only center/CE diagnostic does not exist in either trainer (`audit.k18_diagnostic_missing`), so "log it
-and keep lambda unless it exceeds 50 % of CE" cannot be executed on today's code.
+(ii) the recommended train-only center/CE diagnostic did not exist in either trainer when this packet was written
+(`audit.k18_diagnostic_missing`), so "log it and keep lambda unless it exceeds 50 % of CE" could not be executed on that code.
+*E7a update:* the observation-only diagnostic now exists (`TrainDiagnostics`, always on, no `TrainConfig` field, bit-identical
+training on CPU fp32; GPU parity is untested and is part of the DR-05 probe). It changes the checkpoint source hashes of
+`train.py`, `b2_stream.py`, `b2_experiment.py` and `b2_loko.py`; earlier checkpoints are not relabelled.
 
 | Option | Description | Scientific consequence | Engineering consequence |
 |---|---|---|---|
@@ -118,7 +121,7 @@ decision and record reference (`approved_by`, `approved_at`, `decision`, `record
 memorandum, as FAIL.
 
 > K18: I choose option [A/B/C/D]. Production training configuration: width [..], epochs [..], batch [..], optimizer/scheduler [..],
-> seeds [..]. Add the train-only center/CE diagnostic: [yes/no].
+> seeds [..]. Keep the train-only center/CE diagnostic (implemented in E7a, always on): [keep/remove before the lock].
 > K17d: I choose [A+C / B / ...]. Predeclared rows: [names].
 > OBS-CANCEL/2: I choose [A / B / C]. [If B: criteria].
 > (Separate message, only after the above) DR-04: authorize generation of the frozen 21,350 observations on [host] with ceilings

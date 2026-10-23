@@ -3,7 +3,7 @@
  "as_of": "2026-10-23",
  "base_main": "755b474b7a2c506ec03441a7d15ed365c47addb1",
  "benchmark_complete": false,
- "note": "Manual audit of the 21,350-observation production plan against the merged code. PASS needs a named test or an inspected location; FAIL is a verified engineering gap or mismatch; BLOCKED needs a researcher decision, authorization, hardware or a measurement; NOT_RUN was not executed. Nothing here approves a gate. E7a update (2026-10-23): the supervisor and the K18 diagnostic findings are resolved for bounded fixtures; production launch stays unimplemented.",
+ "note": "Manual audit of the 21,350-observation production plan against the merged code. PASS needs a named test or an inspected location; FAIL is a verified engineering gap or mismatch; BLOCKED needs a researcher decision, authorization, hardware or a measurement; NOT_RUN was not executed. Nothing here approves a gate. E7a update (2026-10-23): the supervisor and the K18 diagnostic findings are resolved for bounded fixtures; production launch stays unimplemented. E7a review update: independent multi-lens review of the supervisor, K18 diagnostics, training proposal and documentation; the material findings are fixed with regression tests (P30 section 9). Items touched by E7a cite line numbers at the E7a head; untouched items cite 755b474. Main moved to 5d3f1a3 when PR #21 (the first, pre-review E7a state) was merged; this round is its follow-up. The audit base for items not touched by E7a stays 755b474.",
  "items": [
   {
    "id": "audit.generator_cli",
@@ -110,8 +110,8 @@
    "status": "PASS",
    "message": "fit_streaming requires known-kind sources of the train and val-select roles and disjoint scenario groups (E1 evidence, unchanged by E6).",
    "evidence": [
-    "src/geoml/b2_stream.py:293-309",
-    "src/geoml/b2_stream.py:444-447"
+    "src/geoml/b2_stream.py:294-310",
+    "src/geoml/b2_stream.py:447-450"
    ],
    "verified_by": "tests/test_b2_stream.py::test_fit_refuses_group_leakage_wrong_roles_and_test_only_sources"
   },
@@ -158,10 +158,30 @@
    "verified_by": "ci:39991726439 raw job log read in this session"
   },
   {
+   "id": "audit.e6_head_ci",
+   "title": "The merged E6 head passed GitHub Actions",
+   "status": "PASS",
+   "message": "Run 40004028017, job 120587227201, head 8703a526e807933a674813da3ad9216a297f3d57: remaining suite 1226 passed in 546.32 s plus 107 E4 tests = 1333 (no failures), read from the raw job log; PR #20 was merged as 755b474.",
+   "evidence": [
+    "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40004028017"
+   ],
+   "verified_by": "ci:40004028017 raw job log read in E7a"
+  },
+  {
+   "id": "audit.e7a_first_state_ci",
+   "title": "The merged first E7a state (PR #21) passed GitHub Actions",
+   "status": "PASS",
+   "message": "Run 40017354368, job 120633134928, head 5903637d28d3607b606c78f06adfc8c47573edce: repository step 1412 passed, 7 skipped (the K18 golden tests skip on that runner's CPU by design) in 689.49 s, E4 step success. This certifies the pre-review state only; the follow-up with the review fixes needs its own run.",
+   "evidence": [
+    "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40017354368"
+   ],
+   "verified_by": "ci:40017354368 job log tail read in E7a"
+  },
+  {
    "id": "audit.production_training_config_missing",
    "title": "No frozen production training configuration exists; a candidate specification awaits researcher decisions",
    "status": "BLOCKED",
-   "message": "E7a prepared a reviewable candidate (docs/plan/B2_E7_TRAINING_SPEC_PROPOSAL.md, b2_e7_training_proposal.json: 29 parameter records, nine numbered decisions R1-R9, measured/analytic footprint). It is explicitly not frozen and not approved; width, epochs, batch, optimizer/scheduler, seeds, window, interruption and test-coupling policy need the researcher before a production config can be committed. configs/b2_feat.json remains the 3-epoch pilot.",
+   "message": "E7a prepared a reviewable candidate (docs/plan/B2_E7_TRAINING_SPEC_PROPOSAL.md, b2_e7_training_proposal.json: 29 parameter records, ten numbered decisions R1-R10, measured/analytic footprint). It is explicitly not frozen and not approved; width, epochs, batch, optimizer/scheduler, seeds, window, interruption and test-coupling policy need the researcher before a production config can be committed, any value other than the P6 / TrainConfig default (and any data-driven epoch sizing) is a change to P18 section 5 ('P6 settings, no search') that needs a P18 section 10 entry, and R10 asks to confirm the acceptance 0.95 / Pfa 0.05 / Mahalanobis 0.1 constants that P20 and the pilot config state but P18 does not. configs/b2_feat.json remains the 3-epoch pilot.",
    "evidence": [
     "docs/plan/B2_E7_TRAINING_SPEC_PROPOSAL.md",
     "docs/plan/b2_e7_training_proposal.json",
@@ -172,7 +192,7 @@
    "id": "audit.k18_diagnostic_missing",
    "title": "The train-only center/CE ratio diagnostic is recorded by both trainers and in the result JSON",
    "status": "PASS",
-   "message": "geoml.train.fit and geoml.b2_stream.fit_streaming return an additive train_diagnostics block (B2-train-diagnostics/1: per-epoch mean CE, weighted/unweighted center term, weighted/unweighted plan BCE, center/CE ratio with counts and an unavailable reason, embedding rms, provenance; observation_only, affects_training=false, split=train). b2_experiment and b2_loko now write it next to history. Bit-identity with origin/main 755b474 (goldens, verbatim original loops, gradients, RNG) is tested. Editing train.py, b2_stream.py, b2_experiment.py and b2_loko.py changes their hashes in checkpoint provenance (P28 section 6); earlier checkpoints are not relabelled. K18 itself stays PENDING_RESEARCHER; this is a diagnostic only.",
+   "message": "geoml.train.fit and geoml.b2_stream.fit_streaming return an additive train_diagnostics block (B2-train-diagnostics/1: per-epoch mean CE, weighted/unweighted center term, weighted/unweighted plan BCE, center/CE ratio with counts and an unavailable reason, embedding rms, provenance; observation_only, affects_training=false, split=train). b2_experiment and b2_loko now write it next to history, together with best_epoch and best_val_macro_f1 so a reader of the summary can pick the evaluated checkpoint's epoch out of the block. Bit-identity with origin/main 755b474 (goldens, verbatim original loops, gradients, RNG) is tested on CPU fp32 (torch 2.14.1, 1/2/4 threads; an independent review compared 268 configurations without a mismatch); GPU parity is not tested here and belongs to the bounded DR-05 probe. Editing train.py, b2_stream.py, b2_experiment.py and b2_loko.py changes their hashes in checkpoint provenance (P28 section 6); earlier checkpoints are not relabelled. K18 itself stays PENDING_RESEARCHER; this is a diagnostic only.",
    "evidence": [
     "src/geoml/train.py:216-325",
     "src/geoml/b2_stream.py:436-522",
@@ -186,13 +206,14 @@
    "id": "audit.stage_supervisor_missing",
    "title": "A fail-closed staged supervisor exists (bounded fixtures only; the production launch is not implemented)",
    "status": "PASS",
-   "message": "scripts/b2_production_supervisor.py (P30) runs known, test-only and matched in order as supervised children: dry run by default, immutable lock re-verified before every stage and attempt, relocatable run identity, hash-chained journal, wait4 exit codes/CPU/peak RSS, wall/CPU/RSS/attempt/disk ceilings, first-shard timing gate, SIGINT/SIGTERM handling, child dies with the supervisor, orphan quarantine (never deletes), completion marker only for the exact planned inventory. Every spawned command must carry --limit-groups 1..2; production execution is always refused. Exercised by 69 stand-in tests and by a capped real-physics run (two groups per stage, interrupted once and resumed).",
+   "message": "scripts/b2_production_supervisor.py (P30) runs known, test-only and matched in order as supervised children: dry run by default, immutable lock re-verified before every stage and attempt, relocatable run identity (plan, ceilings, timing, heartbeat and launcher), hash-chained journal anchored by journal.head with a tail check on every append, wait4 exit codes/CPU, monotonic elapsed time, polled child RSS (ru_maxrss kept as an upper bound), heartbeats and an estimated charge for a lost supervisor, wall/CPU/RSS/failed-attempt/interruption/disk ceilings (fixtures and production plans cannot raise them), first-shard timing gate, SIGINT/SIGTERM handling, the process group emptied after every attempt, a child that dies with the supervisor, an unreadable host probe failing closed, orphan quarantine (never deletes), and completion only for the exact planned inventory produced under the plan by a clean supervised attempt. Every spawned command must carry --limit-groups 1..2; production execution is always refused. Exercised by 126 tests (stand-in children under the real generator CLIs, a mutation pass in which all but two equivalent mutants are killed) and by a capped real-physics run (two groups per stage, interrupted once, supervisor SIGKILLed once, resumed to completion).",
    "evidence": [
     "scripts/b2_production_supervisor.py",
+    "scripts/b2_e7a_capped_verification.py",
     "docs/plan/P30_b2_e7a_production_supervisor.md",
     "docs/results/b2_e7a_supervisor_verification.json"
    ],
-   "verified_by": "tests/test_b2_production_supervisor.py::test_a_signal_stops_the_child_cleanly_and_the_run_continues_bit_equal"
+   "verified_by": "tests/test_b2_production_supervisor.py::test_a_child_that_finishes_the_work_then_exits_nonzero_is_never_a_silent_success"
   },
   {
    "id": "audit.loko_dispatcher_missing",
@@ -209,8 +230,8 @@
    "status": "BLOCKED",
    "message": "A checkpoint stores model weights (best epoch) only, not optimizer, scheduler, RNG or the data cursor. Either a separately reviewed snapshot is built, or an interrupted seed/view restarts from epoch 0 with the parent checkpoint hash recorded. That is a policy decision before GPU use.",
    "evidence": [
-    "src/geoml/train.py:285-292",
-    "src/geoml/train.py:313-326",
+    "src/geoml/train.py:408-415",
+    "src/geoml/train.py:436-449",
     "docs/plan/B2_E5_PRODUCTION_EXECUTION_PLAN.md:88-92"
    ]
   },
@@ -228,9 +249,10 @@
    "id": "audit.wall_time_unmeasured_at_scale",
    "title": "Generation wall time is an extrapolation from a 60-observation matched profile",
    "status": "BLOCKED",
-   "message": "23.0-30.2 h reproduces arithmetically from 3.8-5.0 s/observation, but the known stage's group mix differs from the matched profile and nothing was timed beyond 64 observations. A start-up gate that compares the first committed shards with the band (stop if outside) belongs to the authorized run, not to this preflight. E7a measured first-shard speed on capped real-physics fixtures (this sandbox, two groups per stage): known 3.92 and 4.53, test-only 4.75 and matched 2.99 s/observation with a 6 s startup allowance, so the 3.8-5.0 band holds for known and test-only but not for matched; nothing was timed at production size.",
+   "message": "23.0-30.2 h reproduces arithmetically from 3.8-5.0 s/observation, but the known stage's group mix differs from the matched profile and nothing was timed beyond 64 observations. A start-up gate that compares the first committed shards with the band (stop if outside) belongs to the authorized run, not to this preflight. E7a's capped real-physics run (this sandbox, two groups per stage, clean tree) cost 4.67 s/observation for the known stage (64 observations, three attempts including the restarts and the estimated charge of one lost attempt), 5.29 for test-only (10) and 4.94 for matched (6) as whole-attempt wall per observation including start-up; the first-shard gate figures (3.1-4.5 s/observation) subtract a fixed 6 s allowance from 3-8 observation shards and are not per-observation costs, so they neither confirm nor refute the 3.8-5.0 band for any stage. Nothing was timed at production size.",
    "evidence": [
-    "docs/results/b2_production_budget.md:12-40"
+    "docs/results/b2_production_budget.md:12-40",
+    "docs/results/b2_e7a_supervisor_verification.json"
    ]
   },
   {
@@ -244,9 +266,9 @@
   },
   {
    "id": "audit.pr_head_ci",
-   "title": "GitHub Actions on this E6 pull-request head",
+   "title": "GitHub Actions on this E7a pull-request head",
    "status": "NOT_RUN",
-   "message": "Recorded in the draft PR description after publication; CI for any other head, including the merged E5 head, does not certify it.",
+   "message": "Recorded in the draft PR description after publication; CI for any other head, including the merged E5 and E6 heads, does not certify it.",
    "evidence": [
     "pull request description"
    ]
@@ -255,12 +277,15 @@
    "id": "audit.supervisor_real_physics_capped",
    "title": "Supervisor verified end to end with real physics on a two-group-per-stage fixture",
    "status": "PASS",
-   "message": "Real generators (obs-cancel/1), 80 observations in total: dry run created nothing; SIGINT after the first known shard gave exit 6 with a resumable root, verify exit 5 and a refused completion; the restart finished all stages, verify exit 0, completion.json written with scope fixture, production_complete=false, benchmark_complete=false. Peak child RSS 570-583 MiB; wall 388 s, CPU 451 s over four attempts.",
+   "message": "Real generators (obs-cancel/1), 80 observations in total, clean tree at commit dd5d965: the dry run created nothing (exit 4); SIGINT after the first known shard gave exit 6 with a resumable root, verify exit 5 and a refused completion (exit 3); the supervisor was then SIGKILLed mid-attempt (its child died with it), the next start recorded supervisor_lost with an estimated charge, and the third start finished all stages; verify exit 0 and completion.json (scope fixture, production_complete=false, benchmark_complete=false). Child peak RSS 506-572 MiB (polled VmHWM); five attempts, wall 382 s, CPU 452 s, the lost attempt's share estimated. The raw journal (113 records) is committed and verifies with Journal.load.",
    "evidence": [
     "docs/results/b2_e7a_supervisor_verification.json",
-    "docs/results/b2_e7a_supervisor_verification.md"
+    "docs/results/b2_e7a_supervisor_verification.md",
+    "docs/results/b2_e7a_supervisor_journal.jsonl",
+    "docs/results/b2_e7a_supervisor_journal.head",
+    "scripts/b2_e7a_capped_verification.py"
    ],
-   "verified_by": "inspection: docs/results/b2_e7a_supervisor_verification.json (journal of the capped real-physics run)"
+   "verified_by": "tests/test_b2_production_supervisor.py::test_the_committed_real_physics_journal_verifies_and_matches_its_summary"
   },
   {
    "id": "audit.production_launch_not_implemented",
@@ -296,7 +321,7 @@
    "id": "audit.loader_synchronous",
    "title": "The training data loader is synchronous",
    "status": "BLOCKED",
-   "message": "No DataLoader, prefetch or workers exist. At the E1 rates the data path alone is roughly 39 minutes per 30-epoch fit (about 5.9 h for nine fits), comparable to the whole 6 GPU-h reservation; unverified on the target host. The authorized GPU probe must measure end to end.",
+   "message": "No DataLoader, prefetch or workers exist. At the E1 rates the train-read and preprocessing path alone is roughly 39 minutes per 30-epoch fit (about 5.9 h for nine fits); the estimate omits the val-select read and preprocessing and the K17b re-preprocessing, which bring it to about 47 minutes per fit and 7.0 h for nine (roughly 1.9x the whole 6 GPU-h reservation); unverified on the target host. The authorized GPU probe must measure end to end.",
    "evidence": [
     "docs/plan/B2_E7_TRAINING_SPEC_PROPOSAL.md",
     "docs/results/b2_streaming_memory.md"

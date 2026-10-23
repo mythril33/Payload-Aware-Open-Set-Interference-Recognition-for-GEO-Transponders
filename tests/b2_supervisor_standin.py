@@ -13,6 +13,7 @@ environment variables so a test can exercise crashes, orphans, signals, slowness
     STANDIN_EXIT_AFTER_OBS  os._exit(STANDIN_EXIT_CODE) after N observations (a mid-shard crash)
     STANDIN_ORPHAN_AT       os._exit(9) right before shard K's descriptor is written (data files exist, descriptor does not)
     STANDIN_SELF_SIGNAL     send this signal number to itself after STANDIN_SELF_SIGNAL_AFTER observations
+    STANDIN_EXIT_AFTER_FINISH  os._exit(N) after the generator finished successfully (a child that did the work, then fails)
     STANDIN_ALLOC_MB        touch this many MiB at start              STANDIN_BURN_CPU_S   busy-loop this many seconds
     STANDIN_PID_FILE        write the pid here at start
 """
@@ -137,6 +138,10 @@ def main(argv):
         if start_delay:
             time.sleep(start_delay)
     module.main(args)
+    finish = os.environ.get("STANDIN_EXIT_AFTER_FINISH")
+    if active and finish is not None:
+        _consume_once()
+        os._exit(int(finish))
 
 
 if __name__ == "__main__":

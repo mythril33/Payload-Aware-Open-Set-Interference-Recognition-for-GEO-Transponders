@@ -150,7 +150,7 @@ def test_streaming_window_arithmetic_matches_the_stored_layout_and_e1_numbers():
     assert record["shard_preprocessed_bytes"]["value"] == 20_971_520         # exactly 20.0 MiB
     assert record["window_observations"]["value"] == 128 and record["window_scenario_groups"]["value"] == 16
     assert record["window_steady_resident_bytes"]["value"] == 128 * (655_360 + 262_144 + 131_072)
-    assert record["window_build_peak_bytes"]["value"] == 128 * (395_264 + 655_360)
+    assert record["window_build_peak_bytes"]["value"] == 128 * (395_264 + 2 * 655_360)    # raw shards + two float32 copies (torch.cat)
     assert (record["train_observations"]["value"], record["train_shards_per_epoch"]["value"],
             record["train_windows_per_epoch"]["value"]) == (12_000, 375, 94)
     assert record["train_bytes_read_per_epoch_double_read"]["value"] == 2 * 12_000 * 395_264
@@ -454,8 +454,13 @@ def test_scientific_and_compute_choices_are_flagged_and_assumptions_are_named(pr
                  "streaming_groups_per_shard", "streaming_window_shards", "test_evaluation_coupling", "interruption_policy",
                  "expected_cpu_ram", "expected_gpu_vram", "expected_sample_passes_and_wall_clock", "compute_hardware"):
         assert parameters[name]["needs_researcher_approval"] is True, name
-    for name in ("plan_shift_augmentation", "checkpoint_selection_rule", "mahalanobis_fit", "calibration", "loss_composition", "training_seed_count"):
+    for name in ("plan_shift_augmentation", "checkpoint_selection_rule", "loss_composition", "training_seed_count"):
         assert parameters[name]["basis"] == "existing_config" and parameters[name]["needs_researcher_approval"] is False, name
+    for name in ("mahalanobis_fit", "calibration"):          # stated in P20 prose and the pilot config, not as P18 numbers: confirm (R10)
+        assert parameters[name]["basis"] == "existing_config" and parameters[name]["needs_researcher_approval"] is True, name
+        assert parameters[name]["approval_group"] == "R10" and "P18" in parameters[name]["consequence"]
+    assert parameters["precision_and_determinism"]["needs_researcher_approval"] is True
+    assert parameters["precision_and_determinism"]["approval_group"] == "R6"
     assert parameters["epochs"]["basis"] in ("repository_default", "plan_assumption") and "ASSUMPTION" in parameters["epochs"]["consequence"]
     assert "analytic estimate, not measured; needs the authorized GPU probe" == parameters["expected_gpu_vram"]["value"]["label"]
     assert parameters["compute_hardware"]["value"].startswith("not decided")
@@ -543,10 +548,95 @@ def test_repository_facts_cited_as_engineering_only_still_hold():
     from geoml import b2_experiment, train as geoml_train
     for path in list((ROOT / "src").rglob("*.py")) + list((ROOT / "scripts").rglob("*.py")):
         text = path.read_text()
-        for token in ("clip_grad", "autocast", "GradScaler", "DataLoader", "num_workers", "use_deterministic_algorithms", "cudnn.deterministic"):
+        for token in ("clip_grad", "autocast", "GradScaler", "DataLoader", "num_workers", "use_deterministic_algorithms", "cudnn.deterministic",
+                      "allow_tf32", "set_float32_matmul_precision"):
             assert token not in text, (path.name, token)
     save_source = inspect.getsource(geoml_train.save)
     assert not any(word in save_source.lower() for word in ("optim", "sched", "rng_state", "opt."))      # no restartable snapshot
     runner = inspect.signature(b2_experiment.run_b2_experiment).parameters
     assert not {"train_only", "skip_test", "skip_evaluation"} & set(runner)
     assert runner["device"].default == "cpu"
+
+
+# ---- E7a review regressions: absolute pins instead of relative ones, the hidden child mode, honest build peak -------------
+
+@pytest.mark.parametrize("width,macs", [(8, 96_732_288), (16, 321_390_848), (32, 1_154_486_784)])
+def test_forward_macs_and_saved_activations_match_independent_closed_forms(width, macs):
+    result = fp.probe("dual_residual", width, 4, measure=False, threads=1)
+    assert result["forward_macs_per_sample"] == macs                                # per-layer closed form, exact
+    assert result["saved_activation_bytes"] == pytest.approx(4 * 4 * 219_136 * width, rel=2e-3)
+
+
+def test_vram_bounds_are_the_documented_sums():
+    analytic = fp.analytic_model_record("dual_residual", 16, 8)
+    result = fp.probe("dual_residual", 16, 8, measure=False, threads=1)
+    record = fp.gpu_vram_record(analytic, result)
+    saved = result["saved_activation_bytes"]
+    lower = analytic["fp32_static_training_state_bytes"]["value"] + analytic["input_batch_bytes"]["value"] + saved
+    assert record["lower_bound_bytes"]["value"] == lower and record["upper_bound_bytes"]["value"] == lower + saved
+
+
+def test_the_r2_width_table_matches_the_tool(proposal):
+    table = proposal["parameters"]["model_width"]["by_width"]
+    assert set(table) == {"8", "16", "32"}
+    for key, row in table.items():
+        width = int(key)
+        for view, count in row["n_parameters_by_view"].items():
+            assert count == fp.analytic_model_record(view, width, 8)["n_parameters_model"]["value"]
+        analytic = fp.analytic_model_record("dual_residual", width, 8)
+        assert row["n_parameters_optimized_dual_residual"] == analytic["n_parameters_optimized"]["value"]
+        assert row["embedding_dim_D"] == analytic["embedding_dim_D"]["value"] == 16 * width
+        assert row["p20_over_p21b_center_term_ratio"] == analytic["p20_over_p21b_center_term_ratio"]["value"]
+        assert row["p20_weight_times_D"] == analytic["p20_weight_times_D"]["value"]
+        assert row["fp32_static_training_state_mib"] == round(analytic["fp32_static_training_state_bytes"]["value"] / 2 ** 20, 2)
+        macs = fp.probe("dual_residual", width, 1, measure=False, threads=1)["forward_macs_per_sample"]
+        assert row["forward_gmacs_per_sample_dual_residual"] == round(macs / 1e9, 3)
+
+
+def test_the_proposal_states_the_p18_search_rule_and_the_unfrozen_constants(proposal):
+    decisions = {d["id"]: d for d in proposal["researcher_decisions"]}
+    assert [d["id"] for d in proposal["researcher_decisions"]] == [f"R{i}" for i in range(1, 11)]
+    for key in ("R2", "R4", "R5", "R6"):
+        assert decisions[key]["p18_section_10_if_not_p6_default"] is True and "section 10" in decisions[key]["p18_note"]
+    assert "section 10" in proposal["parameters"]["epochs_selection_procedure"]["consequence"]
+    assert "precision_and_determinism" in decisions["R6"]["parameters"] and "allow_tf32" in decisions["R6"]["sentence"]
+    assert decisions["R10"]["parameters"] == ["mahalanobis_fit", "calibration"] and "0.95" in decisions["R10"]["sentence"]
+    optimizer = proposal["parameters"]["optimizer"]["value"]
+    assert "0.95 -> 0.85 -> 0.95" in optimizer["effective_beta1_with_OneCycleLR"]
+    flags = proposal["parameters"]["precision_and_determinism"]["value"]
+    assert flags["repository_sets_tf32_flags"] is False and "True" in flags["cudnn_allow_tf32"]
+    assert torch.backends.cudnn.allow_tf32 is True and torch.backends.cuda.matmul.allow_tf32 is False       # torch defaults the text quotes
+
+
+def test_onecycle_overwrites_the_constructor_beta1():
+    model = torch.nn.Linear(2, 2)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
+    assert optimizer.param_groups[0]["betas"][0] == 0.9
+    torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=1e-3, total_steps=100)
+    assert optimizer.param_groups[0]["betas"][0] == 0.95                              # cycle_momentum=True, max_momentum default
+
+
+@pytest.mark.parametrize("override", [{"width": 33}, {"batch": 65}, {"threads": 64}, {"warm_steps": 6}, {"view": "bogus"},
+                                      {"measure": "yes"}, {"soft_deadline_s": 1e9}])
+def test_the_hidden_child_mode_obeys_the_same_caps(override, capsys):
+    spec = {"view": "co", "width": 2, "batch": 1, "warm_steps": 0, "measure": False, "threads": 1, **override}
+    assert fp.main(["--child", json.dumps(spec)]) == 2
+    captured = capsys.readouterr()
+    assert fp.CHILD_PREFIX not in captured.out and "refused child spec" in captured.err
+    assert fp.main(["--child", "{not json"]) == 2 and fp.main(["--child", "[]"]) == 2
+
+
+def test_a_malformed_child_line_is_an_error_record_not_a_crash(monkeypatch):
+    fake = SimpleNamespace(returncode=0, stdout=fp.CHILD_PREFIX + "{not json", stderr="")
+    monkeypatch.setattr(fp.subprocess, "run", lambda *args, **kwargs: fake)
+    result, status, note = fp.run_child({"threads": 1}, 5)
+    assert result is None and status == "error" and "malformed child output" in note
+
+
+def test_the_window_build_peak_counts_both_float32_copies_and_the_proposal_says_so(proposal):
+    record = fp.streaming_window_record("dual_residual", 4, 4)
+    assert record["window_build_peak_bytes"]["value"] == 128 * 1_705_984 == 218_365_952
+    assert "torch.cat" in record["window_build_peak_bytes"]["how"] and "two float32 copies" in record["window_build_peak_bytes"]["how"]
+    window = proposal["evidence"]["footprint_run"]["streaming_window_dual_residual"]
+    assert window["4_groups_x_4_shards"]["window_build_peak_bytes"] == 218_365_952
+    assert window["8_groups_x_4_shards"]["window_build_peak_bytes"] == 436_731_904

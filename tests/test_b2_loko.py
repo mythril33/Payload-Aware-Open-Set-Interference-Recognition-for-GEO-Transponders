@@ -178,6 +178,7 @@ def test_end_to_end_smoke_excludes_heldout_from_every_fit_calibrates_before_test
     assert diagnostics["schema"] == "B2-train-diagnostics/1" and diagnostics["split"] == "train"
     assert diagnostics["observation_only"] is True and diagnostics["affects_training"] is False
     assert len(diagnostics["epochs"]) == len(result["history"])
+    assert diagnostics["epochs"][result["best_epoch"]]["epoch"] == result["best_epoch"] and result["best_val_macro_f1"] >= 0.0
     for method in result["methods"].values():
         assert method["calibration"]["n_calibration"] == 14
         assert method["ranking"]["n_known"] == method["known_acceptance"]["n_samples"] == 14

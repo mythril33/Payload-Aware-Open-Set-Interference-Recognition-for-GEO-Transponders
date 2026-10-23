@@ -1,37 +1,69 @@
-# E7a supervisor — capped real-physics verification
+# E7a supervisor - capped real-physics verification
 
-Date: 2026-10-23. Base `main` `755b474`. `benchmark_complete=false`; nothing here approves a gate. Strict-JSON record with the full hash-chained
-journal: [`b2_e7a_supervisor_verification.json`](b2_e7a_supervisor_verification.json). Contract: [P30](../plan/P30_b2_e7a_production_supervisor.md).
+Status: **fixture execution/recovery demonstration, not production behavior.** `benchmark_complete=false`, `production_complete=false`; no
+researcher gate was touched. Two scenario groups per stage (80 observations in total: 64 known, 10 test-only, 6 matched), real generator
+CLIs and the real physics chain (no stand-in), driven by [`scripts/b2_e7a_capped_verification.py`](../../scripts/b2_e7a_capped_verification.py)
+through [`scripts/b2_production_supervisor.py`](../../scripts/b2_production_supervisor.py) ([P30](../plan/P30_b2_e7a_production_supervisor.md)).
+Machine-readable twin: [`b2_e7a_supervisor_verification.json`](b2_e7a_supervisor_verification.json); the raw journal is committed byte for
+byte ([`b2_e7a_supervisor_journal.jsonl`](b2_e7a_supervisor_journal.jsonl) + [`b2_e7a_supervisor_journal.head`](b2_e7a_supervisor_journal.head), sha256 `c8fc4ef7b8b0d126...`,
+113 records, head `5275503704054c07...`); copied into one directory as `journal.jsonl` / `journal.head` it verifies with `Journal.load`
+(a test does exactly that). Its argv/log fields hold scratch paths.
 
-**Scope (and nothing more).** `scripts/b2_production_supervisor.py` driving the real generators (`obs-cancel/1`, real physics) with
-`--max-groups 2 --groups-per-shard 1`: 80 observations (known 4 roles x 16, test-only 10, matched 6) on this 4-CPU sandbox, CPU only
-(Python 3.13.17, NumPy 2.5.4, SciPy 1.18.1, torch 2.14.1), threads 2. No production data, no model training, no GPU, no LOKO.
+Lock: git commit `dd5d9655f191`, tree clean, lock `975c6206e3484892...`.
 
-| Step | Result |
-|---|---|
-| Dry run (`plan`) | BLOCKED (authorization), 8 checks PASS; working directory not created, no process spawned |
-| Run, SIGINT after the first committed known shard | exit 6 `INTERRUPTED`; child ended with SIGTERM (`exit_code` -15, reason `interrupted`); journal intact |
-| `verify` | exit 5 (stages incomplete, nothing failed) |
-| `complete` while incomplete | refused (exit 3); no `completion.json` written |
-| Restart with the identical plan | exit 0 `STAGES_COMPLETE` in 353.5 s; known shard 0 was kept, the remaining 7 known shards, test-only and matched were generated |
-| `verify` | exit 0, all three stages COMPLETE with the exact planned inventory |
-| `complete` | `completion.json`: `generation_complete=true`, `scope=fixture`, `production_complete=false`, `benchmark_complete=false`, `production_authorized=false` |
+## Steps (one workdir, three supervisor starts)
 
-| Attempt | Exit | Elapsed s | CPU user+sys s | Peak RSS MiB | First-shard s/observation (band 3.8-5.0, startup allowance 6 s) |
-|---|---:|---:|---:|---:|---|
-| known-01 (interrupted) | -15 (SIGTERM, reason `interrupted`) | 38.1 | 44.1 | 571.5 | 3.92 within band |
-| known-02 (resume) | 0 | 266.0 | 310.0 | 582.7 | 4.53 within band |
-| test-01 | 0 | 55.3 | 63.1 | 582.2 | 4.75 within band |
-| matched-01 | 0 | 28.9 | 33.5 | 569.8 | 2.99 faster than band (journaled, not stopped) |
+| # | Step | Exit | t (s) |
+|---|---|---|---|
+| 1 | dry_run | 4 | 3.2 |
+| 2 | interrupted_after_first_shard | 6 | 44.7 |
+| 3 | verify_while_unfinished | 5 | 47.7 |
+| 4 | complete_refused_while_unfinished | 3 | 50.6 |
+| 5 | supervisor_sigkilled_mid_attempt | -9 | 63.1 |
+| 6 | resumed_to_completion | 0 | 393.3 |
+| 7 | verify_complete | 0 | 396.3 |
+| 8 | complete | 0 | 399.3 |
 
-Cumulative from the journal: wall 388.3 s, CPU 450.7 s, attempts known 2 / test 1 / matched 1. The journal chain verifies (`Journal.read` -> no problems).
+Exit codes: 4 = dry run BLOCKED (authorization), 6 = interrupted and resumable, 5 = verify found unfinished stages, 3 = `complete` refused,
+-9 = the SIGKILLed supervisor, 0 = success. The SIGKILLed supervisor's child died with it; the next start recorded the missing end as
+`supervisor_lost` and charged an upper-bound estimate (`estimated` below).
 
-**Reading.** The supervisor's interruption, resume, status, completion and refusal behavior works on the real generators, and the first-shard gate
-measured the real per-observation cost of this host: 3.9-4.8 s for the known and test-only stages (consistent with the 3.8-5.0 band behind the
-E6 wall-time extrapolation) and 3.0 s for the matched stage, whose narrow carriers are cheaper. That is a handful of shards on one host, not a
-production-size measurement: memory and disk at scale, the full 26.6 h estimate and any GPU question remain open
-(checklist items `audit.wall_time_unmeasured_at_scale`, `audit.streaming_unmeasured_at_scale`).
+## Attempts
 
-The corruption, wrong-role, duplicate-group, orphan, drift, budget, slow-first-shard, exit-code and authorization scenarios are exercised by the 69
-stand-in tests (`tests/test_b2_production_supervisor.py`), which run the real generator CLIs with fast fake physics so that each fault can be injected
-deterministically.
+`peak (polled)` is the child's own `VmHWM` sampled while it ran (a lower bound); `peak (ru_maxrss)` is `wait4`'s figure, an **upper bound** that
+also carries the supervisor's own memory at fork (so it is near-constant across attempts and must not be read as the child's peak).
+
+| Attempt | Reason | Exit | Wall (s) | CPU (s) | Peak polled (MiB) | Peak ru_maxrss (MiB) | Estimated |
+|---|---|---|---|---|---|---|---|
+| known-01 | interrupted | -15 | 38.563 | 45.9 | 566 | 566 | no |
+| known-02 | supervisor_lost | None | 16.081 | 24.0 | 507 (last heartbeat) | - | yes (upper-bound estimate) |
+| known-03 | exited | 0 | 244.529 | 286.7 | 572 | 572 | no |
+| test-01 | exited | 0 | 52.906 | 60.7 | 568 | 568 | no |
+| matched-01 | exited | 0 | 29.627 | 34.3 | 506 | 506 | no |
+
+Whole-attempt cost per stage (start-up and the repeated start-up of every restart included, and the estimated charge of the lost attempt; **this is not a validation of the 3.8-5.0 s/observation band**):
+
+| Stage | Attempts | Observations | Attempt wall (s) | CPU (s) | Wall per observation (s) |
+|---|---|---|---|---|---|
+| known | 3 | 64 | 299.2 | 356.5 | 4.67 |
+| test | 1 | 10 | 52.9 | 60.7 | 5.29 |
+| matched | 1 | 6 | 29.6 | 34.3 | 4.94 |
+
+First-shard timing gate records (each subtracts a fixed `--timing-startup-s 6` from a 3-8 observation first shard, so the per-observation figure is
+distorted; they show that the gate evaluates, not what a stage costs):
+
+| Attempt | Outcome | s/observation after allowance | Allowance (s) | Observations |
+|---|---|---|---|---|
+| known-01 | within_band | 4.01 | 6.0 | 8 |
+| known-03 | within_band | 3.85 | 6.08 | 8 |
+| test-01 | within_band | 4.49 | 6.0 | 5 |
+| matched-01 | within_band | 3.13 | 6.0 | 3 |
+
+## Limitations (also in the JSON)
+
+- The journal holds scratch paths in argv/log fields; its chain verifies as committed (Journal.load on the two committed files).
+- peak_rss_kib is ru_maxrss, an upper bound that carries the supervisor's own peak at fork; peak_rss_polled_kib is a lower bound.
+- The timing-gate figures subtract a fixed --timing-startup-s from 3-8 observation first shards; they are not per-observation costs and do not validate the 3.8-5.0 s/observation band. Use per_stage_attempts for whole-attempt wall per observation.
+- A supervisor_lost attempt is charged by an upper-bound estimate (last heartbeat + one interval), not measured.
+- Two groups per stage say nothing about production-size memory, throughput or disk.
+- The run was driven by this script at the lock commit; the later `--render-only` mode and the `estimated`-row layout of this report changed the rendering only, not what was run.

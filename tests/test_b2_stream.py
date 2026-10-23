@@ -343,10 +343,14 @@ def test_runner_streams_a_disk_artifact_with_frozen_roles_thresholds_and_compati
         assert block["schema"] == "B2-train-diagnostics/1" and block["split"] == "train" and block["affects_training"] is False
         assert len(block["epochs"]) == 1 and block["epochs"][0]["n_samples"] == 24
         assert block["epochs"][0]["center_to_ce_ratio"] is not None and block["epochs"][0]["n_plan_samples"] == 24
+        method = result["methods"][view]                                              # which epoch the evaluated weights come from
+        assert method["best_epoch"] == 0 and 0.0 <= method["best_val_macro_f1"] <= 1.0
+        assert block["epochs"][method["best_epoch"]]["epoch"] == method["best_epoch"]
     assert len(json.loads((out / "predictions.json").read_text())) == 24
     summary = json.loads((out / "results_summary.json").read_text())
     assert summary["summary_rule"]["dropped_keys"] == list(__import__("geoml.b2_experiment", fromlist=["x"]).SUMMARY_DROPPED)
     assert set(summary["methods"]["co"]) == set(result["methods"]["co"]) - {"history", "confusion", "mahalanobis_scorer"}
+    assert summary["methods"]["co"]["best_epoch"] == 0 and "train_diagnostics" in summary["methods"]["co"]
     assert "## Partitions" in (out / "results.md").read_text()
     assert any("streaming 1 shard" in line for line in logs)
     # Frozen thresholds and checkpoints are reused unchanged; a different window policy changes the fingerprint only.
