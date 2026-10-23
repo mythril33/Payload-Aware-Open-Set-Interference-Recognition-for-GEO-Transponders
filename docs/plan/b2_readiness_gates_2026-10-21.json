@@ -181,10 +181,73 @@
       "ci_evidence_location": "Verified implementation CI and delivery CI are recorded below with exact head/run/job identifiers",
       "implementation_merge_sha": "af5910c6e1598a90bf2afe864ca23acd0f381c02",
       "delivery_pr_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/12",
-      "delivery_merge_sha": "9300620c13ae81cf16b1ef6ec9e59f2a6026f53c"
+      "delivery_merge_sha": "9300620c13ae81cf16b1ef6ec9e59f2a6026f53c",
+      "records_correction_pr": {
+        "pr": 13,
+        "head_sha": "86033366aedd37101157dc1aac47d4d3a6d6b4c1",
+        "run_id": 39924198169,
+        "job_id": 120316469704,
+        "conclusion": "success",
+        "passed": 1024,
+        "skipped": 0,
+        "pytest_seconds": 236.38
+      }
     },
     "xgboost_baseline": {
-      "status": "PLANNED"
+      "status": "BOUNDED_BASELINE_IMPLEMENTED_IN_FEATURE_BRANCH",
+      "protocol": "B2-XGB/1",
+      "feature_version": "B2-expert/1",
+      "n_features": 26,
+      "branch": "feature/b2-e3b-xgboost-baseline",
+      "preregistration_commit": "c58572c47ee02c050916eb3abcce84a22e858f0f",
+      "dependency": "xgboost-cpu==3.4.1",
+      "cpu_threads": 1,
+      "seed": 0,
+      "trained_rounds": 16,
+      "selection_candidates": [
+        8,
+        16
+      ],
+      "evidence": "docs/plan/P27_b2_e3b_xgboost_baseline.md; docs/results/b2_xgb_baseline.md; docs/research/b2_e3b_review.md",
+      "verification": {
+        "focused_passed": 63,
+        "focused_pytest_seconds": 10.74,
+        "independent_passed": 63,
+        "independent_pytest_seconds": 12.67,
+        "full_suite": {
+          "command": [
+            "/workspace/.venvs/geosim/bin/python",
+            "-m",
+            "pytest",
+            "-q",
+            "-rs"
+          ],
+          "wall_seconds": 318.507408649999,
+          "peak_rss_kib": 1285020,
+          "exit_code": 0,
+          "status": "PASSED_WITH_ENVIRONMENT_SKIP",
+          "passed": 1086,
+          "skipped": 1,
+          "failed": 0,
+          "pytest_seconds": 316.76,
+          "skip_test": "tests/test_b2_stream.py::test_streaming_peak_memory_stays_below_the_whole_dataset_footprint",
+          "skip_reason": "this runner does not allow resetting the peak-RSS counter (/proc/self/clear_refs)",
+          "memory_semantics": "RUSAGE_CHILDREN maximum process RSS including waited descendants, not simultaneous total RSS"
+        },
+        "pilot": {
+          "wall_seconds": 5.535426012,
+          "peak_rss_kib": 258400,
+          "n_train": 16,
+          "n_val_select": 16,
+          "n_val_calib": 16,
+          "n_clean_calibration": 2,
+          "n_known_test": 16,
+          "n_unknown": 10,
+          "n_matched": 6,
+          "production": false
+        }
+      },
+      "limitations": "Tiny CPU pilot and two clean calibration samples establish execution only; no recognition/population-Pfa claim"
     },
     "dual_pol_a5_plan_corruption": {
       "status": "PLANNED"
