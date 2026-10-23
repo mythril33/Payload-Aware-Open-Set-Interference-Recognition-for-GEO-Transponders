@@ -1,0 +1,14 @@
+{
+  "seed": 0,
+  "nthread": 1,
+  "max_rounds": 16,
+  "candidates": [8, 16],
+  "max_depth": 2,
+  "eta": 0.3,
+  "max_bin": 64,
+  "min_child_weight": 1.0,
+  "reg_lambda": 1.0,
+  "reg_alpha": 0.0,
+  "subsample": 1.0,
+  "colsample_bytree": 1.0
+}

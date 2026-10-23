@@ -1,6 +1,6 @@
 # Payload-Aware Open-Set Interference Recognition for GEO Transponders
 
-**B2 production readiness (2026-10-22; E1/E2 merged, bounded E3a implemented):** [P23 implementation/gate plan](docs/plan/P23_b2_production_readiness.md), [P26 EDSC baseline](docs/plan/P26_b2_e3a_edsc_baseline.md), [decision gate JSON](docs/plan/b2_readiness_gates_2026-10-21.json). Full production remains authorization-gated.
+**B2 production readiness (2026-10-23; E1/E2/E3a merged, bounded E3b implemented):** [P23 implementation/gate plan](docs/plan/P23_b2_production_readiness.md), [P26 EDSC](docs/plan/P26_b2_e3a_edsc_baseline.md), [P27 XGBoost](docs/plan/P27_b2_e3b_xgboost_baseline.md), [decision gate JSON](docs/plan/b2_readiness_gates_2026-10-21.json). Full production remains authorization-gated.
 
 
 GEO bent-pipe transponderindeki girişimi, operatörün downlink spektrum izlemesinden tanıyan derin öğrenme çalışması. Ders projesi; makaleye genişletilecek.
@@ -224,3 +224,16 @@ OSCR; two-group smoke evidence cannot establish population Pfa or recognition
 performance. See [P26](docs/plan/P26_b2_e3a_edsc_baseline.md) and
 [bounded verification](docs/results/b2_edsc_baseline.md). XGBoost is the proposed
 E3b follow-up; researcher and production gates remain pending.
+
+### E3b expert-feature/XGBoost CPU baseline
+
+With Python >=3.12, install the pinned CPU dependency with
+`pip install -e '.[dev,ml,xgb]'` (xgboost-cpu 3.4.1 requires Python >=3.12).
+`python -m geoml.b2_xgb --config configs/b2_xgb_smoke.json --data data/b2-readiness-known --unknown-data data/b2-readiness-test --matched-data data/b2-readiness-matched --out runs/b2-e3b-xgb-smoke --smoke --with-baselines`
+streams 26 fixed observation-only features from existing P20 artifacts, fits
+train only, selects one of two preregistered boosting prefixes on val-select,
+then freezes clean-only val-calib alarms before test scoring. The binary
+`1-P(clean)` score shares the EDSC/CFAR comparison contract; multiclass and
+MSP/OSCR reports are separate. See [P27](docs/plan/P27_b2_e3b_xgboost_baseline.md)
+and [bounded results](docs/results/b2_xgb_baseline.md). Tiny pilot values do
+not establish recognition quality or population Pfa; no production run is implied.
