@@ -69,6 +69,7 @@ pre-merge implementation session, not the recovery environment above.
 | Base | `main@ff81cae1b4e2563cc88271566665e9feae7cd44e` (after `git fetch origin main`, `origin/main == HEAD`) | VERIFIED |
 | Working branch | `claude/dazzling-maxwell-y0hw0q` (harness-designated; the master prompt's `feature/b2-e4-dual-pol-plan-corruption` was only a recommendation, the designated branch takes precedence) | VERIFIED |
 | Open PRs at start | none | VERIFIED |
+| Delivery | PR [#15](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/15) merged by the researcher as `4b736a6` (implementation head `a595bcf`, identical tree); follow-up evidence PR from the restarted designated branch | VERIFIED |
 | Python / platform | 3.13.16, Linux 6.18, 4 CPUs, 15 GiB, no GPU | VERIFIED |
 | Env | `/workspace/.venvs/geosim`, `torch==2.14.1`, `numpy==2.5.4`, `scipy==1.18.1`, `xgboost-cpu==3.4.1` | VERIFIED |
 | Existing data / checkpoints | none in the clone (`data/`, `runs/` are git-ignored) | VERIFIED |
@@ -114,18 +115,20 @@ pre-merge implementation session, not the recovery environment above.
 
 | Risk | Mitigation / status |
 |---|---|
-| Replay differs numerically from the stored shard (different BLAS/FFT) | parity policy with fail-closed tolerance; exact on the generating machine — VERIFIED in the pilot (see results note) |
+| Replay differs numerically from the stored shard (different BLAS/FFT) | parity policy with fail-closed tolerance; bit-exact on the generating machine for 90/90 pilot scene replays (BOUNDED_PILOT, see results note); cross-machine parity still untested |
 | Stale residual reused after a co-plan change | adapter tests count canceller calls; MASK_ONLY labelled separately |
 | Counterfactual label ambiguity | descriptive agreement metrics only; transition matrices |
 | Canceller rejects a meaningful belief plan | `blocked` + message counted; algorithm untouched |
 | Provenance break from adding source files | additions-only rule (P28 §6) and no edits to existing sources |
 | Small populations mistaken for evidence | caps, pilot labelling, null CIs below two groups |
 | Pilot checkpoints are chance-level stand-ins | disclosed; outputs are interface checks, not recognition results |
+| `MASK_ONLY` shift equals the K17b training augmentation of the stand-ins | stated in P28 §2 and the results note; compare `MASK_ONLY` and `RECEIVER_CONSISTENT` shifts with this in mind |
 
 ## 6. Work packages, ownership, execution
 
 Roles follow the master prompt. The runtime executed agents A–D sequentially in the integrator context (shared
-tree, strict file ownership below); Agent E was run as an independent read-only reviewer.
+tree, strict file ownership below); Agent E was run as a separate, independent read-only reviewer (first review of `8bedd2b`;
+re-review of `a595bcf`/`4b736a6` after the fixes and the resumability feature; see the review record).
 
 | Agent | Role | Owns |
 |---|---|---|
@@ -143,18 +146,15 @@ tree, strict file ownership below); Agent E was run as an independent read-only 
 
 ## 8. Resume / handoff (how to continue an interrupted E4 job)
 
-The implementation's original branch `claude/dazzling-maxwell-y0hw0q` was
-merged through PR #15; it is no longer a draft delivery. Current recovery
-state lives on `docs/b2-e4-postmerge-evidence` and in reproducible git-ignored
-`data/` and `runs/`. Re-entry must validate current provenance; a checksum
-alone is not sufficient evidence of compatibility.
+State lives in Git (branch `claude/dazzling-maxwell-y0hw0q`; PR #15 is merged, follow-ups are new PRs) and in re-creatable local artifacts under the git-ignored
+`data/` and `runs/`. Everything below is idempotent; re-running a command continues verified work and refuses modified work.
 
 | Interrupted step | Continue with | What is reused / rejected |
 |---|---|---|
 | Pilot generation (`geosim.b2_dataset`, `b2_matched_dataset`) | the same command and output directory | verified shards; a directory with a different request or an unverified partial shard is refused (use a fresh directory) |
 | Stand-in training (`geoml.b2_experiment`) | the same command with `--reuse` | checkpoints/scorers/calibrations whose provenance equals the data; mismatch is refused |
-| One A5 invocation (`python -m geoml.b2_a5 ...`) | the same command and `--out` | current data/source/frozen-model identity is checked; per-scene `out/state/` entries bind array and metadata evidence to the experiment fingerprint; uncommitted writes are discarded and modified entries refused; compatible complete results may be reused |
-| The pilot matrix | `scripts/run_b2_a5_pilot_matrix.sh` with the recorded explicit selection and overall budgets | every selected entry invokes the bounded CLI; complete results are accepted only after current provenance validation; interrupted entries resume from verified scene state; per-attempt logs/status survive failures; subset success remains exit3/PARTIAL |
+| One A5 invocation (`python -m geoml.b2_a5 ...`) | the same command and `--out` | per-scene `out/state/` entries (payload digest + array SHA-256, bound to the experiment fingerprint and library environment); the invocation's own uncommitted `*.tmp`/array files are discarded; modified or foreign entries are refused (digests detect accidental modification, they do not authenticate); a second concurrent process is refused by a lock; a complete checksummed result is reused after its identity verifies |
+| The pilot matrix | `scripts/run_b2_a5_pilot_matrix.sh` | every invocation is handed to the CLI: finished ones are reused after identity verification, an interrupted one resumes at scene level, a changed identity is refused (use a fresh `OUT`); failures and missing results make the script exit non-zero |
 | Summary | `scripts/summarize_b2_a5_pilot.py` (pure function of the invocation results) | refuses mixed identities |
 
 Historical pilot environment (implementation session; not recovered evidence): `scripts/setup_cloud.sh`-equivalent venv at `/workspace/.venvs/geosim`; pilot data

@@ -1,143 +1,57 @@
-# E4 post-merge independent scientific review — 2026-10-23
+# E4 independent scientific red-team review — 2026-10-23
 
-This is a separate read-only agent review within the engineering workflow,
-not an external scientific endorsement. The reviewer did not implement the
-fixes, edit source, fit a model, generate RF data or run the physical pilot.
-Scope: merged P28 and the plan/replay/evaluation modules, E1 validators,
-frozen checkpoint/scorer/calibration bindings, scene/result reuse, matrix
-orchestration, summarizer and adversarial tests. Base main is
-`4b736a6c425ab532e7c8e1bccc7c906f86ebe0be`; recovery engineering commit is
-`2ee03c53ea2183e1b227f09d428701215cfb2090`.
+Scope: read-only review of the dual-pol A5 harness (`src/geoml/b2_a5_plan.py`, `b2_a5_replay.py`, `b2_a5.py`, the
+`tests/test_b2_a5_*.py` files and `tests/b2_a5_support.py`, `scripts/summarize_b2_a5_pilot.py`, the CI step and the E4 claims in
+[P28](../plan/P28_b2_e4_dual_pol_a5.md), [the context pack](../engineering/B2_E4_CONTEXT.md), README and CLAUDE.md), following
+[.agents/review.md](../../.agents/review.md) and the master prompt's Agent E brief. The reviewer ran as a separate agent with no write
+access to the repository; the implementer (integrator) did not review its own code. This is engineering review within the agent workflow,
+not external scientific endorsement.
 
-## Findings and resolution
+P28 was committed (`b58c658`) before any code, replay or A5 outcome existed. The review checked the physical boundary (belief never reaches the
+simulator, IQ unchanged, canceller input), false-oracle and leakage paths, parity strength, provenance rules, frozen-protocol compatibility,
+statistics, caps, test quality and overstated claims.
 
-1. **Blocking, resolved — failure masking and checksum-only matrix skips.**
-   The old shell pipeline ended in `tail -3` without pipefail, hiding Python
-   failures. A matching result checksum also bypassed current provenance.
-   The new driver captures actual subprocess status and full per-attempt
-   logs, always enters the provenance-aware CLI, enforces the overall
-   budget before work, and records every canonical inventory slot.
-2. **Blocking, resolved — unbound committed scene metadata.** The reviewer
-   changed cached parity and work.replays to999 without changing the array
-   checksum; the old loader accepted it. State/2 now binds the entire
-   canonical metadata payload to SHA-256, rejects incompatible/legacy
-   schemas, duplicate keys, nonfinite values and inconsistent work/status/
-   parity/array bindings, and enforces logical replay/cancellation totals.
-   This is checksummed integrity, not an authenticated digital signature.
-3. **Resolved — misleading partial summaries.** The summary now verifies
-   all25 canonical names, per-result hashes/configurations and consistent
-   completion flags, status and totals. Empty parity populations yield
-   null rather than a vacuous true. Nine successful selected invocations
-   still mean PARTIAL, with16 pending invocation slots; pending slots are
-   distinct from non-applicable or blocked samples.
-4. **Resolved — counterfactual metric names.** Nested matched
-   `pair_accuracy*` fields become `pair_agreement_with_original_label*`
-   for MASK_ONLY/RECEIVER_CONSISTENT. Arithmetic and denominators remain
-   unchanged; original-condition accuracy remains conventional accuracy.
-5. **Resolved — cross-only invariance wording.** An unchanged co descriptor
-   causes no cancellation call and reuses the original replay residual.
-   Equality to stored residual requires exact replay parity. The accepted
-   0.125dB portability tolerance does not guarantee bit equality; a
-   regression checks this distinction without changing the receiver.
+## Round 1 — HEAD `8bedd2b` (against base `ff81cae`)
 
-No remaining material code blocker was found in the reviewed recovery
-commit. Physical sampling, RNG, perturbation definitions, cancellation,
-neural training code, fitting roles and thresholds are unchanged.
+Executed by the reviewer: the fast test files (`test_b2_a5_plan.py`, `test_b2_a5_negative.py`: 42 passed in 14 s) and ad-hoc snippets; it also
+read the in-progress pilot outputs. **Verdict: no BLOCKER.** The physical core held: the belief never reaches the simulator, the IQ is a
+read-only copy, the canceller receives only `iq[0]` through the generator's own `_residual` path, the residual is recomputed iff the co
+descriptor changed, `cross_only` never calls the canceller, models read only `spec/mask/residual`, the Mahalanobis/rejection/alarm identities
+match `b2_experiment` key for key, and E4 adds exactly three new source files.
 
-## Positive checks and evidence boundaries
+| ID | Severity | Defect (verified by the reviewer) | Disposition (commit `a595bcf` unless stated) |
+|---|---|---|---|
+| M1 | MATERIAL | `reproduction_command` omitted the CLI `--perturbation/--scope` overrides, so 24 of 25 pilot records pointed at a different experiment; the matched config lived outside the repo | **Fixed.** Overrides are recorded; resolved `a5_config.json` is written; `configs/b2_a5_matched_smoke.json` committed; test re-runs the recorded command and checks the same `experiment_fingerprint` |
+| M2 | MATERIAL | Summarizer compared identities only between two `known` invocations; matched or mixed inputs were never compared, contradicting its docstring | **Fixed.** Known fingerprint, checkpoints, calibration, cancellation, run config, source and per-stage request/artifact identities are always compared; mixed-stage and re-signed-tamper negatives added |
+| m1 | MINOR | Reuse fingerprint omitted the run directory's `config.json` (pfa, methods), scorer/rejection hashes and non-E4 sources, so a changed alarm rule could return a stale result | **Fixed.** Fingerprint now covers the resolved run config, frozen-file hashes and the full source tree; test edits a frozen run file and expects a new identity |
+| m2 | MINOR | Only applicable scenes are replayed/parity-checked, P28 said "every selected scene" | **Clarified** in P28 §5 and the §13 log |
+| m3 | MINOR | Two binding negatives passed through generic manifest integrity, not the targeted check | **Strengthened:** a second valid known artifact (other canceller settings) exercises the matched↔known binding with its own message. The defensive cancellation-equality check cannot be reached with a legitimately generated artifact (the generator refuses it) and is stated as such |
+| m4 | MINOR | `stale_plan` gloss ("the plan the operator held") is not what the formula does | **Corrected** in P28 §3 (formula `default_plan(2(id−1)+pol)`; preceding id may be outside the roles and its group may have redrawn plans); the stale-and-invalid case is `blocked` (also i4) |
+| m5 | MINOR | `phantom_overlaps_physical_event` only for the co descriptor | **Fixed:** per-polarization flags |
+| m6 | MINOR | `original` scored on all rows then sliced, counterfactuals on the applicable subset (batch-composition effects ~1e-5) | **Fixed:** the paired `original` is scored with the same batching; the `none` test asserts exact 0.0 |
+| m7 | MINOR | Results recorded only E4 source hashes and no SciPy version (P28 promised current hashes) | **Fixed:** full source-file hashes, tree fingerprint, frozen-file hashes, SciPy version |
+| m8 | MINOR | Summary text hard-coded "chance-level stand-ins"; `all_parity_exact` counted `None` as exact | **Fixed:** note is an input; checked/unchecked invocations are counted separately |
+| m9 | MINOR | Weaker-than-named assertions; union test skipped `authorize_intruder`; no real-physics matched replay | **Fixed:** exact equality; union test includes `authorize_intruder`; real-physics matched replay test |
+| i1 | INFO | `open_replay_source` could open train/validation roles | **Fixed:** A5 replays the frozen `test` role only |
+| i2 | INFO | The 0.125 dB tolerance applies on any machine; only `exact=false` signals a difference | Accepted and documented; pilot values lie in −120…−70 dB so it is two float16 ulps |
+| i3 | INFO | The stand-ins were trained with the K17b mask-shift augmentation, confounding `MASK_ONLY` shifts | **Stated** in the results note (§4) |
 
-Only spec/mask/residual cross the model input boundary. Labels, scenario
-IDs and plan-consistency targets are bookkeeping, with permutation tests.
-The replay has no belief argument; physical IQ is read-only, and the
-receiver gets calibrated co IQ, corrupted co belief and frozen P20 config.
-`authorize_intruder` deliberately uses privileged true carrier parameters
-to construct the controlled test intervention. It is not a deployable
-oracle detector and must not be described as having no simulator truth
-anywhere in the experiment.
+Overstated or unsupported claims found, and their disposition: links to a non-existent results note (now committed with the evidence);
+"chance-level stand-ins" without committed evidence (now in the results note); "verified equal to stored"/"identical by construction" without the
+parity condition (P28 reworded); "union (tested)" (test extended); `clean_false_alarm`/`event_detection` read as false-alarm/detection rates under
+counterfactuals (reworded as alarm rates among original-clean / original-event scenes, in P28, the results text and the report table headers);
+the P18 log row that listed `stale_plan` among "frozen" perturbations (reworded: defined by P28); invariant A described as tested although it
+holds by construction (P28 reworded).
 
-Physical-IQ invariance evidence consists of the replay/receiver boundary,
-runtime assertions and physical tests with before/after IQ hashes and
-simulator/canceller spies. Pilot JSON persists PSD/mask/residual/metadata
-parity, not raw IQ or per-scene IQ hashes. These evidence types stay separate.
+Residual risks named by the reviewer and kept open: cross-machine bit-parity is untested (CI generates and replays on the same runner); batch
+composition may matter on other BLAS/oneDNN builds; NumPy/SciPy versions recorded in an artifact's request are not compared with the current
+ones (only the parity check protects against version drift).
 
-E1 fully verifies known/matched shard checksums and contents before complete
-result reuse. Replay also checks generator, calibration and cancellation
-identity. Frozen run-file hashes enter the experiment fingerprint, so
-modified checkpoint/scorer/calibration/config/results cannot reuse it.
-No test/matched fitting or threshold selection was found. Clean alarm and
-known-acceptance rejection calibrations remain distinct.
+## Round 2 — re-review of the fixes and of the resumability feature
 
-Group bootstrap resamples scenario IDs together, uses explicit sample and
-scenario denominators and gives null intervals below two groups. Matched
-clean/other-known/rejected predictions remain in the denominator.
-Bootstrap conditions on the fitted scorer and threshold; training,
-calibration, simulator and field uncertainty are absent.
+Requested for commit `a595bcf` (merged to `main` as `4b736a6`, identical tree): verification of every row above, and an attack on the new
+resumable-state design (`SceneState`, `_output_state`, per-scene `state/`, `scripts/run_b2_a5_pilot_matrix.sh`). The first attempt was
+interrupted by an external API usage limit; it was resumed after the limit reset.
 
-## Independent commands actually run
+**Status at this commit: round 2 is still running; its findings are not yet part of this record.** They are appended below when the reviewer reports, together with the resulting fixes.
 
-All runs used Python at `/workspace/.venvs/geosim/bin/python`, with
-OMP/OPENBLAS/MKL threads2 and Agg rendering. Logs and measurement records
-are under the ignored `/tmp/b2-e4-review/` directory in this workspace.
-
-- Initial merged code: plan/eval/negative/resume/summary modules,
-  **78 passed in62.68s**, process65.717846s, peak428504KiB, exit0.
-- Post-fix focused modules excluding real RF replay: **116 passed
-  in247.13s**, process249.878580s, peak431204KiB. Pytest exit0;
-  the wrapper returned9 because only summary source/test changed during
-  the run. This is not a certificate of every final file.
-- Final affected summary regression (three node IDs, including a two-case
-  parametrization): **4 passed in49.80s**, process52.207503s,
-  peak437412KiB, pytest/wrapper exit0, source/test hash guard stable.
-
-```bash
-/workspace/.venvs/geosim/bin/python -m pytest -q \
- tests/test_b2_a5_summary.py::test_uninventoried_or_partial_results_never_claim_full_matrix_completion \
- tests/test_b2_a5_summary.py::test_checksummed_non_strict_json_is_rejected \
- tests/test_b2_a5_summary.py::test_invocations_without_scenes_are_counted_not_called_exact
-```
-
-The reviewer did not run an independent full repository suite or real RF
-generation. The integrator's separate tests and actual bounded pilot are
-in the [results note](../results/b2_a5_dual_pol_pilot.md).
-
-Historical PR15 CI was independently checked: head
-`a595bcfae465e30dd8263cbeb57fae29b7dc9102`, run39947778403,
-job120394555595, success;95passed116.27s +1087passed234.45s, zero
-skips/failures. This is evidence for the merged implementation, not the
-new recovery PR head.
-
-## Final numerical evidence closure
-
-The reviewer separately read the final nine raw invocations, summary,
-state and arrays; no new simulation, replay, inference, fitting or test
-was started. Result:9invocations/36 selected scene-slots =32applied +4
-not-applicable +0blocked;32physical replays/56cancellations/24receiver
-recomputations/312scored sample evaluations. These are repeated evaluation
-slots, not36 independent physical scenarios. All32 checked replays had
-exact parity and maximum difference0dB. The matrix is PARTIAL9/25,
-16pending, zero failed/missing, zero unavailable views.
-
-All9 result sidecars/summary hashes,36state metadata fingerprints and32
-NPZ checksums matched. Current source hashes, frozen checkpoint/scorer/
-calibration files and independently recomputed experiment fingerprints
-matched. Known fingerprint is
-`1c510cd0d5eb76e4dc61d36497699fc9a938633f740bd375f2abd0a1f3928b81`;
-matched fingerprint is
-`6ff7970eb6f28e9a4780a588f2b9f4fde93d6b734aa2af3c42b4e5230a56bf4e`.
-
-Every cached receiver-consistent PSD was bit-equal to its stored PSD;
-cross-only/none cached residuals were bit-equal to stored residuals on
-this exact-parity pilot. All none-condition logit displacements were0;
-co/dual MASK_ONLY and RECEIVER_CONSISTENT logits were identical. Clean/
-event denominators, zero-denominator nulls and group counts were checked.
-No nested counterfactual accuracy field remained. Maximum reported process
-RSS was742884KiB, below the planned1572864KiB bound. Sampling of the
-matrix driver did not certify simultaneous child-tree memory; the result
-uses per-invocation self RSS and waited-child peak accounting.
-
-No material numerical evidence blocker remained. Two scenario groups, two
-clean calibration observations and three-epoch stand-in models support
-execution checks only. They cannot establish population Pfa5%, recognition
-quality or robustness. Full matrix coverage and representative scientific
-validation remain separate. K18/K17d/OBS-CANCEL/2 and production/GPU/LOKO
-approvals remain unchanged; benchmark_complete=false.

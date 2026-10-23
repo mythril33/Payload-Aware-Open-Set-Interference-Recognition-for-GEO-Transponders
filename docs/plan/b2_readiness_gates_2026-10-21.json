@@ -294,139 +294,52 @@
       "merge_sha": "ff81cae1b4e2563cc88271566665e9feae7cd44e"
     },
     "dual_pol_a5_plan_corruption": {
-      "status": "MERGED_ENGINEERING_BOUNDED_PARTIAL_EVIDENCE_VERIFIED",
-      "merged_pr": 15,
-      "merge_sha": "4b736a6c425ab532e7c8e1bccc7c906f86ebe0be",
+      "status": "BOUNDED_HARNESS_IMPLEMENTED_MERGED_PR_15",
       "protocol": "B2-A5-eval/1",
-      "plan_contract": "B2-A5-plan/1",
-      "implementation_ci": {
-        "pr": 15,
-        "head_sha": "a595bcfae465e30dd8263cbeb57fae29b7dc9102",
-        "run_id": 39947778403,
-        "job_id": 120394555595,
-        "conclusion": "success",
-        "status": "VERIFIED_SUCCESS_ON_MERGED_PR_15_HEAD",
-        "synthetic_merge_sha": "2d570bf26e99e94325a543d4da3cdcbb82c399d4",
+      "evidence": "docs/plan/P28_b2_e4_dual_pol_a5.md; docs/results/b2_a5_dual_pol_pilot.md; docs/research/b2_e4_red_team_review.md; tests/test_b2_a5_*.py",
+      "scope": "Capped CPU harness (2 groups, 2 classes, one configuration, 16 replays, 24 cancellations); frozen-checkpoint evaluation of counterfactual operator beliefs with physical replay and recomputed obs-cancel/1 residual; pilot checkpoints are chance-level stand-ins; no recognition or robustness claim; resumable per-scene state",
+      "merge_sha": "4b736a6c425ab532e7c8e1bccc7c906f86ebe0be",
+      "implementation_head_sha": "a595bcfae465e30dd8263cbeb57fae29b7dc9102",
+      "pr_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/15",
+      "verification": {
         "e4_tests": {
           "passed": 95,
-          "skipped": 0,
-          "failed": 0,
-          "pytest_seconds": 116.27
+          "ci_step_wall_s": 116.27
         },
-        "remaining_tests": {
-          "passed": 1087,
-          "skipped": 0,
+        "local_full_suite": {
+          "passed": 1182,
           "failed": 0,
-          "pytest_seconds": 234.45
+          "pytest_wall_s": 475.02,
+          "subprocess_wall_s": 476.89,
+          "peak_rss_kib": 1716256,
+          "exit_code": 0,
+          "date": "2026-10-23"
         },
-        "scope": "Historical merged E4 implementation evidence; not the postmerge recovery branch CI",
-        "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39947778403"
+        "github_actions": {
+          "run_id": 39947778403,
+          "job_id": 120394555595,
+          "head_sha": "a595bcfae465e30dd8263cbeb57fae29b7dc9102",
+          "conclusion": "success",
+          "remaining_suite_passed": 1087,
+          "remaining_suite_wall_s": 234.45,
+          "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39947778403"
+        },
+        "bounded_pilot": {
+          "invocations": 25,
+          "physical_replays": 90,
+          "parity_checked_scenes": 90,
+          "all_parity_exact": true,
+          "cancellation_evaluations": 154,
+          "receiver_recomputations": 64,
+          "new_generation": "2 groups/role known pilot and 2 matched groups only",
+          "model_training": "3-epoch stand-in checkpoints via the existing pilot configuration, not an E4 code path"
+        }
       },
-      "postmerge_engineering_commit": "2ee03c53ea2183e1b227f09d428701215cfb2090",
-      "execution_plan": "docs/engineering/B2_E4_POSTMERGE_EXECUTION.json",
-      "pilot_evidence_status": "NINE_OF_TWENTY_FIVE_PARTIAL_SIXTEEN_PENDING",
-      "evidence": "docs/results/b2_a5_dual_pol_pilot.md; docs/results/b2_a5_dual_pol_pilot.json; docs/results/b2_a5_dual_pol_pilot_table.md",
-      "review": "docs/research/b2_e4_red_team_review.md",
-      "full_matrix_complete": false,
-      "recognition_performance_validated": false,
-      "full_generation_executed": false,
-      "gpu_training_executed": false,
-      "review_status": "NO_REMAINING_MATERIAL_CODE_OR_NUMERICAL_EVIDENCE_FINDING",
-      "pilot_counts": {
-        "invocations_complete": 9,
-        "inventory": 25,
-        "pending": 16,
-        "failed": 0,
-        "missing": 0,
-        "selected_scene_slots": 36,
-        "applied_scene_slots": 32,
-        "not_applicable_scene_slots": 4,
-        "blocked_scene_slots": 0,
-        "physical_replays": 32,
-        "cancellation_evaluations": 56,
-        "receiver_recomputations": 24,
-        "exact_parity_checks": 32
-      },
-      "validation": {
-        "full_local": {
-          "command": [
-            "/workspace/.venvs/geosim/bin/python",
-            "-m",
-            "pytest",
-            "-q",
-            "-rs"
-          ],
-          "environment": {
-            "OMP_NUM_THREADS": "2",
-            "OPENBLAS_NUM_THREADS": "2",
-            "MKL_NUM_THREADS": "2",
-            "MPLBACKEND": "Agg",
-            "CUDA_VISIBLE_DEVICES": ""
-          },
-          "wall_seconds": 719.8930690939997,
-          "peak_rss_kib": 1298088,
-          "sampled_root_process_peak_rss_kib": 1298412,
-          "exit_code": 0,
-          "blocked": null,
-          "passed": 1220,
-          "skipped": 1,
-          "failed": 0,
-          "pytest_seconds": 718.13,
-          "skip_test": "tests/test_b2_stream.py::test_streaming_peak_memory_stays_below_the_whole_dataset_footprint",
-          "skip_reason": "this runner does not allow resetting the peak-RSS counter (/proc/self/clear_refs)",
-          "scope": "Two summary-only source/test paths changed after launch; final affected regression below covers that delta; all detector/model/physical code unchanged"
-        },
-        "final_affected_summary": {
-          "command": [
-            "/workspace/.venvs/geosim/bin/python",
-            "-m",
-            "pytest",
-            "-q",
-            "tests/test_b2_a5_summary.py"
-          ],
-          "environment": {
-            "OMP_NUM_THREADS": "2",
-            "OPENBLAS_NUM_THREADS": "2",
-            "MKL_NUM_THREADS": "2",
-            "MPLBACKEND": "Agg",
-            "CUDA_VISIBLE_DEVICES": ""
-          },
-          "wall_seconds": 98.11671057500007,
-          "peak_rss_kib": 436480,
-          "sampled_root_process_peak_rss_kib": 436792,
-          "exit_code": 0,
-          "blocked": null,
-          "passed": 7,
-          "skipped": 0,
-          "failed": 0,
-          "pytest_seconds": 94.79,
-          "scope": "Final affected summary module, after last code/test change"
-        },
-        "independent_affected_summary": {
-          "command": [
-            "/workspace/.venvs/geosim/bin/python",
-            "-m",
-            "pytest",
-            "-q",
-            "tests/test_b2_a5_summary.py::test_uninventoried_or_partial_results_never_claim_full_matrix_completion",
-            "tests/test_b2_a5_summary.py::test_checksummed_non_strict_json_is_rejected",
-            "tests/test_b2_a5_summary.py::test_invocations_without_scenes_are_counted_not_called_exact"
-          ],
-          "wall_seconds": 52.20750275099999,
-          "peak_rss_kib": 437412,
-          "exit_code": 0,
-          "sources_unchanged_during_run": true,
-          "tested_files_sha256": {
-            "scripts/summarize_b2_a5_pilot.py": "4caa95fa6aafc910f8f64f504b55fd4fbc7ebc3ec4cfee2183ae88fde2ad4606",
-            "tests/test_b2_a5_summary.py": "5c2bca22aea5ccb18750ddcf2f284bbfec340e8c95af5afa05b8306d02bd0c9e",
-            "src/geoml/b2_a5.py": "fb44c7eefa6cf1e9e5d411fb6b6c1a8d18e8018db765d4421392642e2d5097d4"
-          },
-          "scope": "Independent affected regression after the final summary-only coverage/status/totals changes; no real RF generation"
-        },
-        "pilot_wall_seconds": 272.10364062200006,
-        "pilot_peak_process_rss_kib": 742884,
-        "scope": "Partial execution evidence only; two groups/stage and two clean calibration samples do not establish recognition or Pfa precision; exact new PR-head CI is recorded in its description"
-      }
+      "not_authorized_and_not_started": [
+        "full B2 generation",
+        "full GPU training",
+        "full LOKO sweep"
+      ]
     },
     "github_actions_ci": {
       "pr": 15,
