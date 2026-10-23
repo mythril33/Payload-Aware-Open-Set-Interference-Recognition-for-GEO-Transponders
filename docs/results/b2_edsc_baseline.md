@@ -274,6 +274,30 @@ no scientific smoke result and launches no production job.
 The implementation commit was normally pushed to the feature branch and
 [draft PR #11](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/11)
 was opened against unchanged `main`. This results-only follow-up records
-the completed local repeat. The final PR-head Actions evidence is maintained
-in the PR description with exact run/job/commit links; the PR remains draft
-and unmerged.
+the completed local repeat. The initial publication status above was a snapshot. PR #11 was subsequently
+merged externally, and PR #12 delivered the four document updates. Verified
+final states and independent remote CI evidence are recorded below.
+
+## Verified E3a delivery closure — 2026-10-23
+
+GitHub now verifies PR #11 merged as `af5910c6e1598a90bf2afe864ca23acd0f381c02`
+and PR #12 merged as `9300620c13ae81cf16b1ef6ec9e59f2a6026f53c`. Neither merge
+was invoked by the delivery agent; researcher decision objects remain unchanged.
+The current verified remote main is the latter commit. PR #12 changed only
+DURUM, readiness gates, and the MD/JSON result notes.
+
+- [Implementation run39921568709](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39921568709),
+  job120307794277, head `ec47a90b9e8f9ed756bee822d1c2b548830951ee`: **1024 passed,
+  0 skipped, 0 failed in249.90s**, completed/success.
+- [Delivery run39922726893](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39922726893),
+  job120311592843, head `bb589b4b4290da63ffa923add8d893b655b8149c`: **1024 passed,
+  0 skipped, 0 failed in223.50s**, completed/success. Its log records synthetic
+  merge9036bcf (that head into af5910c6).
+
+These are actual GitHub job-log test summaries. The local1023passed+1skipped
+result remains unchanged: its environment could not reset `/proc/self/clear_refs`.
+GitHub supported that RSS check and passed all1024 tests. This records two
+different runner capabilities, not a change to the test population or a waived
+scientific check. No new detector experiment was run for this records update.
+E3a's implementation/delivery/CI engineering prerequisite is satisfied; this
+does not grant production, GPU, LOKO or researcher-decision approval.

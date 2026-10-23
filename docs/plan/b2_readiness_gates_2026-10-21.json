@@ -7,7 +7,8 @@
     "sha": "2cc473fad07fc08984c17e212a06ddb26409a9cd",
     "reported_tests_passed": 978,
     "retested_in_this_change": false,
-    "test_evidence": "Historical E2 local suite: docs/results/b2_loko_harness.md; current E3a verification is recorded separately"
+    "test_evidence": "Historical E2 local suite: docs/results/b2_loko_harness.md; current E3a verification is recorded separately",
+    "scope": "Historical E3a implementation starting point; current verified main is recorded separately"
   },
   "scope": "Readiness plan; no researcher approvals implied",
   "benchmark_complete": false,
@@ -68,7 +69,7 @@
       "pr_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/10"
     },
     "edsc": {
-      "status": "BOUNDED_BASELINE_IMPLEMENTED_DRAFT_PR_11",
+      "status": "IMPLEMENTED_MERGED_PR_11_DELIVERY_EVIDENCE_MERGED_PR_12",
       "protocol": "EDSC/1",
       "branch": "feature/b2-e3a-edsc-baseline",
       "evidence": "docs/plan/P26_b2_e3a_edsc_baseline.md; docs/results/b2_edsc_baseline.md; tests/test_edsc.py; tests/test_b2_edsc.py; tests/test_b2_edsc_metrics.py",
@@ -145,12 +146,42 @@
           "skip_test": "tests/test_b2_stream.py::test_streaming_peak_memory_stays_below_the_whole_dataset_footprint",
           "skip_reason": "this runner does not allow resetting the peak-RSS counter (/proc/self/clear_refs)",
           "memory_semantics": "RUSAGE_CHILDREN maximum process RSS including waited descendants; not aggregate simultaneous RSS"
+        },
+        "github_actions_implementation": {
+          "pr": 11,
+          "head_sha": "ec47a90b9e8f9ed756bee822d1c2b548830951ee",
+          "run_id": 39921568709,
+          "job_id": 120307794277,
+          "conclusion": "success",
+          "passed": 1024,
+          "skipped": 0,
+          "failed": 0,
+          "pytest_seconds": 249.9,
+          "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39921568709",
+          "job_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39921568709/job/120307794277"
+        },
+        "github_actions_delivery": {
+          "pr": 12,
+          "head_sha": "bb589b4b4290da63ffa923add8d893b655b8149c",
+          "synthetic_merge_sha_prefix": "9036bcf",
+          "run_id": 39922726893,
+          "job_id": 120311592843,
+          "conclusion": "success",
+          "passed": 1024,
+          "skipped": 0,
+          "failed": 0,
+          "pytest_seconds": 223.5,
+          "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39922726893",
+          "job_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39922726893/job/120311592843"
         }
       },
       "limitations": "Two clean calibration observations and tiny test groups are execution evidence only; no population Pfa or recognition-performance precision; full production remains gated",
       "pr_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/11",
       "implementation_commit": "ec47a90b9e8f9ed756bee822d1c2b548830951ee",
-      "ci_evidence_location": "Draft PR #11 description: per-head verified Actions result, run/job/head SHA and full-suite count/skip evidence; historical E2 CI below is not an E3a result"
+      "ci_evidence_location": "Verified implementation CI and delivery CI are recorded below with exact head/run/job identifiers",
+      "implementation_merge_sha": "af5910c6e1598a90bf2afe864ca23acd0f381c02",
+      "delivery_pr_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/12",
+      "delivery_merge_sha": "9300620c13ae81cf16b1ef6ec9e59f2a6026f53c"
     },
     "xgboost_baseline": {
       "status": "PLANNED"
@@ -159,13 +190,30 @@
       "status": "PLANNED"
     },
     "github_actions_ci": {
-      "status": "VERIFIED_SUCCESS_ON_PR_10_HEAD",
+      "pr": 12,
+      "head_sha": "bb589b4b4290da63ffa923add8d893b655b8149c",
+      "synthetic_merge_sha_prefix": "9036bcf",
+      "run_id": 39922726893,
+      "job_id": 120311592843,
+      "conclusion": "success",
+      "passed": 1024,
+      "skipped": 0,
+      "failed": 0,
+      "pytest_seconds": 223.5,
+      "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39922726893",
+      "job_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39922726893/job/120311592843",
+      "status": "VERIFIED_SUCCESS_ON_PR_12_HEAD",
       "workflow": ".github/workflows/b2-readiness-ci.yml",
-      "run_id": 39741030340,
-      "head_sha": "a138608faed6beae16c24170ccec06aa6dba3f9b",
-      "job_id": 119698005413,
-      "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39741030340",
-      "scope": "GitHub evidence for E2 head only; no E3a CI claim"
+      "scope": "Remote full repository tests1024passed0skips; local1023passed1RSSskip remains separate",
+      "historical_e2": {
+        "status": "VERIFIED_SUCCESS_ON_PR_10_HEAD",
+        "workflow": ".github/workflows/b2-readiness-ci.yml",
+        "run_id": 39741030340,
+        "head_sha": "a138608faed6beae16c24170ccec06aa6dba3f9b",
+        "job_id": 119698005413,
+        "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39741030340",
+        "scope": "GitHub evidence for E2 head only; no E3a CI claim"
+      }
     }
   },
   "permitted_without_new_researcher_decisions": [
@@ -193,5 +241,10 @@
     "docs/plan/P23_b2_production_readiness.md",
     "docs/results/b2_production_budget.md"
   ],
-  "integrity_note": "Proposed researcher decisions are not approvals. Preserve frozen semantics and strictly segregate train, val-select, val-calib, test and test-matched."
+  "integrity_note": "Proposed researcher decisions are not approvals. Preserve frozen semantics and strictly segregate train, val-select, val-calib, test and test-matched.",
+  "verified_remote_main": {
+    "sha": "9300620c13ae81cf16b1ef6ec9e59f2a6026f53c",
+    "date": "2026-10-23",
+    "note": "PR11 implementation and PR12 four-document delivery evidence are merged; actor actions do not alter researcher approval objects"
+  }
 }
