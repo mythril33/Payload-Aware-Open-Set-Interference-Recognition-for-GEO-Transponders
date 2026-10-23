@@ -835,6 +835,9 @@ def verify_workdir(workdir, *, depth="checksum", max_full=2, require_clean=None)
                                    production=plan["mode"] == "production")
         item = pre.audit_check(audit)
         found = {role: info["observations_committed"] for role, info in audit["roles"].items()}
+        if audit["state"] == "RESUMABLE":                      # e.g. every shard committed but the manifest is missing
+            item = pre.check(item["id"], item["title"], pre.NOT_RUN,
+                             f"stage is not COMPLETE ({item['message']}): the generator still has work to do", **audit)
         if audit["state"] == "COMPLETE" and found != plan["expected_observations"][stage]:
             item = pre.check(item["id"], item["title"], pre.FAIL, f"inventory {found} differs from the plan "
                              f"{plan['expected_observations'][stage]}", **audit)

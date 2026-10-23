@@ -1,0 +1,1191 @@
+{
+  "schema": "B2-training-proposal/1",
+  "status": "PROPOSAL_NOT_FROZEN",
+  "frozen": false,
+  "approved": false,
+  "benchmark_complete": false,
+  "date": "2026-10-23",
+  "base_commit": "755b474b7a2c506ec03441a7d15ed365c47addb1",
+  "source_citation_note": "All file:line citations: line numbers refer to commit 755b474; src/geoml/train.py and src/geoml/b2_stream.py were being edited by another work package in the same checkout while this was written.",
+  "statement": "A reviewable candidate production-training specification. It is not frozen, not approved and not written into any config. Approving any part of it does not authorize full generation, GPU use, training or LOKO; those remain separate gates.",
+  "configs_touched": false,
+  "gate_status_mirrored_from": "docs/plan/b2_readiness_gates_2026-10-21.json (read only)",
+  "gates": {
+    "K18": "PENDING_RESEARCHER",
+    "K17d": "PENDING_RESEARCHER",
+    "OBS-CANCEL-2": "PENDING_RESEARCHER",
+    "full_generation": "NOT_AUTHORIZED",
+    "full_gpu_training": "NOT_AUTHORIZED",
+    "full_loko_sweep": "NOT_AUTHORIZED"
+  },
+  "basis_legend": {
+    "existing_config": "value present in a committed config or frozen protocol text",
+    "repository_default": "value that is a code default or stated in a closed design document, but not frozen in a production config",
+    "plan_assumption": "value that exists only in planning documents as an assumption",
+    "engineering_recommendation": "proposal of this work package; no repository source",
+    "not_in_repository": "(alternatives only) a possible value no repository document names"
+  },
+  "parameters": {
+    "views": {
+      "value": [
+        "co",
+        "dual",
+        "dual_residual"
+      ],
+      "basis": "existing_config",
+      "source": "configs/b2_feat.json:3-7; src/geoml/data.py:43-44 (VIEWS, VIEW_CHANNELS: 2/4/5 channels); P18 section 5 (five-channel main model, co view as matched ablation)",
+      "needs_researcher_approval": true,
+      "alternatives": [
+        {
+          "value": [
+            "dual_residual"
+          ],
+          "basis": "engineering_recommendation",
+          "note": "main five-channel model only: 3 fits for 3 seeds instead of 9"
+        },
+        {
+          "value": [
+            "co",
+            "dual_residual"
+          ],
+          "basis": "engineering_recommendation",
+          "note": "6 fits; drops the four-channel dual ablation (P18 section 8 A4)"
+        }
+      ],
+      "consequence": "GPU/CPU cost is linear in the number of views: 3 views x 3 seeds = 9 fits (3.24 M sample-passes at 30 epochs). The mapping of these views onto the P18 section 8 ablation names (A0-A2, A4) is not asserted here.",
+      "approval": null,
+      "approval_group": "R1"
+    },
+    "training_seed_count": {
+      "value": 3,
+      "basis": "existing_config",
+      "source": "P18_b2_protocol.md:150 and :152 ('3 egitim tohumu (K17, kullanici karari)' for LOKO and statistics); P6_modeller.md:43 (tag: assumption)",
+      "needs_researcher_approval": false,
+      "alternatives": [],
+      "consequence": "Fixed by the K17 user decision for the statistics and LOKO; listed so that it is visible, not as a new choice. Training-seed uncertainty is reported separately from the scenario-group bootstrap (P18 section 7; E5 plan step 7).",
+      "approval": null,
+      "note": "P6 section 4 says results are averaged over the seeds; P18 section 7 says seed uncertainty is separate. The cross-seed aggregation rule is not frozen anywhere (see not_decided_here)."
+    },
+    "training_seed_values": {
+      "value": [
+        0,
+        1,
+        2
+      ],
+      "basis": "repository_default",
+      "source": "src/geoml/b2_loko.py:81 (seeds=(0, 1, 2)); P18_b2_protocol.md:261 (E2 log: 'explicit harness choice'); configs/b2_feat.json:21 (pilot seed 0)",
+      "needs_researcher_approval": true,
+      "alternatives": [
+        {
+          "value": "any other three distinct non-negative integers",
+          "basis": "not_in_repository",
+          "note": "must be written down before the first fit; no seed search or selection of the best seed"
+        }
+      ],
+      "consequence": "The seed fixes weight initialisation (torch.manual_seed), epoch/window order, mirror/roll augmentation and K17b shift draws (src/geoml/train.py:237,252; b2_stream.py:448). b2_experiment runs ONE seed per invocation, so three seeds are three invocations with three configs and three output directories (b2_experiment.py:65,101,431). All seeds are reported; none is chosen by test outcome.",
+      "approval": null,
+      "approval_group": "R1"
+    },
+    "model_width": {
+      "value": 16,
+      "basis": "repository_default",
+      "source": "src/geoml/train.py:26 (TrainConfig.width=16); P6_modeller.md:30 (stages 16/32/64/128 channels, about 310,000 parameters); P18_b2_protocol.md:126 ('P6 settings, no search'). Pilot: configs/b2_feat.json:20 (width 8).",
+      "needs_researcher_approval": true,
+      "alternatives": [
+        {
+          "value": 8,
+          "basis": "existing_config",
+          "note": "pilot width; 79,377 parameters (dual_residual), D=128; the production budget (b2_production_budget.md:74) and the E5 GPU-memory line assume THIS size"
+        },
+        {
+          "value": 32,
+          "basis": "not_in_repository",
+          "note": "1,235,241 parameters, D=512; no document asks for it; 11.9x the forward MACs of width 8"
+        }
+      ],
+      "consequence": "Width fixes the embedding size D = 16 x width (model.py:44,51-53) and with it the K18 scale: the P20-versus-P21b centre-term ratio is D/2 = 64 / 128 / 256 for widths 8 / 16 / 32, so K18 cannot be judged apart from the width. Compute: forward MACs per sample (dual_residual) 0.097 G / 0.321 G / 1.154 G, i.e. width 16 is 3.3x width 8; the 200-1000 samples/s assumption was stated for the ~80 k-parameter (width 8) model, so it does not carry over to width 16.",
+      "approval": null,
+      "approval_group": "R2",
+      "by_width": {
+        "8": {
+          "width": 8,
+          "n_parameters_by_view": {
+            "co": 78777,
+            "dual": 79177,
+            "dual_residual": 79377
+          },
+          "n_parameters_optimized_dual_residual": 80401,
+          "embedding_dim_D": 128,
+          "p20_over_p21b_center_term_ratio": 64.0,
+          "p20_weight_times_D": 0.64,
+          "forward_gmacs_per_sample_dual_residual": 0.097,
+          "fp32_static_training_state_mib": 1.23
+        },
+        "16": {
+          "width": 16,
+          "n_parameters_by_view": {
+            "co": 310505,
+            "dual": 311305,
+            "dual_residual": 311705
+          },
+          "n_parameters_optimized_dual_residual": 313753,
+          "embedding_dim_D": 256,
+          "p20_over_p21b_center_term_ratio": 128.0,
+          "p20_weight_times_D": 1.28,
+          "forward_gmacs_per_sample_dual_residual": 0.321,
+          "fp32_static_training_state_mib": 4.79
+        },
+        "32": {
+          "width": 32,
+          "n_parameters_by_view": {
+            "co": 1232841,
+            "dual": 1234441,
+            "dual_residual": 1235241
+          },
+          "n_parameters_optimized_dual_residual": 1239337,
+          "embedding_dim_D": 512,
+          "p20_over_p21b_center_term_ratio": 256.0,
+          "p20_weight_times_D": 2.56,
+          "forward_gmacs_per_sample_dual_residual": 1.154,
+          "fp32_static_training_state_mib": 18.92
+        }
+      },
+      "note": "'candidate' = the repository default and the reading of P18 section 5 (hyperparameters = P6 settings); nothing freezes it. The pilot and the budget use 8."
+    },
+    "time_pool": {
+      "value": 2,
+      "basis": "repository_default",
+      "source": "src/geoml/train.py:25; P6_modeller.md:26 ('Varsayilan 2; GPU'da 1 kullanilabilir'); src/geoml/data.py:37",
+      "needs_researcher_approval": true,
+      "alternatives": [
+        {
+          "value": 1,
+          "basis": "repository_default",
+          "note": "P6 section 2 names it as a GPU option: input 5 x 128 x 512, twice the activation memory and MACs; no document adopts it"
+        }
+      ],
+      "consequence": "Input per sample is 5 x 64 x 512 (dual_residual) at time_pool 2, which is what every footprint and budget number here assumes. time_pool 1 doubles activation bytes and MACs and changes the preprocessing (no row averaging).",
+      "approval": null,
+      "approval_group": "R2"
+    },
+    "level": {
+      "value": "carrier",
+      "basis": "repository_default",
+      "source": "src/geoml/train.py:24; P6_modeller.md:21-25; docs/plan/P18_b2_protocol.md:36",
+      "needs_researcher_approval": false,
+      "alternatives": [
+        {
+          "value": "absolute",
+          "basis": "repository_default",
+          "note": "ablation only (P6 section 2)"
+        }
+      ],
+      "consequence": "Per-sample planned-carrier reference hides absolute power from the model (no oracle input). 'absolute' would need a training-only reference and is an ablation, not the primary model.",
+      "approval": null
+    },
+    "epochs": {
+      "value": 30,
+      "basis": "repository_default",
+      "source": "src/geoml/train.py:27 (TrainConfig.epochs=30); P6_modeller.md:40 (tagged assumption); B2_E5_PRODUCTION_EXECUTION_PLAN.md:37 and b2_production_budget.md:74 (3 views x 3 seeds x 30 epochs). Pilot: configs/b2_feat.json:18 (3 epochs).",
+      "needs_researcher_approval": true,
+      "alternatives": [
+        {
+          "value": "any fixed N",
+          "basis": "not_in_repository",
+          "note": "cost per fit = 12,000 x N sample-passes; the OneCycle schedule is re-scaled to N, so a shorter run is a different run, not a truncation"
+        },
+        {
+          "value": "early stopping",
+          "basis": "not_in_repository",
+          "note": "not implemented; would change OneCycle semantics (the schedule length is fixed by total_steps)"
+        }
+      ],
+      "consequence": "30 epochs is an ASSUMPTION in every source (P6 tags it [VARSAYIM]; the E6 audit finding audit.production_training_config_missing records that no frozen production config exists). It was never validated on B2 data (the pilots ran 3 epochs on 16 observations). Choosing N from data is legitimate only with train and val-select evidence and a rule registered before the data is looked at; see epochs_selection_procedure.",
+      "approval": null,
+      "approval_group": "R4"
+    },
+    "epochs_selection_procedure": {
+      "value": "fixed budget N chosen before any test evaluation, from train/val-select evidence only, or adopted unchanged from P6",
+      "basis": "engineering_recommendation",
+      "source": "src/geoml/train.py:281-292 and b2_stream.py:495-506 (per-epoch val-select macro-F1 and best_epoch are already logged in 'history'); docs/plan/b2_readiness_gates_2026-10-21.json 'prohibited_without_explicit_approval' (no test-driven hyperparameter selection)",
+      "needs_researcher_approval": true,
+      "alternatives": [
+        {
+          "value": "adopt 30 unchanged (P6)",
+          "basis": "repository_default",
+          "note": "no sizing run; accepts the assumption"
+        },
+        {
+          "value": "one single-seed, single-view sizing run per researcher-listed candidate N on train/val-select",
+          "basis": "engineering_recommendation",
+          "note": "compare best val-select macro-F1 and best_epoch under a selection rule registered in advance (tolerance not decided here); each candidate is a full re-scheduled fit"
+        }
+      ],
+      "consequence": "A sizing run MUST NOT go through geoml.b2_experiment as it is: the runner evaluates the test role (and val-calib thresholds) in the same invocation (b2_experiment.py:479-499, no train-only flag at :766-775). It would have to call geoml.b2_stream.fit_streaming on the train and val-select sources only; no such driver exists. If best_epoch sits at the last epoch the budget was probably too short; if it sits early the late low-learning-rate epochs add little. Neither statement is evidence yet: no B2 production data exists.",
+      "approval": null,
+      "approval_group": "R4"
+    },
+    "batch_size": {
+      "value": 32,
+      "basis": "repository_default",
+      "source": "src/geoml/train.py:28 (TrainConfig.batch=32); P6_modeller.md:40. Pilot: configs/b2_feat.json:19 (batch 8).",
+      "needs_researcher_approval": true,
+      "alternatives": [
+        {
+          "value": 8,
+          "basis": "existing_config",
+          "note": "pilot batch; the E5 GPU-memory line and the production budget assume it; 1,500 steps per epoch"
+        },
+        {
+          "value": 64,
+          "basis": "not_in_repository",
+          "note": "tool cap only; no document asks for it"
+        }
+      ],
+      "consequence": "12,000 / 32 = 375 steps per epoch, 11,250 per 30-epoch fit (OneCycleLR total_steps); batch 8 gives 1,500 and 45,000. Both divide 12,000 exactly, so no short final batch. BatchNorm uses batch statistics: a batch is drawn from one window of 128 observations (16 scenario groups x 8 paired variants at 4 groups/shard, 4 shards). Analytic fp32 activation memory per batch (dual_residual, width 16): 107.0 MiB at batch 8, 428.1 MiB at batch 32.",
+      "approval": null,
+      "approval_group": "R5"
+    },
+    "optimizer": {
+      "value": {
+        "name": "AdamW",
+        "peak_lr": 0.001,
+        "weight_decay": 0.0001,
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "param_groups": 1,
+        "decay_applies_to": "all parameters: convolutions, BatchNorm affine, linear heads, auxiliary head and the CenterLoss centres"
+      },
+      "basis": "repository_default",
+      "source": "src/geoml/train.py:29,31,248-249; src/geoml/b2_stream.py:453-454; P6_modeller.md:39; betas/eps are the torch defaults (torch 2.14.1 in the verification environment)",
+      "needs_researcher_approval": true,
+      "alternatives": [
+        {
+          "value": "no-decay group for BatchNorm/bias/centres",
+          "basis": "not_in_repository",
+          "note": "needs a source edit (changes the source lock)"
+        },
+        {
+          "value": "separate centre learning rate or optimizer (Wen et al. form)",
+          "basis": "not_in_repository",
+          "note": "P20_b2_cancellation_residual.md:132-133 records that the centres share the AdamW decay instead (a frozen convention of that stage); needs a source edit"
+        }
+      ],
+      "consequence": "Decoupled weight decay 1e-4 also shrinks the centre-loss centres towards zero, which weakens the centre term slightly and interacts with K18. Betas and eps are library defaults, not repository values: the production lock must pin the torch version.",
+      "approval": null,
+      "approval_group": "R6"
+    },
+    "learning_rate_schedule": {
+      "value": {
+        "name": "OneCycleLR",
+        "max_lr": 0.001,
+        "total_steps": "epochs x ceil(12000 / batch)",
+        "step": "once per optimizer step",
+        "pct_start": 0.3,
+        "anneal_strategy": "cos",
+        "div_factor": 25.0,
+        "final_div_factor": 10000.0,
+        "three_phase": false,
+        "cycle_momentum": true,
+        "base_momentum": 0.85,
+        "max_momentum": 0.95,
+        "initial_lr": 4e-05,
+        "final_lr": 4e-09
+      },
+      "basis": "repository_default",
+      "source": "src/geoml/train.py:250-251,278; src/geoml/b2_stream.py:456-457,490; P6_modeller.md:39 ('tek dongu'); pct_start .. max_momentum are torch OneCycleLR defaults read with inspect.signature in torch 2.14.1",
+      "needs_researcher_approval": true,
+      "alternatives": [
+        {
+          "value": "constant or cosine schedule",
+          "basis": "not_in_repository",
+          "note": "needs a source edit"
+        }
+      ],
+      "consequence": "Only max_lr and total_steps are set by the repository; everything else is the library default of the installed torch (momentum cycling moves AdamW beta1 between 0.85 and 0.95). The final learning rate is ~4e-9, so late epochs barely move the weights; the checkpoint rule can therefore still select an early epoch.",
+      "approval": null,
+      "approval_group": "R6"
+    },
+    "gradient_clipping": {
+      "value": "none",
+      "basis": "repository_default",
+      "source": "no torch.nn.utils.clip_grad_* call anywhere in src/ or scripts/ (git grep at the base commit); src/geoml/train.py:275-278",
+      "needs_researcher_approval": true,
+      "alternatives": [
+        {
+          "value": "global-norm clipping",
+          "basis": "not_in_repository",
+          "note": "needs a source edit and a registered clip value"
+        }
+      ],
+      "consequence": "As implemented, gradients are unclipped; the OneCycle warm-up (lr starts at 4e-5) is the only stabiliser.",
+      "approval": null,
+      "approval_group": "R6"
+    },
+    "precision_and_determinism": {
+      "value": {
+        "precision": "fp32",
+        "autocast": false,
+        "data_loader_workers": 0,
+        "deterministic_algorithms": false
+      },
+      "basis": "repository_default",
+      "source": "git grep at the base commit finds no autocast, GradScaler, DataLoader, num_workers, cudnn.deterministic or use_deterministic_algorithms in src/ or scripts/; b2_experiment.py:772 (--device default cpu, 'cuda' must be passed)",
+      "needs_researcher_approval": false,
+      "alternatives": [],
+      "consequence": "All footprint numbers are fp32. A GPU run is not bit-reproducible, so a fit restarted from epoch 0 is a new draw of the same seed and configuration, not a replay. Data loading is synchronous in the training process (see expected_sample_passes_and_wall_clock).",
+      "approval": null
+    },
+    "loss_composition": {
+      "value": "cross-entropy (unweighted, mean) + center_loss_weight x centre loss + plan_loss_weight x plan BCE (auxiliary head, independent of the label)",
+      "basis": "existing_config",
+      "source": "src/geoml/train.py:269-274; src/geoml/b2_stream.py:481-486; src/geoml/model.py:64-77 (centre loss = sum over D of squared distance to the class centre, mean over the batch); configs/b2_feat.json:8,22-23",
+      "needs_researcher_approval": false,
+      "alternatives": [],
+      "consequence": "Structure as implemented and used by the pilots; only the two weights are open (K18). The classes are balanced by construction: each of the 1,500 train groups contributes one observation per label, i.e. 1,500 per class.",
+      "approval": null
+    },
+    "center_loss_weight": {
+      "value": 0.005,
+      "basis": "existing_config",
+      "source": "configs/b2_feat.json:22; P20_b2_cancellation_residual.md:84-88 (K18 candidate, 'needs researcher confirmation'); P18_b2_protocol.md:258 (section 10 log 2026-10-21)",
+      "needs_researcher_approval": true,
+      "alternatives": [
+        {
+          "value": "K18 option A (keep 0.005 x sum_d)",
+          "basis": "existing_config",
+          "note": "recommended in the E6 packet"
+        },
+        {
+          "value": "K18 option B (0.01 x mean_d, P21b convention)",
+          "basis": "existing_config",
+          "note": "term is D/2 times weaker: 64 / 128 / 256 at widths 8 / 16 / 32"
+        },
+        {
+          "value": "K18 option C (pre-registered other weight from train/val-select only)",
+          "basis": "not_in_repository",
+          "note": "an extra search; section 10 entry required"
+        },
+        {
+          "value": "K18 option D (0, centre loss off)",
+          "basis": "not_in_repository",
+          "note": "removes the pre-registered mechanism"
+        }
+      ],
+      "consequence": "PENDING_RESEARCHER (gate K18). See B2_E6_RESEARCHER_DECISION_PACKET.md section 2 for the full analysis; it is not repeated here. The only width-dependent fact added here: the weight on the per-dimension mean square is 0.005 x D = 0.64 / 1.28 / 2.56 at widths 8 / 16 / 32.",
+      "approval": null,
+      "approval_group": "R3",
+      "k18_status": "PENDING_RESEARCHER"
+    },
+    "plan_loss_weight": {
+      "value": 1.0,
+      "basis": "existing_config",
+      "source": "configs/b2_feat.json:23; src/geoml/train.py:35; P18_b2_protocol.md:258",
+      "needs_researcher_approval": true,
+      "alternatives": [
+        {
+          "value": "other weight",
+          "basis": "not_in_repository",
+          "note": "part of K18 option C if changed"
+        }
+      ],
+      "consequence": "Part of the K18 candidate pair (0.005, 1.0). The auxiliary head is monitored but never used for checkpoint selection.",
+      "approval": null,
+      "approval_group": "R3"
+    },
+    "plan_shift_augmentation": {
+      "value": {
+        "fraction": 0.15,
+        "max_hz": 500000.0,
+        "distribution": "continuous U(-max, +max) per selected sample",
+        "selection": "Bernoulli per sample per batch (expected fraction, not exact)",
+        "scope": "training only; val-select, val-calib and test masks are never shifted"
+      },
+      "basis": "existing_config",
+      "source": "configs/b2_feat.json:24-25; P18_b2_protocol.md:170-175 (K17b, written before results); src/geoml/train.py:185-207 (Bernoulli at :194, shift at :195)",
+      "needs_researcher_approval": false,
+      "alternatives": [],
+      "consequence": "Frozen by the pre-registered K17b section of P18; carried unchanged. The full preprocessing is re-run for the selected rows (the carrier reference follows the shifted plan), which costs host CPU time and keeps a float16 copy of the window spectra while enabled.",
+      "approval": null
+    },
+    "mirror_roll_augmentation": {
+      "value": {
+        "enabled": true,
+        "mirror": "frequency-axis flip with probability 0.5 per sample",
+        "roll": "circular time shift, ONE random shift per mini-batch (not per sample)"
+      },
+      "basis": "repository_default",
+      "source": "src/geoml/train.py:30,263-266; src/geoml/b2_stream.py:475-478; P6_modeller.md:41",
+      "needs_researcher_approval": true,
+      "alternatives": [
+        {
+          "value": false,
+          "basis": "repository_default",
+          "note": "augment=False is a valid TrainConfig value; not proposed"
+        }
+      ],
+      "consequence": "Carried from P6 (tagged assumption). The mirror ignores the slight IMUX/OMUX asymmetry (P6 section 4). The per-batch roll means the samples of a batch share a time offset.",
+      "approval": null,
+      "approval_group": "R6"
+    },
+    "streaming_groups_per_shard": {
+      "value": 4,
+      "basis": "plan_assumption",
+      "source": "B2_E5_PRODUCTION_EXECUTION_PLAN.md (production command, groups-per-shard 4); b2_e6_audit_findings.json audit.shard_default_hazard; the generators default to 8: src/geosim/b2_dataset.py:39",
+      "needs_researcher_approval": true,
+      "alternatives": [
+        {
+          "value": 8,
+          "basis": "repository_default",
+          "note": "generator default: 64 observations per shard, 32 scenario groups per 4-shard window, but twice the interruption loss in generation"
+        }
+      ],
+      "consequence": "A generation-request parameter (part of the fingerprint, cannot change after generation): it belongs to DR-04 and is listed here only because it fixes the training window. 4 groups = 32 observations = 12.06 MiB raw float16 and 20.0 MiB preprocessed float32 (dual_residual); the 1,500 train groups are 375 shards.",
+      "approval": null,
+      "approval_group": "R7"
+    },
+    "streaming_window_shards": {
+      "value": 4,
+      "basis": "repository_default",
+      "source": "src/geoml/b2_stream.py:67 (DEFAULT_WINDOW_SHARDS=4, 'a declared engineering choice, not a tuned value'); src/geoml/b2_experiment.py:67; P24_b2_e1_streaming_loader.md:91-103",
+      "needs_researcher_approval": true,
+      "alternatives": [
+        {
+          "value": 1,
+          "basis": "repository_default",
+          "note": "4 scenario groups per window: weakest batch diversity, smallest memory"
+        },
+        {
+          "value": 8,
+          "basis": "not_in_repository",
+          "note": "doubles the window; steady window bytes scale linearly (128 MiB at 4 shards)"
+        },
+        {
+          "value": 375,
+          "basis": "not_in_repository",
+          "note": "one window = the whole train role = uniform permutation like the legacy path, but 12.6 GB of float32 inputs plus plan-shift copy resident (analytic)"
+        }
+      ],
+      "consequence": "BLOCKED SHUFFLE (P24 section 5): whole shards are permuted per epoch, samples are permuted inside a window, the 8 paired variants of a group always share a window, and a mini-batch can draw from at most window_shards x groups_per_shard = 16 scenario groups (4 x 4; 32 at 8 groups per shard), plus carried remainder rows only if the window size is not a multiple of the batch (128 and the final 96-observation window are multiples of 8 and 32, so none here). BatchNorm statistics and the augmentation RNG stream therefore differ from a uniform permutation. window_shards enters the experiment fingerprint. Analytic window memory at (4 groups, 4 shards): 128 MiB steady, 128.2 MiB while building; at (8 groups, 4 shards): 256 MiB.",
+      "approval": null,
+      "approval_group": "R7"
+    },
+    "checkpoint_selection_rule": {
+      "value": "best val-select macro-F1 over the 8 known classes (clean + 7), evaluated after every epoch; strict '>' so the first epoch reaching the maximum is kept; the auxiliary plan head is monitored, not selected on",
+      "basis": "existing_config",
+      "source": "src/geoml/train.py:281-292; src/geoml/b2_stream.py:495-506; P18_b2_protocol.md:258 (section 10 log); P20_b2_cancellation_residual.md:81-83",
+      "needs_researcher_approval": false,
+      "alternatives": [],
+      "consequence": "Frozen. val-select is 150 groups = 1,200 observations, so the selection is noisy at the percent level; no test, val-calib or test-only data can reach this rule.",
+      "approval": null
+    },
+    "mahalanobis_fit": {
+      "value": {
+        "statistics": "train-role embeddings of the selected checkpoint (eval mode), class-conditional",
+        "regularization": 0.1
+      },
+      "basis": "existing_config",
+      "source": "configs/b2_feat.json:16; src/geoml/b2_experiment.py:495,510; P18_b2_protocol.md:115",
+      "needs_researcher_approval": false,
+      "alternatives": [],
+      "consequence": "Frozen; fitted per (view, seed) model after the checkpoint is chosen; never sees val or test data.",
+      "approval": null
+    },
+    "calibration": {
+      "value": {
+        "acceptance_target": 0.95,
+        "clean_alarm_pfa": 0.05,
+        "data": "val-calib, known classes only",
+        "quantile": "higher empirical quantile, inclusive acceptance"
+      },
+      "basis": "existing_config",
+      "source": "configs/b2_feat.json:14-15; src/geoml/b2_experiment.py:175,516-518,535; src/geoml/calibration.py:100-110; P18_b2_protocol.md:94,148-149",
+      "needs_researcher_approval": false,
+      "alternatives": [],
+      "consequence": "Frozen. Thresholds come from 1,200 val-calib observations (150 clean for the alarm threshold); the test role is evaluated once with them.",
+      "approval": null
+    },
+    "test_evaluation_coupling": {
+      "value": "the runner evaluates the test role (and the bound B2-test/1 and B2-match/1 sets, if given) immediately after each view's training, inside the same invocation",
+      "basis": "repository_default",
+      "source": "src/geoml/b2_experiment.py:479-499 (loop over views: fit, then infer test), :766-775 (no train-only or skip-test flag); B2_E5_PRODUCTION_EXECUTION_PLAN.md step 7 ('freeze all nine selected checkpoints ... before final test evaluation')",
+      "needs_researcher_approval": true,
+      "alternatives": [
+        {
+          "value": "procedural freeze: the full 3x3 plan, configs and seed list are registered and run unchanged; test metrics of earlier fits are not used to alter later ones",
+          "basis": "engineering_recommendation",
+          "note": "no code change; relies on discipline"
+        },
+        {
+          "value": "reviewed source edit adding a train-only mode (fit + select + scorer + thresholds, no test inference)",
+          "basis": "engineering_recommendation",
+          "note": "edits src/geoml, so it must land before the production source lock"
+        }
+      ],
+      "consequence": "Per model, role hygiene holds: weights, checkpoint, scorer and thresholds are fixed before that model touches test data. What the current runner cannot do is the E5 plan's 'all nine frozen before any test evaluation': seed 0's test numbers exist before seed 1 is trained.",
+      "approval": null,
+      "approval_group": "R8"
+    },
+    "interruption_policy": {
+      "value": "restart the interrupted (view, seed) fit from epoch 0 and record the parent checkpoint hash and restarted=true; never splice partial epochs",
+      "basis": "engineering_recommendation",
+      "source": "src/geoml/train.py:313-321 (save() stores the best-epoch model state, config, history and reference only: no optimizer, scheduler, RNG or data cursor); B2_E5_PRODUCTION_EXECUTION_PLAN.md:88-92; b2_e6_audit_findings.json audit.training_interruption_recovery (BLOCKED)",
+      "needs_researcher_approval": true,
+      "alternatives": [
+        {
+          "value": "implement a reviewed snapshot binding optimizer, OneCycle scheduler, torch global and Generator RNG state, epoch, window/shard order, best_state, history, plus source/data/config/environment identities",
+          "basis": "engineering_recommendation",
+          "note": "edits src/geoml (source lock), needs a bit-exact CPU resume test; on GPU a resumed run still is not bit-reproducible (no deterministic flags)"
+        }
+      ],
+      "consequence": "Restart cost is bounded by ONE fit: 360,000 sample-passes = 0.1-0.5 h of compute at the assumed 1000-200 samples/s, about 0.65 h of synchronous loader time on an E1-like host; on this CPU (measured, dual_residual batch 32) 1.97 h at width 8 and 3.91 h at width 16 per fit. A snapshot only pays if the real per-fit time is hours, which the DR-05 probe must establish first.",
+      "approval": null,
+      "approval_group": "R9"
+    },
+    "expected_cpu_ram": {
+      "value": {
+        "measured_step_peak_over_baseline_mib": {
+          "dual_residual_w8_b8": 131.2,
+          "dual_residual_w16_b32": 632.7,
+          "dual_residual_w32_b32": 1161.7
+        },
+        "measured_rss_baseline_mib": 713.2,
+        "analytic_window_steady_mib_4groups_4shards": 128.0,
+        "analytic_window_steady_mib_8groups_4shards": 256.0,
+        "planning_figure_in_E5_plan": "16 GiB host RAM recommended (unmeasured at scale)"
+      },
+      "basis": "engineering_recommendation",
+      "source": "scripts/b2_training_footprint.py run recorded in evidence.footprint_run (basis measured on this CPU / analytic); docs/results/b2_streaming_memory.md sections 2 and 4 (E1, bounded fixtures); B2_E5_PRODUCTION_EXECUTION_PLAN.md:35",
+      "needs_researcher_approval": true,
+      "alternatives": [],
+      "consequence": "A step at the largest capped configuration (dual_residual, width 32, batch 32) peaked 1161.7 MiB above a 716.8 MiB baseline on this CPU; adding the 128 MiB window (4 groups x 4 shards) gives about 2.0 GiB, far below the 16 GiB planning figure. This is a step measurement plus window arithmetic, NOT a measurement of a full 12,000-observation run (no such run exists).",
+      "approval": null,
+      "approval_group": "DR-05"
+    },
+    "expected_gpu_vram": {
+      "value": {
+        "label": "analytic estimate, not measured; needs the authorized GPU probe",
+        "dual_residual_mib_lower_upper": {
+          "w8_b8": [
+            59.7,
+            113.3
+          ],
+          "w8_b32": [
+            235.3,
+            449.3
+          ],
+          "w16_b8": [
+            116.8,
+            223.8
+          ],
+          "w16_b32": [
+            452.9,
+            881.0
+          ],
+          "w32_b8": [
+            238.0,
+            452.0
+          ],
+          "w32_b32": [
+            895.1,
+            1751.3
+          ]
+        },
+        "excludes": "CUDA context, cuDNN/cuBLAS workspaces, allocator fragmentation, mixed precision",
+        "planning_reservation_in_E5_plan": "8 GiB minimum, 12 GiB preferred for batch 8 / width 8 (unmeasured)"
+      },
+      "basis": "engineering_recommendation",
+      "source": "scripts/b2_training_footprint.py (analytic: weights + gradients + AdamW state + BatchNorm buffers + input batch + autograd-saved activations; upper bound adds activation gradients <= saved bytes)",
+      "needs_researcher_approval": true,
+      "alternatives": [],
+      "consequence": "Analytic only. The largest capped configuration has an upper bound of 1.71 GiB, inside the 8 GiB planning minimum, but nothing was measured on a GPU and the excluded terms (context, workspaces, fragmentation) are not small in general. The authorized DR-05 probe must replace this estimate.",
+      "approval": null,
+      "approval_group": "DR-05"
+    },
+    "expected_sample_passes_and_wall_clock": {
+      "value": {
+        "train_observations": 12000,
+        "epochs_assumed": 30,
+        "fits": 9,
+        "sample_passes_per_fit": 360000,
+        "sample_passes_total": 3240000,
+        "val_select_forward_passes_total": 324000,
+        "assumed_throughput_samples_per_s": [
+          200,
+          1000
+        ],
+        "assumed_pure_training_gpu_hours": [
+          0.9,
+          4.5
+        ],
+        "reservation_in_E5_plan_gpu_hours": 6,
+        "synchronous_loader_estimate": {
+          "seconds_per_epoch": 78.4,
+          "minutes_per_30_epoch_fit": 39.2,
+          "hours_for_nine_fits": 5.88,
+          "basis": "assumed: P24 section 2 read estimate (34 s per epoch) + 12,000 obs / 270 obs/s measured preprocessing in E1 on a different, loaded CPU"
+        },
+        "cpu_only_fallback_hours_per_fit_compute_only": {
+          "basis": "assumed: measured warm CPU step rate (dual_residual, batch 32, this run) x assumed 30 epochs; excludes loader and evaluation",
+          "w8_b32": 1.97,
+          "w16_b32": 3.91,
+          "w32_b32": 12.5
+        }
+      },
+      "basis": "plan_assumption",
+      "source": "docs/results/b2_production_budget.md:74; B2_E5_PRODUCTION_EXECUTION_PLAN.md:37; docs/results/b2_streaming_memory.md:48-49 and P24 section 2 (loader rates); scripts/b2_training_footprint.py assumed_budget",
+      "needs_researcher_approval": true,
+      "alternatives": [
+        {
+          "value": "measure end-to-end throughput including the loader in the authorized DR-05 probe",
+          "basis": "engineering_recommendation",
+          "note": "replaces every assumed number in this record"
+        }
+      ],
+      "consequence": "The 200-1000 samples/s band is an assumption stated for the width-8 model; width 16 has 3.3x the MACs. Separately, no prefetch or worker exists, so loader time adds to compute time: at E1 rates it is about 39 min per fit and 5.9 h for nine fits, which alone approaches the 6 GPU-h reservation (0.9-4.5 h compute + 5.9 h loader if not overlapped). The E1 rates were measured on a different, loaded CPU; the GPU host may be faster. This is why the probe must measure end to end.",
+      "approval": null,
+      "approval_group": "DR-05"
+    },
+    "compute_hardware": {
+      "value": "not decided: GPU model, VRAM, host CPU/RAM, library build and thread settings",
+      "basis": "plan_assumption",
+      "source": "B2_E5_RESEARCHER_DECISIONS.md DR-E5-05 (probe first, then fits); b2_readiness_gates_2026-10-21.json full_gpu_training NOT_AUTHORIZED",
+      "needs_researcher_approval": true,
+      "alternatives": [],
+      "consequence": "Decided by DR-05 together with the authorized probe; this proposal grants nothing.",
+      "approval": null,
+      "approval_group": "DR-05"
+    }
+  },
+  "researcher_decisions": [
+    {
+      "id": "R1",
+      "title": "Scope of fits: views and training seeds",
+      "parameters": [
+        "views",
+        "training_seed_count",
+        "training_seed_values"
+      ],
+      "sentence": "R1: I approve training the views [co, dual, dual_residual | dual_residual only | ...] with the fixed training seeds [0, 1, 2] per view ([9 | 3 | ...] fits); all seeds are reported and none is selected by outcome."
+    },
+    {
+      "id": "R2",
+      "title": "Model width and input resolution",
+      "parameters": [
+        "model_width",
+        "time_pool",
+        "level"
+      ],
+      "sentence": "R2: I choose model width [8 | 16 | 32] and time_pool [2 | 1] with the per-sample carrier reference (level 'carrier')."
+    },
+    {
+      "id": "R3",
+      "title": "K18 loss convention and weights (depends on R2)",
+      "parameters": [
+        "center_loss_weight",
+        "plan_loss_weight"
+      ],
+      "sentence": "R3: K18: I choose option [A | B | C | D]; centre-loss weight [..], plan-BCE weight [..]; add the train-only centre/CE diagnostic: [yes | no]. (Wording as in B2_E6_RESEARCHER_DECISION_PACKET.md section 6.)"
+    },
+    {
+      "id": "R4",
+      "title": "Epoch budget and how it is fixed",
+      "parameters": [
+        "epochs",
+        "epochs_selection_procedure"
+      ],
+      "sentence": "R4: I fix the budget at [N] epochs for every fit (fixed-length OneCycle schedule, no early stopping); N is [taken unchanged from P6 | chosen by the pre-registered train/val-select sizing rule: ...] and no test, test-only, matched or val-calib result informs it."
+    },
+    {
+      "id": "R5",
+      "title": "Batch size",
+      "parameters": [
+        "batch_size"
+      ],
+      "sentence": "R5: I fix the batch size at [8 | 32 | ...]."
+    },
+    {
+      "id": "R6",
+      "title": "Optimizer, schedule, clipping, augmentation (the P6 recipe)",
+      "parameters": [
+        "optimizer",
+        "learning_rate_schedule",
+        "gradient_clipping",
+        "mirror_roll_augmentation"
+      ],
+      "sentence": "R6: I approve AdamW (peak lr [1e-3], weight decay [1e-4] on all parameters including BatchNorm, biases and centres, torch default betas/eps) with OneCycleLR (torch defaults: pct_start 0.3, cosine, div_factor 25, final_div_factor 1e4, momentum cycling 0.85-0.95), no gradient clipping, fp32, mirror (p = 0.5) plus one circular time roll per batch, on the pinned torch version."
+    },
+    {
+      "id": "R7",
+      "title": "Streaming window and sample-order policy",
+      "parameters": [
+        "streaming_groups_per_shard",
+        "streaming_window_shards"
+      ],
+      "sentence": "R7: I accept the blocked-shuffle sample order with [4] groups per shard and [4] shards per window (at most [16] scenario groups per window) as the production training order."
+    },
+    {
+      "id": "R8",
+      "title": "Test-evaluation coupling",
+      "parameters": [
+        "test_evaluation_coupling"
+      ],
+      "sentence": "R8: I choose [procedural freeze of the 3 x 3 plan | a reviewed train-only mode before the source lock] to keep test evaluation after all fits are frozen."
+    },
+    {
+      "id": "R9",
+      "title": "Interruption policy",
+      "parameters": [
+        "interruption_policy"
+      ],
+      "sentence": "R9: an interrupted fit [restarts from epoch 0 with the parent checkpoint hash recorded | resumes from a reviewed snapshot implemented before long training]."
+    }
+  ],
+  "not_decided_here": [
+    "Approval of this proposal: every record's approval is null; nothing here is frozen, locked or registered in a config.",
+    "K18, K17d and OBS-CANCEL/2 (gates stay PENDING_RESEARCHER); full generation, full GPU training and the full LOKO sweep (stay NOT_AUTHORIZED).",
+    "GPU model, VRAM ceiling, host machine, the bounded throughput/VRAM probe and its caps (DR-05).",
+    "Resource ceilings for training (GPU-hours, wall time, disk): the 6 GPU-h reservation is an E5 planning figure, not an authorization.",
+    "Training recipe for the LOKO folds (same recipe or a reduced one) and the LOKO dispatcher / cross-seed aggregation (not implemented).",
+    "The cross-seed aggregation rule for reporting (P6: averaged; P18: seed uncertainty separate); only 'report per seed, bootstrap separately' is stated by the plan.",
+    "The tolerance and candidate list of any epoch-sizing rule (R4).",
+    "Which P18 section 8 ablation names the three views correspond to.",
+    "Whether the observation-only train-time diagnostics being added by another work package (center/CE ratio) are accepted: that is R3, not decided here.",
+    "Any change to configs/, protocol documents P18-P28, src/ or the gates file: this work package touched none of them."
+  ],
+  "evidence": {
+    "footprint_run": {
+      "tool": "scripts/b2_training_footprint.py",
+      "schema": "B2-training-footprint/1",
+      "command": "OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 MKL_NUM_THREADS=2 CUDA_VISIBLE_DEVICES= PYTHONHASHSEED=0 python scripts/b2_training_footprint.py --out runs/footprint/b2_training_footprint.json --time-cap-s 120 --total-cap-s 1500 --warm-steps 2 --threads 2",
+      "environment": {
+        "generated_utc": "2026-10-23T19:16:46+00:00",
+        "python": "3.13.17",
+        "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+        "torch": "2.14.1",
+        "numpy": "2.5.4",
+        "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+        "cpu_count": 4,
+        "host_ram_kib": 16477348,
+        "load_average_before": 1.07373046875,
+        "load_average_after": 3.28662109375,
+        "git_head": "755b474b7a2c506ec03441a7d15ed365c47addb1",
+        "git_working_tree_dirty": true,
+        "device": "cpu (children run with CUDA_VISIBLE_DEVICES='')"
+      },
+      "basis": "step memory and times are measured on this CPU (4 vCPU Xeon, load average rose to about 3.3 from other agents' work, so times are noisy and memory is the more reliable column); VRAM, parameter and activation columns are analytic; no GPU, no data, no training",
+      "rows": [
+        {
+          "view": "co",
+          "width": 8,
+          "batch": 8,
+          "status": "ok",
+          "n_parameters_model": 78777,
+          "embedding_dim_D": 128,
+          "input_batch_mib": 2.0,
+          "saved_activation_mib": 53.5,
+          "gpu_vram_analytic_lower_mib": 56.7,
+          "gpu_vram_analytic_upper_mib": 110.2,
+          "cpu_rss_baseline_mib": 694.3,
+          "cpu_cold_step_peak_over_baseline_mib": 130.4,
+          "cpu_warm_step_peak_over_baseline_mib": 127.5,
+          "cpu_cold_step_wall_s": 0.37,
+          "cpu_warm_step_wall_s_median": 0.238,
+          "cpu_warm_samples_per_s": 33.7
+        },
+        {
+          "view": "co",
+          "width": 8,
+          "batch": 32,
+          "status": "ok",
+          "n_parameters_model": 78777,
+          "embedding_dim_D": 128,
+          "input_batch_mib": 8.0,
+          "saved_activation_mib": 214.0,
+          "gpu_vram_analytic_lower_mib": 223.3,
+          "gpu_vram_analytic_upper_mib": 437.3,
+          "cpu_rss_baseline_mib": 700.2,
+          "cpu_cold_step_peak_over_baseline_mib": 414.3,
+          "cpu_warm_step_peak_over_baseline_mib": 415.5,
+          "cpu_cold_step_wall_s": 2.67,
+          "cpu_warm_step_wall_s_median": 0.683,
+          "cpu_warm_samples_per_s": 46.8
+        },
+        {
+          "view": "co",
+          "width": 16,
+          "batch": 8,
+          "status": "ok",
+          "n_parameters_model": 310505,
+          "embedding_dim_D": 256,
+          "input_batch_mib": 2.0,
+          "saved_activation_mib": 107.0,
+          "gpu_vram_analytic_lower_mib": 113.8,
+          "gpu_vram_analytic_upper_mib": 220.8,
+          "cpu_rss_baseline_mib": 695.1,
+          "cpu_cold_step_peak_over_baseline_mib": 221.9,
+          "cpu_warm_step_peak_over_baseline_mib": 230.9,
+          "cpu_cold_step_wall_s": 0.28,
+          "cpu_warm_step_wall_s_median": 0.208,
+          "cpu_warm_samples_per_s": 38.4
+        },
+        {
+          "view": "co",
+          "width": 16,
+          "batch": 32,
+          "status": "ok",
+          "n_parameters_model": 310505,
+          "embedding_dim_D": 256,
+          "input_batch_mib": 8.0,
+          "saved_activation_mib": 428.1,
+          "gpu_vram_analytic_lower_mib": 440.9,
+          "gpu_vram_analytic_upper_mib": 868.9,
+          "cpu_rss_baseline_mib": 701.2,
+          "cpu_cold_step_peak_over_baseline_mib": 652.5,
+          "cpu_warm_step_peak_over_baseline_mib": 669.5,
+          "cpu_cold_step_wall_s": 3.54,
+          "cpu_warm_step_wall_s_median": 1.564,
+          "cpu_warm_samples_per_s": 20.5
+        },
+        {
+          "view": "co",
+          "width": 32,
+          "batch": 8,
+          "status": "ok",
+          "n_parameters_model": 1232841,
+          "embedding_dim_D": 512,
+          "input_batch_mib": 2.0,
+          "saved_activation_mib": 214.1,
+          "gpu_vram_analytic_lower_mib": 234.9,
+          "gpu_vram_analytic_upper_mib": 449.0,
+          "cpu_rss_baseline_mib": 698.7,
+          "cpu_cold_step_peak_over_baseline_mib": 374.4,
+          "cpu_warm_step_peak_over_baseline_mib": 399.3,
+          "cpu_cold_step_wall_s": 0.74,
+          "cpu_warm_step_wall_s_median": 0.63,
+          "cpu_warm_samples_per_s": 12.7
+        },
+        {
+          "view": "co",
+          "width": 32,
+          "batch": 32,
+          "status": "ok",
+          "n_parameters_model": 1232841,
+          "embedding_dim_D": 512,
+          "input_batch_mib": 8.0,
+          "saved_activation_mib": 856.2,
+          "gpu_vram_analytic_lower_mib": 883.1,
+          "gpu_vram_analytic_upper_mib": 1739.2,
+          "cpu_rss_baseline_mib": 704.7,
+          "cpu_cold_step_peak_over_baseline_mib": 1148.9,
+          "cpu_warm_step_peak_over_baseline_mib": 1262.0,
+          "cpu_cold_step_wall_s": 8.07,
+          "cpu_warm_step_wall_s_median": 6.292,
+          "cpu_warm_samples_per_s": 5.1
+        },
+        {
+          "view": "dual",
+          "width": 8,
+          "batch": 8,
+          "status": "ok",
+          "n_parameters_model": 79177,
+          "embedding_dim_D": 128,
+          "input_batch_mib": 4.0,
+          "saved_activation_mib": 53.5,
+          "gpu_vram_analytic_lower_mib": 58.7,
+          "gpu_vram_analytic_upper_mib": 112.3,
+          "cpu_rss_baseline_mib": 696.4,
+          "cpu_cold_step_peak_over_baseline_mib": 132.4,
+          "cpu_warm_step_peak_over_baseline_mib": 141.5,
+          "cpu_cold_step_wall_s": 0.48,
+          "cpu_warm_step_wall_s_median": 0.18,
+          "cpu_warm_samples_per_s": 44.6
+        },
+        {
+          "view": "dual",
+          "width": 8,
+          "batch": 32,
+          "status": "ok",
+          "n_parameters_model": 79177,
+          "embedding_dim_D": 128,
+          "input_batch_mib": 16.0,
+          "saved_activation_mib": 214.0,
+          "gpu_vram_analytic_lower_mib": 231.3,
+          "gpu_vram_analytic_upper_mib": 445.3,
+          "cpu_rss_baseline_mib": 708.3,
+          "cpu_cold_step_peak_over_baseline_mib": 420.7,
+          "cpu_warm_step_peak_over_baseline_mib": 405.8,
+          "cpu_cold_step_wall_s": 1.0,
+          "cpu_warm_step_wall_s_median": 0.649,
+          "cpu_warm_samples_per_s": 49.3
+        },
+        {
+          "view": "dual",
+          "width": 16,
+          "batch": 8,
+          "status": "ok",
+          "n_parameters_model": 311305,
+          "embedding_dim_D": 256,
+          "input_batch_mib": 4.0,
+          "saved_activation_mib": 107.0,
+          "gpu_vram_analytic_lower_mib": 115.8,
+          "gpu_vram_analytic_upper_mib": 222.8,
+          "cpu_rss_baseline_mib": 697.4,
+          "cpu_cold_step_peak_over_baseline_mib": 196.6,
+          "cpu_warm_step_peak_over_baseline_mib": 205.6,
+          "cpu_cold_step_wall_s": 0.31,
+          "cpu_warm_step_wall_s_median": 0.231,
+          "cpu_warm_samples_per_s": 34.7
+        },
+        {
+          "view": "dual",
+          "width": 16,
+          "batch": 32,
+          "status": "ok",
+          "n_parameters_model": 311305,
+          "embedding_dim_D": 256,
+          "input_batch_mib": 16.0,
+          "saved_activation_mib": 428.1,
+          "gpu_vram_analytic_lower_mib": 448.9,
+          "gpu_vram_analytic_upper_mib": 877.0,
+          "cpu_rss_baseline_mib": 709.3,
+          "cpu_cold_step_peak_over_baseline_mib": 636.6,
+          "cpu_warm_step_peak_over_baseline_mib": 685.6,
+          "cpu_cold_step_wall_s": 1.45,
+          "cpu_warm_step_wall_s_median": 1.56,
+          "cpu_warm_samples_per_s": 20.5
+        },
+        {
+          "view": "dual",
+          "width": 32,
+          "batch": 8,
+          "status": "ok",
+          "n_parameters_model": 1234441,
+          "embedding_dim_D": 512,
+          "input_batch_mib": 4.0,
+          "saved_activation_mib": 214.1,
+          "gpu_vram_analytic_lower_mib": 237.0,
+          "gpu_vram_analytic_upper_mib": 451.0,
+          "cpu_rss_baseline_mib": 700.7,
+          "cpu_cold_step_peak_over_baseline_mib": 352.5,
+          "cpu_warm_step_peak_over_baseline_mib": 401.4,
+          "cpu_cold_step_wall_s": 0.81,
+          "cpu_warm_step_wall_s_median": 0.724,
+          "cpu_warm_samples_per_s": 11.0
+        },
+        {
+          "view": "dual",
+          "width": 32,
+          "batch": 32,
+          "status": "ok",
+          "n_parameters_model": 1234441,
+          "embedding_dim_D": 512,
+          "input_batch_mib": 16.0,
+          "saved_activation_mib": 856.2,
+          "gpu_vram_analytic_lower_mib": 891.1,
+          "gpu_vram_analytic_upper_mib": 1747.2,
+          "cpu_rss_baseline_mib": 712.9,
+          "cpu_cold_step_peak_over_baseline_mib": 1141.5,
+          "cpu_warm_step_peak_over_baseline_mib": 1126.8,
+          "cpu_cold_step_wall_s": 5.63,
+          "cpu_warm_step_wall_s_median": 4.354,
+          "cpu_warm_samples_per_s": 7.4
+        },
+        {
+          "view": "dual_residual",
+          "width": 8,
+          "batch": 8,
+          "status": "ok",
+          "n_parameters_model": 79377,
+          "embedding_dim_D": 128,
+          "input_batch_mib": 5.0,
+          "saved_activation_mib": 53.5,
+          "gpu_vram_analytic_lower_mib": 59.7,
+          "gpu_vram_analytic_upper_mib": 113.3,
+          "cpu_rss_baseline_mib": 697.3,
+          "cpu_cold_step_peak_over_baseline_mib": 131.2,
+          "cpu_warm_step_peak_over_baseline_mib": 148.3,
+          "cpu_cold_step_wall_s": 0.21,
+          "cpu_warm_step_wall_s_median": 0.135,
+          "cpu_warm_samples_per_s": 59.1
+        },
+        {
+          "view": "dual_residual",
+          "width": 8,
+          "batch": 32,
+          "status": "ok",
+          "n_parameters_model": 79377,
+          "embedding_dim_D": 128,
+          "input_batch_mib": 20.0,
+          "saved_activation_mib": 214.0,
+          "gpu_vram_analytic_lower_mib": 235.3,
+          "gpu_vram_analytic_upper_mib": 449.3,
+          "cpu_rss_baseline_mib": 712.4,
+          "cpu_cold_step_peak_over_baseline_mib": 428.3,
+          "cpu_warm_step_peak_over_baseline_mib": 429.5,
+          "cpu_cold_step_wall_s": 0.63,
+          "cpu_warm_step_wall_s_median": 0.63,
+          "cpu_warm_samples_per_s": 50.8
+        },
+        {
+          "view": "dual_residual",
+          "width": 16,
+          "batch": 8,
+          "status": "ok",
+          "n_parameters_model": 311705,
+          "embedding_dim_D": 256,
+          "input_batch_mib": 5.0,
+          "saved_activation_mib": 107.0,
+          "gpu_vram_analytic_lower_mib": 116.8,
+          "gpu_vram_analytic_upper_mib": 223.8,
+          "cpu_rss_baseline_mib": 698.3,
+          "cpu_cold_step_peak_over_baseline_mib": 230.7,
+          "cpu_warm_step_peak_over_baseline_mib": 247.6,
+          "cpu_cold_step_wall_s": 0.33,
+          "cpu_warm_step_wall_s_median": 0.274,
+          "cpu_warm_samples_per_s": 29.2
+        },
+        {
+          "view": "dual_residual",
+          "width": 16,
+          "batch": 32,
+          "status": "ok",
+          "n_parameters_model": 311705,
+          "embedding_dim_D": 256,
+          "input_batch_mib": 20.0,
+          "saved_activation_mib": 428.1,
+          "gpu_vram_analytic_lower_mib": 452.9,
+          "gpu_vram_analytic_upper_mib": 881.0,
+          "cpu_rss_baseline_mib": 713.2,
+          "cpu_cold_step_peak_over_baseline_mib": 632.7,
+          "cpu_warm_step_peak_over_baseline_mib": 689.7,
+          "cpu_cold_step_wall_s": 1.33,
+          "cpu_warm_step_wall_s_median": 1.251,
+          "cpu_warm_samples_per_s": 25.6
+        },
+        {
+          "view": "dual_residual",
+          "width": 32,
+          "batch": 8,
+          "status": "ok",
+          "n_parameters_model": 1235241,
+          "embedding_dim_D": 512,
+          "input_batch_mib": 5.0,
+          "saved_activation_mib": 214.1,
+          "gpu_vram_analytic_lower_mib": 238.0,
+          "gpu_vram_analytic_upper_mib": 452.0,
+          "cpu_rss_baseline_mib": 701.7,
+          "cpu_cold_step_peak_over_baseline_mib": 377.1,
+          "cpu_warm_step_peak_over_baseline_mib": 405.1,
+          "cpu_cold_step_wall_s": 0.93,
+          "cpu_warm_step_wall_s_median": 0.72,
+          "cpu_warm_samples_per_s": 11.1
+        },
+        {
+          "view": "dual_residual",
+          "width": 32,
+          "batch": 32,
+          "status": "ok",
+          "n_parameters_model": 1235241,
+          "embedding_dim_D": 512,
+          "input_batch_mib": 20.0,
+          "saved_activation_mib": 856.2,
+          "gpu_vram_analytic_lower_mib": 895.1,
+          "gpu_vram_analytic_upper_mib": 1751.3,
+          "cpu_rss_baseline_mib": 716.8,
+          "cpu_cold_step_peak_over_baseline_mib": 1161.7,
+          "cpu_warm_step_peak_over_baseline_mib": 1170.9,
+          "cpu_cold_step_wall_s": 4.14,
+          "cpu_warm_step_wall_s_median": 4.015,
+          "cpu_warm_samples_per_s": 8.0
+        }
+      ],
+      "streaming_window_dual_residual": {
+        "4_groups_x_4_shards": {
+          "shard_observations": 32,
+          "window_observations": 128,
+          "window_scenario_groups": 16,
+          "raw_bytes_per_observation": 395264,
+          "preprocessed_bytes_per_observation": 655360,
+          "plan_shift_copy_bytes_per_observation": 393216,
+          "shard_raw_bytes": 12648448,
+          "shard_preprocessed_bytes": 20971520,
+          "window_steady_resident_bytes": 134217728,
+          "window_build_peak_bytes": 134479872,
+          "train_observations": 12000,
+          "train_shards_per_epoch": 375,
+          "train_windows_per_epoch": 94,
+          "train_raw_bytes_per_epoch": 4743168000,
+          "train_bytes_read_per_epoch_double_read": 9486336000,
+          "val_select_bytes_read_per_epoch_double_read": 948633600
+        },
+        "8_groups_x_4_shards": {
+          "shard_observations": 64,
+          "window_observations": 256,
+          "window_scenario_groups": 32,
+          "raw_bytes_per_observation": 395264,
+          "preprocessed_bytes_per_observation": 655360,
+          "plan_shift_copy_bytes_per_observation": 393216,
+          "shard_raw_bytes": 25296896,
+          "shard_preprocessed_bytes": 41943040,
+          "window_steady_resident_bytes": 268435456,
+          "window_build_peak_bytes": 268959744,
+          "train_observations": 12000,
+          "train_shards_per_epoch": 188,
+          "train_windows_per_epoch": 47,
+          "train_raw_bytes_per_epoch": 4743168000,
+          "train_bytes_read_per_epoch_double_read": 9486336000,
+          "val_select_bytes_read_per_epoch_double_read": 948633600
+        }
+      },
+      "widths": {
+        "8": {
+          "width": 8,
+          "n_parameters_by_view": {
+            "co": 78777,
+            "dual": 79177,
+            "dual_residual": 79377
+          },
+          "n_parameters_optimized_dual_residual": 80401,
+          "embedding_dim_D": 128,
+          "p20_over_p21b_center_term_ratio": 64.0,
+          "p20_weight_times_D": 0.64,
+          "forward_gmacs_per_sample_dual_residual": 0.097,
+          "fp32_static_training_state_mib": 1.23
+        },
+        "16": {
+          "width": 16,
+          "n_parameters_by_view": {
+            "co": 310505,
+            "dual": 311305,
+            "dual_residual": 311705
+          },
+          "n_parameters_optimized_dual_residual": 313753,
+          "embedding_dim_D": 256,
+          "p20_over_p21b_center_term_ratio": 128.0,
+          "p20_weight_times_D": 1.28,
+          "forward_gmacs_per_sample_dual_residual": 0.321,
+          "fp32_static_training_state_mib": 4.79
+        },
+        "32": {
+          "width": 32,
+          "n_parameters_by_view": {
+            "co": 1232841,
+            "dual": 1234441,
+            "dual_residual": 1235241
+          },
+          "n_parameters_optimized_dual_residual": 1239337,
+          "embedding_dim_D": 512,
+          "p20_over_p21b_center_term_ratio": 256.0,
+          "p20_weight_times_D": 2.56,
+          "forward_gmacs_per_sample_dual_residual": 1.154,
+          "fp32_static_training_state_mib": 18.92
+        }
+      }
+    },
+    "loader_rates_from_E1": "docs/results/b2_streaming_memory.md:48-49 (about 430 obs/s verified read, about 270 obs/s preprocessing under concurrent load)"
+  }
+}
