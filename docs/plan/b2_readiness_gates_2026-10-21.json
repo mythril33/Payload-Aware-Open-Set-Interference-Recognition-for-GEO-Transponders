@@ -4,9 +4,10 @@
   "baseline": {
     "repository": "mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
     "branch": "main",
-    "sha": "ff1418f2936c5c01c1f171c38c6804b9023cd064",
-    "reported_tests_passed": 955,
-    "retested_in_this_change": false
+    "sha": "2cc473fad07fc08984c17e212a06ddb26409a9cd",
+    "reported_tests_passed": 978,
+    "retested_in_this_change": false,
+    "test_evidence": "Historical E2 local suite: docs/results/b2_loko_harness.md; current E3a verification is recorded separately"
   },
   "scope": "Readiness plan; no researcher approvals implied",
   "benchmark_complete": false,
@@ -60,12 +61,72 @@
       "merge_sha": "5a65062e6a5d4e727567f65d01c77be158ecb76b"
     },
     "loko_a8": {
-      "status": "BOUNDED_HARNESS_IMPLEMENTED_IN_DRAFT_PR",
+      "status": "BOUNDED_HARNESS_IMPLEMENTED_MERGED_PR_10",
       "evidence": "docs/plan/P25_b2_e2_loko_harness.md; tests/test_b2_loko.py",
-      "scope": "Plan-only default plus one bounded CPU fold; production dispatcher and cross-seed aggregation remain unimplemented; no full sweep authorized or run"
+      "scope": "Plan-only default plus one bounded CPU fold; production dispatcher and cross-seed aggregation remain unimplemented; no full sweep authorized or run",
+      "merge_sha": "2cc473fad07fc08984c17e212a06ddb26409a9cd",
+      "pr_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/10"
     },
     "edsc": {
-      "status": "PLANNED"
+      "status": "BOUNDED_BASELINE_IMPLEMENTED_IN_FEATURE_BRANCH",
+      "protocol": "EDSC/1",
+      "branch": "feature/b2-e3a-edsc-baseline",
+      "evidence": "docs/plan/P26_b2_e3a_edsc_baseline.md; docs/results/b2_edsc_baseline.md; tests/test_edsc.py; tests/test_b2_edsc.py; tests/test_b2_edsc_metrics.py",
+      "scope": "Existing P20 obs-cancel/1 residuals via E1 streaming; binary anomaly detection and common clean-Pfa score comparison; no production benchmark claim",
+      "verification": {
+        "focused_tests": {
+          "passed": 46,
+          "wall_s": 15.49
+        },
+        "independent_review_tests": {
+          "passed": 46,
+          "wall_s": 15.89
+        },
+        "full_repository_suite": {
+          "status": "PASSED_WITH_ENVIRONMENT_SKIP",
+          "passed": 1023,
+          "skipped": 1,
+          "failed": 0,
+          "pytest_wall_s": 376.44,
+          "subprocess_wall_s": 378.396740513,
+          "peak_rss_kib": 1281420,
+          "exit_code": 0,
+          "skip_test": "tests/test_b2_stream.py::test_streaming_peak_memory_stays_below_the_whole_dataset_footprint",
+          "skip_reason": "Existing E1 subprocess memory comparison requires /proc/self/clear_refs peak-RSS reset; runner returned peak_reset=false",
+          "limitation": "E1 comparative peak-memory regression was not revalidated in this environment; E3a smoke peak RSS was measured separately"
+        },
+        "real_artifact_smoke": {
+          "wall_s": 4.431314,
+          "peak_rss_kib": 251600,
+          "n_known": 64,
+          "n_test_only": 10,
+          "n_matched": 6,
+          "n_clean_calibration": 2,
+          "new_generation": false,
+          "model_training": false
+        },
+        "review": "Material findings resolved; no remaining material blocker in read-only re-review",
+        "independent_raw_npz_audit": {
+          "script": "scripts/check_b2_edsc_smoke.py",
+          "n_scores": 32,
+          "max_abs_score_discrepancy_db": 2.13e-14,
+          "threshold_abs_discrepancy_db": 7.11e-15,
+          "alarm_counts_verified": true,
+          "subprocess_wall_s": 0.316785,
+          "peak_rss_kib": 27736,
+          "scope": "Independent arithmetic on existing smoke artifacts; execution validation only"
+        },
+        "final_delivery_focused": {
+          "date": "2026-10-23",
+          "passed": 46,
+          "pytest_wall_s": 8.78,
+          "subprocess_wall_s": 9.632498587,
+          "peak_rss_kib": 557860,
+          "exit_code": 0,
+          "scope": "Same reviewed code; no new detector experiment; proposed PR-head CI is recorded separately in PR description"
+        }
+      },
+      "limitations": "Two clean calibration observations and tiny test groups are execution evidence only; no population Pfa or recognition-performance precision; full production remains gated"
     },
     "xgboost_baseline": {
       "status": "PLANNED"
@@ -74,10 +135,13 @@
       "status": "PLANNED"
     },
     "github_actions_ci": {
-      "status": "VERIFIED_SUCCESS_ON_PR_9_HEAD",
+      "status": "VERIFIED_SUCCESS_ON_PR_10_HEAD",
       "workflow": ".github/workflows/b2-readiness-ci.yml",
-      "run_id": 39602354253,
-      "head_sha": "3f484a6f40e8f234fc33672833b36282393c51e2"
+      "run_id": 39741030340,
+      "head_sha": "a138608faed6beae16c24170ccec06aa6dba3f9b",
+      "job_id": 119698005413,
+      "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39741030340",
+      "scope": "GitHub evidence for E2 head only; no E3a CI claim"
     }
   },
   "permitted_without_new_researcher_decisions": [

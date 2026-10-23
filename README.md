@@ -1,6 +1,6 @@
 # Payload-Aware Open-Set Interference Recognition for GEO Transponders
 
-**B2 production readiness (2026-10-22; E1 merged, bounded E2 harness implemented):** [P23 implementation/gate plan](docs/plan/P23_b2_production_readiness.md), [Claude Code Fable 5 master prompt](docs/agent_prompts/B2_PRODUCTION_READINESS_MASTER_PROMPT.md), [decision gate JSON](docs/plan/b2_readiness_gates_2026-10-21.json). Full production remains authorization-gated.
+**B2 production readiness (2026-10-22; E1/E2 merged, bounded E3a implemented):** [P23 implementation/gate plan](docs/plan/P23_b2_production_readiness.md), [P26 EDSC baseline](docs/plan/P26_b2_e3a_edsc_baseline.md), [decision gate JSON](docs/plan/b2_readiness_gates_2026-10-21.json). Full production remains authorization-gated.
 
 
 GEO bent-pipe transponderindeki girişimi, operatörün downlink spektrum izlemesinden tanıyan derin öğrenme çalışması. Ders projesi; makaleye genişletilecek.
@@ -213,3 +213,14 @@ This is an evolving research project, **not** a completed dual-polarization, eig
 ### A8 LOKO engineering harness (2026-10-22)
 
 See [P25](docs/plan/P25_b2_e2_loko_harness.md) and [verification](docs/results/b2_loko_harness.md). `python -m geoml.b2_loko --config configs/b2_feat.json --data data/b2-feat-pilot --out runs/b2-loko-plan` creates a deterministic plan only. One CPU smoke fold is available with `configs/b2_loko_smoke.json` and `--smoke-holdout cw`, on an existing artifact with <=2 groups/role. Production scheduling and seed aggregation remain open; no production authorization or benchmark completion is implied.
+
+### E3a EDSC binary baseline
+
+`python -m geoml.b2_edsc --data data/b2-readiness-known --unknown-data data/b2-readiness-test --matched-data data/b2-readiness-matched --out runs/b2-e3a-edsc-smoke --smoke --with-cfar`
+streams existing verified P20 residuals, freezes a clean-only val-calib alarm
+threshold, and reports binary detection and unknown-positive rankings. Paths
+refer to local artifacts outside Git. EDSC provides no class predictions or
+OSCR; two-group smoke evidence cannot establish population Pfa or recognition
+performance. See [P26](docs/plan/P26_b2_e3a_edsc_baseline.md) and
+[bounded verification](docs/results/b2_edsc_baseline.md). XGBoost is the proposed
+E3b follow-up; researcher and production gates remain pending.

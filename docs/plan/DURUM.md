@@ -1,6 +1,25 @@
 # Proje durumu ve eksik kaydı
 
-Son güncelleme: 2026-10-21 (B2-match/1 K17c eşleşmiş küme, maliyet profili, üretim kapısı; temel deney durumu 2026-10-10) · Bu dosya "şu an neredeyiz, ne eksik" sorusunun tek yanıtıdır; her oturum sonunda güncellenir.
+
+Son teslim kontrolü (2026-10-23): güncel `main` değişmedi; tam 17 E3a dosyası, yalnız ek P18 günlüğü ve değişmeyen onaylar doğrulandı. Son hedefli koşu **46 geçti / 8,78 s**; ham-NPZ denetimi tekrar geçti. Yeni PR-head CI sonucu yayınlandıktan sonra taslak PR açıklamasında commit/run bağlantılarıyla kaydedilir. Önceki tam paket **1023 geçti / 1 ortam kaynaklı atlama** olarak korunur; E3b başlatılmadı.
+Son güncelleme: 2026-10-22 (E3a sınırlı EDSC uygulaması, E2 birleşme/CI kanıtı; temel deney durumu 2026-10-10) · Bu dosya "şu an neredeyiz, ne eksik" sorusunun tek yanıtıdır; her oturum sonunda güncellenir.
+
+## Uygulama eki — 2026-10-22 (E3a: sınırlı EDSC baseline)
+
+- [P26](P26_b2_e3a_edsc_baseline.md), **EDSC/1**: `geoml.edsc` gözlemli `obs-cancel/1` artığının 36 MHz banttaki doğrusal ortalama PSD'sini, gözlenen co-pol planlı taşıyıcı çekirdeklerinin ortak güç referansına oranlar; yüksek skor daha fazla anomali kanıtıdır. `geoml.b2_edsc` E1 doğrulama/akış yolunu kullanır. P21b alıcısına geçilmedi, dondurulmuş fizik/veri sürümleri değişmedi.
+- Eşik yalnız bilinen `val-calib` içindeki `clean` gözlemlerinden, sabit üst ampirik %95 quantile ve katı `score > threshold` kuralıyla alınır. Nominal Pfa %5; gerçekleşen alarm sayısı/payda ayrıca verilir. En az iki temiz senaryo grubu mühendislik korumasıdır; iki temiz pilot örneği popülasyon Pfa'sını doğrulamaz. Test/test-matched hiçbir uyum veya kalibrasyona girmez.
+- `geoml.b2_edsc_metrics`: bilinmeyen-pozitif AUROC/AUPR/FPR@95TPR, açık paydalı ikili algılama/yanlış-alarm, aile ve sabit işletim-koşulu alt grupları, senaryo bootstrap CI ve K17c eşleşmiş ASI/unauthorized **algılama** farkı. Çok sınıflı doğruluk, OSCR ve sınıf tahminleri desteklenmediği için gerekçe/sayımla `null`. CA-CFAR ve dondurulmuş sinir ağı skorları için ortak örnek/provenans/temiz-Pfa karşılaştırma arayüzü var; mevcut %95 bilinen-kabul eşikleri aynı işletim noktası sayılmaz.
+- Odaklı doğrulama **46 geçti, 15,49 s**. Bağımsız salt-okunur inceleme tekrarında **46 geçti, 15,89 s**; tam değerlendirme grupları, bilinen-artefakt bağlama/alıcı kalibrasyonu ve skorlayıcı kimliği/eşik/protokol/payda doğrulamalarıyla ilgili maddi bulgular kapatıldı; açık maddi engel kalmadı. Tam depo paketi: **1023 geçti, 1 ortam kaynaklı atlama, 0 başarısız; pytest 376,44 s**, alt süreç **378,396741 s**, tepe RSS **1281420 KiB**, çıkış kodu 0. Atlanan mevcut test `tests/test_b2_stream.py::test_streaming_peak_memory_stays_below_the_whole_dataset_footprint`: bu ortam `/proc/self/clear_refs` ile tepe-RSS sıfırlamayı desteklemiyor (`peak_reset=false`); E1 bellek karşılaştırması bu koşuda yeniden doğrulanmış sayılmadı.
+- Mevcut gerçek küçük artefaktlarla tek sıkı sınırlı uçtan uca smoke: **4,431314 s**, tepe RSS **251600 KiB**, **64 bilinen + 10 yalnız-test + 6 eşleşmiş** gözlem, **iki temiz val-calib** örneği. Veri üretilmedi, model/GPU eğitimi yapılmadı. Bu yürütme/provenans kanıtıdır; tanıma başarısı veya %5 Pfa hassasiyet kanıtı değildir. Komutlar ve sınırlar [sonuç raporunda](../results/b2_edsc_baseline.md).
+- Bağımsız ham-NPZ aritmetik denetimi (`scripts/check_b2_edsc_smoke.py`): **32 skor**, saklı skorlarla en büyük fark **2,13 × 10⁻¹⁴ dB**, eşik farkı **7,11 × 10⁻¹⁵ dB**; alarm sayıları doğrulandı. Ölçülen alt süreç **0,316785 s**, tepe RSS **27736 KiB**. Bu yeniden hesaplama istatistik/provenans doğrulamasıdır; yeni bilimsel performans kanıtı değildir.
+- **Kalan:** E3b XGBoost, üretim LOKO yürütme/çok-tohum birleştirme, tam çift-pol A5 ve onaylı tam benchmark. K18/K17d/OBS-CANCEL/2 bekliyor; tam üretim/GPU/LOKO yetkisi yok; `benchmark_complete=false`.
+
+## Doğrulanmış uzak durum — 2026-10-22 (E3a başlangıcı)
+
+- `git fetch origin main` sonrasında yerel HEAD ve `origin/main`: **`2cc473fad07fc08984c17e212a06ddb26409a9cd`**. [PR #10](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/10), 2026-10-22 08:24:23 UTC'de bu commit ile birleşmiş; E2 artık taslak PR durumunda değildir. E3a dalı güncel tabandan açıldı: `feature/b2-e3a-edsc-baseline`.
+- GitHub API'de PR #10 başı **`a138608faed6beae16c24170ccec06aa6dba3f9b`** için [Actions `39741030340`](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39741030340) `completed/success`; iş `119698005413` ve depo test adımı başarılı. Bu E2 kanıtıdır; E3a CI sonucu değildir. Önceki yerel **978 test** tarihi kanıttır; E3a doğrulaması ayrı kaydedilir.
+- [E3a bağlam kaydı](../research/b2_e3a_context_ledger.md): kurallar/protokoller, mevcut uygulama, açık bileşenler, küçük artefaktların kimlik/sayıları ve bilimsel/hesaplama sınırları. Hazır gerçek küçük artefaktlarda yalnız **iki temiz val-calib gözlemi** var; %5 Pfa için hassasiyet iddiasına yetmez.
+- Bu durum düzeltmesi hiçbir araştırmacı kararını veya onayı değiştirmez: **K18, K17d ve OBS-CANCEL/2 bekliyor**; tam B2 üretimi, GPU eğitimi ve tam LOKO yetkilendirilmiş değildir; `benchmark_complete=false`.
 
 ## Uygulama eki — 2026-10-22 (E2 ilk dilim: sınırlı LOKO harness)
 
@@ -9,7 +28,7 @@ Son güncelleme: 2026-10-21 (B2-match/1 K17c eşleşmiş küme, maliyet profili,
 - Dışarıda tutulan sınıf ön işlemeden önce train/val-select/val-calib rollerinden çıkarılır; kalan yedi etiket açıkça yeniden numaralanır, `clean` sıfır kalır. Mahalanobis ve eşikler test çıkarımından önce sabitlenir. Kaynak shard doğrulamaları korunur; yeniden kullanım checkpoint ve türetilmiş dosya kimliklerini doğrular.
 - Testte aynı gruptaki yedi bilinen + bir dışarıda tutulan varyant birlikte raporlanır; ranking CI senaryo gruplarını eşleşmiş bootstrap ile örnekler. Paydalar ve örnek/grup sayıları açıktır; boş metrikler ve tek-grup CI null. Tohum belirsizliği dahil değildir.
 - Doğrulama: yeni 9 test **47,10 s**; tam paket **978 geçti, 1014,36 s (16 dk 54 s)**; syntax/strict gate kontrolü ve bağımsız inceleme tamamlandı. Ölçülen sınırlar: [sonuç notu](../results/b2_loko_harness.md). Sentetik fikstürler yürütme kanıtıdır; RF/model başarısı değildir.
-- **Kalan:** üretim LOKO dispatcher/çok-tohum birleştirme, EDSC/XGBoost, tam çift-pol A5. K18/K17d/OBS-CANCEL/2 ve tam üretim/GPU/LOKO onayları bekliyor; hiçbiri başlatılmadı, `benchmark_complete=false`. Dal taslak PR olarak sunulur, otomatik birleşme yok.
+- **Kalan:** üretim LOKO dispatcher/çok-tohum birleştirme, EDSC/XGBoost, tam çift-pol A5. K18/K17d/OBS-CANCEL/2 ve tam üretim/GPU/LOKO onayları bekliyor; hiçbiri başlatılmadı, `benchmark_complete=false`. E2 PR #10 ile birleşti (yukarıdaki doğrulanmış uzak durum); otomatik birleşme yetkisi verilmedi.
 
 ## Uygulama eki — 2026-10-21 (E1: kanonik `geoml.b2_experiment` için bellek sınırlı akış veri yolu)
 
