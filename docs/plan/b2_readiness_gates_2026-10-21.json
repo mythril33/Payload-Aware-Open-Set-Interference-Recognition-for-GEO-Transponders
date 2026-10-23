@@ -593,7 +593,7 @@
       }
     },
     "production_preflight": {
-      "status": "E6_DRAFT_DELIVERY",
+      "status": "E6_MERGED_PR_20",
       "contract": "docs/plan/P29_b2_e6_production_preflight.md",
       "tool": "scripts/b2_production_preflight.py",
       "checklist": "docs/plan/B2_E6_PRODUCTION_READINESS_CHECKLIST.md",
@@ -602,7 +602,61 @@
       "production_executed": false,
       "gpu_training_executed": false,
       "full_loko_executed": false,
+      "gates_changed": false,
+      "merge_commit": "755b474b7a2c506ec03441a7d15ed365c47addb1",
+      "ci": {
+        "pr": 20,
+        "head_sha": "8703a526e807933a674813da3ad9216a297f3d57",
+        "run_id": 40004028017,
+        "job_id": 120587227201,
+        "conclusion": "success",
+        "remaining_tests": {
+          "passed": 1226,
+          "pytest_seconds": 546.32
+        },
+        "e4_tests_passed_by_difference": 107,
+        "total": 1333,
+        "source": "raw job log read in E7a",
+        "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40004028017"
+      }
+    },
+    "production_supervisor": {
+      "status": "E7A_DRAFT_DELIVERY",
+      "contract": "docs/plan/P30_b2_e7a_production_supervisor.md",
+      "tool": "scripts/b2_production_supervisor.py",
+      "tests": "tests/test_b2_production_supervisor.py",
+      "verification": "docs/results/b2_e7a_supervisor_verification.json",
+      "bounded_fixtures_only": true,
+      "max_groups_per_role": 2,
+      "production_launch_implemented": false,
+      "production_executed": false,
+      "gpu_training_executed": false,
+      "full_loko_executed": false,
       "gates_changed": false
+    },
+    "k18_train_diagnostics": {
+      "status": "E7A_DRAFT_DELIVERY",
+      "schema": "B2-train-diagnostics/1",
+      "observation_only": true,
+      "affects_training": false,
+      "files": [
+        "src/geoml/train.py",
+        "src/geoml/b2_stream.py",
+        "src/geoml/b2_experiment.py",
+        "src/geoml/b2_loko.py"
+      ],
+      "tests": "tests/test_b2_train_diagnostics.py",
+      "k18_status": "PENDING_RESEARCHER (unchanged)",
+      "provenance_note": "source edits change checkpoint source provenance (P28 section 6); earlier checkpoints are not relabelled as compatible"
+    },
+    "training_proposal": {
+      "status": "PROPOSAL_NOT_FROZEN",
+      "document": "docs/plan/B2_E7_TRAINING_SPEC_PROPOSAL.md",
+      "machine_readable": "docs/plan/b2_e7_training_proposal.json",
+      "frozen": false,
+      "approved": false,
+      "researcher_decisions": "R1-R9",
+      "configs_touched": false
     }
   },
   "permitted_without_new_researcher_decisions": [
@@ -632,8 +686,8 @@
   ],
   "integrity_note": "Proposed researcher decisions are not approvals. Preserve frozen semantics and strictly segregate train, val-select, val-calib, test and test-matched.",
   "verified_remote_main": {
-    "sha": "59ed11d60ace609a826f6379491c9a8dbd26d64d",
+    "sha": "755b474b7a2c506ec03441a7d15ed365c47addb1",
     "date": "2026-10-23",
-    "note": "PR19 merged; E5 head 7108ee8 run 39991726439 raw logs: 107 + 1132 passed; decisions unchanged"
+    "note": "PR20 merged; E6 head 8703a52 run 40004028017 raw log: remaining suite 1226 passed (+107 E4 = 1333); decisions unchanged"
   }
 }

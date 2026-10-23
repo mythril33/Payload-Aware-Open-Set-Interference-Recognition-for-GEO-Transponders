@@ -58,7 +58,8 @@ from geosim.b2_test_dataset import iter_b2_test_shards, read_b2_test_manifest
 from .data import CORE_DB, reference_level
 from .model import CenterLoss, n_parameters
 from .metrics import macro_f1
-from .train import (TrainConfig, _apply_plan_shift, _forward, _inputs, _model, _plan_targets, _training_plans)
+from .train import (TrainConfig, TrainDiagnostics, _apply_plan_shift, _forward, _inputs, _model, _plan_targets,
+                    _training_plans)
 
 INDEX_KEYS = {"known": ("label", "seed", "plan_consistency"),
               "test": ("family", "seed", "plan_consistency"),
@@ -435,8 +436,10 @@ def _batches(train, cfg, ref, gen, window_shards, with_plans, order):
 def fit_streaming(train, val, cfg: TrainConfig, *, window_shards=DEFAULT_WINDOW_SHARDS, device=None, log=print) -> dict:
     """Train on streamed shards; keep the weights with the best val-select macro-F1.
 
-    Returns the same dictionary as ``geoml.train.fit`` plus a ``streaming`` record of
-    the sample-order policy; ``geoml.train.save``/``load`` apply unchanged.
+    Returns the same dictionary as ``geoml.train.fit`` (including the observation-only K18
+    ``train_diagnostics`` block, accumulated over the streamed training batches only) plus a
+    ``streaming`` record of the sample-order policy; ``geoml.train.save``/``load`` apply unchanged.
+    Editing this file changes its hash in checkpoint source provenance (see ``TrainDiagnostics``).
     """
     if isinstance(window_shards, bool) or not isinstance(window_shards, int) or window_shards < 1:
         raise ValueError("window_shards must be a positive integer")
@@ -458,6 +461,7 @@ def fit_streaming(train, val, cfg: TrainConfig, *, window_shards=DEFAULT_WINDOW_
     gen = torch.Generator().manual_seed(cfg.seed)
     pv = val.index["plan_consistency"] if cfg.plan_consistency else None
     best, best_state, best_epoch, history, orders = -1.0, None, None, [], []
+    diagnostics = TrainDiagnostics(cfg, "geoml.b2_stream.fit_streaming")
     for epoch in range(cfg.epochs):
         model.train()
         t, loss_sum, n_steps = time.time(), 0.0, 0
@@ -478,20 +482,28 @@ def fit_streaming(train, val, cfg: TrainConfig, *, window_shards=DEFAULT_WINDOW_
                 xb = xb.roll(int(torch.randint(xb.shape[2], (1,), generator=gen)), dims=2)
             logits, aux, embedding = model.forward_all(xb.to(device))
             targets = batch["y"].to(device)
-            loss = nn.functional.cross_entropy(logits, targets)
+            # Same operations in the same order as the original three-line loss; the intermediate
+            # terms are named only so the K18 diagnostics can read them (K18, observation only).
+            ce = loss = nn.functional.cross_entropy(logits, targets)
+            center_term = center_weighted = plan_term = plan_weighted = None
             if center is not None:
-                loss = loss + cfg.center_loss_weight * center(embedding, targets)
+                center_term = center(embedding, targets)
+                center_weighted = cfg.center_loss_weight * center_term
+                loss = loss + center_weighted
             if aux is not None:
-                loss = loss + cfg.plan_loss_weight * nn.functional.binary_cross_entropy_with_logits(
-                    aux[:, 0], batch["p"].to(device))
+                plan_term = nn.functional.binary_cross_entropy_with_logits(aux[:, 0], batch["p"].to(device))
+                plan_weighted = cfg.plan_loss_weight * plan_term
+                loss = loss + plan_weighted
             opt.zero_grad()
             loss.backward()
             opt.step()
             sched.step()
             loss_sum += loss.item() * len(xb)
+            diagnostics.update(len(xb), loss, ce, embedding, center_term, center_weighted, plan_term, plan_weighted)
             n_steps += 1
         if n_steps != -(-n // cfg.batch):
             raise RuntimeError("streaming epoch produced an unexpected number of optimizer steps")
+        diagnostics.end_epoch(epoch)       # training batches only: validation has not run yet
         outputs = infer_streaming({"model": model, "config": cfg, "absolute_ref_db": ref, "device": device}, val)
         f1 = macro_f1(val.index["label"], outputs["logits"].argmax(1), len(cfg.labels))
         record = {"epoch": epoch, "train_loss": loss_sum / n, "val_macro_f1": f1}
@@ -506,7 +518,7 @@ def fit_streaming(train, val, cfg: TrainConfig, *, window_shards=DEFAULT_WINDOW_
     model.load_state_dict(best_state)
     return {"model": model, "config": asdict(cfg), "absolute_ref_db": ref, "history": history,
             "best_epoch": best_epoch, "best_val_macro_f1": best,
-            "n_parameters": n_parameters(model), "device": device,
+            "n_parameters": n_parameters(model), "device": device, "train_diagnostics": diagnostics.block(),
             "streaming": {"window_shards": int(window_shards), "train_shard_counts": list(train.shard_counts),
                           "shard_orders": orders,
                           "policy": "shards permuted per epoch when n_shards > window_shards; samples permuted "

@@ -1,0 +1,788 @@
+{
+ "schema": "B2-E7a-supervisor-verification/1",
+ "benchmark_complete": false,
+ "approves_nothing": true,
+ "scope": "BOUNDED_REAL_PHYSICS_FIXTURE: 2 groups per role/stage, groups_per_shard 1, 80 observations (known 4 roles x 16, test-only 10, matched 6); no production data",
+ "base_main": "755b474b7a2c506ec03441a7d15ed365c47addb1",
+ "supervisor_commit_parent": "984a6b3",
+ "environment": {
+  "python": "3.13.17",
+  "numpy": "2.5.4",
+  "scipy": "1.18.1",
+  "torch": "2.14.1+cu130",
+  "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+  "cpus": 4,
+  "threads": "OMP/OPENBLAS/MKL=2",
+  "gpu": "none (CUDA_VISIBLE_DEVICES empty)"
+ },
+ "commands": [
+  "python scripts/b2_production_supervisor.py plan --workdir W --max-groups 2 --groups-per-shard 1 --timing-startup-s 6   # dry run, creates nothing",
+  "python scripts/b2_production_supervisor.py run --workdir W --max-groups 2 --groups-per-shard 1 --execute --allow-dirty-fixture --timing-startup-s 6   # SIGINT after the first known shard",
+  "python scripts/b2_production_supervisor.py verify|complete --workdir W",
+  "python scripts/b2_production_supervisor.py run ... (same arguments)   # restart"
+ ],
+ "steps": [
+  {
+   "step": "dry_run",
+   "t": 3.0,
+   "exit": 4,
+   "verdict": "BLOCKED",
+   "counts": {
+    "PASS": 8,
+    "FAIL": 0,
+    "BLOCKED": 1,
+    "NOT_RUN": 0
+   },
+   "created_workdir": false
+  },
+  {
+   "step": "first_shard_committed",
+   "t": 43.1,
+   "shards": [
+    "known/train/shard-00000.json"
+   ]
+  },
+  {
+   "step": "interrupted",
+   "t": 44.2,
+   "exit": 6,
+   "result": {
+    "exit_code": 6,
+    "status": "INTERRUPTED",
+    "reasons": [
+     "interrupted; the root is left resumable"
+    ],
+    "benchmark_complete": false
+   }
+  },
+  {
+   "step": "verify_after_interrupt",
+   "t": 47.1,
+   "exit": 5
+  },
+  {
+   "step": "complete_refused_while_incomplete",
+   "t": 50.0,
+   "exit": 3,
+   "marker_written": false
+  },
+  {
+   "step": "resumed",
+   "t": 403.5,
+   "exit": 0,
+   "result": {
+    "exit_code": 0,
+    "status": "STAGES_COMPLETE",
+    "reasons": [],
+    "benchmark_complete": false
+   },
+   "wall_s": 353.5
+  },
+  {
+   "step": "verify_complete",
+   "t": 406.8,
+   "exit": 0,
+   "all_stages_verified": true,
+   "usage": {
+    "wall_s": 388.256,
+    "cpu_s": 450.69,
+    "attempts": {
+     "known": 2,
+     "test": 1,
+     "matched": 1
+    },
+    "open_attempt": null
+   }
+  },
+  {
+   "step": "complete",
+   "t": 409.8,
+   "exit": 0,
+   "marker": {
+    "schema": "B2-production-completion/1",
+    "generation_complete": true,
+    "scope": "fixture",
+    "production_complete": false,
+    "benchmark_complete": false,
+    "production_authorized": false,
+    "plan_fingerprint": "88318bab9339853fe7ee325d170aaf8515e0c6b99cfb873548a8d06fe99141a3",
+    "lock_fingerprint": "a791b1c6a53640bf4c179bc048dbcf2d7543c6ce45d8845722539b7a77f8a2b6",
+    "journal_head": "fb62e584b32047b82d4d261ec28e9ca2e2789bd0963375489b821ea504827225",
+    "observations": {
+     "known": {
+      "train": 16,
+      "val-select": 16,
+      "val-calib": 16,
+      "test": 16
+     },
+     "test": {
+      "test": 10
+     },
+     "matched": {
+      "test-matched": 6
+     }
+    },
+    "stage_manifest_fingerprints": {
+     "known": "22878398d5219f064f7f0f8a65fe007459cbf2e277fb821bbad9e899892f0259",
+     "test": "e2282b0f25a29007ff383f9bcd2c3f3e45da95f63e66e48b7acc8f7600e6270b",
+     "matched": "c05e8d641768a345485b8c0be88b002ade20ab2d8bf6904723a1c127541a1568"
+    },
+    "note": "data generation of the planned scope is complete and verified; this is not benchmark completion"
+   }
+  }
+ ],
+ "total_wall_s": 409.8,
+ "attempts": [
+  {
+   "attempt_id": "known-01",
+   "exit_code": -15,
+   "reason": "interrupted",
+   "elapsed_s": 38.063,
+   "cpu_user_s": 33.642,
+   "cpu_sys_s": 10.48,
+   "peak_rss_kib": 585256
+  },
+  {
+   "attempt_id": "known-02",
+   "exit_code": 0,
+   "reason": "exited",
+   "elapsed_s": 265.964,
+   "cpu_user_s": 228.868,
+   "cpu_sys_s": 81.159,
+   "peak_rss_kib": 596728
+  },
+  {
+   "attempt_id": "test-01",
+   "exit_code": 0,
+   "reason": "exited",
+   "elapsed_s": 55.282,
+   "cpu_user_s": 48.502,
+   "cpu_sys_s": 14.554,
+   "peak_rss_kib": 596208
+  },
+  {
+   "attempt_id": "matched-01",
+   "exit_code": 0,
+   "reason": "exited",
+   "elapsed_s": 28.947,
+   "cpu_user_s": 26.084,
+   "cpu_sys_s": 7.401,
+   "peak_rss_kib": 583456
+  }
+ ],
+ "timing_gates": [
+  {
+   "stage": "known",
+   "outcome": "within_band",
+   "s_per_observation": 3.91907200217247,
+   "band": [
+    3.8,
+    5.0
+   ],
+   "startup_allowance_s": 6.0,
+   "observations": 8
+  },
+  {
+   "stage": "known",
+   "outcome": "within_band",
+   "s_per_observation": 4.530650010108948,
+   "band": [
+    3.8,
+    5.0
+   ],
+   "startup_allowance_s": 6.08,
+   "observations": 8
+  },
+  {
+   "stage": "test",
+   "outcome": "within_band",
+   "s_per_observation": 4.751988554000855,
+   "band": [
+    3.8,
+    5.0
+   ],
+   "startup_allowance_s": 6.0,
+   "observations": 5
+  },
+  {
+   "stage": "matched",
+   "outcome": "faster_than_band",
+   "s_per_observation": 2.9862943490346274,
+   "band": [
+    3.8,
+    5.0
+   ],
+   "startup_allowance_s": 6.0,
+   "observations": 3
+  }
+ ],
+ "journal": [
+  {
+   "event": "supervisor_start",
+   "lock_fingerprint": "a791b1c6a53640bf4c179bc048dbcf2d7543c6ce45d8845722539b7a77f8a2b6",
+   "mode": "fixture",
+   "plan_fingerprint": "88318bab9339853fe7ee325d170aaf8515e0c6b99cfb873548a8d06fe99141a3",
+   "restart": false,
+   "seq": 1,
+   "sha256": "4705751e2e283c27659d0bf8c5658fe924ee76f997a59f4ea5b6266be300395c",
+   "time": "2026-10-23T19:41:39.300+00:00"
+  },
+  {
+   "event": "host_checked",
+   "ok": true,
+   "seq": 2,
+   "sha256": "a95d75b97ae5fb7f03f68e15b6ace2a8e853fbedc270751f4ff66612486be8fa",
+   "time": "2026-10-23T19:41:39.306+00:00"
+  },
+  {
+   "event": "stage_start",
+   "seq": 3,
+   "sha256": "d82dd957c4d03db792985eef025ed5ac519d7fab55d7559cb149c948d3afdae4",
+   "stage": "known",
+   "time": "2026-10-23T19:41:39.307+00:00"
+  },
+  {
+   "depth": "checksum",
+   "event": "stage_audit",
+   "hashed_bytes": 0,
+   "problems": [],
+   "roles": {},
+   "seq": 4,
+   "sha256": "8c163d981b5102dcd2662c437571eac57db73fa5d8063a8e3b1bad8bff5f2e56",
+   "stage": "known",
+   "state": "NOT_STARTED",
+   "time": "2026-10-23T19:41:39.323+00:00"
+  },
+  {
+   "argv": [
+    "<scratch>/venv/bin/python",
+    "-m",
+    "geosim.b2_dataset",
+    "--out",
+    "<scratch>/real_work/known",
+    "--config",
+    "<repo>/configs/b2_base.json",
+    "--cancellation",
+    "<repo>/configs/cancellation.json",
+    "--groups-per-shard",
+    "1",
+    "--limit-groups",
+    "2"
+   ],
+   "attempt": 1,
+   "attempt_id": "known-01",
+   "committed_observations": 0,
+   "event": "attempt_start",
+   "pid": 6460,
+   "remaining_shards": 8,
+   "seq": 5,
+   "sha256": "5555d1fbcad92c87ea1afedfdc3620ca2091dee740466a3940be8f191dab21b4",
+   "stage": "known",
+   "time": "2026-10-23T19:41:39.348+00:00"
+  },
+  {
+   "attempt_id": "known-01",
+   "band": [
+    3.8,
+    5.0
+   ],
+   "event": "timing_gate",
+   "observations": 8,
+   "outcome": "within_band",
+   "s_per_observation": 3.91907200217247,
+   "seq": 6,
+   "sha256": "70e05e0e19ca49ea1d6a41542cf389a8f41b9a43f0afbfa7ce6c5e89af17839b",
+   "stage": "known",
+   "startup_allowance_s": 6.0,
+   "time": "2026-10-23T19:42:17.388+00:00",
+   "tolerance": 0.25
+  },
+  {
+   "attempt_id": "known-01",
+   "cpu_sys_s": 10.48,
+   "cpu_user_s": 33.642,
+   "elapsed_s": 38.063,
+   "event": "attempt_end",
+   "exit_code": -15,
+   "log": "<scratch>/real_work/logs/known-01.log",
+   "peak_rss_kib": 585256,
+   "reason": "interrupted",
+   "seq": 7,
+   "sha256": "a1e27e153525811ed2983541d2e1b0ad303c01e8a398122925f129df9c1c4193",
+   "signal": "SIGTERM",
+   "stage": "known",
+   "time": "2026-10-23T19:42:17.390+00:00"
+  },
+  {
+   "event": "interrupted",
+   "exit_code": 6,
+   "reason": "interrupted; the root is left resumable",
+   "seq": 8,
+   "sha256": "81ed49024787e6297bc2f267715fb5fd9734873618a9e283109a95856622c7bb",
+   "time": "2026-10-23T19:42:17.390+00:00"
+  },
+  {
+   "event": "supervisor_start",
+   "lock_fingerprint": "a791b1c6a53640bf4c179bc048dbcf2d7543c6ce45d8845722539b7a77f8a2b6",
+   "mode": "fixture",
+   "plan_fingerprint": "88318bab9339853fe7ee325d170aaf8515e0c6b99cfb873548a8d06fe99141a3",
+   "restart": true,
+   "seq": 9,
+   "sha256": "c938673b9c7f63be96c6e437be848390c8a534d903d47292e0fd2b823fe685b8",
+   "time": "2026-10-23T19:42:26.351+00:00"
+  },
+  {
+   "event": "host_checked",
+   "ok": true,
+   "seq": 10,
+   "sha256": "236859fdc9494c5c02ca2180fdd8dd99f7c3932342b6cf98bfee96ee71f0e0d7",
+   "time": "2026-10-23T19:42:26.357+00:00"
+  },
+  {
+   "event": "stage_start",
+   "seq": 11,
+   "sha256": "813b92a84d28246111b2205f2cfeb5c1938dd6f0c7b932831b42a2f82f2cb9cd",
+   "stage": "known",
+   "time": "2026-10-23T19:42:26.357+00:00"
+  },
+  {
+   "depth": "checksum",
+   "event": "stage_audit",
+   "hashed_bytes": 3246529,
+   "problems": [],
+   "roles": {
+    "test": {
+     "committed": 0,
+     "expected_shards": 2,
+     "missing": 2
+    },
+    "train": {
+     "committed": 1,
+     "expected_shards": 2,
+     "missing": 1
+    },
+    "val-calib": {
+     "committed": 0,
+     "expected_shards": 2,
+     "missing": 2
+    },
+    "val-select": {
+     "committed": 0,
+     "expected_shards": 2,
+     "missing": 2
+    }
+   },
+   "seq": 12,
+   "sha256": "d3704d59af05f37ac04986fcc69e122c6ac2818a0215d887268f9b93e315a344",
+   "stage": "known",
+   "state": "RESUMABLE",
+   "time": "2026-10-23T19:42:26.381+00:00"
+  },
+  {
+   "argv": [
+    "<scratch>/venv/bin/python",
+    "-m",
+    "geosim.b2_dataset",
+    "--out",
+    "<scratch>/real_work/known",
+    "--config",
+    "<repo>/configs/b2_base.json",
+    "--cancellation",
+    "<repo>/configs/cancellation.json",
+    "--groups-per-shard",
+    "1",
+    "--limit-groups",
+    "2"
+   ],
+   "attempt": 2,
+   "attempt_id": "known-02",
+   "committed_observations": 8,
+   "event": "attempt_start",
+   "pid": 6527,
+   "remaining_shards": 7,
+   "seq": 13,
+   "sha256": "11afafcac6cf956db23b0f599be165961e1fe49460f1f98b8224d43eafce7df8",
+   "stage": "known",
+   "time": "2026-10-23T19:42:26.406+00:00"
+  },
+  {
+   "attempt_id": "known-02",
+   "band": [
+    3.8,
+    5.0
+   ],
+   "event": "timing_gate",
+   "observations": 8,
+   "outcome": "within_band",
+   "s_per_observation": 4.530650010108948,
+   "seq": 14,
+   "sha256": "aef9541bd828512bf80cd2219b56b7f99d0603d59beb2f14e8c8b9302317484e",
+   "stage": "known",
+   "startup_allowance_s": 6.08,
+   "time": "2026-10-23T19:46:52.347+00:00",
+   "tolerance": 0.25
+  },
+  {
+   "attempt_id": "known-02",
+   "cpu_sys_s": 81.159,
+   "cpu_user_s": 228.868,
+   "elapsed_s": 265.964,
+   "event": "attempt_end",
+   "exit_code": 0,
+   "log": "<scratch>/real_work/logs/known-02.log",
+   "peak_rss_kib": 596728,
+   "reason": "exited",
+   "seq": 15,
+   "sha256": "d022e6e672494d97d95dc9bcf5a8fff5ebf6e326f10813a666d126c87fe8dc1b",
+   "stage": "known",
+   "time": "2026-10-23T19:46:52.351+00:00"
+  },
+  {
+   "depth": "checksum",
+   "event": "stage_audit",
+   "hashed_bytes": 25930354,
+   "problems": [],
+   "roles": {
+    "test": {
+     "committed": 2,
+     "expected_shards": 2,
+     "missing": 0
+    },
+    "train": {
+     "committed": 2,
+     "expected_shards": 2,
+     "missing": 0
+    },
+    "val-calib": {
+     "committed": 2,
+     "expected_shards": 2,
+     "missing": 0
+    },
+    "val-select": {
+     "committed": 2,
+     "expected_shards": 2,
+     "missing": 0
+    }
+   },
+   "seq": 16,
+   "sha256": "56f35e3cdc1abe3703ee4f7920db07d942299d37134e86505a043369061448c1",
+   "stage": "known",
+   "state": "COMPLETE",
+   "time": "2026-10-23T19:46:52.387+00:00"
+  },
+  {
+   "event": "stage_complete",
+   "seq": 17,
+   "sha256": "e04ec8b0b01ab590a9ef6a8f29bd353c503e74588a9756c0b4f149887ee73c89",
+   "stage": "known",
+   "time": "2026-10-23T19:46:52.388+00:00"
+  },
+  {
+   "event": "stage_start",
+   "seq": 18,
+   "sha256": "f86a5c2b19e3484c7861409e34c8dc5baa38fb947d8abbe42e24c9954f76ad55",
+   "stage": "test",
+   "time": "2026-10-23T19:46:52.388+00:00"
+  },
+  {
+   "depth": "checksum",
+   "event": "stage_audit",
+   "hashed_bytes": 25930354,
+   "problems": [],
+   "roles": {
+    "test": {
+     "committed": 2,
+     "expected_shards": 2,
+     "missing": 0
+    },
+    "train": {
+     "committed": 2,
+     "expected_shards": 2,
+     "missing": 0
+    },
+    "val-calib": {
+     "committed": 2,
+     "expected_shards": 2,
+     "missing": 0
+    },
+    "val-select": {
+     "committed": 2,
+     "expected_shards": 2,
+     "missing": 0
+    }
+   },
+   "seq": 19,
+   "sha256": "fd00d0790f1ee226b3daf072dba1911c44f6648e248cb29fc061ce97088fd1c5",
+   "stage": "known",
+   "state": "COMPLETE",
+   "time": "2026-10-23T19:46:52.434+00:00"
+  },
+  {
+   "depth": "checksum",
+   "event": "stage_audit",
+   "hashed_bytes": 0,
+   "problems": [],
+   "roles": {},
+   "seq": 20,
+   "sha256": "2e22ba19d1fc7706b7ae6418e3610d8563775216bdf512f9cffdc3904cae34c5",
+   "stage": "test",
+   "state": "NOT_STARTED",
+   "time": "2026-10-23T19:46:52.435+00:00"
+  },
+  {
+   "argv": [
+    "<scratch>/venv/bin/python",
+    "-m",
+    "geosim.b2_test_dataset",
+    "--out",
+    "<scratch>/real_work/test",
+    "--config",
+    "<repo>/configs/b2_base.json",
+    "--cancellation",
+    "<repo>/configs/cancellation.json",
+    "--groups-per-shard",
+    "1",
+    "--limit-groups",
+    "2",
+    "--known",
+    "<scratch>/real_work/known"
+   ],
+   "attempt": 1,
+   "attempt_id": "test-01",
+   "committed_observations": 0,
+   "event": "attempt_start",
+   "pid": 6631,
+   "remaining_shards": 2,
+   "seq": 21,
+   "sha256": "833e6ff495cd654dfa51c28a07e9f70e6d3b12d4fd29d0c2a58ba04d0f44234b",
+   "stage": "test",
+   "time": "2026-10-23T19:46:52.460+00:00"
+  },
+  {
+   "attempt_id": "test-01",
+   "band": [
+    3.8,
+    5.0
+   ],
+   "event": "timing_gate",
+   "observations": 5,
+   "outcome": "within_band",
+   "s_per_observation": 4.751988554000855,
+   "seq": 22,
+   "sha256": "81a50c75d3068a08b95700c8f967427e7fa38e206218f4db5bb5747ca344bd6f",
+   "stage": "test",
+   "startup_allowance_s": 6.0,
+   "time": "2026-10-23T19:47:47.719+00:00",
+   "tolerance": 0.25
+  },
+  {
+   "attempt_id": "test-01",
+   "cpu_sys_s": 14.554,
+   "cpu_user_s": 48.502,
+   "elapsed_s": 55.282,
+   "event": "attempt_end",
+   "exit_code": 0,
+   "log": "<scratch>/real_work/logs/test-01.log",
+   "peak_rss_kib": 596208,
+   "reason": "exited",
+   "seq": 23,
+   "sha256": "ff2ef0c0300c6351949dc44ea42ddeb18ee5c6c73a4862902e1e1aad80665ba5",
+   "stage": "test",
+   "time": "2026-10-23T19:47:47.720+00:00"
+  },
+  {
+   "depth": "checksum",
+   "event": "stage_audit",
+   "hashed_bytes": 4071910,
+   "problems": [],
+   "roles": {
+    "test": {
+     "committed": 2,
+     "expected_shards": 2,
+     "missing": 0
+    }
+   },
+   "seq": 24,
+   "sha256": "ea913164c9538e268f99388ad10afd4227b00231639f291d7c7ba31ac2f9a869",
+   "stage": "test",
+   "state": "COMPLETE",
+   "time": "2026-10-23T19:47:47.735+00:00"
+  },
+  {
+   "event": "stage_complete",
+   "seq": 25,
+   "sha256": "fec788ee268d88b2c6db446fb8724679c43252cfc84203ca8d48048f90964af1",
+   "stage": "test",
+   "time": "2026-10-23T19:47:47.736+00:00"
+  },
+  {
+   "event": "stage_start",
+   "seq": 26,
+   "sha256": "43d8d095ecf2ad73152fd1b3bd783994b61f35370f2085406ca2a13fb7a7fee5",
+   "stage": "matched",
+   "time": "2026-10-23T19:47:47.736+00:00"
+  },
+  {
+   "depth": "checksum",
+   "event": "stage_audit",
+   "hashed_bytes": 25930354,
+   "problems": [],
+   "roles": {
+    "test": {
+     "committed": 2,
+     "expected_shards": 2,
+     "missing": 0
+    },
+    "train": {
+     "committed": 2,
+     "expected_shards": 2,
+     "missing": 0
+    },
+    "val-calib": {
+     "committed": 2,
+     "expected_shards": 2,
+     "missing": 0
+    },
+    "val-select": {
+     "committed": 2,
+     "expected_shards": 2,
+     "missing": 0
+    }
+   },
+   "seq": 27,
+   "sha256": "cffcb898fb202b294bc4448e0a1ee6d74f28d2af156fe473c66b36c38b4a69be",
+   "stage": "known",
+   "state": "COMPLETE",
+   "time": "2026-10-23T19:47:47.787+00:00"
+  },
+  {
+   "depth": "checksum",
+   "event": "stage_audit",
+   "hashed_bytes": 4071910,
+   "problems": [],
+   "roles": {
+    "test": {
+     "committed": 2,
+     "expected_shards": 2,
+     "missing": 0
+    }
+   },
+   "seq": 28,
+   "sha256": "4ff4af42f41a83b00cd0594f4f609372ff8226578c2dfbd6996a7437ac0bc7c0",
+   "stage": "test",
+   "state": "COMPLETE",
+   "time": "2026-10-23T19:47:47.798+00:00"
+  },
+  {
+   "depth": "checksum",
+   "event": "stage_audit",
+   "hashed_bytes": 0,
+   "problems": [],
+   "roles": {},
+   "seq": 29,
+   "sha256": "26d7ca14d05fc1ec74c5ccf527db3f3b0c755bbe815a7877ae2f3f21a6a2960d",
+   "stage": "matched",
+   "state": "NOT_STARTED",
+   "time": "2026-10-23T19:47:47.799+00:00"
+  },
+  {
+   "argv": [
+    "<scratch>/venv/bin/python",
+    "-m",
+    "geosim.b2_matched_dataset",
+    "--out",
+    "<scratch>/real_work/matched",
+    "--config",
+    "<repo>/configs/b2_base.json",
+    "--cancellation",
+    "<repo>/configs/cancellation.json",
+    "--groups-per-shard",
+    "1",
+    "--limit-groups",
+    "2",
+    "--known",
+    "<scratch>/real_work/known"
+   ],
+   "attempt": 1,
+   "attempt_id": "matched-01",
+   "committed_observations": 0,
+   "event": "attempt_start",
+   "pid": 6656,
+   "remaining_shards": 2,
+   "seq": 30,
+   "sha256": "ab0cbcec4b2a277b558ae365665f8328fc23cbd7e28a0ffeafe5ab87a13b30c9",
+   "stage": "matched",
+   "time": "2026-10-23T19:47:47.824+00:00"
+  },
+  {
+   "attempt_id": "matched-01",
+   "band": [
+    3.8,
+    5.0
+   ],
+   "event": "timing_gate",
+   "observations": 3,
+   "outcome": "faster_than_band",
+   "s_per_observation": 2.9862943490346274,
+   "seq": 31,
+   "sha256": "8527651bd0f5c0104f83be8e9ad0f571af7939e6168b9127187b344944567ed6",
+   "stage": "matched",
+   "startup_allowance_s": 6.0,
+   "time": "2026-10-23T19:48:16.747+00:00",
+   "tolerance": 0.25
+  },
+  {
+   "attempt_id": "matched-01",
+   "cpu_sys_s": 7.401,
+   "cpu_user_s": 26.084,
+   "elapsed_s": 28.947,
+   "event": "attempt_end",
+   "exit_code": 0,
+   "log": "<scratch>/real_work/logs/matched-01.log",
+   "peak_rss_kib": 583456,
+   "reason": "exited",
+   "seq": 32,
+   "sha256": "6952ca719f6306c648119afd4d3bb471d372a420339ca2446fb8188949f9931d",
+   "stage": "matched",
+   "time": "2026-10-23T19:48:16.751+00:00"
+  },
+  {
+   "depth": "checksum",
+   "event": "stage_audit",
+   "hashed_bytes": 2443292,
+   "problems": [],
+   "roles": {
+    "test-matched": {
+     "committed": 2,
+     "expected_shards": 2,
+     "missing": 0
+    }
+   },
+   "seq": 33,
+   "sha256": "75d1aa650835db6cd2d730abdd11529748f98caa2eccefe7d815466d221d1c8c",
+   "stage": "matched",
+   "state": "COMPLETE",
+   "time": "2026-10-23T19:48:16.765+00:00"
+  },
+  {
+   "event": "stage_complete",
+   "seq": 34,
+   "sha256": "d48407523e2b84e7916527e1dbd8b18d375c17f656d28748b94cb990b0b44c28",
+   "stage": "matched",
+   "time": "2026-10-23T19:48:16.766+00:00"
+  },
+  {
+   "event": "stages_complete",
+   "plan_fingerprint": "88318bab9339853fe7ee325d170aaf8515e0c6b99cfb873548a8d06fe99141a3",
+   "seq": 35,
+   "sha256": "fb62e584b32047b82d4d261ec28e9ca2e2789bd0963375489b821ea504827225",
+   "time": "2026-10-23T19:48:16.767+00:00"
+  }
+ ],
+ "limitations": [
+  "two groups per stage on one sandbox host: no production-size memory, throughput or disk behavior was measured",
+  "first-shard seconds per observation depend on the 6 s startup allowance chosen for this fixture and on host load",
+  "the matched stage ran faster than the 3.8-5.0 s band (a warning, not a stop); the band is a validity band for the whole-plan extrapolation, not a per-stage constant",
+  "the journal hash chain detects accidental modification only"
+ ]
+}

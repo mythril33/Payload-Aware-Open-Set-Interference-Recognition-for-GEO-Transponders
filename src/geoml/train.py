@@ -1,6 +1,7 @@
 """Training and inference for the stage-A classifiers (P6 §4)."""
 from __future__ import annotations
 
+import math
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -212,6 +213,117 @@ def _model(cfg: TrainConfig) -> SmallResNet:
                        aux_outputs=1 if cfg.plan_consistency else 0)
 
 
+DIAGNOSTICS_SCHEMA = "B2-train-diagnostics/1"
+DIAGNOSTICS_LOSS_CONVENTION = (
+    "loss = cross_entropy(logits, y) + center_loss_weight * center(embedding, y) "
+    "+ plan_loss_weight * BCE_with_logits(plan_logit, plan_target); center(embedding, y) = batch mean of "
+    "sum_d (embedding_d - center_y,d)^2; P20 convention values center_loss_weight 0.005 and plan_loss_weight 1.0 "
+    "(the weights actually used are recorded under 'weights'); cross_entropy and BCE are batch means; the center "
+    "and plan terms exist only when enabled")
+
+
+def _finite_or_none(value):
+    return float(value) if value is not None and math.isfinite(value) else None
+
+
+class TrainDiagnostics:
+    """K18 loss-component diagnostics: observation only, training mini-batches only.
+
+    ``update`` reads detached values of the tensors the loss is already built from; it makes no
+    forward pass, no ``center(...)`` call and no random draw, and nothing it records flows back
+    into the loss, the optimizer, the schedule or checkpoint selection (``affects_training`` is
+    false). Statistics are batch-size weighted means over the training batches of one epoch
+    (train mode, augmentation applied); validation, calibration and test data never enter.
+    Unavailable quantities are ``None`` with counts, never NaN.
+
+    Source identity. Adding this class to ``geoml/train.py`` (and its use in
+    ``geoml/b2_stream.py``) changes those files' hashes in the ``source_files_sha256`` bound into
+    checkpoint provenance (``geoml.b2_a5.check_source_rule``, P28 section 6). Checkpoints trained
+    before this change must not be relabelled as source-compatible; they are not modified, and
+    they simply carry no ``train_diagnostics`` key.
+    """
+
+    def __init__(self, cfg: TrainConfig, trainer: str):
+        self.cfg, self.trainer, self.epochs = cfg, trainer, []
+        self.start_epoch()
+
+    def start_epoch(self):
+        self.n_batches = self.n_samples = self.n_center = self.n_plan = 0
+        self.n_embedding_values = self.n_nonfinite = 0
+        self.sums = dict.fromkeys(("loss", "ce", "center", "center_w", "plan", "plan_w", "emb_sq"), 0.0)
+
+    def update(self, n, loss, ce, embedding, center_term=None, center_weighted=None, plan_term=None,
+               plan_weighted=None):
+        """Accumulate one training batch of ``n`` samples; every argument is a tensor of the loss graph."""
+        parts = [loss, ce, embedding.detach().float().pow(2).sum()]
+        if center_term is not None:
+            parts += [center_term, center_weighted]
+        if plan_term is not None:
+            parts += [plan_term, plan_weighted]
+        values = torch.stack([part.detach().float() for part in parts]).tolist()   # one device sync, no graph
+        self.n_batches += 1
+        self.n_samples += n
+        self.n_embedding_values += embedding.numel()
+        self.sums["loss"] += values[0] * n
+        self.sums["ce"] += values[1] * n
+        self.sums["emb_sq"] += values[2]
+        position = 3
+        if center_term is not None:
+            self.n_center += n
+            self.sums["center"] += values[position] * n
+            self.sums["center_w"] += values[position + 1] * n
+            position += 2
+        if plan_term is not None:
+            self.n_plan += n
+            self.sums["plan"] += values[position] * n
+            self.sums["plan_w"] += values[position + 1] * n
+        self.n_nonfinite += int(not all(math.isfinite(value) for value in values))
+
+    def end_epoch(self, epoch: int) -> dict:
+        def mean(key, count):
+            return _finite_or_none(self.sums[key] / count) if count else None
+
+        ce = mean("ce", self.n_samples)
+        center_weighted = mean("center_w", self.n_center)
+        ratio, reason = None, None
+        if not self.n_center:
+            reason = "center_loss_disabled"
+        elif ce is None or center_weighted is None:
+            reason = "nonfinite_mean"
+        elif ce == 0.0:
+            reason = "mean_cross_entropy_is_zero"
+        else:
+            ratio = _finite_or_none(center_weighted / ce)
+            reason = None if ratio is not None else "nonfinite_ratio"
+        record = {
+            "epoch": epoch, "n_batches": self.n_batches, "n_samples": self.n_samples,
+            "mean_total_loss": mean("loss", self.n_samples), "mean_cross_entropy": ce,
+            "mean_center_loss_unweighted": mean("center", self.n_center),
+            "mean_center_loss_weighted": center_weighted, "n_center_samples": self.n_center,
+            "mean_plan_bce_unweighted": mean("plan", self.n_plan),
+            "mean_plan_bce_weighted": mean("plan_w", self.n_plan), "n_plan_samples": self.n_plan,
+            "center_to_ce_ratio": ratio, "center_to_ce_ratio_n_samples": self.n_samples if ratio is not None else 0,
+            "center_to_ce_ratio_unavailable": reason,
+            "embedding_rms": (_finite_or_none(math.sqrt(self.sums["emb_sq"] / self.n_embedding_values))
+                              if self.n_embedding_values else None),
+            "n_embedding_values": self.n_embedding_values, "n_nonfinite_batches": self.n_nonfinite}
+        self.epochs.append(record)
+        self.start_epoch()
+        return record
+
+    def block(self) -> dict:
+        cfg = self.cfg
+        return {"schema": DIAGNOSTICS_SCHEMA, "observation_only": True, "affects_training": False,
+                "split": "train", "trainer": self.trainer, "loss_convention": DIAGNOSTICS_LOSS_CONVENTION,
+                "weights": {"cross_entropy": 1.0, "center_loss_weight": cfg.center_loss_weight,
+                            "center_loss_enabled": cfg.center_loss_weight > 0,
+                            "plan_loss_weight": cfg.plan_loss_weight if cfg.plan_consistency else None,
+                            "plan_head_enabled": cfg.plan_consistency},
+                "aggregation": "batch-size weighted means over the training mini-batches of each epoch (train "
+                               "mode, augmentation applied); validation, calibration and test data never enter",
+                "epochs": [dict(record) for record in self.epochs]}
+
+
 @torch.no_grad()
 def predict(model: nn.Module, x: torch.Tensor, device: str, batch: int = 64) -> np.ndarray:
     """Class probabilities, (N, n_classes)."""
@@ -227,7 +339,9 @@ def predict(model: nn.Module, x: torch.Tensor, device: str, batch: int = 64) -> 
 def fit(train: dict, val: dict, cfg: TrainConfig, device: str | None = None, log=print) -> dict:
     """Train on `train`, keep the weights with the best validation macro-F1.
 
-    Returns {"model", "config", "absolute_ref_db", "history", "n_parameters"}.
+    Returns {"model", "config", "absolute_ref_db", "history", "best_epoch", "best_val_macro_f1",
+    "n_parameters", "device", "train_diagnostics"}. ``train_diagnostics`` is the observation-only
+    K18 block of ``TrainDiagnostics`` (training batches only; see its note on source hashes).
     """
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
     _labels(train, len(cfg.labels), "training")
@@ -251,6 +365,7 @@ def fit(train: dict, val: dict, cfg: TrainConfig, device: str | None = None, log
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=cfg.lr, total_steps=steps)
     gen = torch.Generator().manual_seed(cfg.seed)
     best, best_state, best_epoch, history = -1.0, None, None, []
+    diagnostics = TrainDiagnostics(cfg, "geoml.train.fit")
     for epoch in range(cfg.epochs):
         model.train()
         t, loss_sum = time.time(), 0.0
@@ -266,17 +381,25 @@ def fit(train: dict, val: dict, cfg: TrainConfig, device: str | None = None, log
                 xb = xb.roll(int(torch.randint(xb.shape[2], (1,), generator=gen)), dims=2)
             logits, aux, embedding = model.forward_all(xb.to(device))
             targets = yt[idx].to(device)
-            loss = nn.functional.cross_entropy(logits, targets)
+            # Same operations in the same order as the original three-line loss; the intermediate
+            # terms are named only so the K18 diagnostics can read them (K18, observation only).
+            ce = loss = nn.functional.cross_entropy(logits, targets)
+            center_term = center_weighted = plan_term = plan_weighted = None
             if center is not None:
-                loss = loss + cfg.center_loss_weight * center(embedding, targets)
+                center_term = center(embedding, targets)
+                center_weighted = cfg.center_loss_weight * center_term
+                loss = loss + center_weighted
             if aux is not None:
-                loss = loss + cfg.plan_loss_weight * nn.functional.binary_cross_entropy_with_logits(
-                    aux[:, 0], pt[idx].to(device))
+                plan_term = nn.functional.binary_cross_entropy_with_logits(aux[:, 0], pt[idx].to(device))
+                plan_weighted = cfg.plan_loss_weight * plan_term
+                loss = loss + plan_weighted
             opt.zero_grad()
             loss.backward()
             opt.step()
             sched.step()
             loss_sum += loss.item() * len(idx)
+            diagnostics.update(len(idx), loss, ce, embedding, center_term, center_weighted, plan_term, plan_weighted)
+        diagnostics.end_epoch(epoch)       # training batches only: validation has not run yet
         # Checkpoint selection uses known-class macro-F1 only; the auxiliary head is monitored, not selected on.
         outputs = _forward(model, xv, device)
         f1 = macro_f1(val["label"], outputs["logits"].argmax(1), len(cfg.labels))
@@ -292,7 +415,7 @@ def fit(train: dict, val: dict, cfg: TrainConfig, device: str | None = None, log
     model.load_state_dict(best_state)
     return {"model": model, "config": asdict(cfg), "absolute_ref_db": ref, "history": history,
             "best_epoch": best_epoch, "best_val_macro_f1": best,
-            "n_parameters": n_parameters(model), "device": device}
+            "n_parameters": n_parameters(model), "device": device, "train_diagnostics": diagnostics.block()}
 
 
 @torch.no_grad()

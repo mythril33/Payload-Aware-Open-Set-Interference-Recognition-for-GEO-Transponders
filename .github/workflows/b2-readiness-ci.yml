@@ -26,7 +26,7 @@ jobs:
   tests:
     name: Python unit and scientific tests (no production runs)
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     env:
       OMP_NUM_THREADS: "2"
       OPENBLAS_NUM_THREADS: "2"

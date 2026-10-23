@@ -174,6 +174,10 @@ def test_end_to_end_smoke_excludes_heldout_from_every_fit_calibrates_before_test
     result = lk.run_smoke(config(), data, out, holdout="cw", bootstrap=20, log=lambda *_: None)
     assert events.count("calibrate") == 3 and events.index("test") > max(i for i,e in enumerate(events) if e == "calibrate")
     assert result["benchmark_complete"] is False and result["n_mahalanobis_training"] == 14
+    diagnostics = result["train_diagnostics"]                       # K18: observation-only, training batches only
+    assert diagnostics["schema"] == "B2-train-diagnostics/1" and diagnostics["split"] == "train"
+    assert diagnostics["observation_only"] is True and diagnostics["affects_training"] is False
+    assert len(diagnostics["epochs"]) == len(result["history"])
     for method in result["methods"].values():
         assert method["calibration"]["n_calibration"] == 14
         assert method["ranking"]["n_known"] == method["known_acceptance"]["n_samples"] == 14
