@@ -219,8 +219,9 @@ def test_score_direction_and_binary_multiclass_are_not_conflated(tmp_path):
     result = _run(tmp_path)
     metrics = result["views"]["co"]["conditions"]["RECEIVER_CONSISTENT"]
     assert set(metrics["score_displacement"]) == {"msp", "energy", "mahalanobis"}       # larger = more unknown-like
-    assert "oscr" not in json.dumps(result).lower() and "auroc" not in json.dumps(result).lower()
-    assert result["baselines"]["status"] == "PLANNED"
+    assert "oscr" not in json.dumps(result["views"]).lower() and "auroc" not in json.dumps(result["views"]).lower()
+    assert result["baselines"]["status"] == "INPUTS_RECOMPUTED_NO_MODEL"
+    assert "never compared" in result["baselines"]["note"] and "no baseline decision" in result["baselines"]["note"]
     assert len(metrics["confusion_original_label"]) == 8 and len(metrics["confusion_original_label"][0]) == 8
 
 
@@ -302,3 +303,24 @@ def test_cli_reports_errors_without_traceback(tmp_path, capsys):
     saved = _strict(tmp_path / "ok" / "results.json")
     assert saved["configuration"]["perturbation"] == "shift_plus" and saved["configuration"]["scope"] == "both"
     assert "python -m geoml.b2_a5" in saved["reproduction_command"]
+
+
+def test_baseline_inputs_are_recomputed_from_the_counterfactual_streams_without_any_model(tmp_path):
+    co = _run(tmp_path, _config(scope="co_only"))["baselines"]["methods"]
+    cross = _run(tmp_path, _config(scope="cross_only"), name="cross")["baselines"]["methods"]
+    for methods in (co, cross):
+        assert set(methods) == {"edsc_score_db", "ca_cfar_planned", "ca_cfar_blind", "xgboost_features_26"}
+        assert all(entry["available"] and entry["reads"] for entry in methods.values())
+        blind = methods["ca_cfar_blind"]["displacement_vs_original"]
+        for condition in ("MASK_ONLY", "RECEIVER_CONSISTENT"):                       # the blind detector ignores the plan
+            assert all(column["n_scenes_changed"] == 0 for column in blind[condition].values())
+    # co_only: the co mask moves the EDSC reference/core and the planned CFAR; only the recomputed residual moves EDSC under RECEIVER_CONSISTENT
+    edsc = co["edsc_score_db"]["displacement_vs_original"]
+    assert edsc["RECEIVER_CONSISTENT"]["n_scenes_changed"] == 4                  # recomputed residual AND rebuilt mask
+    assert 1 <= edsc["MASK_ONLY"]["n_scenes_changed"] <= edsc["RECEIVER_CONSISTENT"]["n_scenes_changed"]   # mask alone moves the core reference
+    # cross_only: nothing the co-pol statistics read changes; XGBoost sees the cross mask through cross_core_fraction
+    assert cross["edsc_score_db"]["displacement_vs_original"]["RECEIVER_CONSISTENT"]["n_scenes_changed"] == 0
+    assert cross["ca_cfar_planned"]["displacement_vs_original"]["RECEIVER_CONSISTENT"]["time_averaged_cell_db"]["n_scenes_changed"] == 0
+    features = cross["xgboost_features_26"]["displacement_vs_original"]["RECEIVER_CONSISTENT"]
+    assert features["n_features"] == 26 and features["n_features_changed"] >= 1 and features["mean_abs_by_feature"]["cross_core_fraction"] > 0
+    assert features["mean_abs_by_feature"]["co_core_fraction"] == 0.0 and features["mean_abs_by_feature"]["residual_band_level_db"] == 0.0

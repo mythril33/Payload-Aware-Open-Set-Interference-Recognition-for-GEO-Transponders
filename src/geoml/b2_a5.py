@@ -32,15 +32,18 @@ from geosim.b2_scenarios import MATCHED_LABELS
 from geosim.dataset import _file_hash
 
 from .artifacts import fingerprint
+from . import cfar
 from .b2_a5_plan import CONTRACT as PLAN_CONTRACT
 from .b2_a5_plan import PERTURBATIONS, SCOPES, corrupt_operator_plan
 from .b2_a5_replay import (Budget, BudgetExceeded, FrozenReceiver, ObservedInputs, ReplayError, ReplaySource,
                            SceneObservation, build_conditions, check_parity, open_replay_source, replay_scene,
                            reporting_flags)
+from .b2_expert import FEATURE_NAMES, extract_features
 from .b2_experiment import ROLES, VIEWS, B2ExperimentConfig, _pair_metrics, _rate, _softmax
 from .b2_stream import B2Source, infer_streaming, open_b2_known, open_b2_matched
 from .calibration import RejectionCalibration
 from .data import CORE_DB
+from .edsc import FREQUENCIES_HZ, residual_energy
 from .experiment import _sha256, _source_identity
 from .mahalanobis import MahalanobisScorer
 from .metrics import confusion, macro_f1, threshold_at_pfa
@@ -322,6 +325,67 @@ def _view_metrics(keys, outputs, original, diagnostics):
     return out
 
 
+# ---------------------------------------------------------------- observation-only baselines (inputs only)
+
+BASELINE_READS = {
+    "edsc_score_db": ["co-pol PSD (core-bin reference)", "co-pol operator mask (core bins)", "co-pol residual"],
+    "ca_cfar_planned": ["co-pol PSD", "co-pol operator mask"],
+    "ca_cfar_blind": ["co-pol PSD only: ignores the operator plan and the residual by construction"],
+    "xgboost_features_26": ["co and cross PSD", "co and cross operator masks", "co-pol residual"]}
+
+
+def _changed(values) -> int:
+    return int(np.count_nonzero(np.asarray(values)))
+
+
+def baseline_inputs(conditions: dict, groups) -> dict:
+    """Recompute the input statistics of the observation-only baselines on every condition (P28 section 10).
+
+    ``conditions`` maps a condition name to ``ObservedInputs`` of the paired population. No baseline model,
+    threshold or decision exists here: EDSC, CA-CFAR and XGBoost are only evaluated as *input* displacement, so
+    nothing is refit, recalibrated or compared across the binary, eight-class and open-set tasks.
+    """
+    def edsc(o):
+        return residual_energy(o.spec, o.mask, o.residual)["score_db"]
+
+    def cfar_columns(o, use_plan):
+        return cfar.features(o.spec[:, 0], o.mask[:, 0], FREQUENCIES_HZ, np.full(len(o.spec), 36e6), use_plan)
+
+    statistics = {"edsc_score_db": edsc, "ca_cfar_planned": lambda o: cfar_columns(o, True),
+                  "ca_cfar_blind": lambda o: cfar_columns(o, False), "xgboost_features_26": lambda o: extract_features(o.spec, o.mask, o.residual)}
+    values, failures = {}, {}
+    for method, function in statistics.items():
+        try:
+            values[method] = {name: np.asarray(function(observed), dtype=np.float64) for name, observed in conditions.items()}
+        except ValueError as error:
+            failures[method] = str(error)
+    out = {}
+    for method in statistics:
+        if method in failures:
+            out[method] = {"available": False, "reason": failures[method], "reads": BASELINE_READS[method]}
+            continue
+        entry = {"available": True, "reads": BASELINE_READS[method], "displacement_vs_original": {}}
+        for name in ("MASK_ONLY", "RECEIVER_CONSISTENT"):
+            delta = values[method][name] - values[method]["original"]
+            if method == "xgboost_features_26":
+                entry["displacement_vs_original"][name] = {
+                    "mean_abs_by_feature": {feature: float(np.abs(delta[:, i]).mean()) for i, feature in enumerate(FEATURE_NAMES)},
+                    "n_features_changed": int(np.count_nonzero(np.abs(delta).max(axis=0))), "n_features": len(FEATURE_NAMES),
+                    "n_scenes": int(len(delta))}
+            elif method.startswith("ca_cfar"):
+                entry["displacement_vs_original"][name] = {
+                    column: {"displacement": _summary(delta[:, i], groups), "n_scenes_changed": _changed(delta[:, i])}
+                    for i, column in enumerate(("time_averaged_cell_db", "single_cell_db"))}
+            else:
+                entry["displacement_vs_original"][name] = {"displacement_db": _summary(delta, groups), "n_scenes_changed": _changed(delta)}
+        out[method] = entry
+    return {"status": "INPUTS_RECOMPUTED_NO_MODEL",
+            "note": "no frozen baseline model or clean-only threshold artifact exists on main; no baseline decision, alarm, "
+                    "accuracy or OSCR is computed. EDSC (binary), CA-CFAR (binary) and XGBoost (eight-class) are different "
+                    "tasks and are never compared with each other or with the neural views.",
+            "methods": out}
+
+
 # ---------------------------------------------------------------- orchestration
 
 
@@ -454,6 +518,10 @@ def run_a5(config: A5Config, data, runs, out, *, matched_data=None, command_args
     for entry in views.values():
         for condition in (entry.get("conditions") or {}).values():
             condition.pop("_residual_raw", None)
+    baseline = None
+    if applicable:
+        baseline = baseline_inputs({condition: ObservedInputs.stack([r["conditions"][condition] for r in applicable])
+                                    for condition in CONDITIONS}, keys_app.group)
     elapsed = time.perf_counter() - clock
     result = {
         "contract": CONTRACT, "plan_contract": PLAN_CONTRACT, "benchmark_complete": False,
@@ -483,8 +551,8 @@ def run_a5(config: A5Config, data, runs, out, *, matched_data=None, command_args
                          "counterfactual_metric_name": "agreement_with_original_label (descriptive, not accuracy)",
                          "mask_only": "weaker control: stored residual, rebuilt masks; never receiver-consistent",
                          "co_dual_views": "co and dual views do not read the residual; MASK_ONLY and RECEIVER_CONSISTENT differ only through the replayed PSD"},
-        "baselines": {"status": "PLANNED", "reason": "no frozen baseline artifacts exist on main and fitting on the pilot would be training; "
-                      "see P28 section 10"},
+        "baselines": baseline if baseline is not None else {"status": "INPUTS_RECOMPUTED_NO_MODEL", "methods": None,
+                                                             "note": "empty paired population"},
         "cost": {"elapsed_s": elapsed, "peak_rss_kib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss, "cpu_count": 0,
                  "device": "cpu", "python": platform.python_version(), "numpy": np.__version__, "torch": str(torch.__version__),
                  "started_unix": started},

@@ -26,7 +26,7 @@ from geosim import b2_matched_dataset as _matched
 from geosim.b2_protocol import BASE_PROTOCOL, FEATURE_PROTOCOL, LABELS, B2Config
 from geosim.b2_scenarios import MATCHED_LABELS, sample_matched_scene, sample_scene
 from geosim.cancellation import CancellationConfig, cancel_planned_carriers
-from geosim.event_dataset import _stored_carrier, _strict_json
+from geosim.event_dataset import _stored_carrier
 from geosim.polarization import ReceiverCalibration
 
 from .b2_a5_plan import OperatorPlans, PlanCorruption, rebuild_masks
