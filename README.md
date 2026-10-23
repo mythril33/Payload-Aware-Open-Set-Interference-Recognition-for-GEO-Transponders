@@ -1,6 +1,6 @@
 # Payload-Aware Open-Set Interference Recognition for GEO Transponders
 
-**B2 production readiness (2026-10-23; E1-E3b merged, bounded E4 implemented):** [P23 implementation/gate plan](docs/plan/P23_b2_production_readiness.md), [P26 EDSC](docs/plan/P26_b2_e3a_edsc_baseline.md), [P27 XGBoost](docs/plan/P27_b2_e3b_xgboost_baseline.md), [P28 dual-pol A5](docs/plan/P28_b2_e4_dual_pol_a5.md), [decision gate JSON](docs/plan/b2_readiness_gates_2026-10-21.json). Full production remains authorization-gated.
+**B2 production readiness (2026-10-23; E1-E3b and bounded E4 merged):** [P23 implementation/gate plan](docs/plan/P23_b2_production_readiness.md), [P26 EDSC](docs/plan/P26_b2_e3a_edsc_baseline.md), [P27 XGBoost](docs/plan/P27_b2_e3b_xgboost_baseline.md), [P28 dual-pol A5](docs/plan/P28_b2_e4_dual_pol_a5.md), [decision gate JSON](docs/plan/b2_readiness_gates_2026-10-21.json). E3b PR #14 merged as `ff81cae1b4e2563cc88271566665e9feae7cd44e`; E4 PR #15 merged as current verified main `4b736a6c425ab532e7c8e1bccc7c906f86ebe0be`. E4 post-merge evidence recovery is separate from that implementation merge. Full production remains authorization-gated.
 
 
 GEO bent-pipe transponderindeki girişimi, operatörün downlink spektrum izlemesinden tanıyan derin öğrenme çalışması. Ders projesi; makaleye genişletilecek.
@@ -222,8 +222,8 @@ threshold, and reports binary detection and unknown-positive rankings. Paths
 refer to local artifacts outside Git. EDSC provides no class predictions or
 OSCR; two-group smoke evidence cannot establish population Pfa or recognition
 performance. See [P26](docs/plan/P26_b2_e3a_edsc_baseline.md) and
-[bounded verification](docs/results/b2_edsc_baseline.md). XGBoost is the proposed
-E3b follow-up; researcher and production gates remain pending.
+[bounded verification](docs/results/b2_edsc_baseline.md). The merged XGBoost
+baseline is described below; researcher and production gates remain pending.
 
 ### E3b expert-feature/XGBoost CPU baseline
 
@@ -243,12 +243,26 @@ not establish recognition quality or population Pfa; no production run is implie
 `python -m geoml.b2_a5 --config configs/b2_a5_smoke.json --data data/b2-feat-pilot --runs runs/b2-feat-pilot --out runs/b2-a5-smoke`
 asks how frozen recognizers behave when the *operator plan* is wrong (shifted, stale, with a dropped or phantom carrier,
 or authorizing an observed intruder) while the *received signal* stays physically identical. The scene is replayed with
-the source artifact's own request and verified calibration (the `none` replay must equal the stored shard), the
+the source artifact's own request and verified calibration (the `none` replay must satisfy P28's exact/toleranced parity checks), the
 co and/or cross belief is corrupted, both masks are rebuilt, and the residual is recomputed by the frozen `obs-cancel/1` from the
 co-pol IQ and the corrupted co belief (`RECEIVER_CONSISTENT`); the stored-residual `MASK_ONLY` run is only the weaker control.
 Checkpoints, scorers and thresholds come from a `geoml.b2_experiment` run directory and are never trained, fitted or
 recalibrated here; counterfactual outputs are descriptive agreement with the original label, not accuracy. Execution is capped
 (2 groups, 2 classes, one perturbation configuration, 16 replays, 24 cancellations) and CPU only. See
 [P28](docs/plan/P28_b2_e4_dual_pol_a5.md), [context](docs/engineering/B2_E4_CONTEXT.md) and the
-[bounded pilot](docs/results/b2_a5_dual_pol_pilot.md); the pilot checkpoints are chance-level stand-ins, so nothing here
-is a robustness or recognition result.
+[bounded pilot](docs/results/b2_a5_dual_pol_pilot.md). PR #15's exact head
+`a595bcfae465e30dd8263cbeb57fae29b7dc9102` passed
+[run 39947778403](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39947778403),
+[job 120394555595](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39947778403/job/120394555595):
+95 E4 tests plus 1087 other repository tests, with no skips or failures. These are historical merge-head CI results,
+separate from post-merge recovery checks.
+
+The earlier merge contained references to absent pilot/review documents; those references alone did not establish measured evidence.
+Recovery follows the predeclared [nine-invocation plan](docs/engineering/B2_E4_POSTMERGE_EXECUTION.json), a subset of the
+25-invocation inventory; all 16 unselected invocations remain pending. The matrix driver enters the bounded CLI even for
+completed outputs so current provenance is checked before reuse, retains per-attempt logs and propagates subprocess failures.
+A successful selected subset returns exit 3 (`PARTIAL`); only all 25 verified invocations can report a complete matrix.
+The measured recovery subset completed9/25,16pending, with32exact replay parity checks;
+local regression was1220passed+1environment RSS skip, followed by7final affected summary tests.
+The tiny CPU stand-in checkpoints and paired counterfactual metrics establish execution only; no result here establishes
+robustness or recognition performance. K18/K17d/OBS-CANCEL/2 remain pending and `benchmark_complete=false`.
