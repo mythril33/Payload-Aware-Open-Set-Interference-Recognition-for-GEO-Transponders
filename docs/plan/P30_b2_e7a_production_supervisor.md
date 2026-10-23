@@ -99,7 +99,7 @@ SIGKILLed the child dies with it; the next start records the missing end as `sup
 still alive, and continues from the audited state. A lost attempt is **charged**, not forgiven: its wall time is the last
 heartbeat's elapsed time plus one heartbeat interval plus one second, and its CPU is the last heartbeat's CPU plus that interval
 times the locked thread count; the record says `estimated: true` and the note calls it an upper-bound estimate from the last
-heartbeat, not a measurement. Repeated losses therefore cannot buy extra wall or core hours. A kill inside the rename window leaves part/meta files
+heartbeat, not a measurement (its `peak_rss_kib` is the last heartbeat's polled peak). Repeated losses therefore cannot buy extra wall or core hours. A kill inside the rename window leaves part/meta files
 without a committed descriptor: the next audit reports `NEEDS_QUARANTINE` and the supervisor moves exactly those files to
 `quarantine/<stamp>-<seq>/<role>/` with a `QUARANTINE.json` (sizes, SHA-256), journals them, re-audits and resumes. Nothing is ever
 deleted; `INVALID` roots (modified bytes, wrong or repeated groups, tampered request or manifest, source drift) are never touched
@@ -124,6 +124,9 @@ manifest, a short inventory, a plan/root mismatch or a missing final record refu
 wrapper outside `tests/`); 3 failed (child failure, invalid or drifted artifacts, ceiling or timing-gate stop, incomplete scope, a
 dry-run/plan check that FAILs, an unexpected I/O error); 4 dry-run/plan BLOCKED, or verify/status with an orphan awaiting quarantine
 (`NEEDS_QUARANTINE` maps to BLOCKED); 5 verify/status found stages not yet complete; 6 interrupted (resumable).
+
+Evidence: the capped real-physics run is in [`docs/results/b2_e7a_supervisor_verification.md`](../results/b2_e7a_supervisor_verification.md) (driver
+`scripts/b2_e7a_capped_verification.py`, raw journal committed and verified by a test).
 
 ## 8. Limits
 

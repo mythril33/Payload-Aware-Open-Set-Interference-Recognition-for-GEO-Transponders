@@ -55,8 +55,13 @@ def wait_for(predicate, timeout_s, interval=0.5):
 
 def render_markdown(summary):
     lock, journal = summary["lock"], summary["journal"]
+    def peaks(a):
+        if a.get("estimated"):                                   # a lost attempt: peak_rss_kib is the last heartbeat's polled value
+            return f"{a.get('peak_rss_kib', 0) // 1024} (last heartbeat)", "-"
+        return str(a.get("peak_rss_polled_kib", 0) // 1024), str(a.get("peak_rss_kib", 0) // 1024)
+
     rows = "\n".join(f"| {a['attempt_id']} | {a['reason']} | {a['exit_code']} | {a['elapsed_s']} | {round(a['cpu_user_s'] + a['cpu_sys_s'], 1)} | "
-                     f"{a.get('peak_rss_polled_kib', 0) // 1024} | {a.get('peak_rss_kib', 0) // 1024} | {'yes' if a.get('estimated') else 'no'} |"
+                     f"{peaks(a)[0]} | {peaks(a)[1]} | {'yes (upper-bound estimate)' if a.get('estimated') else 'no'} |"
                      for a in summary["attempts"])
     stages = "\n".join(f"| {stage} | {e['attempts']} | {e['observations']} | {e['attempt_wall_s']} | {e['cpu_s']} | "
                        f"{e['wall_s_per_observation_including_startup_and_repeated_restarts']} |"
@@ -72,7 +77,8 @@ CLIs and the real physics chain (no stand-in), driven by [`scripts/b2_e7a_capped
 through [`scripts/b2_production_supervisor.py`](../../scripts/b2_production_supervisor.py) ([P30](../plan/P30_b2_e7a_production_supervisor.md)).
 Machine-readable twin: [`b2_e7a_supervisor_verification.json`](b2_e7a_supervisor_verification.json); the raw journal is committed byte for
 byte ([`{journal['file']}`]({journal['file']}) + [`{journal['head_file']}`]({journal['head_file']}), sha256 `{journal['sha256'][:16]}...`,
-{journal['records']} records, head `{journal['head'][:16]}...`) and verifies with `Journal.load`. Its argv/log fields hold scratch paths.
+{journal['records']} records, head `{journal['head'][:16]}...`); copied into one directory as `journal.jsonl` / `journal.head` it verifies with `Journal.load`
+(a test does exactly that). Its argv/log fields hold scratch paths.
 
 Lock: git commit `{lock['git_commit'][:12]}`, tree {'clean' if lock['git_clean'] else 'DIRTY (--allow-dirty-fixture)'}, lock `{lock['lock_fingerprint'][:16]}...`.
 
@@ -95,7 +101,7 @@ also carries the supervisor's own memory at fork (so it is near-constant across 
 |---|---|---|---|---|---|---|---|
 {rows}
 
-Whole-attempt cost per stage (start-up and the repeated start-up of every restart included; **this is not a validation of the 3.8-5.0 s/observation band**):
+Whole-attempt cost per stage (start-up and the repeated start-up of every restart included, and the estimated charge of the lost attempt; **this is not a validation of the 3.8-5.0 s/observation band**):
 
 | Stage | Attempts | Observations | Attempt wall (s) | CPU (s) | Wall per observation (s) |
 |---|---|---|---|---|---|
@@ -110,15 +116,25 @@ distorted; they show that the gate evaluates, not what a stage costs):
 
 ## Limitations (also in the JSON)
 
-""" + "\n".join(f"- {text}" for text in summary["limitations"]) + "\n"
+""" + "\n".join(f"- {text}" for text in summary["limitations"]) + (
+        "\n- The run was driven by this script at the lock commit; the later `--render-only` mode and the `estimated`-row layout of this report "
+        "changed the rendering only, not what was run.\n")
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--workdir", required=True, help="must not exist")
+    parser.add_argument("--workdir", help="must not exist")
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--allow-dirty-fixture", action="store_true", help="record a dirty tree in the lock (off by default)")
+    parser.add_argument("--render-only", action="store_true", help="re-render the markdown from the committed JSON; runs nothing")
     args = parser.parse_args(argv)
+    if args.render_only:
+        summary_path = Path(args.out_dir) / "b2_e7a_supervisor_verification.json"
+        summary = json.loads(summary_path.read_text())
+        (summary_path.with_suffix(".md")).write_text(render_markdown(summary))
+        return
+    if not args.workdir:
+        raise SystemExit("--workdir is required unless --render-only")
     work, out_dir = Path(args.workdir), Path(args.out_dir)
     if work.exists():
         raise SystemExit("the workdir must not exist")

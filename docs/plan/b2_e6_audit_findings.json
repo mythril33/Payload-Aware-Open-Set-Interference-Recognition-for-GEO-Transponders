@@ -239,9 +239,10 @@
    "id": "audit.wall_time_unmeasured_at_scale",
    "title": "Generation wall time is an extrapolation from a 60-observation matched profile",
    "status": "BLOCKED",
-   "message": "23.0-30.2 h reproduces arithmetically from 3.8-5.0 s/observation, but the known stage's group mix differs from the matched profile and nothing was timed beyond 64 observations. A start-up gate that compares the first committed shards with the band (stop if outside) belongs to the authorized run, not to this preflight. E7a measured first-shard speed on capped real-physics fixtures (this sandbox, two groups per stage): known 3.92 and 4.53, test-only 4.75 and matched 2.99 s/observation with a 6 s startup allowance, so the 3.8-5.0 band holds for known and test-only but not for matched; nothing was timed at production size.",
+   "message": "23.0-30.2 h reproduces arithmetically from 3.8-5.0 s/observation, but the known stage's group mix differs from the matched profile and nothing was timed beyond 64 observations. A start-up gate that compares the first committed shards with the band (stop if outside) belongs to the authorized run, not to this preflight. E7a's capped real-physics run (this sandbox, two groups per stage, clean tree) cost 4.67 s/observation for the known stage (64 observations, three attempts including the restarts and the estimated charge of one lost attempt), 5.29 for test-only (10) and 4.94 for matched (6) as whole-attempt wall per observation including start-up; the first-shard gate figures (3.1-4.5 s/observation) subtract a fixed 6 s allowance from 3-8 observation shards and are not per-observation costs, so they neither confirm nor refute the 3.8-5.0 band for any stage. Nothing was timed at production size.",
    "evidence": [
-    "docs/results/b2_production_budget.md:12-40"
+    "docs/results/b2_production_budget.md:12-40",
+    "docs/results/b2_e7a_supervisor_verification.json"
    ]
   },
   {
@@ -266,12 +267,15 @@
    "id": "audit.supervisor_real_physics_capped",
    "title": "Supervisor verified end to end with real physics on a two-group-per-stage fixture",
    "status": "PASS",
-   "message": "Real generators (obs-cancel/1), 80 observations in total: dry run created nothing; SIGINT after the first known shard gave exit 6 with a resumable root, verify exit 5 and a refused completion; the restart finished all stages, verify exit 0, completion.json written with scope fixture, production_complete=false, benchmark_complete=false. Peak child RSS 570-583 MiB; wall 388 s, CPU 451 s over four attempts.",
+   "message": "Real generators (obs-cancel/1), 80 observations in total, clean tree at commit dd5d965: the dry run created nothing (exit 4); SIGINT after the first known shard gave exit 6 with a resumable root, verify exit 5 and a refused completion (exit 3); the supervisor was then SIGKILLed mid-attempt (its child died with it), the next start recorded supervisor_lost with an estimated charge, and the third start finished all stages; verify exit 0 and completion.json (scope fixture, production_complete=false, benchmark_complete=false). Child peak RSS 506-572 MiB (polled VmHWM); five attempts, wall 382 s, CPU 452 s, the lost attempt's share estimated. The raw journal (113 records) is committed and verifies with Journal.load.",
    "evidence": [
     "docs/results/b2_e7a_supervisor_verification.json",
-    "docs/results/b2_e7a_supervisor_verification.md"
+    "docs/results/b2_e7a_supervisor_verification.md",
+    "docs/results/b2_e7a_supervisor_journal.jsonl",
+    "docs/results/b2_e7a_supervisor_journal.head",
+    "scripts/b2_e7a_capped_verification.py"
    ],
-   "verified_by": "inspection: docs/results/b2_e7a_supervisor_verification.json (journal of the capped real-physics run)"
+   "verified_by": "tests/test_b2_production_supervisor.py::test_the_committed_real_physics_journal_verifies_and_matches_its_summary"
   },
   {
    "id": "audit.production_launch_not_implemented",
@@ -307,7 +311,7 @@
    "id": "audit.loader_synchronous",
    "title": "The training data loader is synchronous",
    "status": "BLOCKED",
-   "message": "No DataLoader, prefetch or workers exist. At the E1 rates the data path alone is roughly 39 minutes per 30-epoch fit (about 5.9 h for nine fits), comparable to the whole 6 GPU-h reservation; unverified on the target host. The authorized GPU probe must measure end to end.",
+   "message": "No DataLoader, prefetch or workers exist. At the E1 rates the train-read and preprocessing path alone is roughly 39 minutes per 30-epoch fit (about 5.9 h for nine fits); the estimate omits the val-select read and preprocessing and the K17b re-preprocessing, which bring it to about 47 minutes per fit and 7.0 h for nine (roughly 1.9x the whole 6 GPU-h reservation); unverified on the target host. The authorized GPU probe must measure end to end.",
    "evidence": [
     "docs/plan/B2_E7_TRAINING_SPEC_PROPOSAL.md",
     "docs/results/b2_streaming_memory.md"

@@ -635,9 +635,10 @@
       "gates_changed": false,
       "review_hardened": true,
       "journal_anchor": "journal.head",
-      "tests_collected": 126,
+      "tests_collected": 127,
       "child_wrapper": "fixture diagnostic restricted to the repository's tests/ directory and hashed into the run identity",
-      "verification_script": "scripts/b2_e7a_capped_verification.py"
+      "verification_script": "scripts/b2_e7a_capped_verification.py",
+      "verification_commit": "dd5d9655f191d27558e0f185a954e93ca68eff80"
     },
     "k18_train_diagnostics": {
       "status": "E7A_DRAFT_DELIVERY",

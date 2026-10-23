@@ -1450,3 +1450,28 @@ def test_a_child_that_touches_300_mib_reports_at_least_that(tmp_path):
     outcome, _ = supervise(tmp_path, code, interrupt_after=1e9)
     assert outcome["reason"] == "exited" and outcome["peak_rss_polled_kib"] >= 300 * 1024 * 0.98
     assert outcome["peak_rss_kib"] >= outcome["peak_rss_polled_kib"] * 0.95
+
+
+# ---- 15 the committed capped real-physics evidence ----------------------------------------------------------------------------
+
+def test_the_committed_real_physics_journal_verifies_and_matches_its_summary(tmp_path):
+    results = ROOT / "docs" / "results"
+    summary = strict((results / "b2_e7a_supervisor_verification.json").read_text())
+    shutil.copy(results / summary["journal"]["file"], tmp_path / "journal.jsonl")
+    shutil.copy(results / summary["journal"]["head_file"], tmp_path / "journal.head")
+    found, problems = sup.Journal.load(tmp_path / "journal.jsonl")
+    assert problems == [] and len(found) == summary["journal"]["records"] and found[-1]["sha256"] == summary["journal"]["head"]
+    assert pre._file_hash(tmp_path / "journal.jsonl") == summary["journal"]["sha256"]
+    assert found[0]["event"] == "supervisor_start" and found[0]["restart"] is False and found[-1]["event"] == "stages_complete"
+    assert [r["restart"] for r in found if r["event"] == "supervisor_start"] == [False, True, True]       # three supervisor starts
+    ends = [r for r in found if r["event"] == "attempt_end"]
+    assert [(r["attempt_id"], r["reason"]) for r in ends] == [("known-01", "interrupted"), ("known-02", "supervisor_lost"),
+                                                             ("known-03", "exited"), ("test-01", "exited"), ("matched-01", "exited")]
+    assert next(r for r in ends if r["reason"] == "supervisor_lost")["estimated"] is True
+    assert sup.usage_from(found) == summary["usage"] and summary["lock"]["git_clean"] is True
+    assert summary["benchmark_complete"] is False and summary["production_complete"] is False
+    assert summary["completion_marker"]["production_authorized"] is False and summary["completion_marker"]["scope"] == "fixture"
+    spec = importlib.util.spec_from_file_location("b2_e7a_capped_verification", ROOT / "scripts" / "b2_e7a_capped_verification.py")
+    driver = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(driver)
+    assert (results / "b2_e7a_supervisor_verification.md").read_text() == driver.render_markdown(summary)       # the report is its JSON
