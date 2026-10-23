@@ -68,4 +68,5 @@ experiment config); single-window runs are bit-identical to the former in-memory
 Blocked on researcher decisions: K18 loss weights, K17d drift handling,
 OBS-CANCEL/2, compute authorization for full production and GPU training.
 E2 first slice (P25, 2026-10-22): `geoml.b2_loko` plans all A8 folds and supports a capped single CPU smoke fold. Production dispatcher and multi-seed aggregation remain unimplemented.
-Remaining code work: production LOKO execution/aggregation, EDSC/XGBoost baselines, A5 dual-pol test corruption.
+E3a ([P26](docs/plan/P26_b2_e3a_edsc_baseline.md)): `geoml.b2_edsc` is a bounded E1-streamed binary EDSC baseline using only P20 observed residual evidence and observed carrier normalization, clean-only val-calib thresholds and paired evaluation. Optional CA-CFAR shares the binary metric/calibration interface; neural known-acceptance thresholds are incompatible. No multiclass EDSC predictions or OSCR. See [verification](docs/results/b2_edsc_baseline.md).
+Remaining code work: production LOKO execution/aggregation, E3b XGBoost, A5 dual-pol test corruption and full-scale validation.

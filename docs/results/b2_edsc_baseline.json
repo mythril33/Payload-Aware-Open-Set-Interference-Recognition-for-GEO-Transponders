@@ -1,0 +1,4734 @@
+{
+  "report_version": "B2-EDSC-engineering-report/1",
+  "benchmark_complete": false,
+  "base_main": "2cc473fad07fc08984c17e212a06ddb26409a9cd",
+  "protocol": "EDSC/1",
+  "run_id": "7527661bce5b090e477a609a88ad42f91c002e527a13789895999b1c833935bd",
+  "evidence_scope": "Bounded engineering and existing real-RF pilot only; no recognition or population-Pfa claim",
+  "evaluation_identity": {
+    "known": "dcffb26470837a5340277d5ca9af7e3f7377cad9c809e5fd37d05769c95bb83b",
+    "unknown": "3b49f0b324e5a5e9653760d1fc99bfcfa81c08871dd71fad119793c19aae8d8c",
+    "matched": "0bb04632b4fa8d4e2db1346f3f8cd2df306398d60d4bc7a50c6e3919d89aa434"
+  },
+  "sample_counts": {
+    "train": 16,
+    "val-select": 16,
+    "val-calib": 16,
+    "test": 16,
+    "known": 16,
+    "unknown": 10,
+    "matched": 6
+  },
+  "calibration": {
+    "edsc": {
+      "method": "edsc",
+      "threshold": -16.335754777539066,
+      "comparison": ">",
+      "nominal_pfa": 0.05,
+      "quantile": "higher empirical 0.95 quantile",
+      "n_calibration": 2,
+      "n_calibration_groups": 2,
+      "false_alarm_count": 0,
+      "false_alarm_rate": 0.0,
+      "empirical_resolution": 0.5,
+      "small_population": true,
+      "population_claim": "empirical calibration only; nominal Pfa is not a population guarantee",
+      "role": "val-calib",
+      "population": "clean only",
+      "provenance": "7527661bce5b090e477a609a88ad42f91c002e527a13789895999b1c833935bd",
+      "score_statistics": null
+    },
+    "cfar_plan": {
+      "method": "cfar_plan",
+      "threshold": 0.9999949512336698,
+      "comparison": ">",
+      "nominal_pfa": 0.05,
+      "quantile": "higher empirical 0.95 quantile",
+      "n_calibration": 2,
+      "n_calibration_groups": 2,
+      "false_alarm_count": 0,
+      "false_alarm_rate": 0.0,
+      "empirical_resolution": 0.5,
+      "small_population": true,
+      "population_claim": "empirical calibration only; nominal Pfa is not a population guarantee",
+      "role": "val-calib",
+      "population": "clean only",
+      "provenance": "7527661bce5b090e477a609a88ad42f91c002e527a13789895999b1c833935bd",
+      "score_statistics": {
+        "mean": [
+          0.3038806766271591,
+          4.69480037689209
+        ],
+        "std_plus_1e_minus6": [
+          0.04615590138530731,
+          0.19806818826293945
+        ]
+      }
+    },
+    "cfar_blind": {
+      "method": "cfar_blind",
+      "threshold": 0.9999992324751396,
+      "comparison": ">",
+      "nominal_pfa": 0.05,
+      "quantile": "higher empirical 0.95 quantile",
+      "n_calibration": 2,
+      "n_calibration_groups": 2,
+      "false_alarm_count": 0,
+      "false_alarm_rate": 0.0,
+      "empirical_resolution": 0.5,
+      "small_population": true,
+      "population_claim": "empirical calibration only; nominal Pfa is not a population guarantee",
+      "role": "val-calib",
+      "population": "clean only",
+      "provenance": "7527661bce5b090e477a609a88ad42f91c002e527a13789895999b1c833935bd",
+      "score_statistics": {
+        "mean": [
+          3.8529820442199707,
+          7.451395034790039
+        ],
+        "std_plus_1e_minus6": [
+          1.3028893934020995,
+          1.2271662221679687
+        ]
+      }
+    }
+  },
+  "verification": {
+    "focused": {
+      "command": [
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_b2_edsc.py",
+        "tests/test_edsc.py",
+        "tests/test_b2_edsc_metrics.py"
+      ],
+      "wall_seconds": 16.722984397999994,
+      "peak_rss_kib": 557920,
+      "exit_code": 0
+    },
+    "smoke": {
+      "command": [
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "geoml.b2_edsc",
+        "--data",
+        "data/b2-readiness-known",
+        "--unknown-data",
+        "data/b2-readiness-test",
+        "--matched-data",
+        "data/b2-readiness-matched",
+        "--smoke",
+        "--with-cfar",
+        "--bootstrap",
+        "200",
+        "--out",
+        "runs/b2-e3a-edsc-smoke"
+      ],
+      "wall_seconds": 4.43131405500003,
+      "peak_rss_kib": 251600,
+      "exit_code": 0
+    },
+    "independent_arithmetic_audit": {
+      "command": [
+        "/workspace/.venvs/geosim/bin/python",
+        "scripts/check_b2_edsc_smoke.py"
+      ],
+      "wall_seconds": 0.3167853100000002,
+      "peak_rss_kib": 27736,
+      "exit_code": 0,
+      "result": {
+        "independent_method": "raw np.load; float64 direct linear PSD means; log10 of ratio; manual frequency grid; sorted higher quantile",
+        "calibration_clean_scores_db": [
+          -18.43926559996182,
+          -16.33575477753906
+        ],
+        "threshold_db": -16.33575477753906,
+        "stored_threshold_db": -16.335754777539066,
+        "threshold_abs_discrepancy_db": 7.105427357601002e-15,
+        "calibration_false_alarms": 0,
+        "n_calibration_clean": 2,
+        "checks": {
+          "known": {
+            "n": 16,
+            "max_abs_score_discrepancy_db": 1.7763568394002505e-14,
+            "clean_alarms": 1,
+            "n_clean": 2,
+            "event_alarms": 13,
+            "n_event": 14
+          },
+          "unknown": {
+            "n": 10,
+            "max_abs_score_discrepancy_db": 1.7763568394002505e-14
+          },
+          "matched": {
+            "n": 6,
+            "max_abs_score_discrepancy_db": 2.1316282072803006e-14
+          }
+        },
+        "wall_seconds": 0.19152787900009116,
+        "peak_rss_kib": 27736
+      }
+    },
+    "full": {
+      "command": [
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ],
+      "wall_seconds": 378.39674051299994,
+      "peak_rss_kib": 1281420,
+      "exit_code": 0
+    }
+  },
+  "full_suite": {
+    "command": [
+      "/workspace/.venvs/geosim/bin/python",
+      "-m",
+      "pytest",
+      "-q"
+    ],
+    "wall_seconds": 378.39674051299994,
+    "peak_rss_kib": 1281420,
+    "exit_code": 0,
+    "status": "PASSED_WITH_ENVIRONMENT_SKIP",
+    "passed": 1023,
+    "skipped": 1,
+    "failed": 0,
+    "pytest_seconds": 376.44,
+    "skip": {
+      "nodeid": "tests/test_b2_stream.py::test_streaming_peak_memory_stays_below_the_whole_dataset_footprint",
+      "reason": "this runner does not allow resetting the peak-RSS counter (/proc/self/clear_refs)",
+      "evidence": "legacy subprocess peak_reset=false; existing E1 comparison test skipped, not failed"
+    },
+    "memory_semantics": "RUSAGE_CHILDREN maximum process RSS including waited descendants; not simultaneous aggregate memory"
+  },
+  "runtime": {
+    "wall_seconds": 1.3094995990001053,
+    "peak_rss_kib": 251600,
+    "python": "3.12.14",
+    "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+    "numpy": "2.5.4",
+    "device": "cpu",
+    "loader": "E1 verified one-shard streaming"
+  },
+  "methods": {
+    "edsc": {
+      "threshold": -16.335754777539066,
+      "clean_false_alarm": {
+        "n": 2,
+        "n_groups": 2,
+        "ci95": [
+          0.0,
+          1.0
+        ],
+        "reason": null,
+        "bootstrap": {
+          "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+          "requested": 200,
+          "valid": 200,
+          "seed": 20261022
+        },
+        "rate": 0.5,
+        "count": 1
+      },
+      "known_event_detection": {
+        "n": 14,
+        "n_groups": 2,
+        "ci95": [
+          0.8571428571428571,
+          1.0
+        ],
+        "reason": null,
+        "bootstrap": {
+          "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+          "requested": 200,
+          "valid": 200,
+          "seed": 20261022
+        },
+        "rate": 0.9285714285714286,
+        "count": 13
+      },
+      "per_class": {
+        "clean": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            0.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 0.5,
+          "count": 1
+        },
+        "cw": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            0.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 0.5,
+          "count": 1
+        },
+        "swept_cw": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 1.0,
+          "count": 2
+        },
+        "unauthorized": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 1.0,
+          "count": 2
+        },
+        "overdrive": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 1.0,
+          "count": 2
+        },
+        "cross_pol": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 1.0,
+          "count": 2
+        },
+        "adjacent_satellite": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 1.0,
+          "count": 2
+        },
+        "carrier_under_carrier": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 1.0,
+          "count": 2
+        }
+      },
+      "unknown": {
+        "families": {
+          "pulsed": {
+            "n": 2,
+            "pre_registered_group": "near",
+            "alarm": {
+              "n": 2,
+              "n_groups": 2,
+              "ci95": [
+                0.0,
+                1.0
+              ],
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022
+              },
+              "rate": 0.5,
+              "count": 1
+            },
+            "ranking": {
+              "unknown_auroc": 0.21875,
+              "unknown_aupr": 0.10416666666666666,
+              "unknown_fpr_at_95_tpr": 0.875,
+              "n_known": 16,
+              "n_unknown": 2,
+              "unknown_prevalence": 0.1111111111111111,
+              "ci95": {
+                "unknown_auroc": [
+                  0.125,
+                  0.25
+                ],
+                "unknown_aupr": [
+                  0.10416666666666666,
+                  0.14285714285714285
+                ],
+                "unknown_fpr_at_95_tpr": [
+                  0.75,
+                  0.875
+                ]
+              },
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022,
+                "n_groups": 2
+              },
+              "conventions": {
+                "positive": "unknown",
+                "negative": "all known test scenes, including known interference",
+                "score_direction": "higher_is_more_anomalous",
+                "aupr": "average_precision_step_integral",
+                "ties": "equal scores enter together",
+                "fpr95_denominator": "all known test scenes at first grouped threshold with >=95% unknown TPR"
+              }
+            },
+            "ranking_reason": null,
+            "expected_binary_decision": "alarm"
+          },
+          "intermittent_bursts": {
+            "n": 2,
+            "pre_registered_group": "near",
+            "alarm": {
+              "n": 2,
+              "n_groups": 2,
+              "ci95": [
+                0.0,
+                1.0
+              ],
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022
+              },
+              "rate": 0.5,
+              "count": 1
+            },
+            "ranking": {
+              "unknown_auroc": 0.1875,
+              "unknown_aupr": 0.10049019607843138,
+              "unknown_fpr_at_95_tpr": 0.9375,
+              "n_known": 16,
+              "n_unknown": 2,
+              "unknown_prevalence": 0.1111111111111111,
+              "ci95": {
+                "unknown_auroc": [
+                  0.125,
+                  0.1875
+                ],
+                "unknown_aupr": [
+                  0.10049019607843138,
+                  0.125
+                ],
+                "unknown_fpr_at_95_tpr": [
+                  0.875,
+                  0.9375
+                ]
+              },
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022,
+                "n_groups": 2
+              },
+              "conventions": {
+                "positive": "unknown",
+                "negative": "all known test scenes, including known interference",
+                "score_direction": "higher_is_more_anomalous",
+                "aupr": "average_precision_step_integral",
+                "ties": "equal scores enter together",
+                "fpr95_denominator": "all known test scenes at first grouped threshold with >=95% unknown TPR"
+              }
+            },
+            "ranking_reason": null,
+            "expected_binary_decision": "alarm"
+          },
+          "adjacent_satellite_downlink": {
+            "n": 2,
+            "pre_registered_group": "near",
+            "alarm": {
+              "n": 2,
+              "n_groups": 2,
+              "ci95": [
+                1.0,
+                1.0
+              ],
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022
+              },
+              "rate": 1.0,
+              "count": 2
+            },
+            "ranking": {
+              "unknown_auroc": 0.625,
+              "unknown_aupr": 0.3269230769230769,
+              "unknown_fpr_at_95_tpr": 0.6875,
+              "n_known": 16,
+              "n_unknown": 2,
+              "unknown_prevalence": 0.1111111111111111,
+              "ci95": {
+                "unknown_auroc": [
+                  0.125,
+                  0.875
+                ],
+                "unknown_aupr": [
+                  0.125,
+                  0.5
+                ],
+                "unknown_fpr_at_95_tpr": [
+                  0.125,
+                  0.875
+                ]
+              },
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022,
+                "n_groups": 2
+              },
+              "conventions": {
+                "positive": "unknown",
+                "negative": "all known test scenes, including known interference",
+                "score_direction": "higher_is_more_anomalous",
+                "aupr": "average_precision_step_integral",
+                "ties": "equal scores enter together",
+                "fpr95_denominator": "all known test scenes at first grouped threshold with >=95% unknown TPR"
+              }
+            },
+            "ranking_reason": null,
+            "expected_binary_decision": "alarm"
+          },
+          "wideband_noise": {
+            "n": 2,
+            "pre_registered_group": "equivalence_limited",
+            "alarm": {
+              "n": 2,
+              "n_groups": 2,
+              "ci95": [
+                1.0,
+                1.0
+              ],
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022
+              },
+              "rate": 1.0,
+              "count": 2
+            },
+            "ranking": {
+              "unknown_auroc": 0.6875,
+              "unknown_aupr": 0.22619047619047616,
+              "unknown_fpr_at_95_tpr": 0.3125,
+              "n_known": 16,
+              "n_unknown": 2,
+              "unknown_prevalence": 0.1111111111111111,
+              "ci95": {
+                "unknown_auroc": [
+                  0.625,
+                  0.75
+                ],
+                "unknown_aupr": [
+                  0.22619047619047616,
+                  0.3333333333333333
+                ],
+                "unknown_fpr_at_95_tpr": [
+                  0.25,
+                  0.375
+                ]
+              },
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022,
+                "n_groups": 2
+              },
+              "conventions": {
+                "positive": "unknown",
+                "negative": "all known test scenes, including known interference",
+                "score_direction": "higher_is_more_anomalous",
+                "aupr": "average_precision_step_integral",
+                "ties": "equal scores enter together",
+                "fpr95_denominator": "all known test scenes at first grouped threshold with >=95% unknown TPR"
+              }
+            },
+            "ranking_reason": null,
+            "expected_binary_decision": "alarm"
+          },
+          "cid_overlay": {
+            "n": 2,
+            "pre_registered_group": "benign",
+            "alarm": {
+              "n": 2,
+              "n_groups": 2,
+              "ci95": [
+                0.0,
+                1.0
+              ],
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022
+              },
+              "rate": 0.5,
+              "count": 1
+            },
+            "ranking": null,
+            "ranking_reason": "benign CID is excluded from unknown-positive ranking",
+            "expected_binary_decision": "no alarm"
+          }
+        },
+        "pooled_near": {
+          "families": [
+            "pulsed",
+            "intermittent_bursts",
+            "adjacent_satellite_downlink"
+          ],
+          "ranking": {
+            "unknown_auroc": 0.34374999999999994,
+            "unknown_aupr": 0.2806117858749438,
+            "unknown_fpr_at_95_tpr": 0.9375,
+            "n_known": 16,
+            "n_unknown": 6,
+            "unknown_prevalence": 0.2727272727272727,
+            "ci95": {
+              "unknown_auroc": [
+                0.125,
+                0.41666666666666663
+              ],
+              "unknown_aupr": [
+                0.21574074074074073,
+                0.35
+              ],
+              "unknown_fpr_at_95_tpr": [
+                0.875,
+                0.9375
+              ]
+            },
+            "reason": null,
+            "bootstrap": {
+              "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+              "requested": 200,
+              "valid": 200,
+              "seed": 20261022,
+              "n_groups": 2
+            },
+            "conventions": {
+              "positive": "unknown",
+              "negative": "all known test scenes, including known interference",
+              "score_direction": "higher_is_more_anomalous",
+              "aupr": "average_precision_step_integral",
+              "ties": "equal scores enter together",
+              "fpr95_denominator": "all known test scenes at first grouped threshold with >=95% unknown TPR"
+            }
+          },
+          "alarm": {
+            "n": 6,
+            "n_groups": 2,
+            "ci95": [
+              0.3333333333333333,
+              1.0
+            ],
+            "reason": null,
+            "bootstrap": {
+              "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+              "requested": 200,
+              "valid": 200,
+              "seed": 20261022
+            },
+            "rate": 0.6666666666666666,
+            "count": 4
+          },
+          "exclusions": "wideband_noise is reported separately; cid_overlay is benign"
+        }
+      },
+      "matched": {
+        "n_samples": 6,
+        "n_groups": 2,
+        "clean_false_alarm": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 0.0,
+          "count": 0
+        },
+        "pair": {
+          "n_pairs": 2,
+          "adjacent_satellite_detection": {
+            "n": 2,
+            "n_groups": 2,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "reason": null,
+            "bootstrap": {
+              "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+              "requested": 200,
+              "valid": 200,
+              "seed": 20261022
+            },
+            "rate": 0.0,
+            "count": 0
+          },
+          "unauthorized_detection": {
+            "n": 2,
+            "n_groups": 2,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "reason": null,
+            "bootstrap": {
+              "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+              "requested": 200,
+              "valid": 200,
+              "seed": 20261022
+            },
+            "rate": 0.0,
+            "count": 0
+          },
+          "difference_unauthorized_minus_asi": {
+            "mean": 0.0,
+            "n": 2,
+            "n_groups": 2,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "reason": null,
+            "bootstrap": {
+              "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+              "requested": 200,
+              "valid": 200,
+              "seed": 20261022
+            }
+          },
+          "score_difference_unauthorized_minus_asi": {
+            "mean": 0.2982822951170263,
+            "n": 2,
+            "n_groups": 2,
+            "ci95": [
+              -0.06597843488221145,
+              0.6625430251162641
+            ],
+            "reason": null,
+            "bootstrap": {
+              "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+              "requested": 200,
+              "valid": 200,
+              "seed": 20261022
+            }
+          }
+        },
+        "per_bin": {
+          "[4,7)": {
+            "n_samples": 3,
+            "n_groups": 1,
+            "clean_false_alarm": {
+              "n": 1,
+              "n_groups": 1,
+              "ci95": null,
+              "reason": "fewer than two scenario groups",
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 0,
+                "seed": 20261022
+              },
+              "rate": 0.0,
+              "count": 0
+            },
+            "pair": {
+              "n_pairs": 1,
+              "adjacent_satellite_detection": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 0.0,
+                "count": 0
+              },
+              "unauthorized_detection": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 0.0,
+                "count": 0
+              },
+              "difference_unauthorized_minus_asi": {
+                "mean": 0.0,
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                }
+              },
+              "score_difference_unauthorized_minus_asi": {
+                "mean": 0.6625430251162641,
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                }
+              }
+            }
+          },
+          "[7,10)": {
+            "n_samples": 3,
+            "n_groups": 1,
+            "clean_false_alarm": {
+              "n": 1,
+              "n_groups": 1,
+              "ci95": null,
+              "reason": "fewer than two scenario groups",
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 0,
+                "seed": 20261022
+              },
+              "rate": 0.0,
+              "count": 0
+            },
+            "pair": {
+              "n_pairs": 1,
+              "adjacent_satellite_detection": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 0.0,
+                "count": 0
+              },
+              "unauthorized_detection": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 0.0,
+                "count": 0
+              },
+              "difference_unauthorized_minus_asi": {
+                "mean": 0.0,
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                }
+              },
+              "score_difference_unauthorized_minus_asi": {
+                "mean": -0.06597843488221145,
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                }
+              }
+            }
+          },
+          "[10,13]": {
+            "n_samples": 0,
+            "n_groups": 0,
+            "clean_false_alarm": {
+              "n": 0,
+              "n_groups": 0,
+              "ci95": null,
+              "reason": "empty selection",
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 0,
+                "seed": 20261022
+              },
+              "rate": null,
+              "count": 0
+            },
+            "pair": {
+              "n_pairs": 0,
+              "adjacent_satellite_detection": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "unauthorized_detection": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "difference_unauthorized_minus_asi": {
+                "mean": null,
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                }
+              },
+              "score_difference_unauthorized_minus_asi": {
+                "mean": null,
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                }
+              }
+            }
+          }
+        },
+        "conventions": {
+          "bin_edges": "frozen K17c C/I_psd [4,7), [7,10), [10,13]",
+          "comparison": "paired binary alarm difference, unauthorized minus ASI; no class discrimination claim",
+          "limitation": "matched carrier widths and level distribution differ from natural test scenes"
+        },
+        "natural_comparison": {
+          "limitation": "natural and matched distributions differ in carrier width and levels",
+          "classes": {
+            "adjacent_satellite": {
+              "detection": {
+                "n": 2,
+                "n_groups": 2,
+                "ci95": [
+                  1.0,
+                  1.0
+                ],
+                "reason": null,
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 200,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 2
+              },
+              "c_over_i_psd_db": {
+                "n": 2,
+                "n_missing": 0,
+                "n_outside_bins": 1,
+                "bins": {
+                  "[4,7)": {
+                    "n": 1,
+                    "n_groups": 1,
+                    "ci95": null,
+                    "reason": "fewer than two scenario groups",
+                    "bootstrap": {
+                      "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                      "requested": 200,
+                      "valid": 0,
+                      "seed": 20261022
+                    },
+                    "rate": 1.0,
+                    "count": 1
+                  },
+                  "[7,10)": {
+                    "n": 0,
+                    "n_groups": 0,
+                    "ci95": null,
+                    "reason": "empty selection",
+                    "bootstrap": {
+                      "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                      "requested": 200,
+                      "valid": 0,
+                      "seed": 20261022
+                    },
+                    "rate": null,
+                    "count": 0
+                  },
+                  "[10,13]": {
+                    "n": 0,
+                    "n_groups": 0,
+                    "ci95": null,
+                    "reason": "empty selection",
+                    "bootstrap": {
+                      "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                      "requested": 200,
+                      "valid": 0,
+                      "seed": 20261022
+                    },
+                    "rate": null,
+                    "count": 0
+                  }
+                }
+              }
+            },
+            "unauthorized": {
+              "detection": {
+                "n": 2,
+                "n_groups": 2,
+                "ci95": [
+                  1.0,
+                  1.0
+                ],
+                "reason": null,
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 200,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 2
+              },
+              "c_over_i_psd_db": {
+                "n": 2,
+                "n_missing": 0,
+                "n_outside_bins": 0,
+                "bins": {
+                  "[4,7)": {
+                    "n": 1,
+                    "n_groups": 1,
+                    "ci95": null,
+                    "reason": "fewer than two scenario groups",
+                    "bootstrap": {
+                      "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                      "requested": 200,
+                      "valid": 0,
+                      "seed": 20261022
+                    },
+                    "rate": 1.0,
+                    "count": 1
+                  },
+                  "[7,10)": {
+                    "n": 1,
+                    "n_groups": 1,
+                    "ci95": null,
+                    "reason": "fewer than two scenario groups",
+                    "bootstrap": {
+                      "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                      "requested": 200,
+                      "valid": 0,
+                      "seed": 20261022
+                    },
+                    "rate": 1.0,
+                    "count": 1
+                  },
+                  "[10,13]": {
+                    "n": 0,
+                    "n_groups": 0,
+                    "ci95": null,
+                    "reason": "empty selection",
+                    "bootstrap": {
+                      "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                      "requested": 200,
+                      "valid": 0,
+                      "seed": 20261022
+                    },
+                    "rate": null,
+                    "count": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "unsupported": {
+        "multiclass_accuracy": null,
+        "oscr_auc": null,
+        "class_predictions": null,
+        "n_known": 16,
+        "reason": "binary anomaly scores provide no known-class predictions; OSCR requires correct class decisions"
+      },
+      "operating_conditions": {
+        "clean": {
+          "ibo_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[1,4)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[4,9)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[9,11)": {
+                "n": 2,
+                "n_groups": 2,
+                "ci95": [
+                  0.0,
+                  1.0
+                ],
+                "reason": null,
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 200,
+                  "seed": 20261022
+                },
+                "rate": 0.5,
+                "count": 1
+              },
+              "[11,13]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          },
+          "cn_up_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[15,20)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 0.0,
+                "count": 0
+              },
+              "[20,25)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[25,30]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          },
+          "cn_dn_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[15,20)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[20,25)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[25,30]": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 0.0,
+                "count": 0
+              }
+            }
+          }
+        },
+        "cw": {
+          "ibo_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[1,4)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[4,9)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[9,11)": {
+                "n": 2,
+                "n_groups": 2,
+                "ci95": [
+                  0.0,
+                  1.0
+                ],
+                "reason": null,
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 200,
+                  "seed": 20261022
+                },
+                "rate": 0.5,
+                "count": 1
+              },
+              "[11,13]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          },
+          "cn_up_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[15,20)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 0.0,
+                "count": 0
+              },
+              "[20,25)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[25,30]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          },
+          "cn_dn_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[15,20)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[20,25)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[25,30]": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 0.0,
+                "count": 0
+              }
+            }
+          }
+        },
+        "swept_cw": {
+          "ibo_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[1,4)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[4,9)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[9,11)": {
+                "n": 2,
+                "n_groups": 2,
+                "ci95": [
+                  1.0,
+                  1.0
+                ],
+                "reason": null,
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 200,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 2
+              },
+              "[11,13]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          },
+          "cn_up_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[15,20)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[20,25)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[25,30]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          },
+          "cn_dn_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[15,20)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[20,25)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[25,30]": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              }
+            }
+          }
+        },
+        "unauthorized": {
+          "ibo_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[1,4)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[4,9)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[9,11)": {
+                "n": 2,
+                "n_groups": 2,
+                "ci95": [
+                  1.0,
+                  1.0
+                ],
+                "reason": null,
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 200,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 2
+              },
+              "[11,13]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          },
+          "cn_up_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[15,20)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[20,25)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[25,30]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          },
+          "cn_dn_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[15,20)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[20,25)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[25,30]": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              }
+            }
+          },
+          "c_over_i_psd_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[4,7)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[7,10)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[10,13]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          }
+        },
+        "overdrive": {
+          "ibo_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[1,4)": {
+                "n": 2,
+                "n_groups": 2,
+                "ci95": [
+                  1.0,
+                  1.0
+                ],
+                "reason": null,
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 200,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 2
+              },
+              "[4,9)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[9,11)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[11,13]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          },
+          "cn_up_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[15,20)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[20,25)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[25,30]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          },
+          "cn_dn_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[15,20)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[20,25)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[25,30]": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              }
+            }
+          }
+        },
+        "cross_pol": {
+          "ibo_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[1,4)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[4,9)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[9,11)": {
+                "n": 2,
+                "n_groups": 2,
+                "ci95": [
+                  1.0,
+                  1.0
+                ],
+                "reason": null,
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 200,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 2
+              },
+              "[11,13]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          },
+          "cn_up_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[15,20)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[20,25)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[25,30]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          },
+          "cn_dn_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[15,20)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[20,25)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[25,30]": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              }
+            }
+          }
+        },
+        "adjacent_satellite": {
+          "ibo_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[1,4)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[4,9)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[9,11)": {
+                "n": 2,
+                "n_groups": 2,
+                "ci95": [
+                  1.0,
+                  1.0
+                ],
+                "reason": null,
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 200,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 2
+              },
+              "[11,13]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          },
+          "cn_up_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[15,20)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[20,25)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[25,30]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          },
+          "cn_dn_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[15,20)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[20,25)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[25,30]": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              }
+            }
+          },
+          "c_over_i_psd_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 1,
+            "bins": {
+              "[4,7)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[7,10)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[10,13]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          }
+        },
+        "carrier_under_carrier": {
+          "ibo_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[1,4)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[4,9)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[9,11)": {
+                "n": 2,
+                "n_groups": 2,
+                "ci95": [
+                  1.0,
+                  1.0
+                ],
+                "reason": null,
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 200,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 2
+              },
+              "[11,13]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          },
+          "cn_up_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[15,20)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[20,25)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[25,30]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          },
+          "cn_dn_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[15,20)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[20,25)": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "[25,30]": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              }
+            }
+          },
+          "c_over_i_db": {
+            "n": 2,
+            "n_missing": 0,
+            "n_outside_bins": 0,
+            "bins": {
+              "[5,15)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[15,25)": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "[25,30]": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "cfar_plan": {
+      "threshold": 0.9999949512336698,
+      "clean_false_alarm": {
+        "n": 2,
+        "n_groups": 2,
+        "ci95": [
+          0.0,
+          1.0
+        ],
+        "reason": null,
+        "bootstrap": {
+          "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+          "requested": 200,
+          "valid": 200,
+          "seed": 20261022
+        },
+        "rate": 0.5,
+        "count": 1
+      },
+      "known_event_detection": {
+        "n": 14,
+        "n_groups": 2,
+        "ci95": [
+          0.5714285714285714,
+          1.0
+        ],
+        "reason": null,
+        "bootstrap": {
+          "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+          "requested": 200,
+          "valid": 200,
+          "seed": 20261022
+        },
+        "rate": 0.7857142857142857,
+        "count": 11
+      },
+      "per_class": {
+        "clean": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            0.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 0.5,
+          "count": 1
+        },
+        "cw": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            0.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 0.5,
+          "count": 1
+        },
+        "swept_cw": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 1.0,
+          "count": 2
+        },
+        "unauthorized": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 1.0,
+          "count": 2
+        },
+        "overdrive": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            0.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 0.5,
+          "count": 1
+        },
+        "cross_pol": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 1.0,
+          "count": 2
+        },
+        "adjacent_satellite": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            0.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 0.5,
+          "count": 1
+        },
+        "carrier_under_carrier": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 1.0,
+          "count": 2
+        }
+      },
+      "unknown": {
+        "families": {
+          "pulsed": {
+            "n": 2,
+            "pre_registered_group": "near",
+            "alarm": {
+              "n": 2,
+              "n_groups": 2,
+              "ci95": [
+                0.0,
+                1.0
+              ],
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022
+              },
+              "rate": 0.5,
+              "count": 1
+            },
+            "ranking": {
+              "unknown_auroc": 0.28125,
+              "unknown_aupr": 0.11309523809523808,
+              "unknown_fpr_at_95_tpr": 0.75,
+              "n_known": 16,
+              "n_unknown": 2,
+              "unknown_prevalence": 0.1111111111111111,
+              "ci95": {
+                "unknown_auroc": [
+                  0.125,
+                  0.5
+                ],
+                "unknown_aupr": [
+                  0.11309523809523808,
+                  0.2
+                ],
+                "unknown_fpr_at_95_tpr": [
+                  0.5,
+                  0.875
+                ]
+              },
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022,
+                "n_groups": 2
+              },
+              "conventions": {
+                "positive": "unknown",
+                "negative": "all known test scenes, including known interference",
+                "score_direction": "higher_is_more_anomalous",
+                "aupr": "average_precision_step_integral",
+                "ties": "equal scores enter together",
+                "fpr95_denominator": "all known test scenes at first grouped threshold with >=95% unknown TPR"
+              }
+            },
+            "ranking_reason": null,
+            "expected_binary_decision": "alarm"
+          },
+          "intermittent_bursts": {
+            "n": 2,
+            "pre_registered_group": "near",
+            "alarm": {
+              "n": 2,
+              "n_groups": 2,
+              "ci95": [
+                1.0,
+                1.0
+              ],
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022
+              },
+              "rate": 1.0,
+              "count": 2
+            },
+            "ranking": {
+              "unknown_auroc": 0.3125,
+              "unknown_aupr": 0.11688311688311688,
+              "unknown_fpr_at_95_tpr": 0.75,
+              "n_known": 16,
+              "n_unknown": 2,
+              "unknown_prevalence": 0.1111111111111111,
+              "ci95": {
+                "unknown_auroc": [
+                  0.25,
+                  0.5
+                ],
+                "unknown_aupr": [
+                  0.11688311688311688,
+                  0.2
+                ],
+                "unknown_fpr_at_95_tpr": [
+                  0.5,
+                  0.75
+                ]
+              },
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022,
+                "n_groups": 2
+              },
+              "conventions": {
+                "positive": "unknown",
+                "negative": "all known test scenes, including known interference",
+                "score_direction": "higher_is_more_anomalous",
+                "aupr": "average_precision_step_integral",
+                "ties": "equal scores enter together",
+                "fpr95_denominator": "all known test scenes at first grouped threshold with >=95% unknown TPR"
+              }
+            },
+            "ranking_reason": null,
+            "expected_binary_decision": "alarm"
+          },
+          "adjacent_satellite_downlink": {
+            "n": 2,
+            "pre_registered_group": "near",
+            "alarm": {
+              "n": 2,
+              "n_groups": 2,
+              "ci95": [
+                0.0,
+                1.0
+              ],
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022
+              },
+              "rate": 0.5,
+              "count": 1
+            },
+            "ranking": {
+              "unknown_auroc": 0.21875,
+              "unknown_aupr": 0.10512820512820513,
+              "unknown_fpr_at_95_tpr": 0.8125,
+              "n_known": 16,
+              "n_unknown": 2,
+              "unknown_prevalence": 0.1111111111111111,
+              "ci95": {
+                "unknown_auroc": [
+                  0.0,
+                  0.375
+                ],
+                "unknown_aupr": [
+                  0.10512820512820513,
+                  0.16666666666666666
+                ],
+                "unknown_fpr_at_95_tpr": [
+                  0.625,
+                  1.0
+                ]
+              },
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022,
+                "n_groups": 2
+              },
+              "conventions": {
+                "positive": "unknown",
+                "negative": "all known test scenes, including known interference",
+                "score_direction": "higher_is_more_anomalous",
+                "aupr": "average_precision_step_integral",
+                "ties": "equal scores enter together",
+                "fpr95_denominator": "all known test scenes at first grouped threshold with >=95% unknown TPR"
+              }
+            },
+            "ranking_reason": null,
+            "expected_binary_decision": "alarm"
+          },
+          "wideband_noise": {
+            "n": 2,
+            "pre_registered_group": "equivalence_limited",
+            "alarm": {
+              "n": 2,
+              "n_groups": 2,
+              "ci95": [
+                0.0,
+                1.0
+              ],
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022
+              },
+              "rate": 0.5,
+              "count": 1
+            },
+            "ranking": {
+              "unknown_auroc": 0.3125,
+              "unknown_aupr": 0.11688311688311688,
+              "unknown_fpr_at_95_tpr": 0.75,
+              "n_known": 16,
+              "n_unknown": 2,
+              "unknown_prevalence": 0.1111111111111111,
+              "ci95": {
+                "unknown_auroc": [
+                  0.0,
+                  0.5
+                ],
+                "unknown_aupr": [
+                  0.1111111111111111,
+                  0.2
+                ],
+                "unknown_fpr_at_95_tpr": [
+                  0.5,
+                  1.0
+                ]
+              },
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022,
+                "n_groups": 2
+              },
+              "conventions": {
+                "positive": "unknown",
+                "negative": "all known test scenes, including known interference",
+                "score_direction": "higher_is_more_anomalous",
+                "aupr": "average_precision_step_integral",
+                "ties": "equal scores enter together",
+                "fpr95_denominator": "all known test scenes at first grouped threshold with >=95% unknown TPR"
+              }
+            },
+            "ranking_reason": null,
+            "expected_binary_decision": "alarm"
+          },
+          "cid_overlay": {
+            "n": 2,
+            "pre_registered_group": "benign",
+            "alarm": {
+              "n": 2,
+              "n_groups": 2,
+              "ci95": [
+                0.0,
+                1.0
+              ],
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022
+              },
+              "rate": 0.5,
+              "count": 1
+            },
+            "ranking": null,
+            "ranking_reason": "benign CID is excluded from unknown-positive ranking",
+            "expected_binary_decision": "no alarm"
+          }
+        },
+        "pooled_near": {
+          "families": [
+            "pulsed",
+            "intermittent_bursts",
+            "adjacent_satellite_downlink"
+          ],
+          "ranking": {
+            "unknown_auroc": 0.27083333333333337,
+            "unknown_aupr": 0.21744372758304648,
+            "unknown_fpr_at_95_tpr": 0.8125,
+            "n_known": 16,
+            "n_unknown": 6,
+            "unknown_prevalence": 0.2727272727272727,
+            "ci95": {
+              "unknown_auroc": [
+                0.125,
+                0.4583333333333333
+              ],
+              "unknown_aupr": [
+                0.2126022126022126,
+                0.30277777777777776
+              ],
+              "unknown_fpr_at_95_tpr": [
+                0.625,
+                1.0
+              ]
+            },
+            "reason": null,
+            "bootstrap": {
+              "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+              "requested": 200,
+              "valid": 200,
+              "seed": 20261022,
+              "n_groups": 2
+            },
+            "conventions": {
+              "positive": "unknown",
+              "negative": "all known test scenes, including known interference",
+              "score_direction": "higher_is_more_anomalous",
+              "aupr": "average_precision_step_integral",
+              "ties": "equal scores enter together",
+              "fpr95_denominator": "all known test scenes at first grouped threshold with >=95% unknown TPR"
+            }
+          },
+          "alarm": {
+            "n": 6,
+            "n_groups": 2,
+            "ci95": [
+              0.3333333333333333,
+              1.0
+            ],
+            "reason": null,
+            "bootstrap": {
+              "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+              "requested": 200,
+              "valid": 200,
+              "seed": 20261022
+            },
+            "rate": 0.6666666666666666,
+            "count": 4
+          },
+          "exclusions": "wideband_noise is reported separately; cid_overlay is benign"
+        }
+      },
+      "matched": {
+        "n_samples": 6,
+        "n_groups": 2,
+        "clean_false_alarm": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 0.0,
+          "count": 0
+        },
+        "pair": {
+          "n_pairs": 2,
+          "adjacent_satellite_detection": {
+            "n": 2,
+            "n_groups": 2,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "reason": null,
+            "bootstrap": {
+              "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+              "requested": 200,
+              "valid": 200,
+              "seed": 20261022
+            },
+            "rate": 0.0,
+            "count": 0
+          },
+          "unauthorized_detection": {
+            "n": 2,
+            "n_groups": 2,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "reason": null,
+            "bootstrap": {
+              "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+              "requested": 200,
+              "valid": 200,
+              "seed": 20261022
+            },
+            "rate": 1.0,
+            "count": 2
+          },
+          "difference_unauthorized_minus_asi": {
+            "mean": 1.0,
+            "n": 2,
+            "n_groups": 2,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "reason": null,
+            "bootstrap": {
+              "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+              "requested": 200,
+              "valid": 200,
+              "seed": 20261022
+            }
+          },
+          "score_difference_unauthorized_minus_asi": {
+            "mean": 69.89338085312431,
+            "n": 2,
+            "n_groups": 2,
+            "ci95": [
+              50.761812212504424,
+              89.02494949374422
+            ],
+            "reason": null,
+            "bootstrap": {
+              "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+              "requested": 200,
+              "valid": 200,
+              "seed": 20261022
+            }
+          }
+        },
+        "per_bin": {
+          "[4,7)": {
+            "n_samples": 3,
+            "n_groups": 1,
+            "clean_false_alarm": {
+              "n": 1,
+              "n_groups": 1,
+              "ci95": null,
+              "reason": "fewer than two scenario groups",
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 0,
+                "seed": 20261022
+              },
+              "rate": 0.0,
+              "count": 0
+            },
+            "pair": {
+              "n_pairs": 1,
+              "adjacent_satellite_detection": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 0.0,
+                "count": 0
+              },
+              "unauthorized_detection": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "difference_unauthorized_minus_asi": {
+                "mean": 1.0,
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                }
+              },
+              "score_difference_unauthorized_minus_asi": {
+                "mean": 50.761812212504424,
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                }
+              }
+            }
+          },
+          "[7,10)": {
+            "n_samples": 3,
+            "n_groups": 1,
+            "clean_false_alarm": {
+              "n": 1,
+              "n_groups": 1,
+              "ci95": null,
+              "reason": "fewer than two scenario groups",
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 0,
+                "seed": 20261022
+              },
+              "rate": 0.0,
+              "count": 0
+            },
+            "pair": {
+              "n_pairs": 1,
+              "adjacent_satellite_detection": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 0.0,
+                "count": 0
+              },
+              "unauthorized_detection": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "difference_unauthorized_minus_asi": {
+                "mean": 1.0,
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                }
+              },
+              "score_difference_unauthorized_minus_asi": {
+                "mean": 89.02494949374422,
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                }
+              }
+            }
+          },
+          "[10,13]": {
+            "n_samples": 0,
+            "n_groups": 0,
+            "clean_false_alarm": {
+              "n": 0,
+              "n_groups": 0,
+              "ci95": null,
+              "reason": "empty selection",
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 0,
+                "seed": 20261022
+              },
+              "rate": null,
+              "count": 0
+            },
+            "pair": {
+              "n_pairs": 0,
+              "adjacent_satellite_detection": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "unauthorized_detection": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "difference_unauthorized_minus_asi": {
+                "mean": null,
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                }
+              },
+              "score_difference_unauthorized_minus_asi": {
+                "mean": null,
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                }
+              }
+            }
+          }
+        },
+        "conventions": {
+          "bin_edges": "frozen K17c C/I_psd [4,7), [7,10), [10,13]",
+          "comparison": "paired binary alarm difference, unauthorized minus ASI; no class discrimination claim",
+          "limitation": "matched carrier widths and level distribution differ from natural test scenes"
+        },
+        "natural_comparison": {
+          "limitation": "natural and matched distributions differ in carrier width and levels",
+          "classes": {
+            "adjacent_satellite": {
+              "detection": {
+                "n": 2,
+                "n_groups": 2,
+                "ci95": [
+                  0.0,
+                  1.0
+                ],
+                "reason": null,
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 200,
+                  "seed": 20261022
+                },
+                "rate": 0.5,
+                "count": 1
+              },
+              "c_over_i_psd_db": {
+                "n": 2,
+                "n_missing": 0,
+                "n_outside_bins": 1,
+                "bins": {
+                  "[4,7)": {
+                    "n": 1,
+                    "n_groups": 1,
+                    "ci95": null,
+                    "reason": "fewer than two scenario groups",
+                    "bootstrap": {
+                      "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                      "requested": 200,
+                      "valid": 0,
+                      "seed": 20261022
+                    },
+                    "rate": 0.0,
+                    "count": 0
+                  },
+                  "[7,10)": {
+                    "n": 0,
+                    "n_groups": 0,
+                    "ci95": null,
+                    "reason": "empty selection",
+                    "bootstrap": {
+                      "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                      "requested": 200,
+                      "valid": 0,
+                      "seed": 20261022
+                    },
+                    "rate": null,
+                    "count": 0
+                  },
+                  "[10,13]": {
+                    "n": 0,
+                    "n_groups": 0,
+                    "ci95": null,
+                    "reason": "empty selection",
+                    "bootstrap": {
+                      "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                      "requested": 200,
+                      "valid": 0,
+                      "seed": 20261022
+                    },
+                    "rate": null,
+                    "count": 0
+                  }
+                }
+              }
+            },
+            "unauthorized": {
+              "detection": {
+                "n": 2,
+                "n_groups": 2,
+                "ci95": [
+                  1.0,
+                  1.0
+                ],
+                "reason": null,
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 200,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 2
+              },
+              "c_over_i_psd_db": {
+                "n": 2,
+                "n_missing": 0,
+                "n_outside_bins": 0,
+                "bins": {
+                  "[4,7)": {
+                    "n": 1,
+                    "n_groups": 1,
+                    "ci95": null,
+                    "reason": "fewer than two scenario groups",
+                    "bootstrap": {
+                      "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                      "requested": 200,
+                      "valid": 0,
+                      "seed": 20261022
+                    },
+                    "rate": 1.0,
+                    "count": 1
+                  },
+                  "[7,10)": {
+                    "n": 1,
+                    "n_groups": 1,
+                    "ci95": null,
+                    "reason": "fewer than two scenario groups",
+                    "bootstrap": {
+                      "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                      "requested": 200,
+                      "valid": 0,
+                      "seed": 20261022
+                    },
+                    "rate": 1.0,
+                    "count": 1
+                  },
+                  "[10,13]": {
+                    "n": 0,
+                    "n_groups": 0,
+                    "ci95": null,
+                    "reason": "empty selection",
+                    "bootstrap": {
+                      "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                      "requested": 200,
+                      "valid": 0,
+                      "seed": 20261022
+                    },
+                    "rate": null,
+                    "count": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "unsupported": {
+        "multiclass_accuracy": null,
+        "oscr_auc": null,
+        "class_predictions": null,
+        "n_known": 16,
+        "reason": "binary anomaly scores provide no known-class predictions; OSCR requires correct class decisions"
+      }
+    },
+    "cfar_blind": {
+      "threshold": 0.9999992324751396,
+      "clean_false_alarm": {
+        "n": 2,
+        "n_groups": 2,
+        "ci95": [
+          1.0,
+          1.0
+        ],
+        "reason": null,
+        "bootstrap": {
+          "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+          "requested": 200,
+          "valid": 200,
+          "seed": 20261022
+        },
+        "rate": 1.0,
+        "count": 2
+      },
+      "known_event_detection": {
+        "n": 14,
+        "n_groups": 2,
+        "ci95": [
+          0.7142857142857143,
+          0.8571428571428571
+        ],
+        "reason": null,
+        "bootstrap": {
+          "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+          "requested": 200,
+          "valid": 200,
+          "seed": 20261022
+        },
+        "rate": 0.7857142857142857,
+        "count": 11
+      },
+      "per_class": {
+        "clean": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 1.0,
+          "count": 2
+        },
+        "cw": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 1.0,
+          "count": 2
+        },
+        "swept_cw": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 1.0,
+          "count": 2
+        },
+        "unauthorized": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 1.0,
+          "count": 2
+        },
+        "overdrive": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            0.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 0.5,
+          "count": 1
+        },
+        "cross_pol": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 0.0,
+          "count": 0
+        },
+        "adjacent_satellite": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 1.0,
+          "count": 2
+        },
+        "carrier_under_carrier": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 1.0,
+          "count": 2
+        }
+      },
+      "unknown": {
+        "families": {
+          "pulsed": {
+            "n": 2,
+            "pre_registered_group": "near",
+            "alarm": {
+              "n": 2,
+              "n_groups": 2,
+              "ci95": [
+                1.0,
+                1.0
+              ],
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022
+              },
+              "rate": 1.0,
+              "count": 2
+            },
+            "ranking": {
+              "unknown_auroc": 0.5625,
+              "unknown_aupr": 0.17692307692307693,
+              "unknown_fpr_at_95_tpr": 0.6875,
+              "n_known": 16,
+              "n_unknown": 2,
+              "unknown_prevalence": 0.1111111111111111,
+              "ci95": {
+                "unknown_auroc": [
+                  0.5625,
+                  0.6875
+                ],
+                "unknown_aupr": [
+                  0.17692307692307693,
+                  0.25
+                ],
+                "unknown_fpr_at_95_tpr": [
+                  0.375,
+                  0.6875
+                ]
+              },
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022,
+                "n_groups": 2
+              },
+              "conventions": {
+                "positive": "unknown",
+                "negative": "all known test scenes, including known interference",
+                "score_direction": "higher_is_more_anomalous",
+                "aupr": "average_precision_step_integral",
+                "ties": "equal scores enter together",
+                "fpr95_denominator": "all known test scenes at first grouped threshold with >=95% unknown TPR"
+              }
+            },
+            "ranking_reason": null,
+            "expected_binary_decision": "alarm"
+          },
+          "intermittent_bursts": {
+            "n": 2,
+            "pre_registered_group": "near",
+            "alarm": {
+              "n": 2,
+              "n_groups": 2,
+              "ci95": [
+                1.0,
+                1.0
+              ],
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022
+              },
+              "rate": 1.0,
+              "count": 2
+            },
+            "ranking": {
+              "unknown_auroc": 0.515625,
+              "unknown_aupr": 0.16025641025641024,
+              "unknown_fpr_at_95_tpr": 0.6875,
+              "n_known": 16,
+              "n_unknown": 2,
+              "unknown_prevalence": 0.1111111111111111,
+              "ci95": {
+                "unknown_auroc": [
+                  0.5,
+                  0.5625
+                ],
+                "unknown_aupr": [
+                  0.16025641025641024,
+                  0.2
+                ],
+                "unknown_fpr_at_95_tpr": [
+                  0.5,
+                  0.6875
+                ]
+              },
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022,
+                "n_groups": 2
+              },
+              "conventions": {
+                "positive": "unknown",
+                "negative": "all known test scenes, including known interference",
+                "score_direction": "higher_is_more_anomalous",
+                "aupr": "average_precision_step_integral",
+                "ties": "equal scores enter together",
+                "fpr95_denominator": "all known test scenes at first grouped threshold with >=95% unknown TPR"
+              }
+            },
+            "ranking_reason": null,
+            "expected_binary_decision": "alarm"
+          },
+          "adjacent_satellite_downlink": {
+            "n": 2,
+            "pre_registered_group": "near",
+            "alarm": {
+              "n": 2,
+              "n_groups": 2,
+              "ci95": [
+                1.0,
+                1.0
+              ],
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022
+              },
+              "rate": 1.0,
+              "count": 2
+            },
+            "ranking": {
+              "unknown_auroc": 0.546875,
+              "unknown_aupr": 0.17692307692307693,
+              "unknown_fpr_at_95_tpr": 0.6875,
+              "n_known": 16,
+              "n_unknown": 2,
+              "unknown_prevalence": 0.1111111111111111,
+              "ci95": {
+                "unknown_auroc": [
+                  0.546875,
+                  0.625
+                ],
+                "unknown_aupr": [
+                  0.17692307692307693,
+                  0.25
+                ],
+                "unknown_fpr_at_95_tpr": [
+                  0.375,
+                  0.6875
+                ]
+              },
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022,
+                "n_groups": 2
+              },
+              "conventions": {
+                "positive": "unknown",
+                "negative": "all known test scenes, including known interference",
+                "score_direction": "higher_is_more_anomalous",
+                "aupr": "average_precision_step_integral",
+                "ties": "equal scores enter together",
+                "fpr95_denominator": "all known test scenes at first grouped threshold with >=95% unknown TPR"
+              }
+            },
+            "ranking_reason": null,
+            "expected_binary_decision": "alarm"
+          },
+          "wideband_noise": {
+            "n": 2,
+            "pre_registered_group": "equivalence_limited",
+            "alarm": {
+              "n": 2,
+              "n_groups": 2,
+              "ci95": [
+                1.0,
+                1.0
+              ],
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022
+              },
+              "rate": 1.0,
+              "count": 2
+            },
+            "ranking": {
+              "unknown_auroc": 0.5,
+              "unknown_aupr": 0.15555555555555556,
+              "unknown_fpr_at_95_tpr": 0.5,
+              "n_known": 16,
+              "n_unknown": 2,
+              "unknown_prevalence": 0.1111111111111111,
+              "ci95": {
+                "unknown_auroc": [
+                  0.125,
+                  0.875
+                ],
+                "unknown_aupr": [
+                  0.125,
+                  0.5
+                ],
+                "unknown_fpr_at_95_tpr": [
+                  0.125,
+                  0.875
+                ]
+              },
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022,
+                "n_groups": 2
+              },
+              "conventions": {
+                "positive": "unknown",
+                "negative": "all known test scenes, including known interference",
+                "score_direction": "higher_is_more_anomalous",
+                "aupr": "average_precision_step_integral",
+                "ties": "equal scores enter together",
+                "fpr95_denominator": "all known test scenes at first grouped threshold with >=95% unknown TPR"
+              }
+            },
+            "ranking_reason": null,
+            "expected_binary_decision": "alarm"
+          },
+          "cid_overlay": {
+            "n": 2,
+            "pre_registered_group": "benign",
+            "alarm": {
+              "n": 2,
+              "n_groups": 2,
+              "ci95": [
+                1.0,
+                1.0
+              ],
+              "reason": null,
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 200,
+                "seed": 20261022
+              },
+              "rate": 1.0,
+              "count": 2
+            },
+            "ranking": null,
+            "ranking_reason": "benign CID is excluded from unknown-positive ranking",
+            "expected_binary_decision": "no alarm"
+          }
+        },
+        "pooled_near": {
+          "families": [
+            "pulsed",
+            "intermittent_bursts",
+            "adjacent_satellite_downlink"
+          ],
+          "ranking": {
+            "unknown_auroc": 0.5416666666666666,
+            "unknown_aupr": 0.327859477124183,
+            "unknown_fpr_at_95_tpr": 0.6875,
+            "n_known": 16,
+            "n_unknown": 6,
+            "unknown_prevalence": 0.2727272727272727,
+            "ci95": {
+              "unknown_auroc": [
+                0.5416666666666666,
+                0.6041666666666666
+              ],
+              "unknown_aupr": [
+                0.327859477124183,
+                0.42857142857142855
+              ],
+              "unknown_fpr_at_95_tpr": [
+                0.5,
+                0.6875
+              ]
+            },
+            "reason": null,
+            "bootstrap": {
+              "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+              "requested": 200,
+              "valid": 200,
+              "seed": 20261022,
+              "n_groups": 2
+            },
+            "conventions": {
+              "positive": "unknown",
+              "negative": "all known test scenes, including known interference",
+              "score_direction": "higher_is_more_anomalous",
+              "aupr": "average_precision_step_integral",
+              "ties": "equal scores enter together",
+              "fpr95_denominator": "all known test scenes at first grouped threshold with >=95% unknown TPR"
+            }
+          },
+          "alarm": {
+            "n": 6,
+            "n_groups": 2,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "reason": null,
+            "bootstrap": {
+              "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+              "requested": 200,
+              "valid": 200,
+              "seed": 20261022
+            },
+            "rate": 1.0,
+            "count": 6
+          },
+          "exclusions": "wideband_noise is reported separately; cid_overlay is benign"
+        }
+      },
+      "matched": {
+        "n_samples": 6,
+        "n_groups": 2,
+        "clean_false_alarm": {
+          "n": 2,
+          "n_groups": 2,
+          "ci95": [
+            0.0,
+            1.0
+          ],
+          "reason": null,
+          "bootstrap": {
+            "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+            "requested": 200,
+            "valid": 200,
+            "seed": 20261022
+          },
+          "rate": 0.5,
+          "count": 1
+        },
+        "pair": {
+          "n_pairs": 2,
+          "adjacent_satellite_detection": {
+            "n": 2,
+            "n_groups": 2,
+            "ci95": [
+              0.0,
+              1.0
+            ],
+            "reason": null,
+            "bootstrap": {
+              "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+              "requested": 200,
+              "valid": 200,
+              "seed": 20261022
+            },
+            "rate": 0.5,
+            "count": 1
+          },
+          "unauthorized_detection": {
+            "n": 2,
+            "n_groups": 2,
+            "ci95": [
+              0.0,
+              1.0
+            ],
+            "reason": null,
+            "bootstrap": {
+              "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+              "requested": 200,
+              "valid": 200,
+              "seed": 20261022
+            },
+            "rate": 0.5,
+            "count": 1
+          },
+          "difference_unauthorized_minus_asi": {
+            "mean": 0.0,
+            "n": 2,
+            "n_groups": 2,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "reason": null,
+            "bootstrap": {
+              "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+              "requested": 200,
+              "valid": 200,
+              "seed": 20261022
+            }
+          },
+          "score_difference_unauthorized_minus_asi": {
+            "mean": 0.7611446926399151,
+            "n": 2,
+            "n_groups": 2,
+            "ci95": [
+              -0.00918884900308492,
+              1.5314782342829152
+            ],
+            "reason": null,
+            "bootstrap": {
+              "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+              "requested": 200,
+              "valid": 200,
+              "seed": 20261022
+            }
+          }
+        },
+        "per_bin": {
+          "[4,7)": {
+            "n_samples": 3,
+            "n_groups": 1,
+            "clean_false_alarm": {
+              "n": 1,
+              "n_groups": 1,
+              "ci95": null,
+              "reason": "fewer than two scenario groups",
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 0,
+                "seed": 20261022
+              },
+              "rate": 1.0,
+              "count": 1
+            },
+            "pair": {
+              "n_pairs": 1,
+              "adjacent_satellite_detection": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "unauthorized_detection": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 1
+              },
+              "difference_unauthorized_minus_asi": {
+                "mean": 0.0,
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                }
+              },
+              "score_difference_unauthorized_minus_asi": {
+                "mean": -0.00918884900308492,
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                }
+              }
+            }
+          },
+          "[7,10)": {
+            "n_samples": 3,
+            "n_groups": 1,
+            "clean_false_alarm": {
+              "n": 1,
+              "n_groups": 1,
+              "ci95": null,
+              "reason": "fewer than two scenario groups",
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 0,
+                "seed": 20261022
+              },
+              "rate": 0.0,
+              "count": 0
+            },
+            "pair": {
+              "n_pairs": 1,
+              "adjacent_satellite_detection": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 0.0,
+                "count": 0
+              },
+              "unauthorized_detection": {
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": 0.0,
+                "count": 0
+              },
+              "difference_unauthorized_minus_asi": {
+                "mean": 0.0,
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                }
+              },
+              "score_difference_unauthorized_minus_asi": {
+                "mean": 1.5314782342829152,
+                "n": 1,
+                "n_groups": 1,
+                "ci95": null,
+                "reason": "fewer than two scenario groups",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                }
+              }
+            }
+          },
+          "[10,13]": {
+            "n_samples": 0,
+            "n_groups": 0,
+            "clean_false_alarm": {
+              "n": 0,
+              "n_groups": 0,
+              "ci95": null,
+              "reason": "empty selection",
+              "bootstrap": {
+                "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                "requested": 200,
+                "valid": 0,
+                "seed": 20261022
+              },
+              "rate": null,
+              "count": 0
+            },
+            "pair": {
+              "n_pairs": 0,
+              "adjacent_satellite_detection": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "unauthorized_detection": {
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                },
+                "rate": null,
+                "count": 0
+              },
+              "difference_unauthorized_minus_asi": {
+                "mean": null,
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                }
+              },
+              "score_difference_unauthorized_minus_asi": {
+                "mean": null,
+                "n": 0,
+                "n_groups": 0,
+                "ci95": null,
+                "reason": "empty selection",
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 0,
+                  "seed": 20261022
+                }
+              }
+            }
+          }
+        },
+        "conventions": {
+          "bin_edges": "frozen K17c C/I_psd [4,7), [7,10), [10,13]",
+          "comparison": "paired binary alarm difference, unauthorized minus ASI; no class discrimination claim",
+          "limitation": "matched carrier widths and level distribution differ from natural test scenes"
+        },
+        "natural_comparison": {
+          "limitation": "natural and matched distributions differ in carrier width and levels",
+          "classes": {
+            "adjacent_satellite": {
+              "detection": {
+                "n": 2,
+                "n_groups": 2,
+                "ci95": [
+                  1.0,
+                  1.0
+                ],
+                "reason": null,
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 200,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 2
+              },
+              "c_over_i_psd_db": {
+                "n": 2,
+                "n_missing": 0,
+                "n_outside_bins": 1,
+                "bins": {
+                  "[4,7)": {
+                    "n": 1,
+                    "n_groups": 1,
+                    "ci95": null,
+                    "reason": "fewer than two scenario groups",
+                    "bootstrap": {
+                      "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                      "requested": 200,
+                      "valid": 0,
+                      "seed": 20261022
+                    },
+                    "rate": 1.0,
+                    "count": 1
+                  },
+                  "[7,10)": {
+                    "n": 0,
+                    "n_groups": 0,
+                    "ci95": null,
+                    "reason": "empty selection",
+                    "bootstrap": {
+                      "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                      "requested": 200,
+                      "valid": 0,
+                      "seed": 20261022
+                    },
+                    "rate": null,
+                    "count": 0
+                  },
+                  "[10,13]": {
+                    "n": 0,
+                    "n_groups": 0,
+                    "ci95": null,
+                    "reason": "empty selection",
+                    "bootstrap": {
+                      "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                      "requested": 200,
+                      "valid": 0,
+                      "seed": 20261022
+                    },
+                    "rate": null,
+                    "count": 0
+                  }
+                }
+              }
+            },
+            "unauthorized": {
+              "detection": {
+                "n": 2,
+                "n_groups": 2,
+                "ci95": [
+                  1.0,
+                  1.0
+                ],
+                "reason": null,
+                "bootstrap": {
+                  "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                  "requested": 200,
+                  "valid": 200,
+                  "seed": 20261022
+                },
+                "rate": 1.0,
+                "count": 2
+              },
+              "c_over_i_psd_db": {
+                "n": 2,
+                "n_missing": 0,
+                "n_outside_bins": 0,
+                "bins": {
+                  "[4,7)": {
+                    "n": 1,
+                    "n_groups": 1,
+                    "ci95": null,
+                    "reason": "fewer than two scenario groups",
+                    "bootstrap": {
+                      "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                      "requested": 200,
+                      "valid": 0,
+                      "seed": 20261022
+                    },
+                    "rate": 1.0,
+                    "count": 1
+                  },
+                  "[7,10)": {
+                    "n": 1,
+                    "n_groups": 1,
+                    "ci95": null,
+                    "reason": "fewer than two scenario groups",
+                    "bootstrap": {
+                      "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                      "requested": 200,
+                      "valid": 0,
+                      "seed": 20261022
+                    },
+                    "rate": 1.0,
+                    "count": 1
+                  },
+                  "[10,13]": {
+                    "n": 0,
+                    "n_groups": 0,
+                    "ci95": null,
+                    "reason": "empty selection",
+                    "bootstrap": {
+                      "unit": "scenario groups resampled with all variants together; threshold and scorer fixed",
+                      "requested": 200,
+                      "valid": 0,
+                      "seed": 20261022
+                    },
+                    "rate": null,
+                    "count": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "unsupported": {
+        "multiclass_accuracy": null,
+        "oscr_auc": null,
+        "class_predictions": null,
+        "n_known": 16,
+        "reason": "binary anomaly scores provide no known-class predictions; OSCR requires correct class decisions"
+      }
+    }
+  },
+  "independent_review": {
+    "mode": "separate read-only agent",
+    "focused_passed": 46,
+    "pytest_seconds": 15.89,
+    "remaining_material_blockers": 0,
+    "record": "docs/research/b2_e3a_review.md"
+  },
+  "pending_decisions": [
+    "K18",
+    "K17d",
+    "OBS-CANCEL/2"
+  ],
+  "production_authorized": false,
+  "limitations": [
+    "Bounded engineering/pilot evidence only; no recognition performance claim.",
+    "Two clean calibration groups are permitted for smoke; nominal Pfa is not a population guarantee.",
+    "Group bootstrap conditions on frozen scorer and threshold; no calibration or physical-model uncertainty.",
+    "obs-cancel/1 residual includes cancellation error, phase noise and payload distortion.",
+    "No neural model fitted or compared using its known-acceptance rejection threshold."
+  ],
+  "final_delivery_verification": {
+    "date": "2026-10-23",
+    "scope": "Final E3a delivery only; no new detector experiment or E3b work",
+    "focused": {
+      "command": [
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_b2_edsc.py",
+        "tests/test_edsc.py",
+        "tests/test_b2_edsc_metrics.py"
+      ],
+      "wall_seconds": 9.6324985870001,
+      "peak_rss_kib": 557860,
+      "exit_code": 0
+    },
+    "focused_pytest_seconds": 8.78,
+    "focused_passed": 46,
+    "independent_arithmetic_audit": {
+      "command": [
+        "/workspace/.venvs/geosim/bin/python",
+        "scripts/check_b2_edsc_smoke.py"
+      ],
+      "wall_seconds": 0.4739455819999421,
+      "peak_rss_kib": 27736,
+      "exit_code": 0,
+      "result": {
+        "independent_method": "raw np.load; float64 direct linear PSD means; log10 of ratio; manual frequency grid; sorted higher quantile",
+        "calibration_clean_scores_db": [
+          -18.43926559996182,
+          -16.33575477753906
+        ],
+        "threshold_db": -16.33575477753906,
+        "stored_threshold_db": -16.335754777539066,
+        "threshold_abs_discrepancy_db": 7.105427357601002e-15,
+        "calibration_false_alarms": 0,
+        "n_calibration_clean": 2,
+        "checks": {
+          "known": {
+            "n": 16,
+            "max_abs_score_discrepancy_db": 1.7763568394002505e-14,
+            "clean_alarms": 1,
+            "n_clean": 2,
+            "event_alarms": 13,
+            "n_event": 14
+          },
+          "unknown": {
+            "n": 10,
+            "max_abs_score_discrepancy_db": 1.7763568394002505e-14
+          },
+          "matched": {
+            "n": 6,
+            "max_abs_score_discrepancy_db": 2.1316282072803006e-14
+          }
+        },
+        "wall_seconds": 0.291417733000344,
+        "peak_rss_kib": 27736
+      }
+    },
+    "code_and_test_sha256": {
+      "src/geoml/edsc.py": "6bb8e2a6fba89c0bb85f28e6d4eaa99da97da9d5c82f87b6385589742a542061",
+      "src/geoml/b2_edsc.py": "382204e426669201f2c8b97de15d05dbafd3f199aa208193c7475a192c301a01",
+      "src/geoml/b2_edsc_metrics.py": "11ce46ae2236ae30e64570ca31e0071c73151dabf08c634f470cf8eea0f0c61b",
+      "tests/test_edsc.py": "c1175cbf17727d5cc6867ef15813a83309d7f12c185e172fd655132cb60d2f84",
+      "tests/test_b2_edsc.py": "9e9075578d9f4f7990b8870e75a85545cb260bfc0476ccc18cb7cbeaf71f8184",
+      "tests/test_b2_edsc_metrics.py": "4fd99e1f7e8c50f5fdb404c9929173a730865f0f7ee37f0f37034e3864521a7a",
+      "scripts/check_b2_edsc_smoke.py": "e29d94510dc0c85b89cce002247fb0ea6343f3e5902abea1e91a10991b62fa33"
+    },
+    "source_match": "All current geoml/geosim Python source hashes match the recorded real-artifact smoke provenance",
+    "regression_scope": "Detector and test files unchanged since the recorded full local suite; later-added standalone arithmetic audit re-executed and compilation checked",
+    "strict_json": true,
+    "approval_objects_unchanged": true,
+    "p18_change": "One additive section-10 implementation log row only",
+    "benchmark_complete": false,
+    "new_production_experiment": false,
+    "e3b_started": false
+  }
+}
