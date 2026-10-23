@@ -55,7 +55,8 @@ Index order (also the RNG key): `none`=0, `shift_plus`=1, `shift_minus`=2, `drop
 `authorize_intruder`=5, `stale_plan`=6. Each descriptor (co, cross) is transformed **independently** from its
 own plan with `numpy.random.default_rng([scenario_id, 1850, index, polarization])` (polarization co=0,
 cross=1). Namespace 1850 is unused by every frozen namespace (1801, 1810, 1813, 1820, 1830, 1840; simulator
-7051/7052). Scope `both` is exactly the union of `co_only` and `cross_only` results (tested).
+7051/7052). Scope `both` is exactly the union of `co_only` and `cross_only` results (tested) and is applicable only if both
+descriptor transformations are applicable.
 
 | Perturbation | Definition | Not applicable when |
 |---|---|---|
@@ -196,3 +197,4 @@ receiver-consistent. Test-only unknown families (B2-test/1) are outside this sli
 | Date | Change |
 |---|---|
 | 2026-10-23 | Registered before implementation and before any A5 outcome inspection. |
+| 2026-10-23 | Implementation clarifications, added after three engineering wiring smokes of the runner (`drop_one`/`co_only` known, `shift_plus`/`cross_only` known, `authorize_intruder`/`both` matched; 4, 2 and 4 scenes; used only to check that the code runs) and **before** the recorded pilot matrix: (a) scope `both` is applicable only when the transformation is applicable to both descriptors; (b) additive observable diagnostics `spec_co_core_db`, `residual_core_db`, `cancellation_depth_core_db` over the bins above -3 dB of the ORIGINAL co-pol mask (fixed across conditions) next to the registered full-band diagnostics, because the full-band ratio is dominated by the noise floor; (c) `original`-condition fields `prediction_change_vs_original` and `max_abs_logit_difference_vs_original` are `null` (trivial); (d) `mask_only_vs_receiver_consistent` reports whether PSD, residual and logits are identical per view. No definition of §3-§9 changed. |
