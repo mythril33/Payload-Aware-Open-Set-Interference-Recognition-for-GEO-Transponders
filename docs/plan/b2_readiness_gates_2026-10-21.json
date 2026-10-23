@@ -339,7 +339,24 @@
         "full B2 generation",
         "full GPU training",
         "full LOKO sweep"
-      ]
+      ],
+      "follow_up": {
+        "pr_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/17",
+        "head_sha_code": "7ec5eeeebed96485b71986e30aa0506e9ad2692d",
+        "scope": "resumability/driver hardening after independent review round 2; pilot matrix re-run (identical scientific content); real kill-and-resume exercised",
+        "e4_tests": {
+          "passed": 102
+        },
+        "local_full_suite": {
+          "passed": 1189,
+          "failed": 0,
+          "pytest_wall_s": 567.97,
+          "subprocess_wall_s": 570.16,
+          "peak_rss_kib": 1724880,
+          "exit_code": 0,
+          "date": "2026-10-23"
+        }
+      }
     },
     "github_actions_ci": {
       "pr": 15,

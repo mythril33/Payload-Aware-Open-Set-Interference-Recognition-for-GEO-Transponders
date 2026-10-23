@@ -28,7 +28,7 @@
 | `matched_phantom_both` | 4 / 4 | 4 | 8 | True | -0.00 | -0.93 | +0.40 / -0.64 | 2 | 0 | 10 / 15 of 26 |
 | `matched_phantom_co_only` | 4 / 4 | 4 | 8 | True | -0.00 | -0.93 | +0.40 / -0.64 | 2 | 0 | 9 / 14 of 26 |
 
-### Model-level paired conditions (stand-in checkpoints; execution evidence only)
+### Model-level paired conditions (frozen checkpoints supplied by the run directory; see the summary's interpretation block for what they are)
 
 | Invocation | View | Condition | n | Agreement | Changed | max abs Δlogit | Alarm among original-clean | Alarm among original-event |
 |---|---|---|---|---|---|---|---|---|

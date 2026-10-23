@@ -11,7 +11,7 @@ per stage. It is **not** a recognition, robustness or false-alarm result: the fr
 
 | Item | Value |
 |---|---|
-| Code under test | `a595bcfae465e30dd8263cbeb57fae29b7dc9102` (merged to `main` as PR [#15](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/15), merge commit `4b736a6`, identical tree); source-tree fingerprint `aabded03fd990da7…`; E4 files `b2_a5.py` `c356fafc7d9e…`, `b2_a5_plan.py` `938622a6f558…`, `b2_a5_replay.py` `5bfbb4d188b1…` |
+| Code under test | `7ec5eeeebed96485b71986e30aa0506e9ad2692d` = PR [#17](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/17) (resumability/driver hardening after review round 2) on top of the E4 harness merged in PR [#15](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/15) (merge `4b736a6`, implementation `a595bcf`). The same 25-invocation matrix was first run on `a595bcf`; its scientific content (every population, count, displacement and rate) is identical to the one reported here, only hashes and timings differ. Source-tree fingerprint `3428a3257bcfcf63…`; E4 files `b2_a5.py` `ec9fb13e6078…`, `b2_a5_plan.py` `938622a6f558…`, `b2_a5_replay.py` `5bfbb4d188b1…` |
 | Environment | container, 4 CPUs, 15 GiB, no GPU; Python 3.13.16, NumPy 2.5.4, SciPy 1.18.1, torch 2.14.1; `OMP_NUM_THREADS=2` |
 | Known pilot artifact (`B2-feat/1`) | 2 groups per role (train, val-select, val-calib, test) = 64 observations, generated with `geosim.b2_dataset --config configs/b2_base.json --cancellation configs/cancellation.json --limit-groups 2 --groups-per-shard 1` in 4 min 49 s wall (4.5 s/observation); data fingerprint `6c2b95ed84cc0e51…`, request `87f80561c86b4ec1…` |
 | Matched pilot artifact (`B2-match/1`) | 2 groups × 3 variants = 6 observations bound to the known artifact; fingerprint `406166d86becc7e8…` (generation not separately timed) |
@@ -27,11 +27,11 @@ referenced by SHA-256 and `experiment_fingerprint`); full tables: [b2_a5_dual_po
 
 | Class | What it is | Result |
 |---|---|---|
-| **A. Synthetic / stand-in fixtures** (unit tests) | deterministic stand-in simulator and canceller on real B2 artifact writers; pure plan tests; leakage / corruption / statistics matrix | 95 E4 tests; see §6 |
+| **A. Synthetic / stand-in fixtures** (unit tests) | deterministic stand-in simulator and canceller on real B2 artifact writers; pure plan tests; leakage / corruption / statistics matrix | 102 E4 tests; see §6 |
 | **B. Actual deterministic physical replay** | real payload chain and real `obs-cancel/1`: 90 scene replays (25 invocations) each compared with the stored shard, plus the two real-physics test fixtures (one known test group, one matched group) | **90 / 90 scenes bit-exact**: PSD, masks, residual and the 31-key metadata record equal, maximum absolute difference 0.0 dB (generation and replay on the same machine; cross-machine parity is untested and covered only by the 0.125 dB fail-closed tolerance) |
 | **C. Model inference** | frozen stand-in checkpoints, scorers and thresholds on original / MASK_ONLY / RECEIVER_CONSISTENT | wiring and pairing verified; **no recognition information** (§4) |
 | **D. Baseline inputs** | EDSC score, planned/blind CA-CFAR statistics and the 26 XGBoost features recomputed per condition | inputs only; no baseline model, threshold or decision exists (P28 §10) |
-| **E. Resumption** | one invocation killed with SIGKILL after 2 of 4 scenes, then continued by the matrix driver | `resumed 2/4 scenes from verified state; computed 2 now`; the driver skipped the 3 finished invocations |
+| **E. Resumption** | real kill-and-resume exercises with SIGKILL | on `a595bcf`: killed after 2 of 4 scenes, the matrix driver resumed it (`resumed 2/4 scenes from verified state; computed 2 now`) and skipped the 3 finished invocations; on the hardened `7ec5eee`: killed after 3 of 4 scenes, resumed (`resumed 3/4 scenes from verified state; computed 1 now`) and the final result equals the uninterrupted matrix run in **every field except** `cost`, `resume` and `reproduction_command` (experiment fingerprint included) |
 
 ## 3. Receiver-level results (model independent; RC = `RECEIVER_CONSISTENT`)
 
@@ -111,23 +111,22 @@ residual channel, which the augmentation (applied to the stored residual) never 
 - Two groups per stage: no interval is meaningful; test-only unknown families (`B2-test/1`) are outside this slice.
 - Cross-machine bit-parity untested (same-machine exactness only); numpy/scipy versions of generation and replay are not compared beyond the
   parity check itself.
-- Wall time of the matched pilot generation and of the whole matrix (it includes a deliberate crash and a resume) was not separately recorded; the
-  per-invocation `elapsed_s` is the work of that process only (the resumed invocation reports 12.9 s for its 2 recomputed scenes).
+- Wall time of the matched pilot generation was not separately recorded; the per-invocation `elapsed_s` is the work of that process only.
 
 ## 6. Tests, CI and cost (measured, scope stated)
 
 | Measurement | Value |
 |---|---|
-| E4 test files (`tests/test_b2_a5_*.py`) | 95 tests: plan 25, replay 17 (real physics), eval 22, negative 19, resume 8, summary 4 |
-| Local full suite on `a595bcf` | **1182 passed, 0 failed, 0 skipped reported**, pytest 475.02 s (subprocess 476.89 s), peak child RSS 1 716 256 KiB, exit 0 (main before E4: 1086 passed + 1 environment skip; the difference is E4 plus the prior suite's growth, not re-attributed here) |
+| E4 test files (`tests/test_b2_a5_*.py`) | 102 tests: plan 25, replay 17 (real physics), eval 22, negative 19, resume 15, summary 4 |
+| Local full suite on `7ec5eee` | **1189 passed, 0 failed, 0 skipped reported**, pytest 567.97 s (subprocess 570.16 s), peak child RSS 1 724 880 KiB, exit 0 (on `a595bcf`: 1182 passed, 475.02 s, peak 1 716 256 KiB; main before E4: 1086 passed + 1 environment skip; the +7 since `a595bcf` are the hardening tests; wall times vary with machine load) |
 | GitHub Actions, PR head `a595bcf` | run [39947778403](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39947778403) / job 120394555595, Python 3.12.15, conclusion **success**: E4 step 95 passed in 116.27 s, remaining suite 1087 passed in 234.45 s. Earlier head `8bedd2b`: run 39946563917 success |
 | One replay of one scene | about 5 s (3.0 s simulator + 1.3 s parity cancellation + I/O); each recomputation adds about 1.3 s |
-| Pilot matrix | 25 invocations, 90 replays, 154 cancellation evaluations, 64 receiver recomputations, 870 scored samples; sum of in-process elapsed 563 s; 11–31 s per invocation; peak RSS 1071872 KiB |
+| Pilot matrix | 25 invocations, 90 replays, 154 cancellation evaluations, 64 receiver recomputations, 870 scored samples; sum of in-process elapsed 641 s; about 11–33 s per invocation; peak RSS 1100940 KiB; driver finished with `MATRIX_DONE expected=25 failed=0` |
 | Mutation checks (manual) | forcing a stale residual or feeding the cross-pol IQ to the canceller makes the targeted tests fail |
 
 ## 7. Independent review
 
-Read-only red-team review: [b2_e4_red_team_review.md](../research/b2_e4_red_team_review.md).
+Read-only red-team review, two rounds (round 1 on `8bedd2b`, round 2 on `main@4b736a6`; no blocker, round-2 findings fixed in this PR): [b2_e4_red_team_review.md](../research/b2_e4_red_team_review.md). The hardening itself was not re-reviewed by a third round.
 
 ## 8. Reproduction
 

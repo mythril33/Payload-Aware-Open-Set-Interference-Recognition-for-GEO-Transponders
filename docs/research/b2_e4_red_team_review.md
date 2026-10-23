@@ -53,5 +53,31 @@ Requested for commit `a595bcf` (merged to `main` as `4b736a6`, identical tree): 
 resumable-state design (`SceneState`, `_output_state`, per-scene `state/`, `scripts/run_b2_a5_pilot_matrix.sh`). The first attempt was
 interrupted by an external API usage limit; it was resumed after the limit reset.
 
-**Status at this commit: round 2 is still running; its findings are not yet part of this record.** They are appended below when the reviewer reports, together with the resulting fixes.
+Executed by the reviewer: code reading of `git diff 8bedd2b a595bcf`, snippets under its scratch directory (resume attacks, driver
+pipeline behaviour); it did not run the real-physics replay tests or the full suite. **Verdict: no BLOCKER; one MATERIAL, six MINOR, one INFO.**
+All round-1 findings were confirmed fixed (M1, M2, m1, m2, m3, m4, m5, m6, m7, m9, i1, i4; m8 mostly: the summary heading still said
+"stand-in checkpoints"; i3 still open: the K17b confound was not yet written into P28/CONTEXT). The reviewer also checked and found sound: a resumed
+run equals an uninterrupted one apart from `cost`/`resume`/`reproduction_command`; crash recovery between the array replace and the JSON
+write, during the JSON write, and between `results.json` and its sidecar; `allow_pickle=False`; frozen views validated before any state is
+written; caps cannot be bypassed by resuming; foreign or stale state is refused through the identity marker and the per-scene fingerprint.
 
+| ID | Severity | Defect (verified by the reviewer) | Disposition (commit `7ec5eee`) |
+|---|---|---|---|
+| R1 | MATERIAL | The matrix driver ran `python … \| tail -3 \|\| failed=1` without `pipefail`, so `failed` was never set; a broken `--matched-data` or generator drift (errors raised before the output directory exists) made invocations vanish while the script reported success | **Fixed.** `set -u -o pipefail`, `PIPESTATUS[0]`, `FAILED` lines, and a final check that every expected invocation has a verified checksummed `results.json` (otherwise `MISSING`, exit 1). Test runs the driver with `/bin/false` (fails loudly) and `/bin/true` (exits 0 without results) and expects exit 1 with 25 `MISSING` |
+| R2 | MINOR | The shell-level skip checked only the checksum sidecar, bypassing the experiment-identity check; after a source/config change the old results would be kept and a summary of equally stale results accepted | **Fixed.** No shell skip: every invocation is handed to `geoml.b2_a5`, whose reuse path verifies identity and checksum. The pilot re-run on the hardened code started from a fresh output directory because the old one is (correctly) refused |
+| R3 | MINOR | Only the array files were hash-bound; parity, work counts, flags, descriptors and `arrays_sha256` of the state JSON were trusted; `arrays_sha256=null` on an applied scene silently dropped it from the paired population | **Fixed.** Digest over the whole payload; arrays must exist exactly for applied scenes; a consistent re-sign is still caught by the recomputed-corruption comparison; tests edit each field class. Documented as detecting accidental modification, not authenticating the writer |
+| R4 | MINOR | `*.tmp` files in the output directory were deleted before anything showed it was an A5 output directory | **Fixed.** Only the module's own temporary names are discarded, after the identity check; foreign `*.tmp`, a foreign `state/` and outputs overlapping the data/run directories are refused untouched |
+| R5 | MINOR | Cached replay arrays were not bound to library versions or platform, allowing a mixed-environment resume | **Fixed.** NumPy/SciPy/torch/Python/machine/system are in the state marker; mismatch is refused |
+| R6 | MINOR | No lock against concurrent invocations on one `--out` | **Fixed.** Exclusive advisory `flock` on `out/.a5.lock` (released by the OS when the holder dies, so a crash never blocks resumption) |
+| R7 | INFO | Malformed state keys raised `KeyError`/`AttributeError` (traceback instead of a clean error); no `fsync` | **Fixed.** Malformed state raises `ValueError`; state, results and checksum writes flush and `fsync` before the rename |
+
+Documentation overclaims named by the reviewer, all corrected: "modified state is refused" (now precise about what is verified and that digests
+are not authentication), "driver resumable the same way/finished invocations are skipped" (now the identity-checked behaviour above), "state lives
+in … draft PR" (PR #15 was merged), and the missing `MASK_ONLY` ≡ K17b-augmentation confound (P28 §2, CONTEXT risk register, results note §4). Residual
+risks the reviewer accepted as documented: cross-machine bit-parity untested; NumPy/SciPy versions of an artifact's request are not compared with the
+current ones beyond the parity check.
+
+Verification of the fixes: focused E4 tests and the full suite are recorded in the [results note](../results/b2_a5_dual_pol_pilot.md) and
+[DURUM](../plan/DURUM.md). Round 2 reviewed `main@4b736a6` (source, tests and scripts identical to `a595bcf`); the fixes were not re-reviewed by a
+third round. They are covered by new tests and by the real kill-and-resume exercise described in the results note, and a further read-only pass is
+recommended before any production-scale use.
