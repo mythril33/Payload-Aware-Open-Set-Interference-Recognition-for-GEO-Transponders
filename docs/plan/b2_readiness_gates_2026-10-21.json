@@ -247,7 +247,40 @@
           "production": false
         }
       },
-      "limitations": "Tiny CPU pilot and two clean calibration samples establish execution only; no recognition/population-Pfa claim"
+      "limitations": "Tiny CPU pilot and two clean calibration samples establish execution only; no recognition/population-Pfa claim",
+      "delivery": {
+        "pr": 14,
+        "initial_head_sha": "d88c689100f1482670f0a8bfb08e8093df12905a",
+        "initial_run_id": 39927676691,
+        "initial_job_id": 120327984394,
+        "initial_conclusion": "failure",
+        "failed_step": "Install project and test dependencies",
+        "scientific_tests_executed": false,
+        "cause": "xgboost-cpu==3.4.1 requires Python>=3.12; inherited runner used Python3.11.17",
+        "correction": "Use Python3.12 in readiness CI; preserve pin and all scientific checks",
+        "local_followup_focused": {
+          "command": [
+            "/workspace/.venvs/geosim/bin/python",
+            "-m",
+            "pytest",
+            "-q",
+            "tests/test_b2_expert.py",
+            "tests/test_b2_xgb_model.py",
+            "tests/test_b2_xgb_metrics.py",
+            "tests/test_b2_xgb.py"
+          ],
+          "wall_seconds": 24.839673965001566,
+          "peak_rss_kib": 565656,
+          "exit_code": 0,
+          "scope": "Python3.12 CI environment correction only; detector/model/test sources unchanged from d88c689",
+          "workflow_sha256": "f719c18a99bb6231401e02dc660fb88d25767fdd8495c517d83a4c6e3ddf0cad",
+          "passed": 63,
+          "skipped": 0,
+          "failed": 0,
+          "pytest_seconds": 23.87
+        },
+        "final_head_ci": "PENDING; exact final-head result will be linked in PR14 description"
+      }
     },
     "dual_pol_a5_plan_corruption": {
       "status": "PLANNED"

@@ -124,3 +124,14 @@ Independent read-only review precedes delivery; material findings are fixed.
 All missing metrics are strict JSON null with counts/reasons. Group bootstrap
 conditions on the fitted scorer/threshold and excludes training/calibration
 and physics uncertainty. Tiny pilot metrics establish execution only.
+
+## 6. Delivery environment correction (2026-10-23)
+
+The first PR #14 run39927676691/job120327984394 at head
+`d88c689100f1482670f0a8bfb08e8093df12905a` failed during installation:
+the pinned xgboost-cpu3.4.1 requires Python >=3.12, whereas inherited CI
+used Python3.11. Scientific tests did not run in that failed job. Readiness
+CI now uses Python3.12, matching the locally tested Python3.12.14 minor
+version. The optional extra's requirement is documented explicitly. This
+environment correction leaves the preregistered dependency pin, features,
+model/selection budget, scores, thresholds and all scientific checks intact.

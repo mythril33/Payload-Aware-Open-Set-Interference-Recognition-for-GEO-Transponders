@@ -227,7 +227,8 @@ E3b follow-up; researcher and production gates remain pending.
 
 ### E3b expert-feature/XGBoost CPU baseline
 
-Install the pinned CPU dependency with `pip install -e '.[dev,ml,xgb]'`.
+With Python >=3.12, install the pinned CPU dependency with
+`pip install -e '.[dev,ml,xgb]'` (xgboost-cpu 3.4.1 requires Python >=3.12).
 `python -m geoml.b2_xgb --config configs/b2_xgb_smoke.json --data data/b2-readiness-known --unknown-data data/b2-readiness-test --matched-data data/b2-readiness-matched --out runs/b2-e3b-xgb-smoke --smoke --with-baselines`
 streams 26 fixed observation-only features from existing P20 artifacts, fits
 train only, selects one of two preregistered boosting prefixes on val-select,

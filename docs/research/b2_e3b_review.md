@@ -75,3 +75,12 @@ cannot validate a 5% population Pfa; bootstrap fixes the already fitted
 scorer/threshold and omits training/calibration/physics uncertainty; P20
 cancellation depth/errors and missing-carrier normalization remain. No
 researcher or production gate is approved by this review.
+
+The reviewer also inspected actual PR14 CI job120327984394 logs:
+run39927676691 failed before tests because Python3.11 cannot install the
+pinned xgboost-cpu3.4.1 (requires Python>=3.12). Read-only review of the
+follow-up confirmed that only the CI Python version and environment
+documentation changed: dependency pin, gate assertions, compile and full
+test commands, source/tests, features, score/threshold and budget stayed
+intact. No conditional dependency skip or weakened check was introduced.
+Final-head remote verification is reported separately in the PR.

@@ -261,6 +261,29 @@ See the [E3a report](b2_edsc_baseline.md) for the distinct recorded runs.
 Adding E3b modules changes the broad source-identity map; it does not make
 the historical E3a smoke or checkpoint provenance equal to the expanded tree.
 
+## Delivery environment correction
+
+Implementation commit `d88c689100f1482670f0a8bfb08e8093df12905a`
+was normally pushed to `feature/b2-e3b-xgboost-baseline` and opened as
+[draft PR #14](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/14).
+Its first [CI run39927676691](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39927676691),
+job120327984394, failed at dependency installation: inherited Python3.11.17
+cannot install xgboost-cpu3.4.1, whose metadata requires Python>=3.12.
+Gate, compilation and scientific tests were skipped after that failure;
+there is no remote test count for that run.
+
+The follow-up changes readiness CI to Python3.12, matching the locally
+validated minor version, and documents the extra's requirement. All pins,
+scientific commands and preregistered experimental semantics remain intact.
+No source, test or experiment-config file changed since the full local run.
+The same four-module focused command above was repeated after this fix:
+**63 passed, 0 skipped, 0 failed in 23.87 s**, exit0; subprocess wall
+**24.839674 s**, peak RSS **565,656 KiB**. Strict JSON and unchanged decision
+objects were checked again. Independent read-only diff review confirmed
+that no scientific check was removed. Exact final-head CI evidence is
+recorded in the PR description after completion; this note does not claim
+that a pending follow-up run passed.
+
 ## Limits and remaining work
 
 The physical simulator, observed cancellation and operator-plan assumptions
