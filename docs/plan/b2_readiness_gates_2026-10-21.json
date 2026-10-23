@@ -1,6 +1,6 @@
 {
   "schema": "b2-readiness-gates/1",
-  "as_of": "2026-10-22",
+  "as_of": "2026-10-23",
   "baseline": {
     "repository": "mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
     "branch": "main",
@@ -68,7 +68,7 @@
       "pr_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/10"
     },
     "edsc": {
-      "status": "BOUNDED_BASELINE_IMPLEMENTED_IN_FEATURE_BRANCH",
+      "status": "BOUNDED_BASELINE_IMPLEMENTED_DRAFT_PR_11",
       "protocol": "EDSC/1",
       "branch": "feature/b2-e3a-edsc-baseline",
       "evidence": "docs/plan/P26_b2_e3a_edsc_baseline.md; docs/results/b2_edsc_baseline.md; tests/test_edsc.py; tests/test_b2_edsc.py; tests/test_b2_edsc_metrics.py",
@@ -124,9 +124,33 @@
           "peak_rss_kib": 557860,
           "exit_code": 0,
           "scope": "Same reviewed code; no new detector experiment; proposed PR-head CI is recorded separately in PR description"
+        },
+        "final_delivery_full_repository_suite": {
+          "command": [
+            "/workspace/.venvs/geosim/bin/python",
+            "-m",
+            "pytest",
+            "-q",
+            "-rs"
+          ],
+          "wall_seconds": 346.21008751000045,
+          "peak_rss_kib": 1272224,
+          "exit_code": 0,
+          "date": "2026-10-23",
+          "source_commit": "ec47a90b9e8f9ed756bee822d1c2b548830951ee",
+          "passed": 1023,
+          "skipped": 1,
+          "failed": 0,
+          "pytest_seconds": 343.5,
+          "skip_test": "tests/test_b2_stream.py::test_streaming_peak_memory_stays_below_the_whole_dataset_footprint",
+          "skip_reason": "this runner does not allow resetting the peak-RSS counter (/proc/self/clear_refs)",
+          "memory_semantics": "RUSAGE_CHILDREN maximum process RSS including waited descendants; not aggregate simultaneous RSS"
         }
       },
-      "limitations": "Two clean calibration observations and tiny test groups are execution evidence only; no population Pfa or recognition-performance precision; full production remains gated"
+      "limitations": "Two clean calibration observations and tiny test groups are execution evidence only; no population Pfa or recognition-performance precision; full production remains gated",
+      "pr_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/11",
+      "implementation_commit": "ec47a90b9e8f9ed756bee822d1c2b548830951ee",
+      "ci_evidence_location": "Draft PR #11 description: per-head verified Actions result, run/job/head SHA and full-suite count/skip evidence; historical E2 CI below is not an E3a result"
     },
     "xgboost_baseline": {
       "status": "PLANNED"

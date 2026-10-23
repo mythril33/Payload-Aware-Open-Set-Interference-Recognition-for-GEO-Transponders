@@ -203,7 +203,8 @@
       "reason": "this runner does not allow resetting the peak-RSS counter (/proc/self/clear_refs)",
       "evidence": "legacy subprocess peak_reset=false; existing E1 comparison test skipped, not failed"
     },
-    "memory_semantics": "RUSAGE_CHILDREN maximum process RSS including waited descendants; not simultaneous aggregate memory"
+    "memory_semantics": "RUSAGE_CHILDREN maximum process RSS including waited descendants; not simultaneous aggregate memory",
+    "evidence_date": "2026-10-22"
   },
   "runtime": {
     "wall_seconds": 1.3094995990001053,
@@ -4729,6 +4730,35 @@
     "p18_change": "One additive section-10 implementation log row only",
     "benchmark_complete": false,
     "new_production_experiment": false,
-    "e3b_started": false
+    "e3b_started": false,
+    "full_repository_suite": {
+      "command": [
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs"
+      ],
+      "wall_seconds": 346.21008751000045,
+      "peak_rss_kib": 1272224,
+      "exit_code": 0,
+      "date": "2026-10-23",
+      "source_commit": "ec47a90b9e8f9ed756bee822d1c2b548830951ee",
+      "passed": 1023,
+      "skipped": 1,
+      "failed": 0,
+      "pytest_seconds": 343.5,
+      "skip_test": "tests/test_b2_stream.py::test_streaming_peak_memory_stays_below_the_whole_dataset_footprint",
+      "skip_reason": "this runner does not allow resetting the peak-RSS counter (/proc/self/clear_refs)",
+      "memory_semantics": "RUSAGE_CHILDREN maximum process RSS including waited descendants; not aggregate simultaneous RSS"
+    }
+  },
+  "publication": {
+    "branch": "feature/b2-e3a-edsc-baseline",
+    "implementation_commit": "ec47a90b9e8f9ed756bee822d1c2b548830951ee",
+    "pr_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/11",
+    "draft": true,
+    "merged": false,
+    "ci_evidence": "Latest head SHA, run/job links, full-suite counts/skips and outcome are recorded in the draft PR description after per-head verification"
   }
 }

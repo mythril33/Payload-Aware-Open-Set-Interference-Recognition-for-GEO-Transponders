@@ -1,7 +1,7 @@
 # Proje durumu ve eksik kaydı
 
 
-Son teslim kontrolü (2026-10-23): güncel `main` değişmedi; tam 17 E3a dosyası, yalnız ek P18 günlüğü ve değişmeyen onaylar doğrulandı. Son hedefli koşu **46 geçti / 8,78 s**; ham-NPZ denetimi tekrar geçti. Yeni PR-head CI sonucu yayınlandıktan sonra taslak PR açıklamasında commit/run bağlantılarıyla kaydedilir. Önceki tam paket **1023 geçti / 1 ortam kaynaklı atlama** olarak korunur; E3b başlatılmadı.
+Son teslim kontrolü (2026-10-23): güncel `main` değişmedi; tam 17 E3a dosyası, yalnız ek P18 günlüğü ve değişmeyen onaylar doğrulandı. Son hedefli koşu **46 geçti / 8,78 s**; ham-NPZ denetimi tekrar geçti. Yeni PR-head CI sonucu yayınlandıktan sonra taslak PR açıklamasında commit/run bağlantılarıyla kaydedilir. Önceki tam paket kaydı korunur; bu teslim oturumunda tam paket ayrıca **1023 geçti / 1 ortam kaynaklı atlama / 0 hata, 343,50 s** olarak tekrarlandı (alt süreç 346,210088 s, tepe süreç RSS 1272224 KiB). Tek atlama yine `/proc/self/clear_refs` kısıtlı E1 RSS testidir. Uygulama commit’i `ec47a90b9e8f9ed756bee822d1c2b548830951ee` normal push ile yayımlandı; [taslak PR #11](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/11) açık ve birleşmedi. Nihai head CI kanıtı PR açıklamasından izlenir; E3b başlatılmadı.
 Son güncelleme: 2026-10-22 (E3a sınırlı EDSC uygulaması, E2 birleşme/CI kanıtı; temel deney durumu 2026-10-10) · Bu dosya "şu an neredeyiz, ne eksik" sorusunun tek yanıtıdır; her oturum sonunda güncellenir.
 
 ## Uygulama eki — 2026-10-22 (E3a: sınırlı EDSC baseline)
