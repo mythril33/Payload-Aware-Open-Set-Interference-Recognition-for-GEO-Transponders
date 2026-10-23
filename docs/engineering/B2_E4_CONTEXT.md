@@ -11,6 +11,7 @@ Status vocabulary: `VERIFIED` (checked in this session against code/tests), `IMP
 | Base | `main@ff81cae1b4e2563cc88271566665e9feae7cd44e` (after `git fetch origin main`, `origin/main == HEAD`) | VERIFIED |
 | Working branch | `claude/dazzling-maxwell-y0hw0q` (harness-designated; the master prompt's `feature/b2-e4-dual-pol-plan-corruption` was only a recommendation, the designated branch takes precedence) | VERIFIED |
 | Open PRs at start | none | VERIFIED |
+| Delivery | PR [#15](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/15) merged by the researcher as `4b736a6` (implementation head `a595bcf`, identical tree); follow-up evidence PR from the restarted designated branch | VERIFIED |
 | Python / platform | 3.13.16, Linux 6.18, 4 CPUs, 15 GiB, no GPU | VERIFIED |
 | Env | `/workspace/.venvs/geosim`, `torch==2.14.1`, `numpy==2.5.4`, `scipy==1.18.1`, `xgboost-cpu==3.4.1` | VERIFIED |
 | Existing data / checkpoints | none in the clone (`data/`, `runs/` are git-ignored) | VERIFIED |
@@ -56,7 +57,7 @@ Status vocabulary: `VERIFIED` (checked in this session against code/tests), `IMP
 
 | Risk | Mitigation / status |
 |---|---|
-| Replay differs numerically from the stored shard (different BLAS/FFT) | parity policy with fail-closed tolerance; exact on the generating machine — VERIFIED in the pilot (see results note) |
+| Replay differs numerically from the stored shard (different BLAS/FFT) | parity policy with fail-closed tolerance; bit-exact on the generating machine for 90/90 pilot scene replays (BOUNDED_PILOT, see results note); cross-machine parity still untested |
 | Stale residual reused after a co-plan change | adapter tests count canceller calls; MASK_ONLY labelled separately |
 | Counterfactual label ambiguity | descriptive agreement metrics only; transition matrices |
 | Canceller rejects a meaningful belief plan | `blocked` + message counted; algorithm untouched |
@@ -67,7 +68,8 @@ Status vocabulary: `VERIFIED` (checked in this session against code/tests), `IMP
 ## 6. Work packages, ownership, execution
 
 Roles follow the master prompt. The runtime executed agents A–D sequentially in the integrator context (shared
-tree, strict file ownership below); Agent E was run as an independent read-only reviewer.
+tree, strict file ownership below); Agent E was run as a separate, independent read-only reviewer (first review of `8bedd2b`;
+re-review of `a595bcf`/`4b736a6` after the fixes and the resumability feature; see the review record).
 
 | Agent | Role | Owns |
 |---|---|---|

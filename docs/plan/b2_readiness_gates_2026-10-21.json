@@ -283,7 +283,52 @@
       }
     },
     "dual_pol_a5_plan_corruption": {
-      "status": "PLANNED"
+      "status": "BOUNDED_HARNESS_IMPLEMENTED_MERGED_PR_15",
+      "protocol": "B2-A5-eval/1",
+      "evidence": "docs/plan/P28_b2_e4_dual_pol_a5.md; docs/results/b2_a5_dual_pol_pilot.md; docs/research/b2_e4_red_team_review.md; tests/test_b2_a5_*.py",
+      "scope": "Capped CPU harness (2 groups, 2 classes, one configuration, 16 replays, 24 cancellations); frozen-checkpoint evaluation of counterfactual operator beliefs with physical replay and recomputed obs-cancel/1 residual; pilot checkpoints are chance-level stand-ins; no recognition or robustness claim; resumable per-scene state",
+      "merge_sha": "4b736a6c425ab532e7c8e1bccc7c906f86ebe0be",
+      "implementation_head_sha": "a595bcfae465e30dd8263cbeb57fae29b7dc9102",
+      "pr_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/15",
+      "verification": {
+        "e4_tests": {
+          "passed": 95,
+          "ci_step_wall_s": 116.27
+        },
+        "local_full_suite": {
+          "passed": 1182,
+          "failed": 0,
+          "pytest_wall_s": 475.02,
+          "subprocess_wall_s": 476.89,
+          "peak_rss_kib": 1716256,
+          "exit_code": 0,
+          "date": "2026-10-23"
+        },
+        "github_actions": {
+          "run_id": 39947778403,
+          "job_id": 120394555595,
+          "head_sha": "a595bcfae465e30dd8263cbeb57fae29b7dc9102",
+          "conclusion": "success",
+          "remaining_suite_passed": 1087,
+          "remaining_suite_wall_s": 234.45,
+          "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39947778403"
+        },
+        "bounded_pilot": {
+          "invocations": 25,
+          "physical_replays": 90,
+          "parity_checked_scenes": 90,
+          "all_parity_exact": true,
+          "cancellation_evaluations": 154,
+          "receiver_recomputations": 64,
+          "new_generation": "2 groups/role known pilot and 2 matched groups only",
+          "model_training": "3-epoch stand-in checkpoints via the existing pilot configuration, not an E4 code path"
+        }
+      },
+      "not_authorized_and_not_started": [
+        "full B2 generation",
+        "full GPU training",
+        "full LOKO sweep"
+      ]
     },
     "github_actions_ci": {
       "pr": 12,
