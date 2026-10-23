@@ -233,7 +233,7 @@ The proposed delivery contains exactly the 17 reviewed E3a paths. Source and
 test files match the earlier staged full-suite contents; every current
 `geoml`/`geosim` Python source hash matches the recorded smoke provenance.
 The only later-added executable is the retained independent arithmetic audit,
-which was checked separately. No detector experiment, generation, model
+which was checked separately. No new detector experiment, RF waveform generation, model
 training or E3b work was started for delivery.
 
 The same focused command above was repeated against the final proposed code:
@@ -246,13 +246,34 @@ of existing evidence, not another detector experiment.
 `python -m compileall -q src tests scripts`, staged/unstaged whitespace checks,
 strict JSON and saved-output checksum/provenance checks passed. The P18 diff
 is one additive implementation-log row; researcher approval objects equal
-the base commit exactly and `benchmark_complete=false`. The single prior
-E1 RSS skip remains a skip; the full local suite is not misrepresented as
-repeated during this delivery check. Code/test SHA-256 values and exact
-measurements are retained in the JSON report.
+the base commit exactly and `benchmark_complete=false`. Code/test SHA-256 values and exact
+measurements are retained in the JSON report. The earlier full-suite result
+is retained separately from the later final-delivery repeat below.
 
 The new PR-head Actions result is recorded with the exact commit, run and job
 links in the draft PR description after publication; historical E2 Actions
 evidence in the readiness ledger does not stand in for E3a CI. A green E3a
 head satisfies the engineering/CI prerequisite for proposing E3b, but neither
 a draft PR nor CI authorizes merge, research decisions or production work.
+
+The complete local suite was subsequently repeated on the published implementation
+commit `ec47a90b9e8f9ed756bee822d1c2b548830951ee`:
+
+```bash
+OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 MKL_NUM_THREADS=2 MPLBACKEND=Agg \
+  /workspace/.venvs/geosim/bin/python -m pytest -q -rs
+```
+
+Result: **1023 passed, 1 skipped, 0 failed in 343.50 s**, exit 0;
+subprocess wall **346.210088 s**, maximum process RSS including descendants
+**1,272,224 KiB**. The `-rs` output explicitly reports the existing E1 RSS
+test skipped at `tests/test_b2_stream.py:421` because this runner cannot reset
+`/proc/self/clear_refs`. It is not reported as passed. This repeat changes
+no scientific smoke result and launches no production job.
+
+The implementation commit was normally pushed to the feature branch and
+[draft PR #11](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/11)
+was opened against unchanged `main`. This results-only follow-up records
+the completed local repeat. The final PR-head Actions evidence is maintained
+in the PR description with exact run/job/commit links; the PR remains draft
+and unmerged.
