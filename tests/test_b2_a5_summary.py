@@ -88,4 +88,52 @@ def test_invocations_without_scenes_are_counted_not_called_exact(tmp_path):
     summary_module.main(["--runs", str(tmp_path / "runs"), "--out", str(out)])
     totals = json.loads(out.read_text())["totals"]
     assert totals["invocations_without_parity_check"] == 1 and totals["invocations_with_parity_check"] == 0
-    assert totals["all_checked_parity_exact"] is True and totals["scenes_parity_checked"] == 0
+    assert totals["all_checked_parity_exact"] is None and totals["scenes_parity_checked"] == 0
+
+
+def test_uninventoried_or_partial_results_never_claim_full_matrix_completion(tmp_path):
+    name = "known_drop_one_co_only"
+    _invoke(tmp_path, name)
+    summary = summary_module.summarize(tmp_path / "runs")
+    assert summary["matrix_coverage"]["matrix_complete"] is False
+    assert summary["matrix_coverage"]["matrix_status"] == "UNINVENTORIED"
+    result = summary_module._load(tmp_path / "runs" / name)
+    coverage = {"schema": "B2-A5-matrix-status/1", "benchmark_complete": False,
+                "matrix_complete": False, "matrix_status": "PARTIAL",
+                "totals": {"inventory": 25, "completed": 1, "pending": 24, "failed": 0, "missing": 0},
+                "invocations": [{"name": name, "status": "completed", "results_sha256": result["sha256"],
+                                 "experiment_fingerprint": result["data"]["experiment_fingerprint"]},
+                                *[{"name": n, "status": "skipped"} for n in summary_module.EXPECTED_INVOCATIONS - {name}]]}
+    path = tmp_path / "runs" / "matrix_status.json"
+    path.write_text(json.dumps(coverage))
+    summary = summary_module.summarize(tmp_path / "runs")
+    assert summary["matrix_coverage"]["matrix_status"] == "PARTIAL"
+    assert "pending=24" in summary_module.markdown(summary)
+    coverage["matrix_status"] = "COMPLETE"
+    path.write_text(json.dumps(coverage))
+    with pytest.raises(ValueError, match="completion status"):
+        summary_module.summarize(tmp_path / "runs")
+    coverage["matrix_status"] = "PARTIAL"
+    coverage["totals"]["completed"] = 25
+    path.write_text(json.dumps(coverage))
+    with pytest.raises(ValueError, match="totals"):
+        summary_module.summarize(tmp_path / "runs")
+    coverage["totals"]["completed"] = 1
+    coverage["matrix_complete"] = True
+    path.write_text(json.dumps(coverage))
+    with pytest.raises(ValueError, match="completion flag"):
+        summary_module.summarize(tmp_path / "runs")
+    coverage["invocations"] = coverage["invocations"][:1]
+    path.write_text(json.dumps(coverage))
+    with pytest.raises(ValueError, match="25 canonical"):
+        summary_module.summarize(tmp_path / "runs")
+
+
+@pytest.mark.parametrize("extra", [', "benchmark_complete": false', ', "bad": NaN'])
+def test_checksummed_non_strict_json_is_rejected(tmp_path, extra):
+    _invoke(tmp_path, "a")
+    path = tmp_path / "runs" / "a" / "results.json"
+    path.write_text(path.read_text().rstrip()[:-1] + extra + '}')
+    path.with_name('results.json.sha256').write_text(summary_module._sha(path))
+    with pytest.raises(ValueError):
+        summary_module.summarize(tmp_path / "runs")

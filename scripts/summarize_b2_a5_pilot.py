@@ -15,6 +15,25 @@ import json
 from pathlib import Path
 
 CONDITIONS = ("original", "MASK_ONLY", "RECEIVER_CONSISTENT")
+EXPECTED_INVOCATIONS = ({"known_none_both"}
+    | {f"known_{p}_{s}" for p in ("shift_plus", "shift_minus", "drop_one", "phantom", "authorize_intruder", "stale_plan")
+       for s in ("co_only", "cross_only", "both")}
+    | {f"matched_{p}_{s}" for p in ("drop_one", "phantom", "authorize_intruder") for s in ("co_only", "both")})
+
+
+def _strict(text):
+    def unique(pairs):
+        values = {}
+        for key, value in pairs:
+            if key in values:
+                raise ValueError(f"duplicate JSON key: {key}")
+            values[key] = value
+        return values
+    def reject(value):
+        raise ValueError(f"nonfinite JSON constant: {value}")
+    value = json.loads(text, object_pairs_hook=unique, parse_constant=reject)
+    json.dumps(value, allow_nan=False)  # also rejects overflowed JSON exponents
+    return value
 
 
 def _sha(path: Path) -> str:
@@ -33,7 +52,7 @@ def _load(directory: Path) -> dict:
     results, sidecar = directory / "results.json", directory / "results.json.sha256"
     if not results.is_file() or not sidecar.is_file() or sidecar.read_text().strip() != _sha(results):
         raise ValueError(f"{directory}: missing or modified results.json")
-    data = json.loads(results.read_text())
+    data = _strict(results.read_text())
     if data.get("contract") != "B2-A5-eval/1" or data.get("benchmark_complete") is not False:
         raise ValueError(f"{directory}: not a B2-A5-eval/1 result with benchmark_complete=false")
     return {"directory": directory.name, "sha256": _sha(results), "data": data}
@@ -56,6 +75,9 @@ def _view(entry: dict) -> dict:
             "alarm_among_original_event": {"mean": _mean(c["event_detection"]), "n": _n(c["event_detection"])},
             "residual_total_db_displacement": _mean(displacement.get("residual_total_db")),
             "cancellation_depth_core_db_displacement": _mean(displacement.get("cancellation_depth_core_db")),
+            "asi_vs_unauthorized": c.get("asi_vs_unauthorized"),
+            "score_displacement": c.get("score_displacement"),
+            "agreement_counts_and_group_ci": c["agreement_with_original_label"],
             "n_scenes": c["n_scenes"], "n_groups": c["n_groups"]}
     return {"available": True, "paired_n": entry["paired_population"]["n_scenes"], "conditions": out,
             "mask_only_vs_receiver_consistent": entry.get("mask_only_vs_receiver_consistent"),
@@ -99,6 +121,39 @@ def summarize(runs: Path, checkpoint_note: str = "supplied by the run directory;
     loaded = [_load(path) for path in sorted(p for p in runs.iterdir() if p.is_dir())]
     if not loaded:
         raise ValueError("no invocation directories found")
+    coverage = {"matrix_status": "UNINVENTORIED", "matrix_complete": False,
+                "reason": "No matrix_status.json; invocation files alone do not establish complete coverage"}
+    manifest = runs / "matrix_status.json"
+    if manifest.exists():
+        coverage = _strict(manifest.read_text())
+        if coverage.get("schema") != "B2-A5-matrix-status/1" or coverage.get("benchmark_complete") is not False:
+            raise ValueError("foreign matrix manifest")
+        entries = coverage["invocations"]
+        if {item["name"] for item in entries} != EXPECTED_INVOCATIONS:
+            raise ValueError("matrix manifest does not inventory all 25 canonical invocations")
+        completed = {item["name"]:item for item in entries if item["status"] == "completed"}
+        if len({item["name"] for item in entries}) != len(entries) or set(completed) != {item["directory"] for item in loaded}:
+            raise ValueError("matrix inventory/completed invocation population differs from results")
+        for item in loaded:
+            recorded = completed[item["directory"]]
+            data = item["data"]
+            canonical = f"{data['source']['stage']}_{data['configuration']['perturbation']}_{data['configuration']['scope']}"
+            if item["directory"] != canonical:
+                raise ValueError("matrix invocation name differs from result configuration")
+            if (recorded["results_sha256"] != item["sha256"]
+                    or recorded["experiment_fingerprint"] != item["data"]["experiment_fingerprint"]):
+                raise ValueError("matrix result checksum or experiment provenance differs")
+        if coverage.get("matrix_complete") != (len(completed) == len(entries)):
+            raise ValueError("matrix completion flag disagrees with its inventory")
+        if (coverage.get("matrix_status") == "COMPLETE") != coverage["matrix_complete"]:
+            raise ValueError("matrix completion status disagrees with its inventory")
+        actual = {"inventory": len(entries), "completed": len(completed),
+                  "failed": sum(e["status"] == "failed" for e in entries),
+                  "missing": sum(e["status"] == "missing" for e in entries),
+                  "pending": sum(e["status"] in ("pending", "running", "skipped", "blocked_budget") for e in entries)}
+        if any(coverage.get("totals", {}).get(k) != n for k,n in actual.items()):
+            raise ValueError("matrix totals disagree with its inventory")
+        coverage = {**coverage, "manifest_sha256": _sha(manifest)}
     first = loaded[0]["data"]
     reference, per_stage = _identity(first), {}
     for item in loaded:
@@ -131,7 +186,7 @@ def summarize(runs: Path, checkpoint_note: str = "supplied by the run directory;
               "receiver_recomputations": sum(i["counts"]["receiver_recomputations"] for i in invocations),
               "scored_samples": sum(i["counts"]["scored_samples"] for i in invocations),
               "invocations_with_parity_check": len(checked), "invocations_without_parity_check": len(invocations) - len(checked),
-              "all_checked_parity_exact": all(i["parity"]["all_exact"] for i in checked),
+              "all_checked_parity_exact": all(i["parity"]["all_exact"] for i in checked) if checked else None,
               "scenes_parity_checked": sum(i["parity"]["n_scenes_checked"] for i in invocations),
               "elapsed_s_sum": sum(i["elapsed_s"] for i in invocations),
               "peak_rss_kib_max": max(i["peak_rss_kib"] for i in invocations)}
@@ -145,6 +200,7 @@ def summarize(runs: Path, checkpoint_note: str = "supplied by the run directory;
                                "source_tree_fingerprint": first["implementation"]["source_tree_fingerprint"],
                                "e4_source_files_sha256": first["implementation"]["e4_source_files_sha256"]},
             "frozen_models": first["frozen_models"], "totals": totals, "invocations": invocations,
+            "matrix_coverage": coverage,
             "interpretation": {
                 "what_this_is": "bounded execution evidence for replay parity, the receiver-consistent recomputation and the paired data flow",
                 "what_this_is_not": ["recognition-quality evidence", "a robustness claim", "population-level false-alarm rates"],
@@ -184,7 +240,13 @@ def markdown(summary: dict) -> str:
                 model.append(f"| `{inv['name']}` | {view} | {name} | {c['n_scenes']} | {pct(c['agreement_with_original_label'])} | "
                              f"{pct(c['prediction_change_vs_original'])} | {logit} | {pct(c['alarm_among_original_clean']['mean'])} (n={c['alarm_among_original_clean']['n']}) | "
                              f"{pct(c['alarm_among_original_event']['mean'])} (n={c['alarm_among_original_event']['n']}) |")
-    return ("### Receiver-level and baseline-input displacement (model independent; RC = RECEIVER_CONSISTENT)\n\n" + "\n".join(receiver)
+    coverage = summary["matrix_coverage"]
+    counts = coverage.get("totals", {})
+    banner = (f"Matrix coverage: **{coverage['matrix_status']}**; complete={coverage['matrix_complete']}; "
+              f"completed={counts.get('completed', 'unknown')}/{counts.get('inventory', 'unknown')}, "
+              f"pending={counts.get('pending', 'unknown')}, failed={counts.get('failed', 'unknown')}, "
+              f"missing={counts.get('missing', 'unknown')}. Unexecuted invocation slots are not non-applicable samples.\n\n")
+    return (banner + "### Receiver-level and baseline-input displacement (model independent; RC = RECEIVER_CONSISTENT)\n\n" + "\n".join(receiver)
             + "\n\n### Model-level paired conditions (stand-in checkpoints; execution evidence only)\n\n" + "\n".join(model) + "\n")
 
 

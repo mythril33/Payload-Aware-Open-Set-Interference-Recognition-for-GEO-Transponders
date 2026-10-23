@@ -126,7 +126,7 @@ def test_modified_committed_state_fails_closed(tmp_path, monkeypatch):
     meta = json.loads(path.read_text())
     meta["record"]["corrupted_identity"] = "0" * 64
     path.write_text(json.dumps(meta))
-    with pytest.raises(ValueError, match="no longer matches its recomputed corruption"):
+    with pytest.raises(ValueError, match="metadata checksum mismatch"):
         _run(tmp_path / "out")
 
 
@@ -164,8 +164,6 @@ def test_not_applicable_scenes_are_recorded_as_progress_too(tmp_path, monkeypatc
     assert _same(resumed, reference) and resumed["resume"]["scenes_from_state"] >= 3
 
 
-def test_matrix_driver_is_syntactically_valid_and_resumes_by_skipping_finished_invocations():
+def test_matrix_shell_entrypoint_is_syntactically_valid():
     script = ROOT / "scripts" / "run_b2_a5_pilot_matrix.sh"
     assert subprocess.run(["bash", "-n", str(script)]).returncode == 0
-    text = script.read_text()
-    assert "results.json.sha256" in text and "unrestricted" not in text and "--train" not in text

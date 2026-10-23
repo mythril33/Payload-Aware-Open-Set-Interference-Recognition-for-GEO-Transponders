@@ -215,6 +215,20 @@ def test_pair_denominators_keep_clean_other_and_rejected_predictions():
     assert pair["pair_accuracy"]["mean"] == 0.25 and pair["two_by_two"]["adjacent_satellite"]["unauthorized"] == 1
 
 
+def test_counterfactual_matched_pair_fields_are_descriptive_agreement(tmp_path):
+    ws = support.workspace()
+    cfg = _config(stage="matched", perturbation="drop_one", scope="both",
+                  labels=("adjacent_satellite", "unauthorized"))
+    result = _run(tmp_path, cfg, matched_data=ws / "matched")
+    conditions = result["views"]["co"]["conditions"]
+    assert conditions["original"]["asi_vs_unauthorized"]["msp"]["pair_accuracy"]["n_samples"] == 4
+    for condition in ("MASK_ONLY", "RECEIVER_CONSISTENT"):
+        pair = conditions[condition]["asi_vs_unauthorized"]["msp"]
+        assert not any("accuracy" in key for key in pair)
+        assert pair["pair_agreement_with_original_label"]["n_samples"] == 4
+        assert pair["n_samples"] == 4
+
+
 def test_score_direction_and_binary_multiclass_are_not_conflated(tmp_path):
     result = _run(tmp_path)
     metrics = result["views"]["co"]["conditions"]["RECEIVER_CONSISTENT"]
