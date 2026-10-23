@@ -215,6 +215,18 @@ def test_parity_tolerance_policy_is_fail_closed(source, replayed):
         rp.check_parity(replace(replay, plan_consistency=1 - replay.plan_consistency), stored)
 
 
+def test_cross_only_residual_invariance_is_relative_to_replay_under_tolerance(source, replayed):
+    replay, stored = replayed["clean"], source.stored(GROUP, "clean")
+    nudged = replace(replay, residual=(replay.residual.astype(np.float32) + 0.0625).astype(np.float16))
+    assert rp.check_parity(nudged, stored)["exact"] is False
+    receiver = rp.FrozenReceiver(source.cancellation)
+    built = rp.build_conditions(nudged, stored, _corruption(nudged, "shift_plus", "cross_only"), receiver)
+    assert receiver.calls == 0 and built["residual_recomputed"] is False
+    assert np.array_equal(built["RECEIVER_CONSISTENT"].residual, nudged.residual)
+    assert np.array_equal(built["MASK_ONLY"].residual, stored.residual)
+    assert not np.array_equal(built["RECEIVER_CONSISTENT"].residual, stored.residual)
+
+
 def test_caps_are_enforced_before_the_expensive_work(source, monkeypatch):
     monkeypatch.setattr(rp, "sample_scene", lambda *a, **k: pytest.fail("simulator started despite exhausted budget"))
     with pytest.raises(rp.BudgetExceeded, match="replay cap"):

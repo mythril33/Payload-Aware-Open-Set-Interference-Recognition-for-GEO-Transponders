@@ -279,8 +279,19 @@
           "failed": 0,
           "pytest_seconds": 23.87
         },
-        "final_head_ci": "PENDING; exact final-head result will be linked in PR14 description"
-      }
+        "final_head_ci": {
+          "head_sha": "25f984d16653a59cd28c3ca7463763faee4a94f7",
+          "run_id": 39928576202,
+          "job_id": 120330933282,
+          "conclusion": "success",
+          "passed": 1087,
+          "skipped": 0,
+          "failed": 0,
+          "pytest_seconds": 234.26
+        }
+      },
+      "merged_pr": 14,
+      "merge_sha": "ff81cae1b4e2563cc88271566665e9feae7cd44e"
     },
     "dual_pol_a5_plan_corruption": {
       "status": "BOUNDED_HARNESS_IMPLEMENTED_MERGED_PR_15",
@@ -331,29 +342,52 @@
       ]
     },
     "github_actions_ci": {
-      "pr": 12,
-      "head_sha": "bb589b4b4290da63ffa923add8d893b655b8149c",
-      "synthetic_merge_sha_prefix": "9036bcf",
-      "run_id": 39922726893,
-      "job_id": 120311592843,
+      "pr": 15,
+      "head_sha": "a595bcfae465e30dd8263cbeb57fae29b7dc9102",
+      "run_id": 39947778403,
+      "job_id": 120394555595,
       "conclusion": "success",
-      "passed": 1024,
-      "skipped": 0,
-      "failed": 0,
-      "pytest_seconds": 223.5,
-      "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39922726893",
-      "job_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39922726893/job/120311592843",
-      "status": "VERIFIED_SUCCESS_ON_PR_12_HEAD",
-      "workflow": ".github/workflows/b2-readiness-ci.yml",
-      "scope": "Remote full repository tests1024passed0skips; local1023passed1RSSskip remains separate",
-      "historical_e2": {
-        "status": "VERIFIED_SUCCESS_ON_PR_10_HEAD",
+      "status": "VERIFIED_SUCCESS_ON_MERGED_PR_15_HEAD",
+      "synthetic_merge_sha": "2d570bf26e99e94325a543d4da3cdcbb82c399d4",
+      "e4_tests": {
+        "passed": 95,
+        "skipped": 0,
+        "failed": 0,
+        "pytest_seconds": 116.27
+      },
+      "remaining_tests": {
+        "passed": 1087,
+        "skipped": 0,
+        "failed": 0,
+        "pytest_seconds": 234.45
+      },
+      "scope": "Historical merged E4 implementation evidence; not the postmerge recovery branch CI",
+      "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39947778403",
+      "historical_e3a_records": {
+        "pr": 12,
+        "head_sha": "bb589b4b4290da63ffa923add8d893b655b8149c",
+        "synthetic_merge_sha_prefix": "9036bcf",
+        "run_id": 39922726893,
+        "job_id": 120311592843,
+        "conclusion": "success",
+        "passed": 1024,
+        "skipped": 0,
+        "failed": 0,
+        "pytest_seconds": 223.5,
+        "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39922726893",
+        "job_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39922726893/job/120311592843",
+        "status": "VERIFIED_SUCCESS_ON_PR_12_HEAD",
         "workflow": ".github/workflows/b2-readiness-ci.yml",
-        "run_id": 39741030340,
-        "head_sha": "a138608faed6beae16c24170ccec06aa6dba3f9b",
-        "job_id": 119698005413,
-        "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39741030340",
-        "scope": "GitHub evidence for E2 head only; no E3a CI claim"
+        "scope": "Remote full repository tests1024passed0skips; local1023passed1RSSskip remains separate",
+        "historical_e2": {
+          "status": "VERIFIED_SUCCESS_ON_PR_10_HEAD",
+          "workflow": ".github/workflows/b2-readiness-ci.yml",
+          "run_id": 39741030340,
+          "head_sha": "a138608faed6beae16c24170ccec06aa6dba3f9b",
+          "job_id": 119698005413,
+          "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39741030340",
+          "scope": "GitHub evidence for E2 head only; no E3a CI claim"
+        }
       }
     }
   },
@@ -384,8 +418,8 @@
   ],
   "integrity_note": "Proposed researcher decisions are not approvals. Preserve frozen semantics and strictly segregate train, val-select, val-calib, test and test-matched.",
   "verified_remote_main": {
-    "sha": "9300620c13ae81cf16b1ef6ec9e59f2a6026f53c",
+    "sha": "4b736a6c425ab532e7c8e1bccc7c906f86ebe0be",
     "date": "2026-10-23",
-    "note": "PR11 implementation and PR12 four-document delivery evidence are merged; actor actions do not alter researcher approval objects"
+    "note": "PR14 XGBoost merged as ff81cae1b4e2563cc88271566665e9feae7cd44e; PR15 E4 merged; approvals unchanged"
   }
 }

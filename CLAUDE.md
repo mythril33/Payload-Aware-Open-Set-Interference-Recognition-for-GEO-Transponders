@@ -1,6 +1,6 @@
 # CLAUDE.md — Claude Code context for this repository
 
-**Readiness status (2026-10-23):** E1, E2 (bounded), E3a and E3b are merged; [P28](docs/plan/P28_b2_e4_dual_pol_a5.md) adds a bounded E4 dual-pol A5 operator-plan corruption harness (`geoml.b2_a5*`). Remaining work is governed by [P23 B2 Production Readiness](docs/plan/P23_b2_production_readiness.md) and the [bounded master prompt](docs/agent_prompts/B2_PRODUCTION_READINESS_MASTER_PROMPT.md): streaming, LOKO, EDSC/XGBoost, A5 dual-pol tests, CI, and explicit K18/K17d/OBS-CANCEL/2 approvals. No full production authorization is implied.
+**Readiness status (2026-10-23):** E1, bounded E2, E3a, E3b (PR #14, merge `ff81cae1b4e2563cc88271566665e9feae7cd44e`) and bounded E4 (PR #15, merge/current main `4b736a6c425ab532e7c8e1bccc7c906f86ebe0be`) are merged. [P28](docs/plan/P28_b2_e4_dual_pol_a5.md) defines the E4 dual-pol A5 harness (`geoml.b2_a5*`); its post-merge evidence recovery does not restart E4. Remaining work is governed by [P23 B2 Production Readiness](docs/plan/P23_b2_production_readiness.md) and the [bounded master prompt](docs/agent_prompts/B2_PRODUCTION_READINESS_MASTER_PROMPT.md). K18/K17d/OBS-CANCEL/2 remain pending; no full production authorization is implied.
 
 
 Read `AGENTS.md` first; it holds the binding repository rules. This file adds
@@ -55,7 +55,7 @@ python -m geoml.b2_experiment --config configs/b2_feat.json --data data/b2-feat-
 - Unknown score: larger = more unknown-like. State positive class, denominator, n.
 - Strict JSON, `null` + counts for unavailable metrics. Pilots are pilots.
 
-## Current milestone (2026-10-21, fourth slice)
+## Current milestone (2026-10-23, E4 post-merge evidence recovery)
 
 All frozen B2/1 data stages exist: B2-feat/1 (known + fifth channel), B2-test/1
 (test-only families), B2-match/1 (K17c level-matched ASI ↔ unauthorized).

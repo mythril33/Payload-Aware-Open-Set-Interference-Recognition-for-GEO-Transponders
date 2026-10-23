@@ -2,7 +2,16 @@
 
 **Date:** 2026-10-21  
 **Starting point:** `main` at `ff1418f2936c5c01c1f171c38c6804b9023cd064` (PR #7 merged).  
-**Status:** **PROPOSED PLAN, NOT AN IMPLEMENTED OR APPROVED BENCHMARK.** This document records the latest researcher/agent work plan; it does not modify frozen P18 or authorize full production.
+**Status (updated 2026-10-23):** Bounded E1/E2/E3a/E3b/E4 engineering has merged; the full benchmark remains incomplete and unapproved. The original plan and its starting-point evidence are retained below. Post-merge E4 evidence recovery is a separate bounded task; this document does not modify frozen P18 or authorize full production.
+
+## Verified post-merge status (2026-10-23)
+
+- E3b [PR #14](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/14) merged as `ff81cae1b4e2563cc88271566665e9feae7cd44e`.
+- E4 [PR #15](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/15) merged as verified current main `4b736a6c425ab532e7c8e1bccc7c906f86ebe0be`. At recovery start its PR body described work in progress; the verified merge and raw Actions evidence supersede that historical wording.
+- Exact E4 head `a595bcfae465e30dd8263cbeb57fae29b7dc9102`, [run39947778403/job120394555595](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39947778403/job/120394555595): **95 E4 tests passed in116.27s and1087 remaining tests passed in234.45s**, no skips or failures. Checkout was synthetic merge `2d570bf26e99e94325a543d4da3cdcbb82c399d4`; CPython3.12.15. This historical CI is separate from post-merge validation.
+- The merge referenced pilot/review files that were absent from its tree. Recovery therefore verifies or recreates only the documented small fixture, preserves the merged implementation, and publishes measured evidence separately. [The predeclared recovery plan](../engineering/B2_E4_POSTMERGE_EXECUTION.json) selects9 of25 capped invocations before outcomes;16 unselected invocations remain pending. A completed selected subset is **partial coverage**, never a complete matrix or a robustness result. Actual measurements belong in the [pilot report](../results/b2_a5_dual_pol_pilot.md) and [independent review](../research/b2_e4_red_team_review.md).
+- Post-merge reliability hardening (`2ee03c5`) binds scene evidence, propagates Python failures with per-attempt logs, validates current provenance through the bounded CLI before any reuse, and distinguishes full completion from partial/missing/blocked coverage. P18/P20/P28 physical semantics and every researcher decision remain unchanged; `benchmark_complete=false`.
+- Measured recovery subset:9/25 PARTIAL,16pending,32exact applicable-scene parity checks;32replays/56cancellations in272.103641s, maximum process RSS742884KiB. Local full regression:1220passed+1environment RSS skip718.13s; final summary-only changes were covered by7affected tests and4independent cases after the full-suite launch. Exact new-PR-head CI remains separate evidence in that PR.
 
 ## Source of truth and provenance
 
@@ -55,7 +64,7 @@ A gate's proposal is **not** approval. Record the researcher's explicit decision
 
 ### E4 — Full A5 dual-pol operator-plan corruption
 
-**Status (2026-10-23): bounded harness implemented** — [P28](P28_b2_e4_dual_pol_a5.md), `geoml.b2_a5*`, tests `tests/test_b2_a5_*.py`; capped CPU pilot only, checkpoints are chance-level stand-ins, no production authorization implied (see [results](../results/b2_a5_dual_pol_pilot.md)).
+**Status (2026-10-23): bounded harness merged in PR #15; post-merge scientific evidence recovery is separate** — [P28](P28_b2_e4_dual_pol_a5.md), `geoml.b2_a5*`, tests `tests/test_b2_a5_*.py`. The predeclared recovery pilot covers9 of25 invocations with tiny CPU stand-in checkpoints; unselected coverage remains pending. Its actual status and measurements are in the [results](../results/b2_a5_dual_pol_pilot.md), with no recognition/robustness or production claim.
 
 - Go beyond the existing A1 mask-only shortcut. Perturb **both** operator plan descriptors and reconstruct both masks under shifts (±0.5 MHz), dropped carrier, phantom carrier, and unauthorized-as-authorized cases as applicable. On the 5-channel path **recompute the observation-based cancellation residual from the perturbed plan**; merely altering saved masks is an explicitly labeled weaker control.
 - Freeze checkpoints/calibrators, do not retrain on tests, never modify the physical received observation, preserve group IDs and prohibit simulator-truth inputs. Test independent perturbation of co/cross plans and confirm changed residual/unchanged observation, provenance and deterministic replay.

@@ -212,6 +212,17 @@ separate from the data and run directories. `scripts/run_b2_a5_pilot_matrix.sh` 
 reused only after its identity and checksum verify, an interrupted one resumes at scene level, a changed identity is refused), reports
 failing invocations and exits non-zero if any expected invocation lacks a verified result.
 
+Post-merge integrity correction: scene JSON now uses the explicit internal
+`B2-A5-scene-state/2` envelope, binding its full metadata payload (parity,
+work, reporting flags and array checksum) to a canonical SHA-256. Duplicate
+keys, nonfinite values, incompatible schemas and inconsistent logical work
+are rejected. Legacy unsigned scene state is not upgraded or trusted; use a
+fresh directory. This internal cache correction changes neither physical
+artifacts nor `B2-A5-eval/1` experimental definitions. The matrix always
+invokes the provenance-aware CLI, records complete per-attempt logs and
+inventories unexecuted configurations; checksum equality alone cannot skip
+compatibility checks. Partial coverage remains explicitly partial.
+
 ## 12. Exclusions and gates
 
 Not authorized and not started: full B2 generation, full GPU training, full 7×3 LOKO, K18, K17d, OBS-CANCEL/2,
@@ -222,6 +233,7 @@ receiver-consistent. Test-only unknown families (B2-test/1) are outside this sli
 
 | Date | Change |
 |---|---|
+| 2026-10-23 | Post-merge engineering/evidence correction: metadata-bound scene-state/2 and fail-closed logical work checks; reliable matrix exit codes, per-attempt logs, explicit overall budgets and partial coverage; nested matched counterfactual `pair_accuracy*` fields renamed `pair_agreement_with_original_label*` without changing values/denominators. Cross-only means no co-plan-driven recomputation and equality to the original replay residual; equality to stored arrays requires exact replay parity. No physical, perturbation, RNG, cancellation, fitting or threshold semantics changed. |
 | 2026-10-23 | Registered before implementation and before any A5 outcome inspection. |
 | 2026-10-23 | Hardening after review round 2 (no perturbation, RNG key, metric or cap change): state-payload digests, environment binding, output-directory lock and separation, own-temporary-only cleanup, driver pipefail/expected-result check, per-polarization flag names, K17b confound sentence in §2. The pilot matrix was re-run on the hardened code. |
 | 2026-10-23 | Post-review clarifications (independent red-team review of the implemented harness, before the final pilot record): `stale_plan` is a formula (initial-draw plan of id-1), not a history, and an invalid replacement is `blocked`; only applicable scenes are replayed and parity-checked; parity wording is conditional on the §5 policy; alarm columns are rates among original-clean/original-event scenes, not false-alarm/detection rates under counterfactuals; the experiment fingerprint also covers the run directory's frozen files and the full source tree; §11a resumability added. No perturbation definition, RNG key, metric definition or cap changed. |

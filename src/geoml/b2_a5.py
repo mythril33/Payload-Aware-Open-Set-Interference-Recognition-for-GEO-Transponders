@@ -61,6 +61,7 @@ CONDITIONS = ("original", "MASK_ONLY", "RECEIVER_CONSISTENT")
 STAGES = ("known", "matched")
 E4_ADDED_FILES = ("geoml/b2_a5.py", "geoml/b2_a5_plan.py", "geoml/b2_a5_replay.py")
 CAPS = {"max_groups": 2, "max_classes": 2, "max_configurations": 1, "max_replays": 16, "max_cancellations": 24}
+STATE_CONTRACT = "B2-A5-scene-state/2"  # Checksummed envelope; legacy unsigned state is incompatible.
 DEFAULT_LABELS = {"known": ("clean", "unauthorized"), "matched": ("adjacent_satellite", "unauthorized")}
 AUTHORIZATION = {"full_b2_production": "NOT_AUTHORIZED_NOT_STARTED", "full_gpu_training": "NOT_AUTHORIZED_NOT_STARTED",
                  "full_loko_sweep": "NOT_AUTHORIZED_NOT_STARTED", "K18": "PENDING_RESEARCHER",
@@ -333,6 +334,11 @@ def _view_metrics(keys, outputs, original, diagnostics):
         pair_mask = np.isin(labels, [asi, unauthorized])
         out["asi_vs_unauthorized"] = {method: _pair_metrics(prediction, outputs["accepted"][method], labels, groups, pair_mask)
                                       for method in outputs["accepted"]}
+        if outputs is not original:
+            out["asi_vs_unauthorized"] = {
+                method: {key.replace("pair_accuracy", "pair_agreement_with_original_label"): value
+                         for key, value in values.items()}
+                for method, values in out["asi_vs_unauthorized"].items()}
     else:
         out["asi_vs_unauthorized"] = None
     out["residual"] = {key: _summary(values, groups) for key, values in diagnostics.items()}
@@ -695,6 +701,8 @@ def _run_a5(config, data, runs, out, *, matched_data, command_args, log, held) -
             del replay                                            # raw IQ is transient
         for key in work:
             work[key] += scene_work[key]
+        if work["replays"] > CAPS["max_replays"] or work["cancellations"] > CAPS["max_cancellations"]:
+            raise BudgetExceeded("resumed logical work exceeds invocation caps")
         records.append(record)
         rows.append({"stored": stored, "corruption": corruption, "conditions": conditions})
     if from_state:
@@ -846,7 +854,7 @@ def _identical_outputs(name, scored, applicable):
     return {"view_reads_residual": name == "dual_residual", "psd_identical": bool(spec_same),
             "residual_identical": bool(residual_same),
             "logits_identical": bool(np.array_equal(scored["MASK_ONLY"]["logits"], scored["RECEIVER_CONSISTENT"]["logits"])),
-            "note": "co/dual views never read the residual; with an unchanged co descriptor the residual is identical by construction"}
+            "note": "co/dual views never read the residual; an unchanged co descriptor reuses the replay residual without a cancellation call; equality to stored residual requires exact replay parity"}
 
 
 def report(result: dict) -> str:

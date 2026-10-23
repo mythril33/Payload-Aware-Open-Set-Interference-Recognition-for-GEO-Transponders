@@ -1,8 +1,66 @@
 # B2 E4 context pack — dual-pol A5 operator-plan corruption
 
+## Current post-merge evidence recovery — 2026-10-23
+
+This section supersedes the historical implementation-session snapshot below.
+E4 is already merged and is not being rebuilt. E3b PR #14 merged as
+`ff81cae1b4e2563cc88271566665e9feae7cd44e`; E4 PR #15 merged as verified
+current `origin/main@4b736a6c425ab532e7c8e1bccc7c906f86ebe0be`.
+The recovery branch is `docs/b2-e4-postmerge-evidence`.
+
+PR #15's final head `a595bcfae465e30dd8263cbeb57fae29b7dc9102` passed
+[run39947778403/job120394555595](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39947778403/job/120394555595):
+95 E4 tests in116.27s plus1087 other repository tests in234.45s, no skips
+or failures. The job used CPython3.12.15 and synthetic checkout
+`2d570bf26e99e94325a543d4da3cdcbb82c399d4`. Historical CI success does not
+validate missing pilot records or stand in for post-merge tests.
+
+At recovery start, the four linked pilot JSON/Markdown/table/review files
+were absent, as were `data/b2-feat-pilot`, `data/b2-match-pilot`,
+`runs/b2-feat-pilot` and `runs/b2-a5-pilot`. The earlier session's pilot
+claims below were therefore not accepted as traceable current evidence.
+Readiness artifacts had different generator-source hashes and their NN
+checkpoints failed P28's training-source rule; P21b artifacts were also
+incompatible. None was silently substituted or relabelled.
+
+The [predeclared recovery execution plan](B2_E4_POSTMERGE_EXECUTION.json)
+fixes the small fixture, setup budget and nine selected matrix invocations
+before recovery generation or outcome inspection. The integrator recorded
+fresh known-data generation (64 observations,274.449s,574192KiB peak RSS)
+and matched-data generation (6 observations,31.947s,562816KiB peak RSS).
+Only the documented3-epoch CPU stand-in setup is permitted; the A5 runner
+itself still fits nothing. Pilot measurements and checkpoint identities
+are reported in [the results note](../results/b2_a5_dual_pol_pilot.md).
+The selected nine finished with exit3/PARTIAL:32applied and4non-applicable
+scene-slots,32replays/56cancellations, all32parity checks exact. Matrix wall
+was272.103641s and maximum process RSS742884KiB. All16 unselected
+invocations remain pending. Local full regression was1220passed+1existing
+E1 RSS skip718.13s; final summary-only guards were separately covered by
+7passed94.79s and independent4passed49.80s. No complete-matrix or
+recognition/robustness claim follows.
+
+Post-merge commit `2ee03c5` hardens scene-evidence binding and the matrix
+driver without changing cancellation, perturbation or physical semantics.
+The matrix enters `geoml.b2_a5` for every selected invocation, including
+completed ones, so current source/data/frozen-state provenance is checked
+before reuse. Every attempt keeps its full log and Python exit status.
+Exit0 means all25 inventory entries completed; exit3 means a completed
+explicit subset (`PARTIAL`); failures, interrupted work and rejected
+budgets have separate nonzero statuses. Missing/skipped/blocked invocation
+slots and non-applicable/blocked physical scenes are distinct counts.
+See `matrix_status.json` alongside actual invocation files for coverage.
+
+K18/K17d/OBS-CANCEL/2 remain `PENDING_RESEARCHER`; full generation, full GPU
+training and full LOKO remain `NOT_AUTHORIZED`, and
+`benchmark_complete=false`. Recovery status does not grant a gate approval.
+
+## Historical implementation-session snapshot
+
 Status vocabulary: `VERIFIED` (checked in this session against code/tests), `IMPLEMENTED`, `BOUNDED_PILOT`,
 `PLANNED`, `BLOCKED`, `APPROVAL_REQUIRED`. Updated as the work lands; the final state is in
 [the pilot note](../results/b2_a5_dual_pol_pilot.md) and DURUM.
+Here, "this session" and the original branch/environment refer to the
+pre-merge implementation session, not the recovery environment above.
 
 ## 1. Starting point
 
@@ -99,9 +157,11 @@ State lives in Git (branch `claude/dazzling-maxwell-y0hw0q`; PR #15 is merged, f
 | The pilot matrix | `scripts/run_b2_a5_pilot_matrix.sh` | every invocation is handed to the CLI: finished ones are reused after identity verification, an interrupted one resumes at scene level, a changed identity is refused (use a fresh `OUT`); failures and missing results make the script exit non-zero |
 | Summary | `scripts/summarize_b2_a5_pilot.py` (pure function of the invocation results) | refuses mixed identities |
 
-Pilot environment (this session): `scripts/setup_cloud.sh`-equivalent venv at `/workspace/.venvs/geosim`; pilot data
+Historical pilot environment (implementation session; not recovered evidence): `scripts/setup_cloud.sh`-equivalent venv at `/workspace/.venvs/geosim`; pilot data
 `data/b2-feat-pilot` (`geosim.b2_dataset --config configs/b2_base.json --cancellation configs/cancellation.json --limit-groups 2
 --groups-per-shard 1`), `data/b2-match-pilot` (`geosim.b2_matched_dataset ... --known data/b2-feat-pilot --limit-groups 2`), run directory
 `runs/b2-feat-pilot` (`geoml.b2_experiment --config configs/b2_feat.json`, trained on the unmodified `main` source before the E4 files
-existed; E4 allow-lists exactly three added files). A new session without these directories regenerates them with the commands above
-(about 5 + 1 minutes of generation and 10 s of training on 4 CPUs); no full-scale generation, GPU training or LOKO sweep is involved.
+existed; E4 allow-lists exactly three added files). These named artifacts were absent at recovery start. Recovery
+uses the explicit fixture/budget plan above and records actual environment, times and identities in the results report;
+the old approximate5+1 minute generation/10s training estimate is not a new measurement. No full-scale generation,
+GPU training or LOKO sweep is involved.
