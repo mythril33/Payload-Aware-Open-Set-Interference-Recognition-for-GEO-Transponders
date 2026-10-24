@@ -577,8 +577,13 @@ def test_command_line_exit_codes_strict_json_and_no_overwrite(tmp_path, capsys, 
     assert pre.main(["inventory"]) == 0
     result = strict(capsys.readouterr().out)
     assert result["benchmark_complete"] is False and result["production_authorized"] is False and result["verdict"] == "PASS"
-    assert pre.main(["gates"]) == 4
-    assert strict(capsys.readouterr().out)["counts"]["BLOCKED"] == 6
+    assert pre.main(["gates"]) == 4                                                 # blocked: the compute gates stay closed ...
+    gate_report = strict(capsys.readouterr().out)
+    assert gate_report["counts"]["BLOCKED"] == 3 and gate_report["counts"]["FAIL"] == 0
+    statuses = {item["id"]: item["status"] for item in gate_report["checks"]}
+    assert {key for key, status in statuses.items() if status == pre.BLOCKED} == {
+        "gates.full_generation", "gates.full_gpu_training", "gates.full_loko_sweep"}      # ... and only they
+    assert all(statuses[f"gates.{key}"] == pre.PASS for key in ("K18", "K17d", "OBS-CANCEL-2"))   # approved science is not execution authority
     assert pre.main(["--allow-blocked", "gates"]) == 0
     capsys.readouterr()
     out = tmp_path / "report.json"

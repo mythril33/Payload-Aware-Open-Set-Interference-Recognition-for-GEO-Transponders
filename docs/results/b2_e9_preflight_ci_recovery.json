@@ -347,5 +347,31 @@
     "Production hosts, budgets, backup, probe and compute authorizations remain separate NO-GO decisions"
   ],
   "execution_scope": "Existing CPU-only bounded unit fixtures; no production dataset, GPU probe/training, full LOKO or production held-out inference",
-  "measurement_note": "Peak ru_maxrss is a single-process child high-water mark, not a summed concurrent process-tree memory measurement."
+  "measurement_note": "Peak ru_maxrss is a single-process child high-water mark, not a summed concurrent process-tree memory measurement.",
+  "post_merge_ci": {
+    "pr_27_merge_commit": "a5e3b7b",
+    "pr_27_head_ci": {
+      "run_id": 40092535088,
+      "job_id": 120867990644,
+      "head_sha": "29db36ae17c7af15e8eb904a3b1e8ca59e484e72",
+      "conclusion": "failure",
+      "passed": 1709,
+      "failed": 2,
+      "skipped": 7,
+      "seconds": 943.8,
+      "failed_tests": [
+        "tests/test_b2_production_preflight.py::test_command_line_exit_codes_strict_json_and_no_overwrite",
+        "tests/test_b2_training_footprint.py::test_proposal_is_an_unfrozen_unapproved_candidate"
+      ]
+    },
+    "classification": "stale current-state assertions after the scientific approvals; no safety defect",
+    "followup_local_full_suite": {
+      "passed": 1825,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 1058.92
+    },
+    "gates_unchanged": true,
+    "mutation_checks_killed": 2
+  }
 }
