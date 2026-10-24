@@ -1,6 +1,8 @@
 # CLAUDE.md — Claude Code context for this repository
 
-**Current E7b execution scope (2026-10-24):** base main
+**Current state (2026-10-24):** E8 decision/resource preparation (P32, NO-GO, nothing approved) sits on main `4a1cc95` (PR #24 merged, exact-head CI 1771 passed / 7 skipped); see the E8 paragraph below.
+
+**E7b execution scope (2026-10-24):** base main
 `ed65eb54632fc4373accebc88452ddf0ff9fadfe`, PR22/23 merged. Read
 [P31](docs/plan/P31_b2_e7b_isolated_execution.md) for the additive canonical
 `train-only` → `calibrate` → `freeze` → `evaluate` modes. Train/val-select
@@ -81,7 +83,7 @@ python -m geoml.b2_experiment --config configs/b2_feat.json --data data/b2-feat-
 - Unknown score: larger = more unknown-like. State positive class, denominator, n.
 - Strict JSON, `null` + counts for unavailable metrics. Pilots are pilots.
 
-## Current milestone (2026-10-23, E4 post-merge evidence recovery)
+## Current milestone (2026-10-24, through E8 preparation)
 
 All frozen B2/1 data stages exist: B2-feat/1 (known + fifth channel), B2-test/1
 (test-only families), B2-match/1 (K17c level-matched ASI ↔ unauthorized).

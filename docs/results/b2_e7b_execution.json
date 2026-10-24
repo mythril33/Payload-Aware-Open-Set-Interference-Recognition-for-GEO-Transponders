@@ -622,5 +622,6 @@
     },
     "preserved_fixture_tree": "/workspace/b2-e7b-execution-evidence/invalidated-full-pytest-23",
     "assertions_weakened": false
-  }
+  },
+  "final_head_ci_superseded_by": "docs/plan/b2_readiness_gates_2026-10-21.json#engineering.e7b_head_ci (run 40064513568, job 120784837702, merged PR #24); this ledger is an evidence snapshot and keeps its original text"
 }

@@ -18,9 +18,9 @@ Train the three views (`co`, `dual`, `dual_residual`) with seeds 0/1/2 using the
 Mahalanobis from train embeddings (regularization 0.1), thresholds from known val-calib only (acceptance 0.95, clean-alarm Pfa 0.05), and the
 P31 phase order (train-only, known val-calib, freeze, evaluate) with all nine cells frozen before the first test read. Headline model:
 `dual_residual`; `co` and `dual` are the matched ablations; seeds are reported separately and none is selected by outcome. Test-only and matched
-sets are evaluated once, K17d rows are predeclared (section 3). **With this choice no value departs from the P6 / `TrainConfig` recipe defaults or from the P20 pre-registered
+sets are evaluated once, K17d rows are predeclared (section 3). **With this choice no hyperparameter value departs from the P6 / `TrainConfig` recipe defaults or from the P20 pre-registered
 loss/shift values (`configs/b2_feat.json`: centre 0.005, plan BCE 1.0, K17b 15 % / 0.5 MHz; these are config values, not `TrainConfig` code defaults), so no P18 section 10
-entry is needed for any hyperparameter**; a section 10 *decision-log* entry recording the researcher's approvals is optional and the
+entry is needed for any hyperparameter** (the one possible exception is the recommended cuDNN TF32 pin of R6, a non-default numeric choice that the list in R6 says needs one; whether it does is the researcher's call); a section 10 *decision-log* entry recording the researcher's approvals is optional and the
 researcher's call. The nine-fit scope is consistent with P18 (five-channel main model, co as ablation) and K17 (three seeds).
 
 ## 2. Decision matrix
@@ -31,7 +31,7 @@ researcher's call. The nine-fit scope is consistent with P18 (five-channel main 
 |---|---|---|---|---|---|
 | **K18** | Loss convention | **A**: keep P20 `0.005 x sum`, plan BCE 1.0, keep the observation-only train diagnostic | B P21b `0.01 x mean` (64x weaker at width 8, 128x at width 16: effectively CE-only); C pre-register another weight (a search, extra fits); D disable the centre loss | production training config | B-D: P18 section 10 entry |
 | **K17d** | ASI level drift | **A + C**: keep B2-test/1, report all 500 groups, plus a predeclared sub-row of the 35 co-feed missing-carrier groups and a sensitivity row excluding them | B new `B2-test/2` (regenerates 2,500 observations, about 3.5 h, new fingerprints, P18 section 10) | final reporting plan; DR-04 only if B | B only |
-| **OBS-CANCEL/2** | Primary receiver | **A**: keep `obs-cancel/1`; state its 21.7-25 dB (22.8 dB stored-window) phase-noise depth ceiling next to every residual-based result | B separate versioned phase-tracking study with rate-dependent criteria (study cost in no budget; a later switch = a second full generation); C tracker as primary (needs B first, delays DR-04) | **DR-04 generation** (the residual is computed at generation time from IQ that is never stored) | B, C: new stage name + section 10 |
+| **OBS-CANCEL/2** | Primary receiver | **A**: keep `obs-cancel/1`; state its phase-noise-only depth ceiling next to every residual-based result: 21.7 dB over the 4096-sample block, 22.8 dB for the stored window (150 Hz effective linewidth, every carrier rate; the 25.5 dB figure belongs to a hypothetical 64-symbol tracker) | B separate versioned phase-tracking study with rate-dependent criteria (study cost in no budget; a later switch = a second full generation); C tracker as primary (needs B first, delays DR-04) | **DR-04 generation** (the residual is computed at generation time from IQ that is never stored) | B, C: new stage name + section 10 |
 | **R1** | Views, seeds | three views x seeds **0, 1, 2** (nine fits) | `dual_residual` only (3 fits, changes the comparison scope; cannot weaken P31's nine-cell admission) | training scope | no |
 | **R2** | Width, time_pool | **width 16, time_pool 2**, carrier reference | width 8 (cheaper pilot size), width 32 / time_pool 1 (costlier) | budget, K18 ratio, probe | width != 16: section 10 |
 | **R3** | K18 weights (with R2) | option A weights 0.005 / 1.0 | see K18 | config | see K18 |
@@ -42,15 +42,15 @@ researcher's call. The nine-fit scope is consistent with P18 (five-channel main 
 | **R8** | Test coupling | P31 isolated phases; nine cells frozen before the first test read | legacy coupled runner (capped at 12 groups/role) | evaluation | no |
 | **R9** | Interruption | restart the interrupted view/seed from epoch 0, record the parent checkpoint hash, never splice | reviewed snapshot (optimizer/scheduler/RNG/cursor; needs a bit-exact CPU resume test) | long GPU runs | no |
 | **R10** | Constants | confirm acceptance 0.95, clean Pfa 0.05, Mahalanobis regularization 0.1 (0.95 and 0.1 are P20/pilot values, not P18 numbers) | other values (a prior section 10 step; new scorer identity invalidates frozen bundles) | calibration | different value: section 10 |
-| DR-04 | Full generation | **only after** OBS-CANCEL/2, K17d (and K18/R2 if the lock is to cover training) and the engineering milestone of section 5; name host, wall/core/disk ceilings | - | data | - |
+| DR-04 | Full generation | **only after** OBS-CANCEL/2, K17d, R7 (groups per shard is part of the generator request) and a designated host with approved ceilings (and K18/R2-R10 if the lock is to cover training) and the engineering milestone of section 5; name host, wall/core/disk ceilings | - | data | - |
 | DR-05 | GPU probe, then fits | probe first on an identified host under explicit caps ([spec](b2_e8_gpu_probe_spec.json)); fits are a second approval | - | models | - |
 | DR-06 | Full LOKO | defer until production fits exist and the executor is reviewed; 21 fits (primary view) or 63 (three views) are separate budgets | - | LOKO | - |
 
 ## 3. K17d predeclaration the researcher would be approving
 
-Rows fixed now, before any test read: (i) all 500 test groups; (ii) the 35 co-feed missing-carrier groups as a labelled sub-row (group list =
+Rows fixed now, before any test read, for the natural `adjacent_satellite_downlink` family and its pairing with the known uplink ASI (E6 packet section 3): (i) all 500 test groups; (ii) the 35 co-feed missing-carrier groups as a labelled sub-row (group list =
 the 35 rows with `pol == 0` of [`k17d_drift_audit.json`](../results/k17d_drift_audit.json), derived from generation metadata, not from outcomes);
-(iii) a sensitivity row excluding them. Cross-feed drops (43 groups) move no downlink event level. No outcome-driven removal.
+(iii) a sensitivity row excluding them. The 35-group list must be re-derived from the production generation metadata and equal the audited rule (co-feed drop, `pol == 0`) before any test read. Cross-feed drops (43 groups) move no downlink event level. No outcome-driven removal.
 
 ## 4. Sentences the researcher would write (templates; copying them approves nothing)
 

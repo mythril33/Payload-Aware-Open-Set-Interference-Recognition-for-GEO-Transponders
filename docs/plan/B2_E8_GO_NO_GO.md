@@ -13,14 +13,14 @@ measurement or an engineering milestone; NOT_RUN = not executed. The full machin
 | DR-05 bounded GPU probe | **NO-GO** | no identified GPU host or caps; no probe executor exists (the isolated modes are CPU-only); R2/R5/R6 undecided |
 | DR-05 nine production fits | **NO-GO** | needs the probe, K18/R1-R10, a production executor (width 16, 30 epochs, GPU) and the width-explicit budget |
 | DR-06 full LOKO | **NO-GO** | needs production fits, a reviewed production dispatcher; 21 or 63 fits are separate budgets |
-| What can proceed now | **GO** | read-only preparation: approvals recorded by the researcher, the engineering milestone of section 5, bounded CPU fixtures |
+| What is permitted now (no compute) | read-only preparation only | the researcher recording decisions; read-only inventory/preflight/budget tools; bounded CPU fixtures. The engineering milestone E9 starts only after the decisions are recorded (section 5) |
 
 ## 2. Findings
 
 | Status | Item | Evidence |
 |---|---|---|
 | PASS | Verified `origin/main` is `4a1cc95`; PR #24 merged | `git fetch` + `git log`; E7b head `d1e0898` |
-| PASS | Exact-head CI of PR #24: 1771 passed (E4 107 + repository 1664), 7 skipped, 0 failed | Actions run 40064513568 / job 120784837702, raw log read |
+| PASS | Exact-head CI of PR #24: 1771 passed (E4 107 + repository 1664), 7 skipped, 0 failed | Actions run 40064513568 / job 120784837702, raw log read (E4 step `107 passed in 109.40s`; repository step `1664 passed, 7 skipped in 759.80s`) |
 | PASS | Historical records reconciled with that CI; authorization states unchanged | gates `engineering.e7b_head_ci`, `verified_remote_main`; findings `audit.pr_head_ci`; `decisions` untouched, all `approval: null` |
 | PASS | Gates fail closed: K18/K17d/OBS-CANCEL-2 `PENDING_RESEARCHER`, full_generation/GPU/LOKO `NOT_AUTHORIZED`, `benchmark_complete=false` | `python scripts/b2_production_preflight.py gates` (exit 4, six BLOCKED); CI step "Fail closed if any researcher gate is implicitly approved" |
 | PASS | Production cannot be launched: `supervisor plan --production` exit 3 (BLOCKED: gates + `PRODUCTION_LAUNCH_ENABLED False`); `run --production --execute` exit 2 REFUSED; `run --execute` without `--max-groups` and with `--max-groups 3` exit 2 REFUSED; no workdir content created | commands run in E8 (section 3) |
@@ -34,7 +34,7 @@ measurement or an engineering milestone; NOT_RUN = not executed. The full machin
 | BLOCKED | GPU probe specified, not implemented, not run | [spec](b2_e8_gpu_probe_spec.json); `audit.gpu_probe_executor_missing` |
 | BLOCKED | Production host, GPU, backup, ceilings undesignated | [host assessment](B2_E8_HOST_RESOURCE_ASSESSMENT.md); `audit.compute_hosts_undesignated` |
 | BLOCKED | Lock does not record CUDA/cuDNN/driver/GPU model/TF32 flags; no source pins TF32 (torch 2.14.1 default: cuDNN TF32 on) | `scripts/b2_production_preflight.py:323-331`; `git grep allow_tf32 -- src scripts` empty; `audit.lock_environment_lacks_gpu_pins` |
-| BLOCKED | `TrainConfig` code defaults are `center_loss_weight 0.0` and `plan_shift_fraction 0.0`: the P20 centre term (0.005) and the K17b shift (15 %) live only in `configs/b2_feat.json`; a production config built from 'the defaults' would silently drop both | `src/geoml/train.py`; `configs/b2_feat.json`; finding `audit.trainconfig_defaults_disable_p20_terms` |
+| BLOCKED | `TrainConfig` code defaults are `center_loss_weight 0.0`, `plan_shift_fraction 0.0` and `plan_consistency False`: the P20 centre term (0.005), the K17b shift (15 %) and the plan head live only in `configs/b2_feat.json` / the `b2_experiment` config; a production config built from 'the defaults' would silently drop all three | `src/geoml/train.py`; `configs/b2_feat.json`; finding `audit.trainconfig_defaults_disable_p20_terms` |
 | BLOCKED | Release gate is a process step, not a machine-checked record | `audit.release_gate_not_machine_checked`; section 4 |
 | BLOCKED | Not measured at scale: generation wall time, streaming memory/throughput, synchronous loader, GPU throughput/VRAM | checklist `audit.wall_time_unmeasured_at_scale`, `streaming_unmeasured_at_scale`, `loader_synchronous`, `training_budget_width_mismatch` |
 | BLOCKED | Interrupted-training policy (R9) | `audit.training_interruption_recovery` |
@@ -50,7 +50,7 @@ not on the runner, and GPU parity is untested anywhere.
 | Command | Exit | Result |
 |---|---|---|
 | `scripts/b2_production_preflight.py gates` | 4 | BLOCKED: K18, K17d, OBS-CANCEL-2, full_generation, full_gpu_training, full_loko_sweep |
-| `scripts/b2_production_supervisor.py plan --workdir W --production` | 3 | `supervisor.authorization` BLOCKED, `supervisor.production_launch` BLOCKED (`PRODUCTION_LAUNCH_ENABLED is False`) |
+| `scripts/b2_production_supervisor.py plan --workdir W --production` | 3 | `supervisor.authorization` BLOCKED, `supervisor.production_launch` BLOCKED (`PRODUCTION_LAUNCH_ENABLED is False`); exit 3 (FAIL) because this sandbox also fails the lock/disk checks, exit 4 (BLOCKED only) once a clean tree and enough disk remain |
 | `scripts/b2_production_supervisor.py run --workdir W --production --execute` | 2 | REFUSED: production execution refused: four gates BLOCKED |
 | `scripts/b2_production_supervisor.py run --workdir W --max-groups 3 --execute` | 2 | REFUSED: a bounded run needs `--max-groups 1..2` |
 | `scripts/b2_production_supervisor.py run --workdir W --execute` | 2 | REFUSED: same |

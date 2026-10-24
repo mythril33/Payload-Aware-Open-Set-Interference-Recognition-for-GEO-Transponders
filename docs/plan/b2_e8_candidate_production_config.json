@@ -8,7 +8,7 @@
  "base_main": "4a1cc95913b430fee5c5e7d2e54cf48c9feeb8d8",
  "statement": "A candidate only. It lives outside configs/ and matches no loader schema (b2_experiment, b2_loko, b2_execution cannot read it). Every researcher-controlled value is UNAPPROVED; values with status FROZEN_BY_PROTOCOL are carried from P18/P20/K17 and are listed for completeness. Approving any value authorizes no generation, GPU use, training or LOKO.",
  "derivation": "Recipe values (width, time_pool, epochs, batch, optimizer, schedule, augmentation, level) are the P6 / TrainConfig defaults; the loss weights (center 0.005, plan BCE 1.0) and the K17b shift (15 %, 0.5 MHz) are the P20 pre-registered values of configs/b2_feat.json, which are NOT TrainConfig code defaults (TrainConfig has center_loss_weight 0.0 and plan_shift_fraction 0.0). All equal the E7a proposal values (b2_e7_training_proposal.json); this file adds no new value except numerics_pin and the mirror of the recommended decisions. No test, test-only, matched or val-calib outcome informed any value.",
- "p18_section_10_entry_needed_if_approved_as_is": false,
+ "p18_section_10_entry_needed_if_approved_as_is": "NONE_FOR_HYPERPARAMETERS; the recommended cuDNN TF32 pin (numerics_pin) is a non-default numeric choice that the list below says needs one, so whether it does is the researcher's call (R6)",
  "p18_section_10_entry_needed_if_changed": [
   "model_width",
   "epochs",
@@ -226,6 +226,13 @@
    "decision": "R10",
    "proposal_record": "b2_e7_training_proposal.json#parameters.calibration",
    "note": "acceptance 0.95 is a P20/pilot constant; clean alarm Pfa 0.05 is also P18"
+  },
+  "plan_consistency": {
+   "value": true,
+   "status": "UNAPPROVED",
+   "decision": "R3",
+   "proposal_record": "configs/b2_feat.json / b2_experiment default",
+   "note": "TrainConfig code default is False (the auxiliary plan head inactive); b2_experiment sets True; the production config must set it explicitly"
   }
  },
  "numerics_pin": {
@@ -260,7 +267,7 @@
   "OBS-CANCEL-2": {
    "recommended": "A",
    "status": "UNAPPROVED",
-   "summary": "keep obs-cancel/1 as the primary receiver; state the 21.7-25 dB phase-noise depth ceiling next to residual results"
+   "summary": "keep obs-cancel/1 as the primary receiver; state its phase-noise-only depth ceiling next to every residual-based result: 21.7 dB over the 4096-sample block (22.8 dB for the stored window) at the 150 Hz effective linewidth, for every carrier rate"
   },
   "R1": {
    "recommended": "co, dual, dual_residual x seeds 0,1,2 (nine fits)",

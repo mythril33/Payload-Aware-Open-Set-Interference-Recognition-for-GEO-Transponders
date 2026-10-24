@@ -1,7 +1,7 @@
 {
  "schema": "B2-E6-audit-findings/1",
  "as_of": "2026-10-24",
- "base_main": "755b474b7a2c506ec03441a7d15ed365c47addb1",
+ "base_main": "4a1cc95913b430fee5c5e7d2e54cf48c9feeb8d8",
  "benchmark_complete": false,
  "note": "Manual audit of the 21,350-observation production plan against the merged code. PASS needs a named test or an inspected location; FAIL is a verified engineering gap or mismatch; BLOCKED needs a researcher decision, authorization, hardware or a measurement; NOT_RUN was not executed. Nothing here approves a gate. E7a update (2026-10-23): the supervisor and the K18 diagnostic findings are resolved for bounded fixtures; production launch stays unimplemented. E7a review update: independent multi-lens review of the supervisor, K18 diagnostics, training proposal and documentation; the material findings are fixed with regression tests (P30 section 9). Items touched by E7a cite line numbers at the E7a head; untouched items cite 755b474. Main moved to 5d3f1a3 when PR #21 (the first, pre-review E7a state) was merged; this round is its follow-up. The audit base for items not touched by E7a stays 755b474. Main is now 0e8c467 (PR #22 merged the review hardening); a post-merge audit and its fixes are in the hotfix that follows. E7b reconciliation: verified main ed65eb5 contains PR22/23; the raw PR23 job log confirms 1632 passed and seven skips. Separate bounded training/calibration/freeze/evaluation and a bounded LOKO matrix close engineering gaps without authorizing production or choosing R1-R10. Untouched audit items retain historical citations.",
  "items": [
@@ -274,7 +274,7 @@
    "id": "audit.wall_time_unmeasured_at_scale",
    "title": "Generation wall time is an extrapolation from a 60-observation matched profile",
    "status": "BLOCKED",
-   "message": "23.0-30.2 h reproduces arithmetically from 3.8-5.0 s/observation, but the known stage's group mix differs from the matched profile and nothing was timed beyond 64 observations. A start-up gate that compares the first committed shards with the band (stop if outside) belongs to the authorized run, not to this preflight. E7a's capped real-physics run (this sandbox, two groups per stage, clean tree) cost 4.67 s/observation for the known stage (64 observations, three attempts including the restarts and the estimated charge of one lost attempt), 5.25 for test-only (10) and 4.76 for matched (6) as whole-attempt wall per observation including start-up; the first-shard gate figures (3.1-4.5 s/observation) subtract a fixed 6 s allowance from 3-8 observation shards and are not per-observation costs, so they neither confirm nor refute the 3.8-5.0 band for any stage. Nothing was timed at production size.",
+   "message": "23.0-30.2 h reproduces arithmetically from 3.8-5.0 s/observation, but the known stage's group mix differs from the matched profile and nothing was timed beyond 64 observations. A start-up gate that compares the first committed shards with the band (stop if outside) belongs to the authorized run, not to this preflight. E7a's capped real-physics run (this sandbox, two groups per stage, clean tree) cost 4.58 s/observation for the known stage (64 observations, three attempts including the restarts and the estimated charge of one lost attempt), 5.27 for test-only (10) and 4.83 for matched (6) as whole-attempt wall per observation including start-up; the first-shard gate figures (3.1-4.5 s/observation) subtract a fixed 6 s allowance from 3-8 observation shards and are not per-observation costs, so they neither confirm nor refute the 3.8-5.0 band for any stage. Nothing was timed at production size.",
    "evidence": [
     "docs/results/b2_production_budget.md:12-40",
     "docs/results/b2_e7a_supervisor_verification.json"
@@ -298,7 +298,7 @@
     "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40064513568",
     "tests/test_b2_train_diagnostics.py"
    ],
-   "verified_by": "raw job log of run 40064513568 read in E8 (tail of job 120784837702)"
+   "verified_by": "ci:40064513568 raw job log (job 120784837702) read in E8"
   },
   {
    "id": "audit.supervisor_real_physics_capped",
@@ -424,7 +424,7 @@
    "id": "audit.trainconfig_defaults_disable_p20_terms",
    "title": "TrainConfig code defaults silently disable the P20 centre loss and the K17b shift",
    "status": "BLOCKED",
-   "message": "geoml.train.TrainConfig defaults are center_loss_weight 0.0 and plan_shift_fraction 0.0 (plan_loss_weight 1.0, width 16, epochs 30, batch 32); the pre-registered 0.005 centre weight and the 15 % / 0.5 MHz K17b shift exist only in configs/b2_feat.json, a 3-epoch width-8 pilot config. A production run built from 'the defaults' would therefore train without K18's centre term and without the frozen augmentation. The frozen production configuration (after the R-decisions) must set both explicitly, and the executor milestone should refuse a production profile that leaves them at 0.",
+   "message": "geoml.train.TrainConfig defaults are center_loss_weight 0.0 and plan_shift_fraction 0.0 and plan_consistency False (so the auxiliary plan head is inactive although plan_loss_weight is 1.0; width 16, epochs 30, batch 32); the pre-registered 0.005 centre weight and the 15 % / 0.5 MHz K17b shift exist only in configs/b2_feat.json, a 3-epoch width-8 pilot config. A production run built from 'the defaults' would therefore train without K18's centre term, without the plan head and without the frozen augmentation (b2_experiment sets plan_consistency True through its own config default). The frozen production configuration (after the R-decisions) must set both explicitly, and the executor milestone should refuse a production profile that leaves them at 0.",
    "evidence": [
     "src/geoml/train.py",
     "configs/b2_feat.json",

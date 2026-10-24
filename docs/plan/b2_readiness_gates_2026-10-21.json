@@ -769,7 +769,7 @@
         "passed": 107,
         "skipped": 0,
         "failed": 0,
-        "note": "derived: 1771 reported total minus the repository step"
+        "pytest_seconds": 109.4
       },
       "remaining_tests": {
         "passed": 1664,

@@ -51,6 +51,11 @@ def test_host_inventory_is_read_only_and_never_designates_a_host(tmp_path, monke
     before = sorted(p.name for p in tmp_path.iterdir())
     report = inv.build_report("training", ["ROOT"], "BACKUP", facts=facts())
     assert sorted(p.name for p in tmp_path.iterdir()) == before
+    inv.collect(["ROOT", "nested/ROOT"], "BACKUP")                       # the real collectors, not injected facts
+    assert sorted(p.name for p in tmp_path.iterdir()) == before          # nothing was created, not even the queried paths
+    done = subprocess.run([sys.executable, "-I", "-c", "import sys; sys.path.insert(0, %r); import b2_host_inventory; "
+                           "raise SystemExit(int('torch' in sys.modules))" % str(ROOT / "scripts")], capture_output=True)
+    assert done.returncode == 0                                          # importing the inventory never loads torch
     assert report["read_only"] is True and report["gpu_computation_performed"] is False
     assert report["host_designated"] is False and report["production_authorized"] is False and report["benchmark_complete"] is False
     assert report["requirements_status"] == "PROPOSED_UNAPPROVED" and status(report)["host.designation"] == pre.BLOCKED
@@ -124,7 +129,8 @@ def test_budget_withdraws_the_width8_reservation_and_scales_by_the_mac_ratio():
     assert w16["gpu_pure_compute_hours_screening"][0] == pytest.approx(0.9 * ratio, abs=0.02)
     assert w16["gpu_pure_compute_hours_screening"][1] == pytest.approx(4.5 * ratio, abs=0.02)
     assert w16["synchronous_loader_hours"] == w8["synchronous_loader_hours"] == pytest.approx(6.97, abs=0.01)
-    assert w16["gpu_compute_plus_loader_hours_screening"][1] > 3 * 6.0 > 6.0                            # far beyond the old 6 GPU-h
+    low, high = w16["gpu_compute_plus_loader_hours_screening"]
+    assert low / 6.0 == pytest.approx(1.66, abs=0.02) and high / 6.0 == pytest.approx(3.65, abs=0.02)   # the '1.7 - 3.7 x the old 6 GPU-h' of the assessment
     assert out["widths"]["16"]["center_term_ratio_p20_over_p21b"] == 128 and out["widths"]["8"]["center_term_ratio_p20_over_p21b"] == 64
     assert [c["fits"] for c in out["widths"]["16"]["campaigns"]] == [9, 21, 63]
     json.dumps(out, allow_nan=False)
@@ -148,8 +154,11 @@ def test_candidate_config_is_unapproved_and_equals_the_e7_proposal_values():
     cfg = json.loads(CANDIDATE.read_text())
     proposal = json.loads((PLAN / "b2_e7_training_proposal.json").read_text())["parameters"]
     assert cfg["status"] == "UNAPPROVED_NOT_FROZEN" and cfg["frozen"] is False and cfg["approved"] is False and cfg["benchmark_complete"] is False
-    assert cfg["p18_section_10_entry_needed_if_approved_as_is"] is False
+    assert cfg["p18_section_10_entry_needed_if_approved_as_is"].startswith("NONE_FOR_HYPERPARAMETERS")
     for key, record in cfg["training"].items():
+        if key not in proposal:                                              # plan_consistency: added by E8, not an E7 record
+            assert key == "plan_consistency" and record["status"] == "UNAPPROVED"
+            continue
         assert record["value"] == proposal[key]["value"], key
         if proposal[key]["needs_researcher_approval"]:
             assert record["status"] == "UNAPPROVED" and record["decision"], key
@@ -167,6 +176,7 @@ def test_candidate_recipe_values_are_trainconfig_defaults_and_loss_values_are_th
     from geoml.train import TrainConfig
     default, cfg = TrainConfig(labels=("a", "b")), json.loads(CANDIDATE.read_text())["training"]
     assert (default.width, default.epochs, default.batch) == (cfg["model_width"]["value"], cfg["epochs"]["value"], cfg["batch_size"]["value"])
+    assert default.plan_consistency is False and cfg["plan_consistency"]["value"] is True        # code default: plan head inactive
     assert default.time_pool == cfg["time_pool"]["value"] and default.level == cfg["level"]["value"] and default.plan_loss_weight == 1.0
     assert default.center_loss_weight == 0.0 and default.plan_shift_fraction == 0.0          # NOT code defaults: they come from the P20 config
     pilot = json.loads((ROOT / "configs/b2_feat.json").read_text())["training"]
@@ -178,7 +188,7 @@ def test_candidate_recipe_values_are_trainconfig_defaults_and_loss_values_are_th
 def test_candidate_config_cannot_be_loaded_by_any_runner_and_is_not_under_configs():
     from geoml.b2_experiment import B2ExperimentConfig
     assert CANDIDATE.parent.name == "plan" and not list((ROOT / "configs").glob("*e8*"))
-    with pytest.raises(Exception):
+    with pytest.raises((ValueError, KeyError, TypeError)):
         B2ExperimentConfig.from_file(CANDIDATE)
 
 
@@ -192,7 +202,9 @@ def test_gpu_probe_is_a_specification_without_an_executor():
     assert caps["max_timed_steps_per_configuration"] <= 400 and caps["max_epochs_equivalent"] <= 2
     assert {c["width"] for c in spec["configurations"]} <= {8, 16} and any(c["width"] == 16 for c in spec["configurations"])
     assert "applies no pass/fail" in spec["pre_registered_use_of_results"]["ceilings"]
-    assert not [p for p in ROOT.glob("scripts/*probe*") if p.name != "opendpd_probe.py"] and not list(ROOT.glob("src/**/*probe*"))   # no executor was added
+    # Tripwire, not a permanent rule: the E9 executor milestone adds a probe harness and must update this assertion and the spec's `executor` field.
+    assert not [p for p in ROOT.glob("scripts/*probe*") if p.name != "opendpd_probe.py"] and not list(ROOT.glob("src/**/*probe*"))
+    assert len(spec["configurations"]) * caps["max_wall_seconds_per_configuration"] <= caps["max_wall_seconds_total"]
 
 
 # ---- fail-closed facts and records the E8 documents cite -------------------------------------------------------------
@@ -220,10 +232,15 @@ def test_execution_caps_and_device_refusal_cited_by_the_documents_still_hold():
     with pytest.raises(ValueError, match="CPU-only"):
         b2_execution._cpu("cuda")
     assert b2_experiment.LEGACY_MAX_GROUPS == 12
-    assert not re.search(r"allow_tf32|use_deterministic_algorithms|cudnn\.deterministic",
-                         subprocess.run(["git", "grep", "-n", "-E", "allow_tf32|use_deterministic|cudnn.deterministic", "--", "src", "scripts"],
-                                        cwd=ROOT, capture_output=True, text=True).stdout.replace("scripts/b2_host_inventory.py", "")
-                         .replace("scripts/b2_training_footprint.py", ""))
+
+
+def test_no_source_pins_tf32_or_deterministic_algorithms_yet():
+    """The R6 numerics pin belongs to the executor milestone; if it lands, update the documents and this test with it."""
+    pattern = re.compile(r"allow_tf32|use_deterministic_algorithms|cudnn\.deterministic")
+    own = {"b2_host_inventory.py", "b2_training_footprint.py"}                     # mention the flags in prose/reporting only
+    hits = [str(path.relative_to(ROOT)) for path in [*(ROOT / "src").rglob("*.py"), *(ROOT / "scripts").glob("*.py")]
+            if path.name not in own and pattern.search(path.read_text())]
+    assert hits == []
 
 
 def test_records_carry_the_pr24_ci_and_leave_every_gate_unchanged():

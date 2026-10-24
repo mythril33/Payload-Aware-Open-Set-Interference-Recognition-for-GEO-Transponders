@@ -8,7 +8,7 @@ target-host throughput was measured by this work.**
 
 ## 1. The width-8 reservation is withdrawn
 
-E5 reserved **6 GPU-h** for the nine main fits from a 200-1,000 samples/s band stated for the ~80 k-parameter width-8 network, batch 8. The
+E5 reserved **6 GPU-h** for the nine main fits from a 200-1,000 samples/s band stated for the ~80 k-parameter width-8 network (the batch size is not stated in E5). The
 `TrainConfig`/P6 default is **width 16** (311,705 parameters for `dual_residual`, 3.31x the multiply-accumulates of width 8, saved activations 2x at the
 same batch, K18 centre-term ratio D/2 = 128 instead of 64). The 6 GPU-h figure is therefore not carried to width 16 (nor to any width) and no
 replacement reservation is proposed until the bounded probe ([spec](b2_e8_gpu_probe_spec.json)) replaces the assumptions.
@@ -16,7 +16,7 @@ replacement reservation is proposed until the bounded probe ([spec](b2_e8_gpu_pr
 ## 2. Screening bands (extrapolations; the probe replaces them)
 
 GPU pure compute = passes / (width-8 band / MAC ratio); loader = 93 s per epoch at 12,000 train + 1,200 val-select observations, synchronous and
-un-overlapped (the trainer has no prefetch). CPU-only = passes / measured warm CPU rate (noisy, loaded sandbox), compute only.
+un-overlapped (the trainer has no prefetch). The LOKO rows use 10,500 train observations per fit (one class held out), whereas the E5/E6 LOKO range of 2.1 - 10.5 GPU-h used 12,000. CPU-only = passes / measured warm CPU rate (noisy, loaded sandbox), compute only.
 
 | Campaign (30 epochs) | Fits | Train passes | W8 GPU compute (h) | W16 GPU compute (h) | Synchronous loader (h) | W8 compute + loader (h) | **W16 compute + loader (h)** | W16 CPU-only compute (h) |
 |---|---:|---:|---|---|---:|---|---|---:|
@@ -37,7 +37,7 @@ The CPU-only column shows that a CPU fallback for the nine fits is not realistic
 | Working disk / backup | 25 GiB working + a verified backup of at least 9 GB on a **different device** | plan_assumption (proposal) |
 | Training host | its own verified copy of the artifacts (>= 9 GB) + outputs (checkpoints ~1.2 MiB per width-16 fit) + headroom: 25 GiB free proposed | plan_assumption |
 | Generator RAM | ~0.6 GiB measured per process (E7a child peak RSS 566 - 582 MiB at two groups); 2 GiB reserved per process, 8 GiB host | measured (tiny) + plan_assumption |
-| Training host RAM | one fit ~2 GiB (0.7 GiB baseline + step peak 0.63 GiB at width 16 batch 32 + 128 MiB window); 16 GiB proposed | measured_cpu_noisy step peaks + analytic window; no full-run measurement exists |
+| Training host RAM | one fit about 1.5 - 2 GiB (0.7 GiB baseline + warm step peak 0.67 GiB (689.7 MiB) at width 16 batch 32 + 128 MiB window); 16 GiB proposed | measured_cpu_noisy step peaks + analytic window; no full-run measurement exists |
 | GPU memory | analytic bound for `dual_residual` width 16 batch 32: 452.9 - 881.0 MiB **excluding CUDA context, workspaces and fragmentation**; 8 GiB minimum / 12 GiB preferred proposed | analytic; nothing measured on a GPU |
 
 ## 4. Target-host requirements (proposed, UNAPPROVED; the tool compares a machine with them)
