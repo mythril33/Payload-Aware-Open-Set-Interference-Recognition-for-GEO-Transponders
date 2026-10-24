@@ -57,6 +57,8 @@ jobs:
           assert d["decisions"]["full_generation"]["status"] == "NOT_AUTHORIZED"
           assert d["decisions"]["full_gpu_training"]["status"] == "NOT_AUTHORIZED"
           assert d["decisions"]["full_loko_sweep"]["status"] == "NOT_AUTHORIZED"
+          for name, decision in d["decisions"].items():
+              assert decision.get("approval") is None, f"{name} carries an approval record"
           PY
       - name: Compile sources (syntax check)
         run: python -m compileall -q src tests scripts

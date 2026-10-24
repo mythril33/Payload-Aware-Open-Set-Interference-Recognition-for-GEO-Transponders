@@ -31,7 +31,7 @@ Exit codes: 4 = dry run BLOCKED (authorization), 6 = interrupted and resumable, 
 ## Attempts
 
 `peak (polled)` is the child's own `VmHWM` sampled while it ran (a lower bound); `peak (ru_maxrss)` is `wait4`'s figure, an **upper bound** that
-also carries the supervisor's own memory at fork (so it is near-constant across attempts and must not be read as the child's peak).
+can also carry the supervisor's own memory at fork (here it equals the polled value in the four measured attempts, so the real generator's peak is about 506-572 MiB; in general the polled value is the child's own).
 
 | Attempt | Reason | Exit | Wall (s) | CPU (s) | Peak polled (MiB) | Peak ru_maxrss (MiB) | Estimated |
 |---|---|---|---|---|---|---|---|

@@ -934,7 +934,7 @@ def test_a_verified_foreign_root_is_accepted_only_after_a_clean_supervised_attem
 
 @pytest.mark.parametrize("damage,needle", [("deleted", "damaged"), ("emptied", "damaged"), ("tail_cut", "damaged"),
                                            ("head_two_behind", "damaged"), ("head_rewritten", "damaged"),
-                                           ("both_deleted", "does not belong")])
+                                           ("both_deleted", "journal.head is missing")])
 def test_a_missing_emptied_or_truncated_journal_is_refused_by_restart_and_verify(clone, damage, needle):
     journal, head = clone / "journal.jsonl", clone / "journal.head"
     lines = journal.read_text().splitlines()
@@ -1035,7 +1035,8 @@ def test_attempt_budgets_separate_failures_from_pauses():
     assert usage["last_attempt_end"]["known"]["reason"] == "wait_failed" and usage["attempts"]["known"] == 6
     assert sup.last_attempt_acceptable(usage, "known")[0] is False and sup.last_attempt_acceptable(usage, "test")[0] is False
     assert sup.last_attempt_acceptable(sup.usage_from(end(1, "exited", 0)), "known")[0] is True
-    assert sup.last_attempt_acceptable(sup.usage_from(end(1, "interrupted", -15)), "known")[0] is True
+    assert sup.last_attempt_acceptable(sup.usage_from(end(1, "interrupted", -15)), "known")[0] is False      # proves nothing about today's root
+    assert sup.last_attempt_acceptable(sup.usage_from(end(1, "supervisor_lost", None)), "known")[0] is False
     assert sup.last_attempt_acceptable(sup.usage_from(end(1, "exited", 3)), "known")[0] is False
     supervisor = sup.Supervisor.__new__(sup.Supervisor)
     supervisor.plan = {"ceilings": dict(sup.FIXTURE_CEILINGS)}
@@ -1220,20 +1221,16 @@ def test_an_existing_log_is_never_overwritten(tmp_path):
     assert (tmp_path / "child.log").read_text() == "evidence"
 
 
-def test_an_unexpected_io_error_is_a_failed_run_not_a_traceback(tmp_path):
+def test_an_unexpected_io_error_is_a_failed_run_not_a_traceback(tmp_path, monkeypatch):
     work = tmp_path / "io"
 
-    def sabotage(path):                                     # called by the host check, after run.json exists and before any child
-        log = work / "logs" / "known-01.log"
-        log.parent.mkdir(exist_ok=True)
-        if not log.exists():
-            log.write_text("evidence")
-        return shutil.disk_usage(path)
+    def broken(*args, **kwargs):
+        raise OSError(28, "No space left on device")
 
-    supervisor = make(work, disk_usage=sabotage)
-    result = supervisor.run()
-    assert result["exit_code"] == 3 and "FileExistsError" in result["reasons"][0] and records(work)[-1]["event"] == "run_failed"
-    assert (work / "logs" / "known-01.log").read_text() == "evidence"
+    monkeypatch.setattr(sup, "run_child", broken)
+    result = make(work).run()
+    assert result["exit_code"] == 3 and "OSError" in result["reasons"][0] and "No space left" in result["reasons"][0], result
+    assert records(work)[-1]["event"] == "run_failed" and records(work, "stage_complete") == []
 
 
 # -- timing gate, unit level ------------------------------------------------------------------------------------------------
@@ -1475,3 +1472,271 @@ def test_the_committed_real_physics_journal_verifies_and_matches_its_summary(tmp
     driver = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(driver)
     assert (results / "b2_e7a_supervisor_verification.md").read_text() == driver.render_markdown(summary)       # the report is its JSON
+
+
+# ---- 16 post-merge audit (hotfix): lost-attempt thread count, spawn failures, adoption after interruption, provenance ----------
+
+def test_a_lost_attempt_cpu_charge_uses_thread_counts_not_the_hash_seed(tmp_path):
+    work = tmp_path / "w"
+    supervisor = make(work)
+    supervisor.lock = {"environment": {"threads": {"OMP_NUM_THREADS": "2", "OPENBLAS_NUM_THREADS": "2", "MKL_NUM_THREADS": "2",
+                                                   "PYTHONHASHSEED": "1234"}}}
+    work.mkdir()
+    journal = supervisor.journal
+    journal.open()
+    journal.append("attempt_start", stage="known", attempt_id="known-01", attempt=1, argv=["x", "--limit-groups", "1"], pid=2 ** 22 + 7,
+                   committed_observations=0, remaining_shards=1)
+    supervisor._recover_unterminated(sup.Journal.read(work / "journal.jsonl")[0])
+    lost = records(work, "attempt_end")[-1]
+    assert lost["reason"] == "supervisor_lost" and lost["elapsed_s"] == 11.0 and lost["cpu_user_s"] == 22.0     # (10 s + 1 s) x 2 threads
+
+
+def test_damage_in_the_middle_of_the_journal_during_the_last_attempt_still_ends_the_run_with_exit_3(tmp_path, monkeypatch):
+    monkeypatch.setenv("STANDIN_OBS_DELAY_S", "0.5")
+    monkeypatch.setenv("STANDIN_ONLY_STAGE", "matched")
+    work = tmp_path / "late-damage"
+    state = {"done": False}
+
+    def damaging_sleep(seconds):
+        time.sleep(seconds)
+        started = [r for r in sup.Journal.read(work / "journal.jsonl")[0] if r["event"] == "attempt_start"] if (work / "journal.jsonl").exists() else []
+        if not state["done"] and any(r["stage"] == "matched" for r in started):
+            state["done"] = True
+            path = work / "journal.jsonl"
+            lines = path.read_text().split("\n")
+            lines[1] = lines[1].replace("host_checked", "host_checkeX").replace("supervisor_start", "supervisor_starX")
+            path.write_text("\n".join(lines))
+
+    result = make(work, sleep=damaging_sleep).run()
+    assert state["done"] and result["exit_code"] == 3 and "journal damaged during the run" in result["reasons"][0], result
+    assert '"event": "stages_complete"' not in (work / "journal.jsonl").read_text()
+
+
+def test_a_failed_spawn_does_not_wedge_the_workdir(tmp_path):
+    work = tmp_path / "spawn"
+    broken = make(work, ceilings={"max_failed_attempts_per_stage": 3})
+    broken.launcher = lambda stage, plan, w: ["/nonexistent/python", "--limit-groups", "1"]
+    first = broken.run()
+    assert first["exit_code"] == 3 and (work / "logs" / "known-01.log").exists()               # the empty log of the failed spawn stays
+    second = make(work, ceilings={"max_failed_attempts_per_stage": 3}).run()
+    assert second["exit_code"] == 0, second
+    assert (work / "logs" / "known-02.log").exists() and [r["attempt_id"] for r in records(work, "attempt_start")][0] == "known-02"
+
+
+def test_a_child_that_ignores_sigterm_still_dies_with_a_killed_supervisor(tmp_path):
+    script = tmp_path / "holder.py"
+    script.write_text(
+        "import os, sys, signal\n"
+        f"sys.path.insert(0, {str(ROOT / 'scripts')!r})\n"
+        "import b2_production_supervisor as sup\n"
+        "from pathlib import Path\n"
+        "tmp = Path(sys.argv[1])\n"
+        "sup.run_child([sys.executable, '-c', 'import signal, time; signal.signal(signal.SIGTERM, signal.SIG_IGN); time.sleep(120)', '--limit-groups', '1'],\n"
+        "              cwd=str(tmp), env=dict(os.environ), log_path=tmp / 'h.log', timeout_s=300, cpu_budget_s=300, rss_limit_kib=2**30, grace_s=60,\n"
+        "              interrupted=lambda: False, on_start=lambda pid: (tmp / 'pid').write_text(str(pid)), poll_s=0.05)\n")
+    process = subprocess.Popen([sys.executable, str(script), str(tmp_path)], env=dict(os.environ))
+    try:
+        assert wait_for(lambda: (tmp_path / "pid").exists(), 60)
+        child = int((tmp_path / "pid").read_text())
+        time.sleep(1.0)
+        process.kill()
+        process.wait(timeout=30)
+        assert pid_gone(child, timeout=15), "PR_SET_PDEATHSIG must be SIGKILL: a SIGTERM-ignoring child would outlive its supervisor"
+    finally:
+        if process.poll() is None:
+            process.kill()
+
+
+def test_a_verifying_root_after_an_interruption_still_needs_a_clean_supervised_attempt(tmp_path, baseline):
+    work = adopted(tmp_path, baseline)
+    journal = sup.Journal(work / "journal.jsonl")
+    journal.open()
+    journal.append("attempt_start", stage="known", attempt_id="known-01", attempt=1, argv=["x", "--limit-groups", "1"], pid=1,
+                   committed_observations=0, remaining_shards=1)
+    journal.append("attempt_end", stage="known", attempt_id="known-01", reason="interrupted", exit_code=-15, elapsed_s=1.0,
+                   cpu_user_s=1.0, cpu_sys_s=0.0)
+    checks = {c["id"]: c for c in sup.verify_workdir(work)[3]}
+    assert checks["artifact.known"]["status"] == pre.FAIL and "interrupted" in checks["artifact.known"]["message"]
+    result = make(work).run()
+    assert result["exit_code"] == 0, result
+    needed = records(work, "stage_needs_supervised_attempt")
+    assert needed[0]["stage"] == "known" and "interrupted" in needed[0]["reason"]
+    assert [(r["attempt_id"], r["exit_code"]) for r in records(work, "attempt_end") if r["stage"] == "known"] == [("known-01", -15), ("known-02", 0)]
+
+
+def test_children_import_the_locked_source_tree_whatever_the_environment_says(tmp_path):
+    work = tmp_path / "pythonpath"
+    hostile = dict(os.environ, PYTHONPATH="/somewhere/else")
+    assert make(work, environ=hostile).run()["exit_code"] == 0
+    line = next(l for l in (work / "logs" / "known-01.log").read_text().splitlines() if l.startswith("standin env"))
+    assert f"PYTHONPATH={str(ROOT / 'src') + os.pathsep + '/somewhere/else'!r}" in line
+
+
+def test_a_production_plan_cannot_loosen_timing_or_the_disk_reserve(tmp_path):
+    with pytest.raises(sup.SupervisorError, match="timing"):
+        sup.build_plan(tmp_path, mode="production", groups_per_shard=4, timing={"band_s_per_observation": [0.1, 0.2]})
+    with pytest.raises(sup.SupervisorError, match="reserve"):
+        sup.build_plan(tmp_path, mode="production", groups_per_shard=4, ceilings={"min_free_disk_gib": 0.001})
+    assert sup.build_plan(tmp_path, mode="production", groups_per_shard=4, ceilings={"min_free_disk_gib": 500})["ceilings"]["min_free_disk_gib"] == 500
+
+
+def test_the_supervisor_and_preflight_code_are_part_of_the_run_identity(clone):
+    stored = json.loads((clone / "run.json").read_text())
+    assert set(stored["tools_sha256"]) == {"b2_production_supervisor.py", "b2_production_preflight.py"}
+    stored["tools_sha256"]["b2_production_supervisor.py"] = "0" * 64
+    (clone / "run.json").write_text(json.dumps(stored))
+    result = make(clone).run()
+    assert result["exit_code"] == 2 and "supervisor/preflight code differs" in result["reasons"][0]
+    assert {c["id"]: c["status"] for c in sup.verify_workdir(clone)[3]}["workdir.tools"] == pre.FAIL
+    with pytest.raises(sup.SupervisorError):
+        sup.complete_workdir(clone)
+
+
+def test_a_missing_anchor_is_tolerated_for_one_record_only_in_a_workdir_that_never_ran(tmp_path):
+    quiet = tmp_path / "quiet"
+    quiet.mkdir()
+    journal = sup.Journal(quiet / "journal.jsonl")
+    journal.open()
+    journal.append("supervisor_start", restart=False)
+    (quiet / "journal.head").unlink()
+    (quiet / "run.json").write_text("{}")
+    assert sup.Journal.load(quiet / "journal.jsonl")[1] == []
+    (quiet / "known").mkdir()                                                        # anything else in the workdir: no tolerance
+    assert sup.Journal.load(quiet / "journal.jsonl")[1]
+
+
+def test_the_completion_marker_must_belong_to_the_run_and_its_journal(clone):
+    sup.complete_workdir(clone)
+    assert {c["id"]: c["status"] for c in sup.verify_workdir(clone)[3]}["workdir.completion"] == pre.PASS
+    assert make(clone).run()["exit_code"] == 0                                      # the journal grows past the marker's head ...
+    assert {c["id"]: c["status"] for c in sup.verify_workdir(clone)[3]}["workdir.completion"] == pre.PASS     # ... which stays in the chain
+    marker = json.loads((clone / "completion.json").read_text())
+    marker["journal_head"] = "f" * 64
+    (clone / "completion.json").write_text(json.dumps(marker))
+    assert {c["id"]: c["status"] for c in sup.verify_workdir(clone)[3]}["workdir.completion"] == pre.FAIL
+
+
+def test_malformed_state_files_are_refusals_not_tracebacks(clone, capsys):
+    (clone / "lock.json").write_text("{}")
+    assert sup.main(["verify", "--workdir", str(clone)]) == 2
+    assert strict(capsys.readouterr().out)["status"] == "REFUSED"
+    (clone / "run.json").write_text("[]")
+    assert sup.main(["status", "--workdir", str(clone)]) == 2
+    capsys.readouterr()
+
+
+def test_a_real_time_signal_death_is_reported_by_number(tmp_path):
+    outcome, _ = supervise(tmp_path, "import os, time; os.kill(os.getpid(), 40); time.sleep(5)", interrupt_after=1e9)
+    assert outcome["exit_code"] == -40 and outcome["signal"] == "SIG40"
+
+
+def test_a_child_wrapper_must_be_the_stand_in_itself(tmp_path, capsys):
+    other = ROOT / "tests" / "test_b2_production_supervisor.py"
+    assert sup.main(["plan", "--workdir", str(tmp_path / "w"), "--max-groups", "2", "--child-wrapper", str(other)]) == 2
+    assert "b2_supervisor_standin.py" in strict(capsys.readouterr().out)["reasons"][0]
+
+
+# -- limits at their boundaries, durability, budgets that mutants could loosen ---------------------------------------------------
+
+@pytest.mark.parametrize("key", sorted(sup.FIXTURE_CEILING_LIMITS))
+def test_fixture_ceiling_limits_hold_at_their_boundary(tmp_path, key):
+    limit = sup.FIXTURE_CEILING_LIMITS[key]
+    at = sup.build_plan(tmp_path, mode="fixture", max_groups=1, groups_per_shard=1, ceilings={key: limit})
+    assert at["ceilings"][key] == limit
+    with pytest.raises(sup.SupervisorError):
+        sup.build_plan(tmp_path, mode="fixture", max_groups=1, groups_per_shard=1, ceilings={key: limit * 1.01 if limit > 100 else limit + 1})
+
+
+@pytest.mark.parametrize("key", sorted(sup.PRODUCTION_CEILING_LIMITS))
+def test_production_ceiling_limits_hold_at_their_boundary(tmp_path, key):
+    limit = sup.PRODUCTION_CEILING_LIMITS[key]
+    assert sup.build_plan(tmp_path, mode="production", groups_per_shard=4, ceilings={key: limit})["ceilings"][key] == limit
+    with pytest.raises(sup.SupervisorError):
+        sup.build_plan(tmp_path, mode="production", groups_per_shard=4, ceilings={key: limit + 1})
+
+
+@pytest.mark.parametrize("key,ok,bad", [("tolerance", 2.0, 2.01), ("startup_s", 3600.0, 3601.0), ("resume_verify_s_per_observation", 1.0, 1.01)])
+def test_timing_limits_hold_at_their_boundary(tmp_path, key, ok, bad):
+    assert sup.build_plan(tmp_path, mode="fixture", max_groups=1, groups_per_shard=1, timing={key: ok})["timing"][key] == ok
+    with pytest.raises(sup.SupervisorError):
+        sup.build_plan(tmp_path, mode="fixture", max_groups=1, groups_per_shard=1, timing={key: bad})
+
+
+def test_the_journal_and_its_anchor_are_fsynced(tmp_path, monkeypatch):
+    calls = []
+    real = os.fsync
+    monkeypatch.setattr(os, "fsync", lambda fd: (calls.append(fd), real(fd))[1])
+    journal = sup.Journal(tmp_path / "j.jsonl")
+    journal.open()
+    journal.append("one")
+    first = len(calls)
+    journal.append("two")
+    assert first >= 4 and len(calls) - first >= 2          # record + directory + anchor + directory the first time, record + anchor after
+
+
+def test_lost_supervisors_count_against_the_interruption_budget():
+    supervisor = sup.Supervisor.__new__(sup.Supervisor)
+    supervisor.plan = {"ceilings": dict(sup.FIXTURE_CEILINGS)}
+    usage = {"attempts": {"known": 10}, "failed_attempts": {"known": 0}, "interruptions": {"known": 5}, "lost_attempts": {"known": 5}}
+    with pytest.raises(sup.SupervisorError, match="interruption budget"):
+        supervisor._check_attempt_budgets(usage, "known")
+
+
+def test_the_disk_check_keeps_its_ten_percent_margin(tmp_path):
+    supervisor = make(tmp_path / "w")
+    remaining = 2_000_000
+    need = remaining * sup.ARTIFACT_BYTES_PER_OBSERVATION / 2 ** 30
+    reserve = supervisor.plan["ceilings"]["min_free_disk_gib"]
+    usage = {"wall_s": 0.0, "cpu_s": 0.0}
+    supervisor.disk_usage = lambda path: type("U", (), {"free": int((need * 1.05 + reserve) * 2 ** 30)})()
+    with pytest.raises(sup.SupervisorError, match="free disk"):
+        supervisor._check_budgets(usage, remaining)
+    supervisor.disk_usage = lambda path: type("U", (), {"free": int((need * 1.15 + reserve) * 2 ** 30)})()
+    supervisor._check_budgets(usage, remaining)
+
+
+def test_cpu_time_of_a_running_child_includes_the_children_it_has_waited_for():
+    code = "import subprocess, sys, time; subprocess.run([sys.executable, '-c', 'sum(range(4 * 10**7))']); time.sleep(4)"
+    process = subprocess.Popen([sys.executable, "-c", code])
+    try:
+        assert wait_for(lambda: (sup.proc_cpu_s(process.pid) or 0) > 0.3, 3.5, 0.1), sup.proc_cpu_s(process.pid)
+    finally:
+        process.kill()
+        process.wait()
+
+
+def test_the_journal_tail_check_notices_a_swapped_last_record_and_a_foreign_journal(tmp_path):
+    journal = sup.Journal(tmp_path / "j.jsonl")
+    journal.open()
+    journal.append("one")
+    journal.append("two")
+    lines = (tmp_path / "j.jsonl").read_text().split("\n")
+    last = json.loads(lines[1])
+    last["sha256"] = "0" * 64
+    (tmp_path / "j.jsonl").write_text(lines[0] + "\n" + json.dumps(last, sort_keys=True) + "\n")          # same seq, different hash
+    with pytest.raises(sup.SupervisorError, match="journal damaged during the run"):
+        journal.append("three")
+    stranger = sup.Journal(tmp_path / "j.jsonl")                                                          # holds no records but the file exists
+    with pytest.raises(sup.SupervisorError, match="journal damaged during the run"):
+        stranger.append("x")
+
+
+def test_the_run_journal_check_demands_an_original_start_and_matching_fingerprints():
+    identity, lock = {"plan_fingerprint": "p"}, {"lock_fingerprint": "l"}
+    good = [{"event": "supervisor_start", "restart": False, "plan_fingerprint": "p", "lock_fingerprint": "l", "seq": 1}]
+    assert sup.check_run_journal(good, identity, lock) == []
+    assert sup.check_run_journal([{**good[0], "restart": True}], identity, lock)
+    assert sup.check_run_journal([{**good[0], "lock_fingerprint": "other"}], identity, lock)
+    assert sup.check_run_journal([{**good[0], "plan_fingerprint": "other"}], identity, lock)
+
+
+def test_the_limit_constants_are_pinned_to_literals():
+    """The boundary tests read the constants; these literals make loosening a constant itself a visible, reviewed change."""
+    assert sup.FIXTURE_CEILING_LIMITS == {"wall_hours": 4.0, "core_hours": 16.0, "max_failed_attempts_per_stage": 5,
+                                         "max_interruptions_per_stage": 50, "max_rss_gib": 16.0, "grace_s": 120.0}
+    assert sup.PRODUCTION_CEILING_LIMITS == {"wall_hours": 36.0, "core_hours": 42.0, "max_failed_attempts_per_stage": 2,
+                                            "max_interruptions_per_stage": 20, "max_rss_gib": 2.0, "grace_s": 600.0}
+    assert sup.FIXTURE_CEILINGS == {"wall_hours": 1.0, "core_hours": 2.0, "max_failed_attempts_per_stage": 2, "max_interruptions_per_stage": 10,
+                                   "max_rss_gib": 4.0, "min_free_disk_gib": 1.0, "grace_s": 10.0}
+    assert sup.TIMING_LIMITS == {"tolerance": (0.0, 2.0), "startup_s": (0.0, 3600.0), "resume_verify_s_per_observation": (0.0, 1.0)}
+    assert sup.MAX_TOTAL_ATTEMPTS_PER_STAGE == 60 and sup.FIXTURE_MAX_GROUPS == 2 and sup.PRODUCTION_LAUNCH_ENABLED is False

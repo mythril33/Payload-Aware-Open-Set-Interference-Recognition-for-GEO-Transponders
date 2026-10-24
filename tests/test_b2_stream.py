@@ -344,7 +344,8 @@ def test_runner_streams_a_disk_artifact_with_frozen_roles_thresholds_and_compati
         assert len(block["epochs"]) == 1 and block["epochs"][0]["n_samples"] == 24
         assert block["epochs"][0]["center_to_ce_ratio"] is not None and block["epochs"][0]["n_plan_samples"] == 24
         method = result["methods"][view]                                              # which epoch the evaluated weights come from
-        assert method["best_epoch"] == 0 and 0.0 <= method["best_val_macro_f1"] <= 1.0
+        scores = [row["val_macro_f1"] for row in method["history"]]
+        assert method["best_epoch"] == scores.index(max(scores)) == 0 and method["best_val_macro_f1"] == max(scores)    # zero-based, first maximum
         assert block["epochs"][method["best_epoch"]]["epoch"] == method["best_epoch"]
     assert len(json.loads((out / "predictions.json").read_text())) == 24
     summary = json.loads((out / "results_summary.json").read_text())

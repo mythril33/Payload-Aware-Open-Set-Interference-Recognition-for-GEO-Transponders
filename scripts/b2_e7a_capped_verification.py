@@ -95,7 +95,7 @@ Exit codes: 4 = dry run BLOCKED (authorization), 6 = interrupted and resumable, 
 ## Attempts
 
 `peak (polled)` is the child's own `VmHWM` sampled while it ran (a lower bound); `peak (ru_maxrss)` is `wait4`'s figure, an **upper bound** that
-also carries the supervisor's own memory at fork (so it is near-constant across attempts and must not be read as the child's peak).
+can also carry the supervisor's own memory at fork (here it equals the polled value in the four measured attempts, so the real generator's peak is about 506-572 MiB; in general the polled value is the child's own).
 
 | Attempt | Reason | Exit | Wall (s) | CPU (s) | Peak polled (MiB) | Peak ru_maxrss (MiB) | Estimated |
 |---|---|---|---|---|---|---|---|
@@ -225,7 +225,7 @@ def main(argv=None):
                  "dirty_fixture_allowed": args.allow_dirty_fixture, "environment": lock["environment"]},
         "steps": steps, "journal": {"file": journal_copy.name, "head_file": head_copy.name, "records": len(records),
                                     "sha256": sha256(journal_copy), "head": records[-1]["sha256"]},
-        "plan_fingerprint": marker["plan_fingerprint"], "completion_marker": marker, "usage": sup.usage_from(records),
+        "plan_fingerprint": marker["plan_fingerprint"], "tools_sha256": marker.get("tools_sha256"), "completion_marker": marker, "usage": sup.usage_from(records),
         "per_stage_attempts": by_stage,
         "attempts": [{k: r[k] for k in ("attempt_id", "stage", "reason", "exit_code", "elapsed_s", "cpu_user_s", "cpu_sys_s", "peak_rss_kib",
                                           "peak_rss_polled_kib", "supervisor_peak_rss_kib", "estimated") if k in r} for r in ends],

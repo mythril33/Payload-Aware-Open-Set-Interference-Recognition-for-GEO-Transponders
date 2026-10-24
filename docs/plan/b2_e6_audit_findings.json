@@ -3,7 +3,7 @@
  "as_of": "2026-10-23",
  "base_main": "755b474b7a2c506ec03441a7d15ed365c47addb1",
  "benchmark_complete": false,
- "note": "Manual audit of the 21,350-observation production plan against the merged code. PASS needs a named test or an inspected location; FAIL is a verified engineering gap or mismatch; BLOCKED needs a researcher decision, authorization, hardware or a measurement; NOT_RUN was not executed. Nothing here approves a gate. E7a update (2026-10-23): the supervisor and the K18 diagnostic findings are resolved for bounded fixtures; production launch stays unimplemented. E7a review update: independent multi-lens review of the supervisor, K18 diagnostics, training proposal and documentation; the material findings are fixed with regression tests (P30 section 9). Items touched by E7a cite line numbers at the E7a head; untouched items cite 755b474. Main moved to 5d3f1a3 when PR #21 (the first, pre-review E7a state) was merged; this round is its follow-up. The audit base for items not touched by E7a stays 755b474.",
+ "note": "Manual audit of the 21,350-observation production plan against the merged code. PASS needs a named test or an inspected location; FAIL is a verified engineering gap or mismatch; BLOCKED needs a researcher decision, authorization, hardware or a measurement; NOT_RUN was not executed. Nothing here approves a gate. E7a update (2026-10-23): the supervisor and the K18 diagnostic findings are resolved for bounded fixtures; production launch stays unimplemented. E7a review update: independent multi-lens review of the supervisor, K18 diagnostics, training proposal and documentation; the material findings are fixed with regression tests (P30 section 9). Items touched by E7a cite line numbers at the E7a head; untouched items cite 755b474. Main moved to 5d3f1a3 when PR #21 (the first, pre-review E7a state) was merged; this round is its follow-up. The audit base for items not touched by E7a stays 755b474. Main is now 0e8c467 (PR #22 merged the review hardening); a post-merge audit and its fixes are in the hotfix that follows.",
  "items": [
   {
    "id": "audit.generator_cli",
@@ -171,11 +171,21 @@
    "id": "audit.e7a_first_state_ci",
    "title": "The merged first E7a state (PR #21) passed GitHub Actions",
    "status": "PASS",
-   "message": "Run 40017354368, job 120633134928, head 5903637d28d3607b606c78f06adfc8c47573edce: repository step 1412 passed, 7 skipped (the K18 golden tests skip on that runner's CPU by design) in 689.49 s, E4 step success. This certifies the pre-review state only; the follow-up with the review fixes needs its own run.",
+   "message": "Run 40017354368, job 120633134928, head 5903637d28d3607b606c78f06adfc8c47573edce: repository step 1412 passed, 7 skipped (the K18 golden tests skip on that runner's CPU by design) in 689.49 s, E4 step success. This certifies the pre-review state only; the review fixes are certified by the PR #22 run (audit.e7a_followup_ci).",
    "evidence": [
     "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40017354368"
    ],
    "verified_by": "ci:40017354368 job log tail read in E7a"
+  },
+  {
+   "id": "audit.e7a_followup_ci",
+   "title": "The merged E7a follow-up (PR #22, review fixes) passed GitHub Actions",
+   "status": "PASS",
+   "message": "Run 40035525938, job 120693910895, head 8d5bf9bb9cbfa1b5d16353b11fa0874bb79c2a14 (the tip merged as 0e8c467): repository step 1486 passed, 7 skipped (the K18 golden tests skip on that runner's CPU by design) in 820.01 s, E4 step success; 1486 + 107 E4 + 7 skipped = the 1600 collected tests.",
+   "evidence": [
+    "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40035525938"
+   ],
+   "verified_by": "ci:40035525938 job log tail read in the E7a post-merge hotfix"
   },
   {
    "id": "audit.production_training_config_missing",
@@ -196,8 +206,8 @@
    "evidence": [
     "src/geoml/train.py:216-325",
     "src/geoml/b2_stream.py:436-522",
-    "src/geoml/b2_experiment.py:567-570",
-    "src/geoml/b2_loko.py:242-243",
+    "src/geoml/b2_experiment.py:567-572",
+    "src/geoml/b2_loko.py:242-245",
     "tests/test_b2_train_diagnostics.py"
    ],
    "verified_by": "tests/test_b2_train_diagnostics.py::test_gradients_update_and_components_match_the_original_formula"
@@ -206,7 +216,7 @@
    "id": "audit.stage_supervisor_missing",
    "title": "A fail-closed staged supervisor exists (bounded fixtures only; the production launch is not implemented)",
    "status": "PASS",
-   "message": "scripts/b2_production_supervisor.py (P30) runs known, test-only and matched in order as supervised children: dry run by default, immutable lock re-verified before every stage and attempt, relocatable run identity (plan, ceilings, timing, heartbeat and launcher), hash-chained journal anchored by journal.head with a tail check on every append, wait4 exit codes/CPU, monotonic elapsed time, polled child RSS (ru_maxrss kept as an upper bound), heartbeats and an estimated charge for a lost supervisor, wall/CPU/RSS/failed-attempt/interruption/disk ceilings (fixtures and production plans cannot raise them), first-shard timing gate, SIGINT/SIGTERM handling, the process group emptied after every attempt, a child that dies with the supervisor, an unreadable host probe failing closed, orphan quarantine (never deletes), and completion only for the exact planned inventory produced under the plan by a clean supervised attempt. Every spawned command must carry --limit-groups 1..2; production execution is always refused. Exercised by 126 tests (stand-in children under the real generator CLIs, a mutation pass in which all but two equivalent mutants are killed) and by a capped real-physics run (two groups per stage, interrupted once, supervisor SIGKILLed once, resumed to completion).",
+   "message": "scripts/b2_production_supervisor.py (P30) runs known, test-only and matched in order as supervised children: dry run by default, immutable lock re-verified before every stage and attempt, relocatable run identity (plan, ceilings, timing, heartbeat and launcher), hash-chained journal anchored by journal.head with a tail check on every append, wait4 exit codes/CPU, monotonic elapsed time, polled child RSS (ru_maxrss kept as an upper bound), heartbeats and an estimated charge for a lost supervisor, wall/CPU/RSS/failed-attempt/interruption/disk ceilings (fixtures and production plans cannot raise them), first-shard timing gate, SIGINT/SIGTERM handling, the process group emptied after every attempt, a child that dies with the supervisor, an unreadable host probe failing closed, orphan quarantine (never deletes), and completion only for the exact planned inventory produced under the plan by a clean supervised attempt. Every spawned command must carry --limit-groups 1..2; production execution is always refused. Exercised by 162 tests (a second, post-merge audit added 35) (stand-in children under the real generator CLIs, a mutation pass in which all but two equivalent mutants are killed) and by a capped real-physics run (two groups per stage, interrupted once, supervisor SIGKILLed once, resumed to completion).",
    "evidence": [
     "scripts/b2_production_supervisor.py",
     "scripts/b2_e7a_capped_verification.py",
@@ -266,9 +276,9 @@
   },
   {
    "id": "audit.pr_head_ci",
-   "title": "GitHub Actions on this E7a pull-request head",
+   "title": "GitHub Actions on this post-merge hotfix pull-request head",
    "status": "NOT_RUN",
-   "message": "Recorded in the draft PR description after publication; CI for any other head, including the merged E5 and E6 heads, does not certify it.",
+   "message": "Recorded in the draft PR description after publication; CI for any other head, including the merged E5, E6 and E7a heads, does not certify it.",
    "evidence": [
     "pull request description"
    ]

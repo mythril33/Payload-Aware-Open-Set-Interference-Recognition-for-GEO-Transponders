@@ -621,7 +621,7 @@
       }
     },
     "production_supervisor": {
-      "status": "E7A_FIRST_STATE_MERGED_PR_21_REVIEW_FIXES_IN_FOLLOW_UP_DRAFT",
+      "status": "E7A_MERGED_PR_21_AND_PR_22_POST_MERGE_AUDIT_FIXES_IN_HOTFIX",
       "contract": "docs/plan/P30_b2_e7a_production_supervisor.md",
       "tool": "scripts/b2_production_supervisor.py",
       "tests": "tests/test_b2_production_supervisor.py",
@@ -635,7 +635,7 @@
       "gates_changed": false,
       "review_hardened": true,
       "journal_anchor": "journal.head",
-      "tests_collected": 127,
+      "tests_collected": 162,
       "child_wrapper": "fixture diagnostic restricted to the repository's tests/ directory and hashed into the run identity",
       "verification_script": "scripts/b2_e7a_capped_verification.py",
       "verification_commit": "dd5d9655f191d27558e0f185a954e93ca68eff80",
@@ -651,10 +651,23 @@
           "pytest_seconds": 689.49
         },
         "scope": "pre-review state only"
+      },
+      "followup_ci": {
+        "pr": 22,
+        "head_sha": "8d5bf9bb9cbfa1b5d16353b11fa0874bb79c2a14",
+        "merge_sha": "0e8c4675c1f0806ae2feff6ac23c3b4b254f8435",
+        "run_id": 40035525938,
+        "job_id": 120693910895,
+        "conclusion": "success",
+        "repository_step": {
+          "passed": 1486,
+          "skipped": 7,
+          "pytest_seconds": 820.01
+        }
       }
     },
     "k18_train_diagnostics": {
-      "status": "E7A_DRAFT_DELIVERY",
+      "status": "E7A_MERGED_PR_22",
       "schema": "B2-train-diagnostics/1",
       "observation_only": true,
       "affects_training": false,
@@ -712,8 +725,8 @@
   ],
   "integrity_note": "Proposed researcher decisions are not approvals. Preserve frozen semantics and strictly segregate train, val-select, val-calib, test and test-matched.",
   "verified_remote_main": {
-    "sha": "5d3f1a3ed9235afee19a7984aa8bb2751faf5023",
-    "date": "2026-10-23",
-    "note": "PR21 merged the first (pre-review) E7a state 5903637; its run 40017354368 passed (1412 passed, 7 skipped + E4 step); decisions unchanged"
+    "sha": "0e8c4675c1f0806ae2feff6ac23c3b4b254f8435",
+    "date": "2026-10-24",
+    "note": "PR22 merged the review hardening (head 8d5bf9b, run 40035525938: 1486 passed, 7 skipped + E4 step); decisions unchanged"
   }
 }
