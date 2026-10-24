@@ -60,19 +60,26 @@ approval and a consistent plan are evidence; none of them is the DR-04 authoriza
 | D4-15 | G-10 | Backup written and checksum-verified before the finished root is made read-only | procedure | `obligations.post_generation` | **OPEN** (procedure, no tooling) |
 | D4-16 | — | K17d production-metadata cross-check and exposure disclosure scheduled before any final evaluation | later authorization | `obligations.post_generation` | **OPEN** (later; code not written) |
 
-## 4. Required order (binding; reordering invalidates locks)
+## 4. Required order (binding; reordering invalidates locks or approvals)
 
-1. Researcher designates host, backup device and ceilings; runs the read-only host inventory there.
-2. Researcher records the DR-04 authorization in `full_generation` and the memorandum twin, with the `docs/` record, and commits it.
-3. Release change (reviewed) for the launcher; independent review; exact-head CI.
-4. Create the production lock on the clean release head; **then** fill and validate the plan (`validate`). The lock must follow step 2 because the gates JSON is hashed into it.
-5. Only then can a launch be considered by a separate decision; this checklist and the validator cannot make it.
+1. Researcher designates host, backup device and ceilings; the host owner creates the two **empty** root directories; run the read-only host inventory there.
+2. Release change (reviewed) for the launcher; independent review; exact-head CI. The code identity (source tree, generator, tools) is now final.
+3. Build the plan (`template`, then add host, roots, ceilings) and run `digest --plan`. The digest covers the design **and** the code identity, so an approval cannot be reused after any later source, generator or tool edit.
+4. The researcher writes the approval block (section 5) into a committed `docs/` record, records the approval in `full_generation` and the memorandum twin (same approver, instant, decision, record), and commits. That commit changes only docs, the gates JSON and the memorandum, which the digest excludes.
+5. Create the production lock on the clean head **after** step 4 (the gates JSON is hashed into the lock); bind it in the plan with the release evidence and the authorization record.
+6. Run `validate` **on the designated host** so `host.remeasured` can pass (elsewhere it stays BLOCKED).
+7. Only then can a launch be considered by a separate decision; this checklist and the validator cannot make it.
 
 ## 5. DR-04 authorization record skeleton (`B2-E13-dr04-authorization-record/1`)
 
-Not pre-filled and not valid as written; every `<...>` is the researcher's. Field semantics are enforced by `validate_plan`. The committed `docs/` record
-named in `record` must itself contain the approved-plan digest, the host id, the expiry and the approver's name; the validity window is at most 30 days and
-may not start before the E12 register (2026-10-24).
+Not pre-filled and not valid as written; every `<...>` is the researcher's. The committed `docs/` record named in `record` must contain exactly one fenced
+strict-JSON **approval block** (first block below, printed with the digest by `digest --plan`); the plan carries the second object. Validity is at most 30
+days and may not start before the E12 register (2026-10-24).
+
+```json
+{"schema": "B2-E13-dr04-approval-block/1", "decision": "APPROVE", "approved_by": "<name>", "approved_plan_digest": "<digest from the digest command>",
+ "host_id": "<host>", "expires_at": "<ISO-8601 instant>"}
+```
 
 ```json
 {

@@ -74,7 +74,7 @@ def gates_with_dr04(approved):
         record = {"approved_by": "researcher", "approved_at": "2026-10-29T08:00:00Z", "decision": "DR-04 generation of 21,350 observations",
                   "record": RECORD, "wall_hours": 36, "core_hours": 42, "working_disk_gib": 25, "backup_disk_gb": 9}
         gates["decisions"]["full_generation"].update(status="AUTHORIZED", approval=record)
-        memo["decisions"]["full_generation"].update(status="AUTHORIZED")
+        memo["decisions"]["full_generation"].update(status="AUTHORIZED", approved_by=record["approved_by"], approved_at=record["approved_at"], record=RECORD)
     return gates, memo
 
 
@@ -88,7 +88,8 @@ def reference(decision_record, k17d_report):
             "environment": {"python": "3.12.14", "numpy": "2.5.4", "scipy": "1.18.1", "threads": dict(THREADS)},
             "tools_sha256": {name: H(name) for name in G.TOOLS}, "records_sha256": {name: H(name) for name in G.INPUT_FILES if name != pre.GATES_PATH},
             "committed_inputs": {name: True for name in G.INPUT_FILES}, "scientific_protocol": json.loads((ROOT / G.PROTOCOL_JSON).read_text()),
-            "scientific_record_sha256": list(SCIENTIFIC_HASHES),
+            "scientific_record_sha256": list(SCIENTIFIC_HASHES), "uncommitted_source": [],
+            "host_measurements": {"node": "validator-node", "roots": {}},
             "gates": gates, "memo": memo, "decision_record": copy.deepcopy(decision_record),
             "k17d_verification": copy.deepcopy(k17d_report), "record_files": {}, "record_texts": {}, "lock": None, "lock_problems": None}
 
@@ -104,6 +105,13 @@ def host_report(**override):
               "production_authorized": False, "benchmark_complete": False, "inventory": inventory}
     report.update(override)
     return report
+
+
+def record_text(digest, **override):
+    block = {"schema": G.APPROVAL_BLOCK_SCHEMA, "decision": "APPROVE", "approved_by": "researcher", "approved_plan_digest": digest, "host_id": "gen-host-01",
+             "expires_at": "2026-11-20T00:00:00Z"}
+    block.update(override)
+    return "# DR-04 authorization (synthetic)\n\nApproved by the researcher.\n\n```json\n" + json.dumps(block) + "\n```\n"
 
 
 def finish(plan):
@@ -127,7 +135,9 @@ def complete(reference):
     reference["gates"], reference["memo"] = gates_with_dr04(True)
     reference["record_files"] = {RECORD: H("record")}
     digest = G.approved_plan_digest(plan)
-    reference["record_texts"] = {RECORD: f"Approved by researcher. approved_plan_digest {digest}; host_id gen-host-01; expires_at 2026-11-20T00:00:00Z."}
+    reference["record_texts"] = {RECORD: record_text(digest)}
+    reference["host_measurements"] = {"node": "gen-host-01", "roots": {
+        "/data/b2": {"exists": True, "device": 11, "fstype": "xfs", "free_gib": 400.0}, "/mnt/backup/b2": {"exists": True, "device": 22, "fstype": "ext4", "free_gib": 90.0}}}
     plan["authorization"] = {
         "schema": G.SCHEMA_AUTHORIZATION, "kind": "compute_generation", "gate": "full_generation", "stage": "DR-04", "observations": 21350,
         "basis": G.AUTH_BASIS, "approved_by": "researcher", "approved_at": "2026-10-29T08:00:00Z", "expires_at": "2026-11-20T00:00:00Z",
@@ -1019,30 +1029,43 @@ def test_cli_status_is_no_go_exit_4_and_refuses_to_overwrite(tmp_path, monkeypat
 
 # ---- review round: committed inputs, approver-authored binding, scope, volatile storage, hostile input -----------------
 
-def test_record_text_must_carry_the_approved_digest_host_expiry_and_approver(reference):
-    for token in ("approved_plan_digest", "host_id", "expires_at", "approved_by"):
-        plan = complete(reference)
-        text = reference["record_texts"][RECORD]
-        replacement = {"approved_plan_digest": plan["authorization"]["approved_plan_digest"], "host_id": plan["authorization"]["host_id"],
-                       "expires_at": plan["authorization"]["expires_at"], "approved_by": plan["authorization"]["approved_by"]}[token]
-        reference["record_texts"][RECORD] = text.replace(replacement, "redacted")
-        assert "authorization.record_content" in failing(run(plan, reference)), token
+def test_record_must_hold_exactly_one_strict_json_approval_block_with_exact_values(reference):
     plan = complete(reference)
+    digest = plan["authorization"]["approved_plan_digest"]
+    for override in ({"decision": "REJECT"}, {"decision": "NOT APPROVED"}, {"approved_by": "someone-else"}, {"approved_plan_digest": H("older")},
+                     {"host_id": "other-host"}, {"expires_at": "2026-11-21T00:00:00Z"}, {"schema": "B2-E13-dr04-approval-block/2"}):
+        reference["record_texts"][RECORD] = record_text(digest, **override)
+        assert "authorization.record_content" in failing(run(plan, reference)), override
+    good = record_text(digest)
+    for text in ("", "NOT APPROVED " + digest + " gen-host-01 2026-11-20T00:00:00Z researcher", good + good, good.replace('"decision": "APPROVE"', '"decision": "APPROVE", "extra": 1'),
+                 good.replace("```json", "```text"), good.replace('"schema"', '"schema",', 1), "```json\n{\"a\": 1, \"a\": 2}\n```"):
+        reference["record_texts"][RECORD] = text
+        assert "authorization.record_content" in failing(run(plan, reference)), text[:40]
+    reference["record_texts"][RECORD] = "intro\n```json\n{\"unrelated\": true}\n```\n" + good                     # an unrelated block is ignored
+    assert "authorization.record_content" not in failing(run(plan, reference))
     del reference["record_texts"][RECORD]
     assert "authorization.record_content" in failing(run(plan, reference))
 
 
-def test_approved_plan_digest_changes_with_the_design_but_not_with_the_commit_or_lock(reference):
+def test_approved_plan_digest_changes_with_design_and_code_but_not_with_what_the_approval_commit_changes(reference):
     plan = complete(reference)
     base = G.approved_plan_digest(plan)
-    for change in (lambda p: p["ceilings"].__setitem__("wall_hours", 35.0), lambda p: p["host"].__setitem__("host_id", "other"),
-                   lambda p: p["working"].__setitem__("root", "/data/other"), lambda p: p["backup"].__setitem__("storage_id", "disk-C"),
-                   lambda p: p["environment"].__setitem__("numpy", "2.5.5"), lambda p: p["stages"]["known"]["options"].__setitem__("groups_per_shard", 8)):
+    changing = (lambda p: p["ceilings"].__setitem__("wall_hours", 35.0), lambda p: p["host"].__setitem__("host_id", "other"),
+                lambda p: p["working"].__setitem__("root", "/data/other"), lambda p: p["backup"].__setitem__("storage_id", "disk-C"),
+                lambda p: p["environment"].__setitem__("numpy", "2.5.5"), lambda p: p["stages"]["known"]["options"].__setitem__("groups_per_shard", 8),
+                lambda p: p["source"].__setitem__("source_tree_sha256", H("new generator source")), lambda p: p["source"].__setitem__("known_request_fingerprint", H("r")),
+                lambda p: p["source"].__setitem__("generator_provenance_fingerprint", H("g")), lambda p: p["source"]["parsed_config_sha256"].__setitem__("b2_config", H("p")),
+                lambda p: p["source"]["tools_sha256"].__setitem__(G.TOOLS[1], H("new supervisor")), lambda p: p["source"]["configs_sha256"].__setitem__("configs/b2_base.json", H("c")),
+                lambda p: p["source"]["records_sha256"].__setitem__(G.DECISIONS, H("d")))
+    for change in changing:
         changed = complete(reference)
         change(changed)
         assert G.approved_plan_digest(changed) != base
-    for change in (lambda p: p["source"].__setitem__("git_commit", "c" * 40), lambda p: p.__setitem__("lock", {"lock_fingerprint": H("z")}),
-                   lambda p: p["host"].__setitem__("inventory", host_report()), lambda p: p["source"]["configs_sha256"].clear()):
+    unchanged = (lambda p: p["source"].__setitem__("git_commit", "c" * 40), lambda p: p.__setitem__("lock", {"lock_fingerprint": H("z")}),
+                 lambda p: p["host"].__setitem__("inventory", host_report()), lambda p: p["source"]["configs_sha256"].__setitem__(pre.GATES_PATH, H("approved gates")),
+                 lambda p: p["source"]["records_sha256"].__setitem__(pre.MEMO_PATH, H("approved memo")), lambda p: p.__setitem__("release_evidence", None),
+                 lambda p: p["source"]["files_sha256"].__setitem__("src/geosim/alpha.py", H("x")))
+    for change in unchanged[:-1]:
         changed = complete(reference)
         change(changed)
         assert G.approved_plan_digest(changed) == base
@@ -1329,10 +1352,203 @@ def test_fstype_of_reads_the_longest_mount_prefix():
     assert G.host_inventory.fstype_of("/mnt/back up/data", read=read) == "xfs"
     assert G.host_inventory.fstype_of("/mnt/other", read=read) == "nfs4"
     assert G.host_inventory.fstype_of("/home/user", read=lambda path: None) is None
-    assert G.host_inventory.disk_facts(["/dev/shm"])[0]["fstype"] in (None, "tmpfs") and "fstype" in G.host_inventory.disk_facts(["/nonexistent/path"])[0]
+    assert G.host_inventory.fstype_of("/dev/shm/x", read=lambda path: "30 22 0:25 / /dev/shm rw - TMPFS tmpfs rw") == "tmpfs"          # normalised
+    assert "fstype" in G.host_inventory.disk_facts(["/nonexistent/path"])[0]
     facts = G.host_inventory.collect(["/nonexistent/path"], facts={"cpu": {"x": 1}, "memory": {"x": 1}, "disks": [{"x": 1}], "gpu": {"x": 1}, "libraries": {"x": 1}})
-    assert facts["node"] and _instant_ok(facts["collected_at"])
+    assert "node" in facts and _instant_ok(facts["collected_at"])
 
 
 def _instant_ok(text):
     return G._instant(text) is not None
+
+
+# ---- second review round ------------------------------------------------------------------------------------------------
+
+def test_forbidden_key_scan_is_linear_in_memory_whatever_the_key_length(reference):
+    import tracemalloc
+    hostile = {"k" * 100_000: [0] * 3_000}                                           # a long key over a wide list: old code built 3,000 path strings
+    tracemalloc.start()
+    found = G._forbidden_keys(hostile)
+    peak = tracemalloc.get_traced_memory()[1]
+    tracemalloc.stop()
+    assert found == [] and peak < 20 * 2 ** 20
+    nested = {"a": [{"b": {"Command": 1, "ARGV": 2}}], "c": {"execute": 3}}
+    assert G._forbidden_keys(nested) == sorted(["$.a[0].b.Command", "$.a[0].b.ARGV", "$.c.execute"])
+    many = {f"x{i}": {"run": i} for i in range(100)}
+    assert len(G._forbidden_keys(many)) == 8                                            # reporting is capped, scanning stops early
+    assert len(G._forbidden_keys({("run" if i == 0 else f"k{i}"): [{"k" * 70_000: 1}] for i in range(3)})) == 1
+
+
+def test_untracked_ignored_or_skip_worktree_source_files_fail(reference):
+    plan = complete(reference)
+    reference["uncommitted_source"] = ["src/geosim/hidden_extra.py"]
+    assert "source.committed_source" in failing(run(plan, reference))
+
+
+def test_collect_reference_checks_every_hashed_source_file_against_head():
+    seen = []
+    inner = fake_git()
+
+    def recording(*args, repo=None):
+        if args[2] == "hash-object":
+            seen.append(args[-1])
+        return inner(*args, repo=repo)
+    snapshot = G.collect_reference(rederive=False, git=recording, evaluated_at=NOW)
+    assert snapshot["uncommitted_source"] == []
+    assert set(snapshot["files_sha256"]) <= set(seen) and set(pre.LOCKED_CONFIGS) <= set(seen) and {f"scripts/{name}" for name in G.TOOLS} <= set(seen)
+    snapshot = G.collect_reference(rederive=False, git=fake_git(blob_ok=False), evaluated_at=NOW)
+    assert "src/geosim/b2_scenarios.py" in snapshot["uncommitted_source"] and set(snapshot["files_sha256"]) <= set(snapshot["uncommitted_source"])
+
+
+def test_host_remeasurement_is_required_and_blocked_off_host(reference):
+    plan = complete(reference)
+    assert "host.remeasured" in status(run(plan, reference)) and status(run(plan, reference))["host.remeasured"] == G.PASS
+    reference["host_measurements"]["node"] = "some-laptop"
+    report = run(plan, reference)
+    assert "host.remeasured" in blocked(report) and report["plan_status"] == "INCOMPLETE_OR_INCONSISTENT"
+    del reference["host_measurements"]
+    assert "host.remeasured" in blocked(run(plan, reference))
+
+
+@pytest.mark.parametrize("root,change", [("/data/b2", {"device": 99}), ("/data/b2", {"fstype": "tmpfs"}), ("/data/b2", {"free_gib": 30.0}), ("/data/b2", {"exists": False}),
+                                         ("/mnt/backup/b2", {"device": 11}), ("/mnt/backup/b2", {"fstype": "xfs"}), ("/mnt/backup/b2", {"free_gib": 1.0}),
+                                         ("/mnt/backup/b2", {"free_gib": None})])
+def test_remeasured_roots_must_agree_with_the_inventory_and_have_space(reference, root, change):
+    plan = complete(reference)
+    reference["host_measurements"]["roots"][root].update(change)
+    assert "host.remeasured" in failing(run(plan, reference))
+
+
+def test_remeasurement_covers_both_declared_roots(reference):
+    plan = complete(reference)
+    del reference["host_measurements"]["roots"]["/mnt/backup/b2"]
+    assert "host.remeasured" in failing(run(plan, reference))
+
+
+def test_measure_root_is_stat_only_and_reports_missing_roots(tmp_path):
+    measured = G._measure_root(str(tmp_path))
+    assert measured["exists"] is True and isinstance(measured["device"], int) and measured["free_gib"] > 0
+    before = sorted(tmp_path.iterdir())
+    assert G._measure_root(str(tmp_path / "absent")) == {"exists": False, "device": None, "fstype": None, "free_gib": None}
+    assert sorted(tmp_path.iterdir()) == before
+
+
+def test_memorandum_twin_must_carry_the_same_approver_time_and_record(reference):
+    for field, value in (("approved_by", "someone-else"), ("approved_at", "1999-01-01T00:00:00Z"), ("record", "docs/other.md"), ("approved_by", None)):
+        plan = complete(reference)
+        reference["memo"]["decisions"]["full_generation"][field] = value
+        assert "authorization.gate" in failing(run(plan, reference)), field
+
+
+@pytest.mark.parametrize("gate", ["full_gpu_training", "full_loko_sweep"])
+@pytest.mark.parametrize("where", ["gates", "memo"])
+@pytest.mark.parametrize("edit", [lambda d: d.__setitem__("approval", {"approved_by": "x"}), lambda d: d.__setitem__("approved_by", "x"),
+                                  lambda d: d.__setitem__("status", "PENDING_RESEARCHER")])
+def test_other_compute_gates_must_be_exactly_not_authorized_without_approval_material(reference, gate, where, edit):
+    plan = complete(reference)
+    edit(reference[where]["decisions"][gate])
+    assert "authorization.scope_isolation" in failing(run(plan, reference))
+
+
+@pytest.mark.parametrize("path", ["/run/b2", "/var/run/b2", "/tmp/b2", "/var/tmp/b2", "/dev/shm/b2", "/sys/b2", "/proc/b2"])
+def test_volatile_trees_include_run_and_var_run(path):
+    assert G._volatile(path) is True
+
+
+@pytest.mark.parametrize("path", ["/run/media/user/backup/b2", "/run/mount/disk/b2", "/data/b2", "/mnt/backup/b2", "/runner/b2", "/tmpdata/b2"])
+def test_durable_looking_paths_are_not_blanket_refused(path):
+    assert G._volatile(path) is False
+
+
+@pytest.mark.parametrize("fstype", ["securityfs", "debugfs", "tracefs", "configfs", "fusectl", "pstore", "bpf", "hugetlbfs", "autofs", "binfmt_misc", "efivarfs", "TMPFS", " tmpfs "])
+def test_more_pseudo_filesystems_are_refused_and_types_are_normalised(reference, fstype):
+    plan = complete(reference)
+    plan["host"]["inventory"]["inventory"]["disks"][0]["fstype"] = fstype
+    assert "host.filesystems" in failing(run(finish(plan), reference))
+    plan = complete(reference)
+    plan["host"]["inventory"]["inventory"]["disks"][1]["fstype"] = fstype
+    assert "host.filesystems" in failing(run(finish(plan), reference))
+
+
+def test_overlay_is_refused_for_the_backup_only(reference):
+    plan = complete(reference)
+    plan["host"]["inventory"]["inventory"]["disks"][0]["fstype"] = "overlay"
+    assert "host.filesystems" not in failing(run(finish(plan), reference))
+
+
+def test_unreadable_mountinfo_bytes_do_not_crash_the_inventory(tmp_path):
+    bad = tmp_path / "mountinfo"
+    bad.write_bytes(b"22 1 8:1 / /mnt/\xff\xfe rw - ext4 /dev/sda1 rw\n")
+    assert G.host_inventory._read(bad) is None                                          # UnicodeDecodeError is absorbed like an OSError
+    assert G.host_inventory.fstype_of("/x", read=G.host_inventory._read) in (None, "ext4", "xfs", "tmpfs", "overlay", "btrfs", "zfs", "nfs4")
+
+
+def test_register_date_lower_bound_with_a_live_expiry(reference):
+    plan = complete(reference)
+    plan["authorization"]["approved_at"] = "2026-10-23T08:00:00Z"                      # one day before the E12 register, expiry still in the future
+    plan["authorization"]["expires_at"] = "2026-11-10T00:00:00Z"
+    reference["gates"]["decisions"]["full_generation"]["approval"]["approved_at"] = "2026-10-23T08:00:00Z"
+    reference["memo"]["decisions"]["full_generation"]["approved_at"] = "2026-10-23T08:00:00Z"
+    reference["record_texts"][RECORD] = record_text(plan["authorization"]["approved_plan_digest"], expires_at="2026-11-10T00:00:00Z")
+    assert "authorization.provenance" in failing(run(plan, reference))
+
+
+def test_validity_window_and_inventory_age_boundaries(reference):
+    plan = complete(reference)
+    plan["authorization"]["approved_at"] = "2026-10-26T12:00:00+00:00"
+    reference["gates"]["decisions"]["full_generation"]["approval"]["approved_at"] = "2026-10-26T12:00:00+00:00"
+    reference["memo"]["decisions"]["full_generation"]["approved_at"] = "2026-10-26T12:00:00+00:00"
+    for expires, expected in (("2026-11-25T12:00:00+00:00", True), ("2026-11-25T12:00:01+00:00", False)):          # exactly 30 days, then 30 days + 1 s
+        plan["authorization"]["expires_at"] = expires
+        reference["record_texts"][RECORD] = record_text(plan["authorization"]["approved_plan_digest"], expires_at=expires)
+        assert ("authorization.provenance" not in failing(run(plan, reference))) is expected, expires
+    plan = complete(reference)
+    for collected, expected in (("2026-10-16T12:00:00+00:00", True), ("2026-10-16T11:59:59+00:00", False)):          # exactly 14 days before NOW, then older
+        plan["host"]["inventory"]["inventory"]["collected_at"] = collected
+        assert ("host.identity" not in failing(run(finish(plan), reference))) is expected, collected
+
+
+def test_register_flags_and_extra_authorization_fields_are_checked(reference):
+    for key, value in (("scientific_decisions_ratified", False), ("production_authorized", True), ("benchmark_complete", True), ("execution_authorized", True)):
+        plan = complete(reference)
+        reference["decision_record"]["document"][key] = value
+        assert "scientific.ratified_no_execution" in failing(run(plan, reference)), key
+        reference["decision_record"]["document"][key] = {"scientific_decisions_ratified": True, "production_authorized": False, "benchmark_complete": False,
+                                                          "execution_authorized": False}[key]
+    plan = complete(reference)
+    plan["authorization"]["ceilings"]["gpu_hours"] = 6
+    assert "authorization.ceilings" in failing(run(plan, reference))
+    plan = complete(reference)
+    plan["release_evidence"]["exact_head_ci"]["job_id"] = "2"
+    assert "release.evidence" in failing(run(finish(plan), reference))
+
+
+def test_digest_command_prints_the_digest_and_a_block_template_but_approves_nothing(reference, tmp_path, capsys, monkeypatch):
+    plan = complete(reference)
+    path = tmp_path / "plan.json"
+    path.write_text(json.dumps(plan))
+    assert G.main(["digest", "--plan", str(path)]) == 0
+    printed = json.loads(capsys.readouterr().out)
+    assert printed["approved_plan_digest"] == G.approved_plan_digest(plan) == plan["authorization"]["approved_plan_digest"]
+    block = printed["approval_block_template"]
+    assert block["decision"] == "APPROVE" and block["approved_plan_digest"] == printed["approved_plan_digest"] and block["approved_by"].startswith("<")
+    path.write_text("[1]")
+    with pytest.raises(SystemExit) as stop:
+        G.main(["digest", "--plan", str(path)])
+    assert stop.value.code == 2
+
+
+def test_record_reading_is_bounded(tmp_path):
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "big.md").write_bytes(b"x" * (G.MAX_RECORD_BYTES * 4))
+    snapshot = G.collect_reference(repo=ROOT, rederive=False, git=fake_git(), evaluated_at=NOW, record_paths=["docs/plan/DURUM.md"])
+    assert len(snapshot["record_texts"]["docs/plan/DURUM.md"]) <= G.MAX_RECORD_BYTES
+
+
+def test_main_catches_unexpected_errors_from_lock_verification(tmp_path, monkeypatch, reference):
+    monkeypatch.setattr(G, "collect_reference", lambda **kwargs: (_ for _ in ()).throw(AttributeError("malformed lock")))
+    plan = tmp_path / "plan.json"
+    plan.write_text(json.dumps(G.make_template(reference)))
+    with pytest.raises(SystemExit) as stop:
+        G.main(["validate", "--plan", str(plan)])
+    assert stop.value.code == 2

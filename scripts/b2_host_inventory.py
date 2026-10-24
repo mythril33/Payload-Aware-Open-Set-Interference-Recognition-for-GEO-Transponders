@@ -8,7 +8,9 @@ plan (``b2_production_preflight.PROPOSED_CEILINGS``). It writes nothing but the 
 exclusively), creates no scratch file, imports neither torch nor CUDA, starts no GPU kernel and runs at most one
 fixed ``nvidia-smi --query-gpu`` driver query. A missing GPU is BLOCKED (a host or hardware decision), a measured
 shortfall is FAIL, and PASS only means "this machine meets the proposed figure". It designates no host, authorizes
-nothing and never reports ``benchmark_complete=true``. It lives in ``scripts/`` because every ``src/**/*.py`` is
+nothing and never reports ``benchmark_complete=true``. Each disk row also names the filesystem type of its mount, and the
+report carries the node name and the collection time (E13), so a later reader can tell a volatile or foreign report from a
+real one; all of it is still the reporting process's own claim. It lives in ``scripts/`` because every ``src/**/*.py`` is
 hashed into checkpoint provenance and the production lock.
 """
 import argparse
@@ -49,7 +51,7 @@ REQUIREMENTS = {
 def _read(path):
     try:
         return Path(path).read_text()
-    except OSError:
+    except (OSError, UnicodeDecodeError):
         return None
 
 
@@ -93,7 +95,7 @@ def fstype_of(path, read=_read):
         mount = re.sub(r"\\([0-7]{3})", lambda match: chr(int(match.group(1), 8)), fields[4])
         if (mount == "/" or real == mount or real.startswith(mount.rstrip("/") + "/")) and (best is None or len(mount) >= len(best[0])):
             best = (mount, right.split()[0])
-    return best[1] if best else None
+    return best[1].strip().lower() if best else None
 
 
 def disk_facts(paths, disk_usage=shutil.disk_usage):
