@@ -1,7 +1,7 @@
 # E10 change note — R10 clean-alarm threshold: higher empirical quantile
 
 **Finding:** PR #30 audit item M-1 (`docs/research/B2_E9_INDEPENDENT_SCIENTIFIC_AUDIT.md`).
-**Baseline:** `origin/main` `e43987e`.
+**Baseline:** `e43987e` (PR #32), the base of this branch. `origin/main` is now `293c487` (PR #33, merge of `4efb7f0`), which already contains the threshold, `ALARM_RULE` and calibrate-path changes listed below. The saturation-free score (`9f99f3e`) and the documentation commits follow it on the same branch.
 **Approved rule:** `docs/plan/b2_e9_approved_scientific_protocol.json:334` — "higher empirical quantile, inclusive acceptance";
 alarm strictly `score > threshold` (`docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md`, R10).
 
@@ -19,7 +19,7 @@ differently.
 |---|---|
 | `src/geoml/metrics.py` | New `clean_alarm_threshold(clean_scores, pfa)`: explicit `method="higher"`; refuses empty, multi-dimensional, non-finite scores and `pfa` outside (0,1), booleans and strings. New constant `CLEAN_ALARM_QUANTILE_METHOD = "higher"`. `threshold_at_pfa` is **unchanged** in value and labelled HISTORICAL. |
 | `src/geoml/b2_execution.py` | The E9 calibrate path imports and calls `clean_alarm_threshold` (line 313). The alarm score is `clean_alarm_score` (defined at line 43): the sum of the non-clean probabilities, which equals `1 - P(clean)` without the subtraction. The subtraction rounds to exactly 0 once the clean margin exceeds about 37 nats, so confidently clean samples would tie. The evaluate path (line 520) uses the same helper. `ALARM_RULE` changes to `"R10 higher empirical quantile at 1-pfa (clean_alarm_threshold); alarm strictly score > threshold"`. |
-| `tests/test_b2_execution.py` | The isolation test that forbids calibration during evaluation now also monkeypatches `clean_alarm_threshold`. |
+| `tests/test_b2_execution.py` | The isolation test that forbids calibration during evaluation now monkeypatches `clean_alarm_threshold` in place of `threshold_at_pfa` (line 137). |
 | `tests/test_b2_e10_calibration.py` | New regression tests (see below). |
 
 No threshold value was tuned, and no test result was used to choose the method.

@@ -41,7 +41,7 @@ alarm rates, FPR@95TPR, AUROC/AUPR, counterfactual changes) in committed files:
 | test | 3200000, 3200001 | 2 of 500 headline groups |
 | test-matched | 3300000, 3300001 | 2 of 150 matched groups |
 
-Verified by a scan of every `docs/results/*.json` (test-role IDs 32xxxxx and 33xxxxx, classified by content). The scan
+Verified by a scan of every `docs/results/*.json` (test-role IDs 32xxxxx and 33xxxxx, classified by content), and by a separate reading of the Markdown summaries that carry test-role numbers (marked *Markdown* below). The scan
 found no other outcome-bearing test or matched scene. A numeric false positive (`3240000` in `b2_e8_resource_budget.json`,
 a sample-pass count) was excluded.
 
@@ -49,7 +49,7 @@ Committed artifacts carrying outcome-level content on these IDs:
 
 | Artifact | Git commit (date) | Exposed IDs | Outcome-level content |
 |---|---|---|---|
-| `docs/results/b2_feat_pilot.json` | 46b13fc (2026-10-20) and later | 3200000, 3200001 | accuracy, FPR@95TPR, ECE, confusion, alarm |
+| `docs/results/b2_feat_pilot.json` | 46b13fc (2026-10-20) and later | 3200000, 3200001 | accuracy, ECE, confusion, alarm (open-set block null, `n_unknown = 0`; no FPR@95TPR value) |
 | `docs/results/b2_observed_pilot.json` | 24feaa6 (2026-10-21) | 3200000 | accuracy, macro-F1, clean false alarm, confusion |
 | `docs/results/b2_observed_predictions.json` | 24feaa6 (2026-10-21) | 3200000 | **per-observation** predictions, probabilities, event alarm |
 | `docs/results/b2_test_pilot.json` | a09429b (2026-10-21) | 3200000, 3200001 | accuracy, FPR@95TPR, alarm, known-closed accuracy |
@@ -57,16 +57,20 @@ Committed artifacts carrying outcome-level content on these IDs:
 | `docs/results/b2_matched_pilot.md` | ba98d6b (2026-10-21) | 3300000, 3300001 | matched-pair physics and pilot evaluation summary |
 | `docs/results/b2_xgb_baseline.json` | d88c689 (2026-10-23) | 3200000, 3200001 | accuracy, AUPR, class predictions, binary score; the status file publishes known-test 6/16 and clean test alarm 1/2 (`docs/plan/DURUM.md:82`) |
 | `docs/results/b2_edsc_baseline.json` | ec47a90 (2026-10-23; evidence date 2026-10-22) | test-role counts and metric blocks | E3a EDSC baseline on the test role |
-| `docs/results/b2_physical_figure_data.json` (atlas figures) | 7108ee8 (2026-10-23) | 3200000 | **observation-level**: spectrogram arrays of the held-out group, clean and carrier-under-carrier; the atlas selection rule was 'clean and CuC, before examining outputs' (`docs/results/B2_SCIENTIFIC_RESULTS_ATLAS.md:36`) |
+| `docs/results/b2_physical_figure_data.json` (atlas figures) | 7108ee8 (2026-10-23) | 3200000 | **observation-level**: spectrogram arrays of the held-out group, clean and carrier-under-carrier; the atlas selection rule was 'clean and CuC, before examining outputs' (`docs/results/B2_SCIENTIFIC_RESULTS_ATLAS.md:36–37`) |
 | `docs/results/b2_a5_dual_pol_pilot.json` | 3c0068e (2026-10-23) | 3200000, 3200001, 3300000, 3300001 | alarm, logits, counterfactual agreement |
 | `docs/results/b2_a5_postmerge_partial_pilot.json` | 5e824fe (2026-10-23) | 3200000, 3200001, 3300000, 3300001 | change vs original prediction, clean false alarm |
-| `docs/results/b2_figure_manifest.json` (figures C1, C3, unknown AUROC/AUPR rows) | 7108ee8 (2026-10-23) | 3200000 | figure values derived from test-scene outcomes |
+| `docs/results/b2_figure_manifest.json` (figures C1, C3, unknown AUROC/AUPR rows) | 7108ee8 (2026-10-23) | 3200000, 3200001 | figure values derived from test-scene outcomes (two-group test partition) |
+| `docs/results/B2_SCIENTIFIC_RESULTS_ATLAS.md` (Markdown; lines 36–37, 152) | 7108ee8 (2026-10-23) | 3200000 (selection rule, line 36) | known-test accuracy "12.5%" and bounded XGBoost "6/16 correct" (line 152) |
+| `docs/results/b2_feat_pilot.md` (Markdown; lines 87–89) | 46b13fc (2026-10-20) | 3200000, 3200001 | 12.5 % test accuracy per view |
+| `docs/results/b2_a5_dual_pol_pilot.md` (Markdown) | 3c0068e (2026-10-23) | 3200000, 3200001, 3300000, 3300001 | A5 pilot summary (IDs as listed in the JSON row above) |
 
 Metadata or physics-only exposure (no model output), which is weaker but not zero:
 
 | Artifact | Exposed IDs | What it holds |
 |---|---|---|
 | `docs/results/k17d_drift_audit.json` (committed ba98d6b, 2026-10-21) | 78 test groups | drop identity, polarization, drift in dB |
+| `docs/results/b2_e10_k17d_identity.json` (committed 4efb7f0, regenerated in 9f99f3e; 2026-10-24) | 500 headline test-group IDs; the 35 / 43 / 465 split | identity metadata only; no outcome content, no observation read |
 | `docs/results/b2_feat_cancellation_check.json`, `b2_test_family_check.json` | 3200000, 3200001 | residual and PSD physics of test scenes |
 | `docs/results/b2_matched_check.json` | 3300000, 3300001 | injected-power and placement physics |
 
@@ -84,8 +88,8 @@ Timeline (git commit dates, UTC):
 
 - 2026-10-20 22:26 — `46b13fc` introduces `center_loss_weight = 0.005` and `plan_loss_weight = 1.0` in
   `configs/b2_feat.json`. The `TrainConfig` default (`src/geoml/train.py:37`) is `0.0`, with the comment "frozen before training". **In the same commit it commits
-  `docs/results/b2_feat_pilot.json`, whose test partition (groups 3200000, 3200001) already reports test accuracy 0.125
-  and open-set metrics.** The first committed test-role outcome is therefore contemporaneous with the center-weight value.
+  `docs/results/b2_feat_pilot.json`, whose test partition (groups 3200000, 3200001) already reports test accuracy 0.125,
+  ECE, confusion and alarm; its open-set block is null (`n_unknown = 0`).** The first committed test-role outcome is therefore contemporaneous with the center-weight value.
   The commit cannot show which came first inside it.
 - 2026-10-20 — K17a–d decisions dated in P18 §7a, which states that they were written before results. This is the same day
   as the first test-role outcome; the order within the day is not recorded.
@@ -109,7 +113,7 @@ Findings from reading the decision-stage documents:
 3. `docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md` cites no test-role outcome number. Its rationales are
    engineering and protocol rationales.
 4. `docs/results/B2_SCIENTIFIC_RESULTS_ATLAS.md` and `docs/plan/DURUM.md` publish the test-role pilot numbers
-   (for example "12.5 % known-test accuracy", "6/16 correct"). Those numbers are visible to every later reader. `docs/plan/P20_b2_cancellation_residual.md:143` also publishes the 12.5 % pilot
+   (for example "have12.5%known-test accuracy" at `B2_SCIENTIFIC_RESULTS_ATLAS.md:152` and "test kapalı doğruluğu 6/16" at `DURUM.md:82`). Those numbers are visible to every later reader. `docs/plan/P20_b2_cancellation_residual.md:143` also publishes the 12.5 % pilot
    accuracy and the zero-positive plan-consistency observation.
 
 **Assessment:** the committed record shows **no decision that cites a test-role outcome**. The earliest test-role outcome (`46b13fc`, 2026-10-20) is contemporaneous with the K17 and K18 values, and the record cannot establish the order within that commit. That is a real limitation, not a finding of influence. It does **not** prove that no
@@ -145,11 +149,11 @@ The residual influence risk is small in magnitude (2 + 2 groups, pilot checkpoin
   becomes a new prediction with a new realized count, so the "35" figure is no longer pre-declared.
 - *Reproducibility:* good. New seeds, new fingerprints, new generator run.
 - *Implementation scope (estimate, not executed):*
-  - Generation: the pilot cost (about 4 s per observation, `docs/results/b2_test_pilot.md`) applied to 6,500 test
-    observations (500 groups x 13 variants) and 450 matched observations (6,950 in total) gives about 7.7 core-hours.
+  - Generation: the pilot cost (about 4 s per observation on 2 threads, `docs/results/b2_test_pilot.md:15`) applied to 6,500 test
+    observations (500 groups x 13 variants) and 450 matched observations (6,950 in total) gives about 7.7 wall-clock hours on 2 threads, about 15 core-hours.
     This is an extrapolation from a two-group pilot, not a measurement at scale.
   - Storage: the pilot measured about 0.4 MiB per test-only observation (`b2_test_pilot.md`); the same scale gives about
-    2.8 GB.
+    2.7 GiB (about 2.9 GB).
   - Engineering: a new frozen role and seed range, metadata-only identity validation (the K17d module in this PR can be
     reused), a new configuration version and tests.
 - *New generation authorization:* **required.** Option B needs an explicit DR-04 generation authorization and a separate
@@ -159,7 +163,7 @@ The residual influence risk is small in magnitude (2 + 2 groups, pilot checkpoin
 
 - *Scientific defensibility:* moderate. Removing four exposed scenes is simple, but it is a protocol change: the approval
   forbids outcome-driven removal, and the removal must be fixed now, before the final read.
-- *Compatibility with researcher decisions:* conflicts with the approval's rule "do not remove groups on the basis of
+- *Compatibility with researcher decisions:* conflicts with the approval's rule "Do not remove groups on the basis of
   outcomes". It is compatible only if the removal rule is defined by exposure (a metadata fact), not by outcome.
   The approval would need a new version or a dated amendment.
 - *Statistical cost:* the two exposed test groups are not drop groups, so they sit in the 465 sensitivity row. Removing
@@ -191,7 +195,7 @@ monitors and which plans are declared.
 
 ### D-2.1 Evidence
 
-- `docs/plan/P14_dual_polarization.md:24` already assumes "two monitored IQ / PSD streams and two operator plans". The
+- `docs/plan/P14_dual_polarization.md:24` already assumes "Two monitored IQ / PSD streams and two operator plans" (the diagram node label). The
   architecture therefore presupposes a dual-polarization monitor. It is not written as a contract with availability
   assumptions.
 - `docs/plan/P18_b2_protocol.md:30–35` lists five channels, 1-based: 1 calibrated co-pol spectrum, 2 calibrated cross-pol
@@ -252,7 +256,7 @@ and a declared cross plan are assumed), and state whether `co` is reported along
   shift is applied at `:533`).
 - `docs/plan/P18_b2_protocol.md:170–188` (K17b) defines the second output as `plan_consistency ∈ {tutarlı, planlı taşıyıcı
   yok}` (consistent, planned carrier missing), states that it is independent of the main label, and calls the shift
-  "kaydırma, etiketi koruyan artırım" (label-preserving augmentation).
+  "Kaydırma, etiketi koruyan artırım" (label-preserving augmentation).
 - `docs/plan/P28_b2_e4_dual_pol_a5.md:44–45` notes that the K17b shift is the training augmentation, so the A5 `shift_*`
   perturbations are in-distribution for training.
 
@@ -325,8 +329,7 @@ magnitudes.
 - `docs/plan/P28_b2_e4_dual_pol_a5.md:66–71` covers plan perturbations for the frozen checkpoint, with the residual recomputed
   from the corrupted co belief (`RECEIVER_CONSISTENT`, P28:41): `shift_plus/minus` (±0.5 MHz on every `f0`), `drop_one`,
   `phantom`, `authorize_intruder` and `stale_plan`.
-- **Not covered by any committed perturbation:** symbol-rate error, modulation or roll-off error, frequency errors other than
-  ±0.5 MHz, and a magnitude sweep. The canceller's depth dependence on these is therefore unmeasured.
+- **Not covered by any committed perturbation:** no committed perturbation sweeps symbol-rate, roll-off, modulation or frequency error at controlled magnitudes. `stale_plan` (P28:71) replaces the whole descriptor with another default plan, so it changes those fields without a controlled magnitude. The canceller's depth dependence on these is therefore unmeasured.
 - P28:44–45 notes that the ±0.5 MHz shift is also the training augmentation (in-distribution for training).
 
 **Assessment.** A plan-perturbation experiment exists (P28 A5), but it is capped, uses frozen checkpoints, and does not
@@ -374,8 +377,8 @@ depth curve may be reported in main results or only in a supplement.
 
 ### D-6.2 Options
 
-- **Option A — NumPy `higher` (implemented).** Conservative: the calibration alarm rate is at most Pfa, and one order
-  statistic below the tighter rule in general. Matches the acceptance quantile in `calibration.py:131`.
+- **Option A — NumPy `higher` (implemented).** Conservative: the calibration alarm rate is at most Pfa, and the threshold
+  sits one order statistic above the `inverted_cdf` threshold (95 against 94 in the example). Matches the acceptance quantile in `calibration.py:131`.
 - **Option B — smallest order statistic with at most n·Pfa clean scores above it (`inverted_cdf`).** The most sensitive
   threshold that still meets Pfa on the calibration set. Changes the E9 threshold by one order statistic (95 to 94 in the
   example). No frozen artifact depends on the E9 path.

@@ -11,7 +11,7 @@
 | Item | Value |
 |---|---|
 | Local interpreter | Python 3.13.17 in a scratch venv under the session scratchpad (not in the repository) |
-| Pinned packages (from `scripts/setup_cloud.sh`) | numpy 2.5.4, scipy 1.18.1, pytest 9.1.1, matplotlib 3.11.2, torch 2.14.1 (PyPI build; the CPU index was blocked), xgboost-cpu 3.4.1 |
+| Pinned packages | numpy 2.5.4, scipy 1.18.1, pytest 9.1.1, matplotlib 3.11.2 and torch 2.14.1 from `scripts/setup_cloud.sh:10–12` (PyPI build, since the CPU index was blocked); xgboost-cpu 3.4.1 from the `xgb` extra in `pyproject.toml:15` |
 | Threads | `OMP_NUM_THREADS=2`, `OPENBLAS_NUM_THREADS=2` |
 | CI reference | `.github/workflows/b2-readiness-ci.yml` runs on Python 3.12 with `pip install -e ".[dev,ml,xgb]"`. **Local runs used Python 3.13, so they are not an exact reproduction of the CI interpreter.** |
 | Editable install | not performed; tests used `PYTHONPATH=src` |
@@ -37,9 +37,9 @@ No assertion was weakened to pass. Each edit below was made because the test enc
 
 | Test | Before | After | Reason |
 |---|---|---|---|
-| `tests/test_b2_execution.py::test_threshold_rule_matches_independent_power_probability_arithmetic` | expected `np.quantile(1-p_clean, .95)` (linear) | expected `np.quantile(p[:,1:].sum(1), .95, method="higher")` | The first change encoded the historical linear rule. The second uses the same non-cancelling score as the executor. For ordinary margins the two forms agree to rounding. |
+| `tests/test_b2_execution.py::test_threshold_rule_matches_independent_power_probability_arithmetic` | expected `np.quantile(1-p_clean, .95)` (linear) | expected `np.quantile(p[clean,1:].sum(1), .95, method="higher")` | The first change encoded the historical linear rule. The second uses the same non-cancelling score as the executor. For ordinary margins the two forms agree to rounding. |
 | `tests/test_b2_execution.py::test_fixture_evaluation_uses_only_frozen_objects_and_readonly_inputs` | monkeypatched `threshold_at_pfa` | the name is removed from the list; `clean_alarm_threshold` stays | `b2_execution` no longer imports `threshold_at_pfa`, so `monkeypatch.setattr` failed. |
-| `tests/test_b2_e10_k17d.py::fixture_audit` | header had `n_missing_groups` only | adds `n_missing_co_feed` and `n_missing_cross_feed` | The validator now checks these header counts against the derivation. The fixture was a real audit shape, so it had to carry the fields. |
+| `tests/test_b2_e10_k17d.py::fixture_audit` | header had `n_test_groups` and `n_missing_groups` | adds `n_missing_co_feed` and `n_missing_cross_feed` | The validator now checks these header counts against the derivation. The fixture was a real audit shape, so it had to carry the fields. |
 | `tests/test_b2_e10_k17d.py::test_cross_check_refuses_an_audit_missing_one_group` | `match="only_in_derived|disagrees"` | `match="1 derived-only"` | The loose pattern matched the word "disagrees" alone. |
 | `tests/test_b2_e10_k17d.py` AST allow-list | any `from . import x` accepted as a bare `"."` | exact set `{__future__, hashlib, json, numbers, .b2_protocol, .b2_scenarios}` | The old check did not constrain which sibling modules the validator imports. |
 
@@ -64,14 +64,14 @@ No assertion was weakened to pass. Each edit below was made because the test enc
 - `benchmark_complete` is false in the approved protocol, the readiness gates and the candidate configuration.
 - `full_generation`, `full_gpu_training`, `full_loko_sweep` and `gpu_probe` remain `NOT_AUTHORIZED`; `production_launch` is `DISABLED`.
 - `runtime_permitted()` is false and every `guard_execution(action)` raises `ExecutionNotAuthorized`.
-- The approved protocol JSON, the approval record, the E8 decision approval, `src/geoml/b2_e9_contract.py`, `configs/` and the candidate configuration are **byte-identical to `e43987e`** (section 7).
+- The approved protocol JSON, the approval record, the E8 decision approval, `src/geoml/b2_e9_contract.py`, `configs/` and `docs/plan/b2_e8_candidate_production_config.json` are **byte-identical to `e43987e`** (section 7).
 - P33 is restored to its `e43987e` text. The `4efb7f0` edit that withdrew a resource figure was wrong and is reverted.
 
 ## 7. Exact HEAD, file changes and CI
 
 - **Merged state:** PR #33 merged at `4efb7f0`. `origin/main` is `293c487`, tree identical to `4efb7f0`.
 - **Follow-up code commit under test:** `9f99f3e`, rebased onto `293c487`. Its tree equals `68b13bb`, the commit the full suite ran on, because the tree of `origin/main` equals that of `4efb7f0`.
-- **Protected paths:** `git diff --stat e43987e HEAD -- docs/plan/b2_e9_approved_scientific_protocol.json docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md docs/plan/B2_E8_DECISION_APPROVAL.md src/geoml/b2_e9_contract.py configs/ docs/plan/b2_e9_candidate_production_config.json` is **empty**.
+- **Protected paths:** `git diff --stat e43987e HEAD -- docs/plan/b2_e9_approved_scientific_protocol.json docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md docs/plan/B2_E8_DECISION_APPROVAL.md src/geoml/b2_e9_contract.py configs/ docs/plan/b2_e8_candidate_production_config.json` is **empty**.
 - **Documentation-only check:** `git diff --stat 68b13bb HEAD` lists only `docs/` paths for the documentation commit.
 - **CI:** the follow-up draft PR's exact-head check run is recorded in its description after it completes. The prior check on `4efb7f0` (run `40108670413`, job `120915592427`) passed; it is superseded.
 - **Local-versus-CI interpreter:** local runs used Python 3.13; CI uses Python 3.12. CI is the authoritative exact-head evidence for 3.12.
