@@ -28,7 +28,7 @@ from .b2_stream import fit_streaming, infer_streaming, open_b2_known_roles
 from .calibration import RejectionCalibration, calibrate_scores
 from .experiment import _sha256, _source_identity, _write_json
 from .mahalanobis import MahalanobisScorer, fit_mahalanobis
-from .metrics import confusion, expected_calibration_error, macro_f1, threshold_at_pfa
+from .metrics import clean_alarm_threshold, confusion, expected_calibration_error, macro_f1
 from .openset import unknown_scores
 from .train import load, save
 
@@ -37,7 +37,7 @@ ROLES = ex.ROLES
 VIEWS = ex.VIEWS
 PROFILES = ("proposed-full", "fixture")
 CAPS = {"groups_per_role":2, "epochs":2, "width":8, "batch":32}
-ALARM_RULE = "P20 threshold_at_pfa; alarm strictly score > threshold"
+ALARM_RULE = "R10 higher empirical quantile at 1-pfa (clean_alarm_threshold); alarm strictly score > threshold"
 
 
 def _runtime():
@@ -304,7 +304,7 @@ def calibrate_b2_models(data, runs, *, reuse=False, device="cpu", log=print):
         outputs = infer_streaming(fitted,sources["val-calib"])
         probabilities = ex._softmax(outputs["logits"])
         scores = 1.-probabilities[:,0]
-        threshold = threshold_at_pfa(scores[clean],config.pfa)
+        threshold = clean_alarm_threshold(scores[clean],config.pfa)
         alarm = {"score":"one_minus_softmax_clean","direction":"higher_is_more_anomalous",
                  "threshold":float(threshold),"target_clean_pfa":config.pfa,"rule":ALARM_RULE,
                  "population":"clean-only known val-calib","n_clean_calibration":int(clean.sum()),
