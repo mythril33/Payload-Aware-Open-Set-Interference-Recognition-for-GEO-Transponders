@@ -249,10 +249,15 @@ def test_records_carry_the_pr24_ci_and_leave_every_gate_unchanged():
     assert ci["run_id"] == 40064513568 and ci["job_id"] == 120784837702 and ci["total_passed"] == 1771 and ci["total_skipped"] == 7
     assert ci["status"] == "VERIFIED_SUCCESS_ON_MERGED_PR_24_HEAD" and gates["verified_remote_main"]["sha"].startswith("4a1cc95")
     assert gates["benchmark_complete"] is False and gates["engineering"]["e8_freeze_preparation"]["go_no_go"] == "NO_GO"
-    expected = {"K18": "PENDING_RESEARCHER", "K17d": "PENDING_RESEARCHER", "OBS-CANCEL-2": "PENDING_RESEARCHER",
+    # Current approvals supersede E8's historical candidate, not its NO-GO controls.
+    expected = {"K18": "APPROVED", "K17d": "APPROVED", "OBS-CANCEL-2": "APPROVED",
                 "full_generation": "NOT_AUTHORIZED", "full_gpu_training": "NOT_AUTHORIZED", "full_loko_sweep": "NOT_AUTHORIZED"}
     assert {k: gates["decisions"][k]["status"] for k in expected} == expected
-    assert all(gates["decisions"][k]["approval"] is None for k in expected)
+    for key, status in expected.items():
+        if status == "APPROVED":
+            assert gates["decisions"][key]["approval"]["record"] == "docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md"
+        else:
+            assert gates["decisions"][key]["approval"] is None
     proposal = json.loads((PLAN / "b2_e7_training_proposal.json").read_text())
     assert proposal["frozen"] is False and proposal["approved"] is False and all(r["approval"] is None for r in proposal["parameters"].values())
 

@@ -92,11 +92,56 @@ def test_committed_scientific_approvals_pass_but_compute_gates_remain_blocked():
     assert status["gates.benchmark_complete"] == pre.PASS
     for key in ("K18", "K17d", "OBS-CANCEL-2"):
         assert status[f"gates.{key}"] == pre.PASS
-        assert status[f"gates.{key}.consistency"] == pre.PASS
+        assert gates["decisions"][key]["status"] == memo["decisions"][key]["status"] == "APPROVED"
     for key in ("full_generation", "full_gpu_training", "full_loko_sweep"):
         assert status[f"gates.{key}"] == pre.BLOCKED
-        assert status[f"gates.{key}.consistency"] == pre.PASS
+        assert gates["decisions"][key]["status"] == memo["decisions"][key]["status"] == "NOT_AUTHORIZED"
         assert gates["decisions"][key]["approval"] is None
+    # The checker emits a consistency entry only when the records disagree.
+    assert not any(item["status"] == pre.FAIL for item in pre.check_gates(gates, memo)
+                   if item["id"].endswith(".consistency"))
+
+
+@pytest.mark.parametrize("key", ["K18", "K17d", "OBS-CANCEL-2"])
+@pytest.mark.parametrize("missing", pre.APPROVAL_FIELDS)
+def test_approved_scientific_gate_rejects_each_missing_provenance_field(key, missing):
+    gates = pre._read_json(ROOT / pre.GATES_PATH)
+    memo = pre._read_json(ROOT / pre.MEMO_PATH)
+    gates["decisions"][key]["approval"].pop(missing)
+    status = {item["id"]: item["status"] for item in pre.check_gates(gates, memo)}
+    assert status[f"gates.{key}"] == pre.FAIL
+
+
+@pytest.mark.parametrize("key", ["K18", "K17d", "OBS-CANCEL-2"])
+def test_pending_scientific_gate_cannot_keep_an_approval_record(key):
+    gates = pre._read_json(ROOT / pre.GATES_PATH)
+    memo = pre._read_json(ROOT / pre.MEMO_PATH)
+    gates["decisions"][key]["status"] = memo["decisions"][key]["status"] = "PENDING_RESEARCHER"
+    memo["decisions"][key].update(approved_by=None, approved_at=None)
+    status = {item["id"]: item["status"] for item in pre.check_gates(gates, memo)}
+    assert status[f"gates.{key}"] == pre.FAIL
+
+
+@pytest.mark.parametrize("key", ["K18", "K17d", "OBS-CANCEL-2"])
+def test_current_scientific_approval_must_agree_with_the_memorandum(key):
+    gates = pre._read_json(ROOT / pre.GATES_PATH)
+    memo = pre._read_json(ROOT / pre.MEMO_PATH)
+    memo["decisions"][key]["status"] = "PENDING_RESEARCHER"
+    status = {item["id"]: item["status"] for item in pre.check_gates(gates, memo)}
+    assert status[f"gates.{key}.consistency"] == pre.FAIL
+
+
+@pytest.mark.parametrize("key", ["full_generation", "full_gpu_training", "full_loko_sweep"])
+@pytest.mark.parametrize("copy_scientific_approval", [False, True])
+def test_compute_status_change_needs_its_own_authorization(key, copy_scientific_approval):
+    gates = pre._read_json(ROOT / pre.GATES_PATH)
+    memo = pre._read_json(ROOT / pre.MEMO_PATH)
+    gates["decisions"][key]["status"] = memo["decisions"][key]["status"] = "AUTHORIZED"
+    if copy_scientific_approval:
+        gates["decisions"][key]["approval"] = copy.deepcopy(gates["decisions"]["K18"]["approval"])
+    checks = pre.check_gates(gates, memo)
+    assert {item["id"]: item["status"] for item in checks}[f"gates.{key}"] == pre.FAIL
+    assert pre.report(checks)["production_authorized"] is False
 
 
 def test_an_approval_needs_provenance_and_a_pending_gate_may_not_carry_one():

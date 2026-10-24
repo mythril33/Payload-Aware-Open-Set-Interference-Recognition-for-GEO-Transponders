@@ -1,5 +1,12 @@
 # Proje durumu ve eksik kaydı
 
+## Güncel uygulama eki — 2026-10-24 (E9-Preflight: onay sonrası CI kurtarma)
+
+- Gerçek uzak main `d14f31de35ca9de3b88c0c0f8e55d99bbfd98bb7`; PR #26 birleşmiş. K18/K17d/OBS-CANCEL-2 ve R1–R10 bilimsel olarak onaylıdır. Aşağıdaki E7/E8 bekleyen-karar kayıtları tarihsel aday durumlarıdır; güncel onay kaydı [E9 bilimsel kayıt](B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md) dosyasıdır.
+- Run40089480035/job120859075834: E4 adımı106 geçti/1 başarısız; kalan depo testleri atlandı. Neden: onaylanan kapıları hâlâ PENDING bekleyen test; ek güncel-durum varsayımları ve yenilenmemiş türetilmiş checklist de yeniden üretildi. [Kök neden ve doğrulama kaydı](../results/B2_E9_PREFLIGHT_CI_RECOVERY.md).
+- Bu kurtarma yalnız testleri ve türetilmiş/durum belgelerini düzeltir; kaynak, config, onay, fizik, kayıp ve P31 kuralları değişmez. Bilimsel onay compute izni değildir: tam üretim/GPU/LOKO ve GPU probu yetkisiz, üretim başlatıcısı kapalı, `benchmark_complete=false`.
+- Temiz tam doğrulama ve yeni taslak PR head CI sonucu yalnız gerçekten çalıştıktan sonra raporlanır. E9 üretim yürütücüsü bu görevde başlatılmadı; aşağıdaki eski anlık görüntüler bu kayıtla birlikte okunmalıdır.
+
 ## Güncel uygulama eki — 2026-10-24 (E8: bilimsel protokol dondurma hazırlığı ve üretim kaynak hazırlığı)
 
 - Doğrulanmış `main`: **`4a1cc95913b430fee5c5e7d2e54cf48c9feeb8d8`** (PR #24 birleşmiş). Ham günlükten doğrulanan Actions [run 40064513568](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40064513568) / job 120784837702, baş `d1e0898`: E4 adımı 107 + depo adımı 1664 = **1771 geçti, 7 atlandı, 0 başarısız**. Atlananlar `tests/test_b2_train_diagnostics.py:392` (K18 altın karşılaştırması bu runner'da yeniden üretilemiyor; ayrı bit-özdeşlik testi çalışıyor). Kapı JSON'u ve kontrol listesi bu kanıtla uzlaştırıldı; **hiçbir kapı değişmedi** (K18/K17d/OBS-CANCEL-2 `PENDING_RESEARCHER`, üretim/GPU/LOKO `NOT_AUTHORIZED`, tüm `approval` alanları null, `benchmark_complete=false`).
