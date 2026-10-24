@@ -658,153 +658,30 @@
   ],
   "execution_scope": "Existing CPU-only bounded unit fixtures; no production dataset, GPU probe/training, full LOKO or production held-out inference",
   "measurement_note": "Peak ru_maxrss is a single-process child high-water mark, not a summed concurrent process-tree memory measurement.",
-  "ci_attempt_a": {
-    "schema": "B2-E9-independent-CI-review/1",
-    "reviewer": "/root/e9_safety_audit",
-    "repository": "mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
-    "pull_request": 27,
-    "head_sha": "29db36ae17c7af15e8eb904a3b1e8ca59e484e72",
-    "base_sha": "d14f31de35ca9de3b88c0c0f8e55d99bbfd98bb7",
-    "run_id": 40092535088,
-    "run_attempt": 1,
-    "job_id": 120867990644,
-    "status": "completed",
-    "conclusion": "failure",
-    "synthetic_merge_sha": "6c0ee781898f996e1238a167c81deefc10bb9212",
-    "python": "3.12.15",
-    "run_started_at": "2026-10-24T12:05:59Z",
-    "run_updated_at": "2026-10-24T12:25:33Z",
-    "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40092535088",
-    "job_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40092535088/job/120867990644",
-    "e4": {
-      "passed": 107,
-      "failed": 0,
-      "skipped": 0,
-      "warnings": 0,
-      "pytest_seconds": 143.84,
-      "raw_summary": "2026-10-24T12:09:43.7198380Z 107 passed in 143.84s (0:02:23)"
-    },
-    "repository_tests": {
+  "post_merge_ci": {
+    "pr_27_merge_commit": "a5e3b7b",
+    "pr_27_head_ci": {
+      "run_id": 40092535088,
+      "job_id": 120867990644,
+      "head_sha": "29db36ae17c7af15e8eb904a3b1e8ca59e484e72",
+      "conclusion": "failure",
       "passed": 1709,
       "failed": 2,
       "skipped": 7,
-      "warnings": 46,
-      "pytest_seconds": 943.8,
-      "raw_summary": "2026-10-24T12:25:28.9084981Z 2 failed, 1709 passed, 7 skipped, 46 warnings in 943.80s (0:15:43)"
+      "seconds": 943.8,
+      "failed_tests": [
+        "tests/test_b2_production_preflight.py::test_command_line_exit_codes_strict_json_and_no_overwrite",
+        "tests/test_b2_training_footprint.py::test_proposal_is_an_unfrozen_unapproved_candidate"
+      ]
     },
-    "total_passed": 1816,
-    "total_failed": 2,
-    "total_skipped": 7,
-    "total_warnings": 46,
-    "skip_node_ids_visible": false,
-    "grouped_skip_lines": [
-      "2026-10-24T12:25:28.9083984Z SKIPPED [7] tests/test_b2_train_diagnostics.py:392: this machine/torch build does not reproduce the origin/main capture even with the verbatim original loop; test_instrumented_trainers_are_bit_identical_to_the_original_loops still applies"
-    ],
-    "failures": [
-      {
-        "node_id": "tests/test_b2_production_preflight.py::test_command_line_exit_codes_strict_json_and_no_overwrite",
-        "location": "tests/test_b2_production_preflight.py:581",
-        "detail": "assert 3 == 6: stale pre-approval BLOCKED count"
-      },
-      {
-        "node_id": "tests/test_b2_training_footprint.py::test_proposal_is_an_unfrozen_unapproved_candidate",
-        "location": "tests/test_b2_training_footprint.py:429",
-        "detail": "Historical E7 proposal PENDING snapshot incorrectly compared to current APPROVED scientific gates"
-      }
-    ],
-    "steps": [
-      {
-        "name": "Set up job",
-        "status": "completed",
-        "conclusion": "success",
-        "number": 1
-      },
-      {
-        "name": "Run actions/checkout@v4",
-        "status": "completed",
-        "conclusion": "success",
-        "number": 2
-      },
-      {
-        "name": "Run actions/setup-python@v5",
-        "status": "completed",
-        "conclusion": "success",
-        "number": 3
-      },
-      {
-        "name": "Install project and test dependencies",
-        "status": "completed",
-        "conclusion": "success",
-        "number": 4
-      },
-      {
-        "name": "Verify explicit scientific approvals and keep all compute gates closed",
-        "status": "completed",
-        "conclusion": "success",
-        "number": 5
-      },
-      {
-        "name": "Compile sources (syntax check)",
-        "status": "completed",
-        "conclusion": "success",
-        "number": 6
-      },
-      {
-        "name": "E4 A5 plan-corruption checks (bounded, CPU only)",
-        "status": "completed",
-        "conclusion": "success",
-        "number": 7
-      },
-      {
-        "name": "Run repository tests on bounded CI runner",
-        "status": "completed",
-        "conclusion": "failure",
-        "number": 8
-      },
-      {
-        "name": "Post Run actions/setup-python@v5",
-        "status": "completed",
-        "conclusion": "skipped",
-        "number": 15
-      },
-      {
-        "name": "Post Run actions/checkout@v4",
-        "status": "completed",
-        "conclusion": "success",
-        "number": 16
-      },
-      {
-        "name": "Complete job",
-        "status": "completed",
-        "conclusion": "success",
-        "number": 17
-      }
-    ],
-    "raw_log_path": "/tmp/b2-e9-preflight/ci-a.log",
-    "raw_log_sha256": "3a86c66b9f12681c81d196626f76233f85afbdfd7576987de9d30c1ef81948c1",
-    "raw_log_bytes": 59162,
-    "raw_log_normalization": "Decoded UTF-8 job log, LF newlines, one terminal newline; no lines filtered",
-    "safety_scope": "Independent read-only CI audit. No source/config/approval/workflow/HEAD edits or local tests/experiments by reviewer."
-  },
-  "validation_environment": {
-    "TMPDIR": "/workspace/b2-e9-validation/tmp",
-    "purpose": "Preserve existing local work and keep bounded validation fixtures outside Git and the smaller /tmp filesystem",
-    "packages": {
-      "numpy": "2.5.4",
-      "scipy": "1.18.1",
-      "torch": "2.14.1+cpu",
-      "xgboost-cpu": "3.4.1",
-      "pytest": "9.1.1"
-    }
-  },
-  "follow_up_base_main": "a5e3b7b8a87ed7b9fb41f513ddb8bb6b685ec4b1",
-  "prior_delivery": {
-    "pull_request": 27,
-    "head_sha": "29db36ae17c7af15e8eb904a3b1e8ca59e484e72",
-    "merge_sha": "a5e3b7b8a87ed7b9fb41f513ddb8bb6b685ec4b1",
-    "merged_during_validation": true,
-    "merge_invoked_by_agent": false,
-    "tree_identical_to_recovery_head": true,
-    "working_tree_changes_preserved_by_fast_forward": true
+    "classification": "stale current-state assertions after the scientific approvals; no safety defect",
+    "followup_local_full_suite": {
+      "passed": 1825,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 1058.92
+    },
+    "gates_unchanged": true,
+    "mutation_checks_killed": 2
   }
 }

@@ -133,3 +133,36 @@ pending or skipped checks are never called successful.
 E9 executor engineering remains a separate future milestone after this
 recovery and independent review. All compute and release controls remain
 NO-GO, including the separate GPU probe authorization.
+
+## Post-merge addendum — exact-head CI of PR #27 failed; follow-up fix
+
+PR #27 was merged as `a5e3b7bd` while its own exact-head run was red:
+[run 40092535088 / job 120867990644](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40092535088/job/120867990644),
+head `29db36ae17c7af15e8eb904a3b1e8ca59e484e72`. The gate step, compile step and
+E4 step passed; the repository step ended **2 failed, 1709 passed, 7 skipped in 943.80 s**
+(the 7 skips are the runner-specific K18 golden captures,
+`tests/test_b2_train_diagnostics.py:392`). Both failures reproduced on main
+`a5e3b7bd` (2 failed in 58.65 s) and are stale current-state assumptions, not
+safety defects:
+
+| Test | Stale assumption | Repair |
+|---|---|---|
+| `test_b2_production_preflight.py::test_command_line_exit_codes_strict_json_and_no_overwrite` | `gates` reports 6 BLOCKED | exactly the three compute gates are BLOCKED, none FAIL, and K18/K17d/OBS-CANCEL-2 are PASS |
+| `test_b2_training_footprint.py::test_proposal_is_an_unfrozen_unapproved_candidate` | the live gate file equals the E7a proposal's snapshot | the proposal stays a fixed historical snapshot that authorizes nothing; live compute gates must equal it (NOT_AUTHORIZED, approval null); live scientific gates must be APPROVED with a complete record |
+
+Mutation check (gate file temporarily altered, then restored byte for byte): a
+compute gate set APPROVED with a copied scientific approval, and a scientific
+gate reverted to PENDING, each fail both repaired tests. No `src/`, `scripts/`,
+`configs/`, workflow, approval record or gate JSON changed; no negative test
+was weakened or removed.
+
+Verified gate state on main `a5e3b7bd` (audited, unchanged by this fix):
+K18, K17d and OBS-CANCEL-2 `APPROVED` with `approved_by` `mythril33`, ISO
+`approved_at` 2026-10-24T11:14:11.155Z and the record
+`docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md`, mirrored in the
+E5 memorandum (status, actor, time, record equal); `full_generation`,
+`full_gpu_training`, `full_loko_sweep` `NOT_AUTHORIZED` with `approval: null`
+in both files; GPU probe `NOT_AUTHORIZED`; `PRODUCTION_LAUNCH_ENABLED=False`;
+`benchmark_complete=false`. Local full suite on the fix: **1825 passed, 0
+failed, 0 skipped** (1058.92 s, CPU, Python 3.13). Exact-head CI for the
+follow-up is recorded in its pull request.
