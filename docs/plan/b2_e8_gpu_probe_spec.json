@@ -1,0 +1,62 @@
+{
+ "schema": "B2-gpu-probe-spec/1",
+ "status": "SPECIFICATION_ONLY",
+ "executor": "NOT_IMPLEMENTED",
+ "authorized": false,
+ "approval": null,
+ "benchmark_complete": false,
+ "date": "2026-10-24",
+ "statement": "An exact, bounded specification of the throughput/VRAM probe of DR-05. It runs nothing. No probe executor exists in the repository, none was run, and no GPU was touched in producing this file. The probe may be run only after (1) a separate researcher message that names the identified host and GPU and states the caps below (or tighter ones), (2) the R2/R5/R6 decisions that fix the measured configuration, and (3) an independently reviewed executor milestone (the isolated modes are CPU-only today, src/geoml/b2_execution.py:39,92).",
+ "preconditions": {
+  "host": "one identified host (hostname or asset id recorded in the report); the report embeds scripts/b2_host_inventory.py --role training output",
+  "gpu": "exactly one CUDA device, selected by CUDA_VISIBLE_DEVICES; no other process may hold the device",
+  "lock": "the production source/environment lock (lock-verify --require-clean passes) so the probe runs on the code that would train",
+  "decisions": ["R2", "R5", "R6"],
+  "data_roles_allowed": ["train", "val-select"],
+  "data_roles_forbidden": ["val-calib", "test", "B2-test/1", "B2-match/1"]
+ },
+ "inputs": {
+  "synthetic_layout_fixture": "random float16 arrays with the stored production shapes (spec [n,2,128,512], mask [n,2,512], residual [n,128,512]), seeded; no B2 role is read; used for the pure compute and VRAM measurements",
+  "real_layout_loader_fixture": "at most 2 scenario groups per role of train and val-select from an already verified B2-feat/1 fixture artifact, read through the E1 streaming loader, to measure the synchronous read + preprocessing path end to end; never val-calib or test"
+ },
+ "configurations": [
+  {"id": "w16_b32_dual_residual_tf32off", "width": 16, "batch": 32, "view": "dual_residual", "cudnn_allow_tf32": false, "role": "candidate"},
+  {"id": "w16_b32_dual_residual_tf32on", "width": 16, "batch": 32, "view": "dual_residual", "cudnn_allow_tf32": true, "role": "numerics cost of the torch default"},
+  {"id": "w16_b32_co_tf32off", "width": 16, "batch": 32, "view": "co", "cudnn_allow_tf32": false, "role": "smallest view"},
+  {"id": "w8_b32_dual_residual_tf32off", "width": 8, "batch": 32, "view": "dual_residual", "cudnn_allow_tf32": false, "role": "anchor to the width-8 assumption"},
+  {"id": "w16_b8_dual_residual_tf32off", "width": 16, "batch": 8, "view": "dual_residual", "cudnn_allow_tf32": false, "role": "only if R5 keeps batch 8 as an alternative"}
+ ],
+ "caps": {
+  "max_wall_seconds_total": 1800,
+  "max_wall_seconds_per_configuration": 300,
+  "warmup_steps": 20,
+  "max_timed_steps_per_configuration": 400,
+  "max_epochs_equivalent": 2,
+  "max_gpu_devices": 1,
+  "max_host_rss_gib": 8,
+  "max_vram_fraction_of_device": 0.8,
+  "max_persisted_files": 1,
+  "retained_checkpoints": 0,
+  "network_egress": "none required",
+  "on_oom_or_cap": "stop that configuration, record the failure with the cap that tripped, do not retry with a different configuration, continue with the next listed one only if total caps allow"
+ },
+ "measurements": {
+  "throughput": "samples/s over the timed steps: median, first and third quartile, computed on synchronized steps (torch.cuda.synchronize before every clock read)",
+  "end_to_end": "samples/s of a loop that includes the synchronous loader on the real-layout fixture, reported separately from pure compute",
+  "vram": "peak torch.cuda.max_memory_allocated and max_memory_reserved per configuration, plus the nvidia-smi peak used memory; compare with scripts/b2_training_footprint.py analytic bounds (w16 b32 dual_residual: 452.9 - 881.0 MiB, excluding CUDA context, workspaces and fragmentation)",
+  "host": "peak process RSS and CPU seconds",
+  "parity": "one fixed seeded batch: forward/backward loss, centre term, CE and plan BCE on the GPU versus the CPU fp32 reference; report absolute and relative differences, assert nothing",
+  "numerics": "state of torch.backends.cudnn.allow_tf32, torch.backends.cuda.matmul.allow_tf32, torch.backends.cudnn.deterministic and torch.version.cuda/cudnn in the report"
+ },
+ "pre_registered_use_of_results": {
+  "budget": "hours_for_a_campaign = passes / measured_end_to_end_rate; the report states the arithmetic for nine fits (3,240,000 passes), 21 fits and 63 fits; no reservation is derived from a single run and a 25 % margin is stated, not applied silently",
+  "ceilings": "the GPU-hour ceiling for DR-05 is the researcher's; this probe sets none and applies no pass/fail threshold to throughput",
+  "forbidden": "results of the probe must not be used to change width, epochs, batch, loss or any other fitted choice except through the researcher's explicit, versioned decision before the first production fit"
+ },
+ "output": {
+  "schema": "B2-gpu-probe-report/1",
+  "format": "strict JSON, exclusive creation, no overwrite",
+  "fields": ["host_inventory", "lock_fingerprint", "command", "caps_applied", "per_configuration_results", "parity", "numerics", "status", "benchmark_complete=false", "production_authorized=false"]
+ },
+ "refusals": ["no approval record naming this host and these caps", "lock-verify fails or the tree is dirty", "any forbidden role is requested", "more than one GPU is visible", "a cap is raised above this file"]
+}

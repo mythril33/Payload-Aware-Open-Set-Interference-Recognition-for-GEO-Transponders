@@ -122,7 +122,7 @@ and would be replaced; the E5 memorandum's 36 Mbaud, 64-symbol reference criteri
 | CPU time | 42 core-h | 34.6 core-h at the high estimate, 20 % allowance | Extrapolated |
 | Working disk | 25 GiB, plus a separate 9 GB verified backup | 8.7 GB estimated artifacts (8.44 GB raw arrays) | Estimated |
 | Host RAM | 8 GiB generation, 16 GiB training | 2 GiB per generator process; 4-shard windows | Unmeasured at scale |
-| GPU | 8 GiB minimum, 12 GiB preferred; 6 GPU-h for the main nine fits | Assumed 200-1000 sample-passes/s | **Not measured**; probe first |
+| GPU | 8 GiB minimum, 12 GiB preferred; 6 GPU-h for the main nine fits (**width 8 only; withdrawn for width 16 by E8**, see [B2_E8_HOST_RESOURCE_ASSESSMENT.md](B2_E8_HOST_RESOURCE_ASSESSMENT.md)) | Assumed 200-1000 sample-passes/s | **Not measured**; probe first |
 | LOKO | 2.1-10.5 GPU-h for 21 fits (63 fits for three views: 6.3-31.5 GPU-h) | Same assumption | Not implemented |
 
 DR-04 should be granted only with: the production lock created from a clean tree (`lock-create`), `audit --production` of each

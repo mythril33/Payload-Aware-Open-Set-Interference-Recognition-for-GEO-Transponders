@@ -1,0 +1,327 @@
+{
+ "schema": "B2-E8-candidate-production-config/1",
+ "status": "UNAPPROVED_NOT_FROZEN",
+ "frozen": false,
+ "approved": false,
+ "benchmark_complete": false,
+ "date": "2026-10-24",
+ "base_main": "4a1cc95913b430fee5c5e7d2e54cf48c9feeb8d8",
+ "statement": "A candidate only. It lives outside configs/ and matches no loader schema (b2_experiment, b2_loko, b2_execution cannot read it). Every researcher-controlled value is UNAPPROVED; values with status FROZEN_BY_PROTOCOL are carried from P18/P20/K17 and are listed for completeness. Approving any value authorizes no generation, GPU use, training or LOKO.",
+ "derivation": "Recipe values (width, time_pool, epochs, batch, optimizer, schedule, augmentation, level) are the P6 / TrainConfig defaults; the loss weights (center 0.005, plan BCE 1.0) and the K17b shift (15 %, 0.5 MHz) are the P20 pre-registered values of configs/b2_feat.json, which are NOT TrainConfig code defaults (TrainConfig has center_loss_weight 0.0 and plan_shift_fraction 0.0). All equal the E7a proposal values (b2_e7_training_proposal.json); this file adds no new value except numerics_pin and the mirror of the recommended decisions. No test, test-only, matched or val-calib outcome informed any value.",
+ "p18_section_10_entry_needed_if_approved_as_is": "NONE_FOR_HYPERPARAMETERS; the recommended cuDNN TF32 pin (numerics_pin) is a non-default numeric choice that the list below says needs one, so whether it does is the researcher's call (R6)",
+ "p18_section_10_entry_needed_if_changed": [
+  "model_width",
+  "epochs",
+  "batch_size",
+  "optimizer",
+  "learning_rate_schedule",
+  "gradient_clipping",
+  "mirror_roll_augmentation",
+  "precision_and_determinism (any non-default numerics)",
+  "K18 option other than A",
+  "any epoch-sizing rule"
+ ],
+ "training": {
+  "views": {
+   "value": [
+    "co",
+    "dual",
+    "dual_residual"
+   ],
+   "status": "UNAPPROVED",
+   "decision": "R1",
+   "proposal_record": "b2_e7_training_proposal.json#parameters.views"
+  },
+  "training_seed_count": {
+   "value": 3,
+   "status": "FROZEN_BY_PROTOCOL",
+   "decision": null,
+   "proposal_record": "b2_e7_training_proposal.json#parameters.training_seed_count",
+   "note": "K17 user decision: three seeds (count only)"
+  },
+  "training_seed_values": {
+   "value": [
+    0,
+    1,
+    2
+   ],
+   "status": "UNAPPROVED",
+   "decision": "R1",
+   "proposal_record": "b2_e7_training_proposal.json#parameters.training_seed_values",
+   "note": "report every seed, select none by outcome"
+  },
+  "model_width": {
+   "value": 16,
+   "status": "UNAPPROVED",
+   "decision": "R2",
+   "proposal_record": "b2_e7_training_proposal.json#parameters.model_width",
+   "note": "P6/TrainConfig default; the width-8 budget does not carry over (P32 section 4)"
+  },
+  "time_pool": {
+   "value": 2,
+   "status": "UNAPPROVED",
+   "decision": "R2",
+   "proposal_record": "b2_e7_training_proposal.json#parameters.time_pool"
+  },
+  "level": {
+   "value": "carrier",
+   "status": "FROZEN_BY_PROTOCOL",
+   "decision": null,
+   "proposal_record": "b2_e7_training_proposal.json#parameters.level",
+   "note": "carrier reference as in P20"
+  },
+  "epochs": {
+   "value": 30,
+   "status": "UNAPPROVED",
+   "decision": "R4",
+   "proposal_record": "b2_e7_training_proposal.json#parameters.epochs",
+   "note": "30 is a P6 assumption never validated on B2; no sizing run, no early stopping"
+  },
+  "batch_size": {
+   "value": 32,
+   "status": "UNAPPROVED",
+   "decision": "R5",
+   "proposal_record": "b2_e7_training_proposal.json#parameters.batch_size"
+  },
+  "optimizer": {
+   "value": {
+    "name": "AdamW",
+    "peak_lr": 0.001,
+    "weight_decay": 0.0001,
+    "betas": [
+     0.9,
+     0.999
+    ],
+    "eps": 1e-08,
+    "param_groups": 1,
+    "decay_applies_to": "all parameters: convolutions, BatchNorm affine, linear heads, auxiliary head and the CenterLoss centres",
+    "effective_beta1_with_OneCycleLR": "cycled 0.95 -> 0.85 -> 0.95 (cycle_momentum=True overwrites the constructor value 0.9 when the scheduler is constructed; measured over an 11,250-step schedule)"
+   },
+   "status": "UNAPPROVED",
+   "decision": "R6",
+   "proposal_record": "b2_e7_training_proposal.json#parameters.optimizer"
+  },
+  "learning_rate_schedule": {
+   "value": {
+    "name": "OneCycleLR",
+    "max_lr": 0.001,
+    "total_steps": "epochs x ceil(12000 / batch)",
+    "step": "once per optimizer step",
+    "pct_start": 0.3,
+    "anneal_strategy": "cos",
+    "div_factor": 25.0,
+    "final_div_factor": 10000.0,
+    "three_phase": false,
+    "cycle_momentum": true,
+    "base_momentum": 0.85,
+    "max_momentum": 0.95,
+    "initial_lr": 4e-05,
+    "final_lr": 4e-09
+   },
+   "status": "UNAPPROVED",
+   "decision": "R6",
+   "proposal_record": "b2_e7_training_proposal.json#parameters.learning_rate_schedule"
+  },
+  "gradient_clipping": {
+   "value": "none",
+   "status": "UNAPPROVED",
+   "decision": "R6",
+   "proposal_record": "b2_e7_training_proposal.json#parameters.gradient_clipping"
+  },
+  "mirror_roll_augmentation": {
+   "value": {
+    "enabled": true,
+    "mirror": "frequency-axis flip with probability 0.5 per sample",
+    "roll": "circular time shift, ONE random shift per mini-batch (not per sample)"
+   },
+   "status": "UNAPPROVED",
+   "decision": "R6",
+   "proposal_record": "b2_e7_training_proposal.json#parameters.mirror_roll_augmentation"
+  },
+  "precision_and_determinism": {
+   "value": {
+    "precision": "fp32",
+    "autocast": false,
+    "data_loader_workers": 0,
+    "deterministic_algorithms": false,
+    "cudnn_allow_tf32": "torch 2.14.1 default True: convolutions run in TF32 on Ampere or newer GPUs unless the lock pins the flag",
+    "matmul_allow_tf32": "torch 2.14.1 default False",
+    "repository_sets_tf32_flags": false
+   },
+   "status": "UNAPPROVED",
+   "decision": "R6",
+   "proposal_record": "b2_e7_training_proposal.json#parameters.precision_and_determinism",
+   "note": "the TF32 flags are not pinned anywhere in src/; see numerics_pin"
+  },
+  "loss_composition": {
+   "value": "cross-entropy (unweighted, mean) + center_loss_weight x centre loss + plan_loss_weight x plan BCE (auxiliary head, independent of the label)",
+   "status": "FROZEN_BY_PROTOCOL",
+   "decision": null,
+   "proposal_record": "b2_e7_training_proposal.json#parameters.loss_composition"
+  },
+  "center_loss_weight": {
+   "value": 0.005,
+   "status": "UNAPPROVED",
+   "decision": "R3",
+   "proposal_record": "b2_e7_training_proposal.json#parameters.center_loss_weight",
+   "note": "K18 option A: P20 sum-of-squares weight; times D = 256 gives 1.28 on the per-dimension mean square at width 16"
+  },
+  "plan_loss_weight": {
+   "value": 1.0,
+   "status": "UNAPPROVED",
+   "decision": "R3",
+   "proposal_record": "b2_e7_training_proposal.json#parameters.plan_loss_weight"
+  },
+  "plan_shift_augmentation": {
+   "value": {
+    "fraction": 0.15,
+    "max_hz": 500000.0,
+    "distribution": "continuous U(-max, +max) per selected sample",
+    "selection": "Bernoulli per sample per batch (expected fraction, not exact)",
+    "scope": "training only; val-select, val-calib and test masks are never shifted"
+   },
+   "status": "FROZEN_BY_PROTOCOL",
+   "decision": null,
+   "proposal_record": "b2_e7_training_proposal.json#parameters.plan_shift_augmentation",
+   "note": "frozen K17b, train role only"
+  },
+  "streaming_groups_per_shard": {
+   "value": 4,
+   "status": "UNAPPROVED",
+   "decision": "R7",
+   "proposal_record": "b2_e7_training_proposal.json#parameters.streaming_groups_per_shard",
+   "note": "part of the generator request; fixed at DR-04 time; the generators default to 8"
+  },
+  "streaming_window_shards": {
+   "value": 4,
+   "status": "UNAPPROVED",
+   "decision": "R7",
+   "proposal_record": "b2_e7_training_proposal.json#parameters.streaming_window_shards"
+  },
+  "checkpoint_selection_rule": {
+   "value": "best val-select macro-F1 over the 8 known classes (clean + 7), evaluated after every epoch; strict '>' so the first epoch reaching the maximum is kept; the auxiliary plan head is monitored, not selected on",
+   "status": "FROZEN_BY_PROTOCOL",
+   "decision": null,
+   "proposal_record": "b2_e7_training_proposal.json#parameters.checkpoint_selection_rule",
+   "note": "val-select macro-F1, first maximum"
+  },
+  "mahalanobis_fit": {
+   "value": {
+    "statistics": "train-role embeddings of the selected checkpoint (eval mode), class-conditional",
+    "regularization": 0.1
+   },
+   "status": "UNAPPROVED",
+   "decision": "R10",
+   "proposal_record": "b2_e7_training_proposal.json#parameters.mahalanobis_fit",
+   "note": "regularization 0.1 is a P20/pilot constant, not a P18 number"
+  },
+  "calibration": {
+   "value": {
+    "acceptance_target": 0.95,
+    "clean_alarm_pfa": 0.05,
+    "data": "val-calib, known classes only",
+    "quantile": "higher empirical quantile, inclusive acceptance"
+   },
+   "status": "UNAPPROVED",
+   "decision": "R10",
+   "proposal_record": "b2_e7_training_proposal.json#parameters.calibration",
+   "note": "acceptance 0.95 is a P20/pilot constant; clean alarm Pfa 0.05 is also P18"
+  },
+  "plan_consistency": {
+   "value": true,
+   "status": "UNAPPROVED",
+   "decision": "R3",
+   "proposal_record": "configs/b2_feat.json / b2_experiment default",
+   "note": "TrainConfig code default is False (the auxiliary plan head inactive); b2_experiment sets True; the production config must set it explicitly"
+  }
+ },
+ "numerics_pin": {
+  "status": "UNAPPROVED",
+  "decision": "R6",
+  "cudnn_allow_tf32": {
+   "recommended": false,
+   "alternative": true,
+   "note": "torch 2.14.1 defaults cuDNN TF32 to True, so on Ampere or newer GPUs convolutions would run in TF32 although the recipe says fp32; pinning False needs the production executor milestone (a src/geoml edit before the lock) and costs convolution speed"
+  },
+  "matmul_allow_tf32": {
+   "recommended": false,
+   "note": "torch default False"
+  },
+  "deterministic_algorithms": {
+   "recommended": false,
+   "note": "no deterministic flags exist today; a fixed-seed GPU restart is not a bit-identical replay (R9)"
+  },
+  "torch_version": "pinned in the production lock (the lock records the version; a torch change fails lock-verify)"
+ },
+ "decision_recommendations": {
+  "K18": {
+   "recommended": "A",
+   "status": "UNAPPROVED",
+   "summary": "keep P20: 0.005 x sum of squared distances, plan BCE 1.0; keep the observation-only train diagnostic"
+  },
+  "K17d": {
+   "recommended": "A+C",
+   "status": "UNAPPROVED",
+   "summary": "keep B2-test/1 frozen; report all 500 groups plus a predeclared 35-group co-feed missing-carrier sub-row and a sensitivity row excluding them"
+  },
+  "OBS-CANCEL-2": {
+   "recommended": "A",
+   "status": "UNAPPROVED",
+   "summary": "keep obs-cancel/1 as the primary receiver; state its phase-noise-only depth ceiling next to every residual-based result: 21.7 dB over the 4096-sample block (22.8 dB for the stored window) at the 150 Hz effective linewidth, for every carrier rate"
+  },
+  "R1": {
+   "recommended": "co, dual, dual_residual x seeds 0,1,2 (nine fits)",
+   "status": "UNAPPROVED"
+  },
+  "R2": {
+   "recommended": "width 16, time_pool 2, carrier reference",
+   "status": "UNAPPROVED"
+  },
+  "R3": {
+   "recommended": "K18 option A weights",
+   "status": "UNAPPROVED"
+  },
+  "R4": {
+   "recommended": "30 epochs unchanged, fixed-length OneCycle, no early stopping, no sizing run",
+   "status": "UNAPPROVED"
+  },
+  "R5": {
+   "recommended": "batch 32 (subject to the probe)",
+   "status": "UNAPPROVED"
+  },
+  "R6": {
+   "recommended": "P6 recipe as implemented; TF32 pinned off",
+   "status": "UNAPPROVED"
+  },
+  "R7": {
+   "recommended": "4 groups per shard x 4 shards per window (blocked shuffle, at most 16 scenario groups per window)",
+   "status": "UNAPPROVED"
+  },
+  "R8": {
+   "recommended": "P31 train-only -> known val-calib -> freeze -> evaluate; all nine cells verified before the first test read",
+   "status": "UNAPPROVED"
+  },
+  "R9": {
+   "recommended": "restart the interrupted view/seed from epoch 0, record the parent checkpoint hash, never splice",
+   "status": "UNAPPROVED"
+  },
+  "R10": {
+   "recommended": "confirm acceptance 0.95, clean Pfa 0.05, Mahalanobis regularization 0.1",
+   "status": "UNAPPROVED"
+  }
+ },
+ "not_in_this_file": [
+  "host, GPU model, VRAM ceiling, wall/GPU-hour/disk ceilings (DR-04, DR-05)",
+  "the LOKO recipe and scope (DR-06)",
+  "any production command"
+ ],
+ "authorization": {
+  "K18": "PENDING_RESEARCHER",
+  "K17d": "PENDING_RESEARCHER",
+  "OBS-CANCEL-2": "PENDING_RESEARCHER",
+  "full_generation": "NOT_AUTHORIZED",
+  "full_gpu_training": "NOT_AUTHORIZED",
+  "full_loko_sweep": "NOT_AUTHORIZED"
+ },
+ "activation": "None in this change. A frozen configuration needs: the researcher's recorded decisions, a P18 section 10 entry only where a value departs from the defaults, a separate reviewed commit that adds the config under configs/, and the production lock created after the last src/ edit."
+}

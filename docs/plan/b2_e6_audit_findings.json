@@ -1,7 +1,7 @@
 {
  "schema": "B2-E6-audit-findings/1",
  "as_of": "2026-10-24",
- "base_main": "755b474b7a2c506ec03441a7d15ed365c47addb1",
+ "base_main": "4a1cc95913b430fee5c5e7d2e54cf48c9feeb8d8",
  "benchmark_complete": false,
  "note": "Manual audit of the 21,350-observation production plan against the merged code. PASS needs a named test or an inspected location; FAIL is a verified engineering gap or mismatch; BLOCKED needs a researcher decision, authorization, hardware or a measurement; NOT_RUN was not executed. Nothing here approves a gate. E7a update (2026-10-23): the supervisor and the K18 diagnostic findings are resolved for bounded fixtures; production launch stays unimplemented. E7a review update: independent multi-lens review of the supervisor, K18 diagnostics, training proposal and documentation; the material findings are fixed with regression tests (P30 section 9). Items touched by E7a cite line numbers at the E7a head; untouched items cite 755b474. Main moved to 5d3f1a3 when PR #21 (the first, pre-review E7a state) was merged; this round is its follow-up. The audit base for items not touched by E7a stays 755b474. Main is now 0e8c467 (PR #22 merged the review hardening); a post-merge audit and its fixes are in the hotfix that follows. E7b reconciliation: verified main ed65eb5 contains PR22/23; the raw PR23 job log confirms 1632 passed and seven skips. Separate bounded training/calibration/freeze/evaluation and a bounded LOKO matrix close engineering gaps without authorizing production or choosing R1-R10. Untouched audit items retain historical citations.",
  "items": [
@@ -201,11 +201,13 @@
    "id": "audit.production_training_config_missing",
    "title": "No frozen production training configuration exists; a candidate specification awaits researcher decisions",
    "status": "BLOCKED",
-   "message": "E7a prepared a reviewable candidate (docs/plan/B2_E7_TRAINING_SPEC_PROPOSAL.md, b2_e7_training_proposal.json: 29 parameter records, ten numbered decisions R1-R10, measured/analytic footprint). It is explicitly not frozen and not approved; width, epochs, batch, optimizer/scheduler, seeds, window, interruption and test-coupling policy need the researcher before a production config can be committed, any value other than the P6 / TrainConfig default (and any data-driven epoch sizing) is a change to P18 section 5 ('P6 settings, no search') that needs a P18 section 10 entry, and R10 asks to confirm the acceptance 0.95 / Pfa 0.05 / Mahalanobis 0.1 constants that P20 and the pilot config state but P18 does not. configs/b2_feat.json remains the 3-epoch pilot.",
+   "message": "E7a prepared a reviewable candidate (docs/plan/B2_E7_TRAINING_SPEC_PROPOSAL.md, b2_e7_training_proposal.json: 29 parameter records, ten numbered decisions R1-R10, measured/analytic footprint). It is explicitly not frozen and not approved; width, epochs, batch, optimizer/scheduler, seeds, window, interruption and test-coupling policy need the researcher before a production config can be committed, any value other than the P6 / TrainConfig default (and any data-driven epoch sizing) is a change to P18 section 5 ('P6 settings, no search') that needs a P18 section 10 entry, and R10 asks to confirm the acceptance 0.95 / Pfa 0.05 / Mahalanobis 0.1 constants that P20 and the pilot config state but P18 does not. configs/b2_feat.json remains the 3-epoch pilot. E8 adds an unapproved, non-loadable candidate (docs/plan/b2_e8_candidate_production_config.json) and an approval-ready matrix (docs/plan/B2_E8_DECISION_APPROVAL.md).",
    "evidence": [
     "docs/plan/B2_E7_TRAINING_SPEC_PROPOSAL.md",
     "docs/plan/b2_e7_training_proposal.json",
-    "configs/b2_feat.json"
+    "configs/b2_feat.json",
+    "docs/plan/b2_e8_candidate_production_config.json",
+    "docs/plan/B2_E8_DECISION_APPROVAL.md"
    ]
   },
   {
@@ -272,7 +274,7 @@
    "id": "audit.wall_time_unmeasured_at_scale",
    "title": "Generation wall time is an extrapolation from a 60-observation matched profile",
    "status": "BLOCKED",
-   "message": "23.0-30.2 h reproduces arithmetically from 3.8-5.0 s/observation, but the known stage's group mix differs from the matched profile and nothing was timed beyond 64 observations. A start-up gate that compares the first committed shards with the band (stop if outside) belongs to the authorized run, not to this preflight. E7a's capped real-physics run (this sandbox, two groups per stage, clean tree) cost 4.67 s/observation for the known stage (64 observations, three attempts including the restarts and the estimated charge of one lost attempt), 5.25 for test-only (10) and 4.76 for matched (6) as whole-attempt wall per observation including start-up; the first-shard gate figures (3.1-4.5 s/observation) subtract a fixed 6 s allowance from 3-8 observation shards and are not per-observation costs, so they neither confirm nor refute the 3.8-5.0 band for any stage. Nothing was timed at production size.",
+   "message": "23.0-30.2 h reproduces arithmetically from 3.8-5.0 s/observation, but the known stage's group mix differs from the matched profile and nothing was timed beyond 64 observations. A start-up gate that compares the first committed shards with the band (stop if outside) belongs to the authorized run, not to this preflight. E7a's capped real-physics run (this sandbox, two groups per stage, clean tree) cost 4.58 s/observation for the known stage (64 observations, three attempts including the restarts and the estimated charge of one lost attempt), 5.27 for test-only (10) and 4.83 for matched (6) as whole-attempt wall per observation including start-up; the first-shard gate figures (3.1-4.5 s/observation) subtract a fixed 6 s allowance from 3-8 observation shards and are not per-observation costs, so they neither confirm nor refute the 3.8-5.0 band for any stage. Nothing was timed at production size.",
    "evidence": [
     "docs/results/b2_production_budget.md:12-40",
     "docs/results/b2_e7a_supervisor_verification.json"
@@ -289,12 +291,14 @@
   },
   {
    "id": "audit.pr_head_ci",
-   "title": "GitHub Actions on the new E7b pull-request head",
-   "status": "NOT_RUN",
-   "message": "Not run before publication. The exact head/run/job and raw results are recorded in the draft PR after publication; historical merged-head CI does not certify this new head.",
+   "title": "The merged E7b head passed GitHub Actions",
+   "status": "PASS",
+   "message": "PR #24 (merged as 4a1cc95): run 40064513568, job 120784837702, head d1e0898c03d1939f5e6084d343c084207a4fbf62, Python 3.12.15, conclusion success. Repository step 1664 passed, 7 skipped, 46 warnings in 759.80 s (raw log; skip reason line: tests/test_b2_train_diagnostics.py:392, 'this machine/torch build does not reproduce the origin/main capture even with the verbatim original loop'; the bit-identity test against the verbatim original loops still applies and runs) plus the E4 step (107 tests) = 1771 passed, 7 skipped, 0 failed. This certifies the PR #24 head; it is not a GPU or production-size result, and the K18 golden comparison is not exercised on that runner.",
    "evidence": [
-    "pull request description"
-   ]
+    "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40064513568",
+    "tests/test_b2_train_diagnostics.py"
+   ],
+   "verified_by": "ci:40064513568 raw job log (job 120784837702) read in E8"
   },
   {
    "id": "audit.supervisor_real_physics_capped",
@@ -324,10 +328,12 @@
    "id": "audit.training_budget_width_mismatch",
    "title": "The compute budget assumes width 8 but the trainer defaults to width 16",
    "status": "BLOCKED",
-   "message": "The 200-1000 samples/s band and the 6 GPU-h reservation were written for the width-8 pilot network; TrainConfig and P6 default to width 16 (about 3.3x the multiply-accumulates; K18 D/2 ratio 128 instead of 64). The width is researcher decision R2; the budget must be recomputed for the chosen width.",
+   "message": "The 200-1000 samples/s band and the 6 GPU-h reservation were written for the width-8 pilot network; TrainConfig and P6 default to width 16 (about 3.3x the multiply-accumulates; K18 D/2 ratio 128 instead of 64). The width is researcher decision R2; the budget must be recomputed for the chosen width. E8 recomputed the screening arithmetic per width (scripts/b2_e8_budget.py, docs/results/b2_e8_resource_budget.json): nine width-16 fits are about 10.0-21.9 h of GPU compute plus un-overlapped loader, versus the withdrawn 6 GPU-h; it stays BLOCKED until the bounded probe measures the target host.",
    "evidence": [
     "docs/plan/B2_E7_TRAINING_SPEC_PROPOSAL.md",
-    "docs/results/b2_production_budget.md:74"
+    "docs/results/b2_production_budget.md:74",
+    "docs/plan/B2_E8_HOST_RESOURCE_ASSESSMENT.md",
+    "docs/results/b2_e8_resource_budget.json"
    ]
   },
   {
@@ -350,6 +356,79 @@
    "evidence": [
     "docs/plan/B2_E7_TRAINING_SPEC_PROPOSAL.md",
     "docs/results/b2_streaming_memory.md"
+   ]
+  },
+  {
+   "id": "audit.e8_pr_head_ci",
+   "title": "GitHub Actions on the E8 pull-request head",
+   "status": "NOT_RUN",
+   "message": "Not run before publication. The exact head/run/job and raw results are recorded in the draft PR after publication; historical merged-head CI does not certify the E8 head.",
+   "evidence": [
+    "pull request description"
+   ]
+  },
+  {
+   "id": "audit.production_executor_missing",
+   "title": "No executor exists for the recipe the proposal describes (width 16, 30 epochs, full roles, GPU, isolated phases)",
+   "status": "BLOCKED",
+   "message": "The isolated train-only/calibrate/freeze/evaluate modes are CPU-only and capped at 2 groups/role, 2 epochs, width 8, batch 32 (src/geoml/b2_execution.py:39 CAPS, :92 _cpu); --device cuda is refused for every non-legacy mode (src/geoml/b2_experiment.py:819); the legacy coupled runner stops at 12 groups/role (:54) and couples test evaluation. Approving R1-R10 therefore cannot start a fit: lifting the caps and adding GPU support is a src/geoml edit that changes every checkpoint provenance and the production lock, so it must be a separately reviewed milestone before the lock, the data run and any fit (also where the TF32 pin of R6 would be implemented).",
+   "evidence": [
+    "src/geoml/b2_execution.py",
+    "src/geoml/b2_experiment.py",
+    "docs/plan/B2_E8_DECISION_APPROVAL.md"
+   ]
+  },
+  {
+   "id": "audit.gpu_probe_executor_missing",
+   "title": "The bounded GPU probe is specified but not implemented",
+   "status": "BLOCKED",
+   "message": "docs/plan/b2_e8_gpu_probe_spec.json fixes configurations, caps, measurements and refusals; no executor exists, none was run, and no GPU was touched. It needs the researcher's host/GPU/caps message, the R2/R5/R6 decisions and an independently reviewed executor.",
+   "evidence": [
+    "docs/plan/b2_e8_gpu_probe_spec.json",
+    "docs/plan/B2_E8_HOST_RESOURCE_ASSESSMENT.md"
+   ]
+  },
+  {
+   "id": "audit.release_gate_not_machine_checked",
+   "title": "The independently reviewed release gate is a process step, not a machine-checked record",
+   "status": "BLOCKED",
+   "message": "Production launch is impossible in this build (PRODUCTION_LAUNCH_ENABLED False, every child needs --limit-groups 1..2) and stays refused with every gate approved (tests). The supervisor's authorization reads only the gates JSON approvals (K18, K17d, OBS-CANCEL-2, full_generation); there is no record of an independent review of the release. The enabling milestone must add and verify such a record (see docs/plan/B2_E8_GO_NO_GO.md section 4) and the approval records remain self-asserted JSON whose control is review at merge.",
+   "evidence": [
+    "scripts/b2_production_supervisor.py",
+    "docs/plan/B2_E8_GO_NO_GO.md"
+   ]
+  },
+  {
+   "id": "audit.host_inventory",
+   "title": "A read-only host/environment inventory compares a machine with the proposed requirements",
+   "status": "PASS",
+   "message": "scripts/b2_host_inventory.py reads CPU, RAM, cgroup limits, disk space (stat only), an optional nvidia-smi driver query and library metadata; it creates no file except an exclusively created --out, imports neither torch nor CUDA and never reports a designated host or authorization. A missing GPU is BLOCKED; a measured shortfall is FAIL. The sandbox fails both roles (19.7 GiB free, same-device backup, no GPU).",
+   "evidence": [
+    "scripts/b2_host_inventory.py",
+    "docs/results/b2_e8_host_inventory_sandbox_training.json"
+   ],
+   "verified_by": "tests/test_b2_e8_tools.py::test_host_inventory_is_read_only_and_never_designates_a_host"
+  },
+  {
+   "id": "audit.lock_environment_lacks_gpu_pins",
+   "title": "The production lock does not record the GPU numerics environment",
+   "status": "BLOCKED",
+   "message": "scripts/b2_production_preflight.py environment() (lines 323-331) records Python, platform, NumPy, SciPy, torch and xgboost versions and the thread variables only. It does not record CUDA/cuDNN versions, GPU model, driver, CUDA_VISIBLE_DEVICES or the TF32/deterministic flags, and no source file sets those flags (git grep allow_tf32 in src and scripts is empty), so on an Ampere or newer GPU torch 2.14.1 runs cuDNN convolutions in TF32 by default although the recipe says fp32. What to pin is decision R6; recording it in the lock belongs to the executor milestone, before the lock is created.",
+   "evidence": [
+    "scripts/b2_production_preflight.py",
+    "docs/plan/B2_E8_DECISION_APPROVAL.md",
+    "docs/plan/b2_e8_candidate_production_config.json"
+   ]
+  },
+  {
+   "id": "audit.trainconfig_defaults_disable_p20_terms",
+   "title": "TrainConfig code defaults silently disable the P20 centre loss and the K17b shift",
+   "status": "BLOCKED",
+   "message": "geoml.train.TrainConfig defaults are center_loss_weight 0.0 and plan_shift_fraction 0.0 and plan_consistency False (so the auxiliary plan head is inactive although plan_loss_weight is 1.0; width 16, epochs 30, batch 32); the pre-registered 0.005 centre weight and the 15 % / 0.5 MHz K17b shift exist only in configs/b2_feat.json, a 3-epoch width-8 pilot config. A production run built from 'the defaults' would therefore train without K18's centre term, without the plan head and without the frozen augmentation (b2_experiment sets plan_consistency True through its own config default). The frozen production configuration (after the R-decisions) must set both explicitly, and the executor milestone should refuse a production profile that leaves them at 0.",
+   "evidence": [
+    "src/geoml/train.py",
+    "configs/b2_feat.json",
+    "docs/plan/b2_e8_candidate_production_config.json"
    ]
   }
  ]

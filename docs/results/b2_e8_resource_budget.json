@@ -1,0 +1,174 @@
+{
+ "schema": "B2-E8-resource-budget/1",
+ "benchmark_complete": false,
+ "production_authorized": false,
+ "status": "ARITHMETIC_NOT_A_RESERVATION",
+ "withdrawn_figure": "The E5 '6 GPU-h' reservation was written for width 8 and is not carried to width 16 or any other width; no replacement reservation is proposed before the authorized probe.",
+ "generation": {
+  "observations": 21350,
+  "wall_hours_single_process": {
+   "low": 23.0,
+   "central": 26.6,
+   "high": 30.2
+  },
+  "reserved_wall_hours": 36.0,
+  "reserved_core_hours": 42.0,
+  "basis": "extrapolation from a 60-observation matched profile (E5); nothing was timed beyond 64 observations; the supervisor's first-shard gate is the start-up validity test"
+ },
+ "storage": {
+  "float16_array_gb": 8.44,
+  "artifact_estimate_gb": 8.7,
+  "working_disk_gib_proposed": 25,
+  "backup_gb_proposed": 9,
+  "training_host_copy_gb_minimum": 8.7,
+  "note": "the training host needs its own verified copy of the artifacts plus run outputs; checkpoints are ~1.2 MiB per width-16 fit"
+ },
+ "widths": {
+  "8": {
+   "model_macs_gmac_per_sample": 0.097,
+   "mac_ratio_vs_width8": 1.0,
+   "center_term_ratio_p20_over_p21b": 64,
+   "campaigns": [
+    {
+     "name": "main: 3 views x 3 seeds",
+     "fits": 9,
+     "epochs": 30,
+     "train_observations_per_fit": 12000,
+     "train_sample_passes": 3240000,
+     "val_select_forward_passes": 324000,
+     "gpu_pure_compute_hours_screening": [
+      0.9,
+      4.5
+     ],
+     "gpu_pure_compute_basis": "extrapolation: width-8 band (200.0, 1000.0) samples/s / MAC ratio 1.00",
+     "synchronous_loader_hours": 6.97,
+     "loader_basis": "plan_assumption: 93.0 s/epoch at 12,000 train + 1,200 val-select observations, scaled linearly",
+     "gpu_compute_plus_loader_hours_screening": [
+      7.88,
+      11.47
+     ],
+     "cpu_only_compute_hours": 17.7,
+     "cpu_only_basis": "measured_cpu_noisy: 50.8 samples/s warm (dual_residual, batch 32, loaded sandbox) x passes; excludes loader"
+    },
+    {
+     "name": "LOKO, primary view: 7 holdouts x 3 seeds",
+     "fits": 21,
+     "epochs": 30,
+     "train_observations_per_fit": 10500,
+     "train_sample_passes": 6615000,
+     "val_select_forward_passes": 661500,
+     "gpu_pure_compute_hours_screening": [
+      1.84,
+      9.19
+     ],
+     "gpu_pure_compute_basis": "extrapolation: width-8 band (200.0, 1000.0) samples/s / MAC ratio 1.00",
+     "synchronous_loader_hours": 14.24,
+     "loader_basis": "plan_assumption: 93.0 s/epoch at 12,000 train + 1,200 val-select observations, scaled linearly",
+     "gpu_compute_plus_loader_hours_screening": [
+      16.08,
+      23.43
+     ],
+     "cpu_only_compute_hours": 36.2,
+     "cpu_only_basis": "measured_cpu_noisy: 50.8 samples/s warm (dual_residual, batch 32, loaded sandbox) x passes; excludes loader"
+    },
+    {
+     "name": "LOKO, all views: 7 x 3 x 3 views",
+     "fits": 63,
+     "epochs": 30,
+     "train_observations_per_fit": 10500,
+     "train_sample_passes": 19845000,
+     "val_select_forward_passes": 1984500,
+     "gpu_pure_compute_hours_screening": [
+      5.51,
+      27.56
+     ],
+     "gpu_pure_compute_basis": "extrapolation: width-8 band (200.0, 1000.0) samples/s / MAC ratio 1.00",
+     "synchronous_loader_hours": 42.72,
+     "loader_basis": "plan_assumption: 93.0 s/epoch at 12,000 train + 1,200 val-select observations, scaled linearly",
+     "gpu_compute_plus_loader_hours_screening": [
+      48.23,
+      70.28
+     ],
+     "cpu_only_compute_hours": 108.5,
+     "cpu_only_basis": "measured_cpu_noisy: 50.8 samples/s warm (dual_residual, batch 32, loaded sandbox) x passes; excludes loader"
+    }
+   ]
+  },
+  "16": {
+   "model_macs_gmac_per_sample": 0.321,
+   "mac_ratio_vs_width8": 3.31,
+   "center_term_ratio_p20_over_p21b": 128,
+   "campaigns": [
+    {
+     "name": "main: 3 views x 3 seeds",
+     "fits": 9,
+     "epochs": 30,
+     "train_observations_per_fit": 12000,
+     "train_sample_passes": 3240000,
+     "val_select_forward_passes": 324000,
+     "gpu_pure_compute_hours_screening": [
+      2.98,
+      14.89
+     ],
+     "gpu_pure_compute_basis": "extrapolation: width-8 band (200.0, 1000.0) samples/s / MAC ratio 3.31",
+     "synchronous_loader_hours": 6.97,
+     "loader_basis": "plan_assumption: 93.0 s/epoch at 12,000 train + 1,200 val-select observations, scaled linearly",
+     "gpu_compute_plus_loader_hours_screening": [
+      9.95,
+      21.87
+     ],
+     "cpu_only_compute_hours": 35.2,
+     "cpu_only_basis": "measured_cpu_noisy: 25.6 samples/s warm (dual_residual, batch 32, loaded sandbox) x passes; excludes loader"
+    },
+    {
+     "name": "LOKO, primary view: 7 holdouts x 3 seeds",
+     "fits": 21,
+     "epochs": 30,
+     "train_observations_per_fit": 10500,
+     "train_sample_passes": 6615000,
+     "val_select_forward_passes": 661500,
+     "gpu_pure_compute_hours_screening": [
+      6.08,
+      30.4
+     ],
+     "gpu_pure_compute_basis": "extrapolation: width-8 band (200.0, 1000.0) samples/s / MAC ratio 3.31",
+     "synchronous_loader_hours": 14.24,
+     "loader_basis": "plan_assumption: 93.0 s/epoch at 12,000 train + 1,200 val-select observations, scaled linearly",
+     "gpu_compute_plus_loader_hours_screening": [
+      20.32,
+      44.64
+     ],
+     "cpu_only_compute_hours": 71.8,
+     "cpu_only_basis": "measured_cpu_noisy: 25.6 samples/s warm (dual_residual, batch 32, loaded sandbox) x passes; excludes loader"
+    },
+    {
+     "name": "LOKO, all views: 7 x 3 x 3 views",
+     "fits": 63,
+     "epochs": 30,
+     "train_observations_per_fit": 10500,
+     "train_sample_passes": 19845000,
+     "val_select_forward_passes": 1984500,
+     "gpu_pure_compute_hours_screening": [
+      18.24,
+      91.21
+     ],
+     "gpu_pure_compute_basis": "extrapolation: width-8 band (200.0, 1000.0) samples/s / MAC ratio 3.31",
+     "synchronous_loader_hours": 42.72,
+     "loader_basis": "plan_assumption: 93.0 s/epoch at 12,000 train + 1,200 val-select observations, scaled linearly",
+     "gpu_compute_plus_loader_hours_screening": [
+      60.96,
+      133.93
+     ],
+     "cpu_only_compute_hours": 215.3,
+     "cpu_only_basis": "measured_cpu_noisy: 25.6 samples/s warm (dual_residual, batch 32, loaded sandbox) x passes; excludes loader"
+    }
+   ]
+  }
+ },
+ "caveats": [
+  "No GPU throughput, VRAM peak, loader rate on the target host or generation rate at production size has been measured.",
+  "GPU bands scale a width-8 assumption by the MAC ratio; real utilization does not scale with MACs alone.",
+  "The synchronous loader is added without overlap because no prefetching exists in the trainer.",
+  "CPU-only hours are measured on a loaded sandbox and are shown only to bound a fallback, not to plan a run."
+ ]
+}

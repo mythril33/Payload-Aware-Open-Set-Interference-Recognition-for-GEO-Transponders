@@ -1,6 +1,8 @@
 # CLAUDE.md — Claude Code context for this repository
 
-**Current E7b execution scope (2026-10-24):** base main
+**Current state (2026-10-24):** E8 decision/resource preparation (P32, NO-GO, nothing approved) sits on main `4a1cc95` (PR #24 merged, exact-head CI 1771 passed / 7 skipped); see the E8 paragraph below.
+
+**E7b execution scope (2026-10-24):** base main
 `ed65eb54632fc4373accebc88452ddf0ff9fadfe`, PR22/23 merged. Read
 [P31](docs/plan/P31_b2_e7b_isolated_execution.md) for the additive canonical
 `train-only` → `calibrate` → `freeze` → `evaluate` modes. Train/val-select
@@ -81,7 +83,7 @@ python -m geoml.b2_experiment --config configs/b2_feat.json --data data/b2-feat-
 - Unknown score: larger = more unknown-like. State positive class, denominator, n.
 - Strict JSON, `null` + counts for unavailable metrics. Pilots are pilots.
 
-## Current milestone (2026-10-23, E4 post-merge evidence recovery)
+## Current milestone (2026-10-24, through E8 preparation)
 
 All frozen B2/1 data stages exist: B2-feat/1 (known + fifth channel), B2-test/1
 (test-only families), B2-match/1 (K17c level-matched ASI ↔ unauthorized).
@@ -99,4 +101,5 @@ E3a ([P26](docs/plan/P26_b2_e3a_edsc_baseline.md)): `geoml.b2_edsc` is a bounded
 E3b ([P27](docs/plan/P27_b2_e3b_xgboost_baseline.md)): `geoml.b2_xgb` streams 26 fixed observation-only features and trains the pinned `xgboost-cpu==3.4.1` baseline. One CPU thread, seed0, one16-round fit, fixed8/16 val-select prefixes; train-only feature normalization, clean-only alarm calibration. Binary `1-P(clean)` shares P26 bundles; actual eight-class decisions and MSP `1-max(P)`/OSCR are separate. Install `.[dev,ml,xgb]`; evidence is in [bounded results](docs/results/b2_xgb_baseline.md).
 The optional pinned XGBoost extra requires Python >=3.12; readiness CI uses 3.12, matching the locally validated minor version. Core geosim retains its existing Python requirement.
 E4 ([P28](docs/plan/P28_b2_e4_dual_pol_a5.md)): `geoml.b2_a5` evaluates frozen checkpoints/scorers/thresholds against counterfactual **operator beliefs** (shift ±0.5 MHz, drop_one, phantom, authorize_intruder, stale_plan; co/cross/both) while the physical IQ is replayed unchanged. `MASK_ONLY` (stored residual) is only the weaker control; `RECEIVER_CONSISTENT` recomputes the residual with the frozen `obs-cancel/1` from the co-pol IQ and the corrupted co belief, after the `none` replay matched the stored shard. E4 edits no existing source file (checkpoint provenance hashes every `src/**/*.py`; additions are allow-listed). Capped CPU smoke only (2 groups, 2 classes, one configuration, 16 replays, 24 cancellations); counterfactual outputs are agreement with the original label, not accuracy; baselines are input-recomputation only (no frozen baseline artifacts). An interrupted A5 invocation resumes from verified per-scene state (`out/state/`: `B2-A5-scene-state/2` metadata checksum, array checksums, experiment-identity and library-environment binding; modified or foreign state is refused, digests detect accidental modification only), concurrent runs on one `--out` are refused, and `scripts/run_b2_a5_pilot_matrix.sh` (wrapper over `scripts/b2_a5_matrix.py`) re-hands every invocation to the identity-checked CLI, exits non-zero on failed or missing results and records explicit partial coverage; see the resume table in `docs/engineering/B2_E4_CONTEXT.md`.
+E8 ([P32](docs/plan/P32_b2_e8_freeze_preparation.md), 2026-10-24): decision/resource preparation only. [B2_E8_DECISION_APPROVAL.md](docs/plan/B2_E8_DECISION_APPROVAL.md) (K18, K17d, OBS-CANCEL/2, R1–R10 recommendations, nothing approved), the UNAPPROVED non-loadable [candidate config](docs/plan/b2_e8_candidate_production_config.json), [host/resource assessment](docs/plan/B2_E8_HOST_RESOURCE_ASSESSMENT.md) (`scripts/b2_e8_budget.py`; the width-8 6 GPU-h figure is withdrawn, width 16 is not budgeted by it), read-only `scripts/b2_host_inventory.py`, the [GPU probe spec](docs/plan/b2_e8_gpu_probe_spec.json) (no executor, nothing run) and the [go/no-go report](docs/plan/B2_E8_GO_NO_GO.md): **NO-GO**. No executor exists for width 16 / 30 epochs / GPU (`src/geoml/b2_execution.py:39` caps; `--device cuda` refused), and `TrainConfig` defaults have `center_loss_weight=0` and `plan_shift_fraction=0` (the P20 values live in `configs/b2_feat.json`). PR #24 exact-head CI: run 40064513568, 1771 passed / 7 skipped.
 Remaining code work: production LOKO execution/aggregation and full-scale validation (including A5 on real checkpoints). Research/compute gates remain pending.

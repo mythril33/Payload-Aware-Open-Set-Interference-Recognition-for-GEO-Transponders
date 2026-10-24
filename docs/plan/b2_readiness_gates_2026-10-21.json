@@ -535,7 +535,7 @@
         "pytest_seconds": 716.07
       },
       "skip_reasons_visible_in_raw_log": false,
-      "scope": "Merged baseline only; new E7b head requires separate CI",
+      "scope": "Merged PR #23 baseline; superseded for the current main by engineering.e7b_head_ci",
       "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40047344666",
       "historical_e4_records": {
         "pr": 15,
@@ -585,7 +585,8 @@
             "scope": "GitHub evidence for E2 head only; no E3a CI claim"
           }
         }
-      }
+      },
+      "superseded_by": "engineering.e7b_head_ci"
     },
     "scientific_results_atlas": {
       "status": "E5_MERGED_PR_19",
@@ -756,8 +757,61 @@
       ]
     },
     "e7b_head_ci": {
-      "status": "NOT_RUN_BEFORE_PUBLICATION",
-      "scope": "Exact new head/run/job and actual results are recorded in the draft PR after publication; no baseline CI substitution."
+      "status": "VERIFIED_SUCCESS_ON_MERGED_PR_24_HEAD",
+      "pr": 24,
+      "merge_sha": "4a1cc95913b430fee5c5e7d2e54cf48c9feeb8d8",
+      "head_sha": "d1e0898c03d1939f5e6084d343c084207a4fbf62",
+      "run_id": 40064513568,
+      "job_id": 120784837702,
+      "conclusion": "success",
+      "python": "3.12.15",
+      "e4_tests": {
+        "passed": 107,
+        "skipped": 0,
+        "failed": 0,
+        "pytest_seconds": 109.4
+      },
+      "remaining_tests": {
+        "passed": 1664,
+        "skipped": 7,
+        "failed": 0,
+        "pytest_seconds": 759.8
+      },
+      "total_passed": 1771,
+      "total_skipped": 7,
+      "skip_reason_visible_in_raw_log": true,
+      "skip_reason": "tests/test_b2_train_diagnostics.py:392: this machine/torch build does not reproduce the origin/main capture even with the verbatim original loop (the bit-identity test against the verbatim loops still applies)",
+      "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40064513568",
+      "scope": "Merged E7b head only; not a GPU, production-size or target-host result."
+    },
+    "e8_freeze_preparation": {
+      "status": "DECISION_AND_RESOURCE_PREPARATION_NOT_APPROVED",
+      "protocol": "P32",
+      "date": "2026-10-24",
+      "documents": [
+        "docs/plan/P32_b2_e8_freeze_preparation.md",
+        "docs/plan/B2_E8_DECISION_APPROVAL.md",
+        "docs/plan/b2_e8_candidate_production_config.json",
+        "docs/plan/B2_E8_HOST_RESOURCE_ASSESSMENT.md",
+        "docs/plan/b2_e8_gpu_probe_spec.json",
+        "docs/plan/B2_E8_GO_NO_GO.md"
+      ],
+      "tools": [
+        "scripts/b2_host_inventory.py",
+        "scripts/b2_e8_budget.py"
+      ],
+      "candidate_config": {
+        "frozen": false,
+        "approved": false
+      },
+      "go_no_go": "NO_GO",
+      "e8_pr_head_ci": "NOT_RUN_BEFORE_PUBLICATION",
+      "not_authorized_and_not_started": [
+        "full B2 generation",
+        "full GPU training",
+        "GPU probe",
+        "full LOKO sweep"
+      ]
     }
   },
   "permitted_without_new_researcher_decisions": [
@@ -787,8 +841,8 @@
   ],
   "integrity_note": "Proposed researcher decisions are not approvals. Preserve frozen semantics and strictly segregate train, val-select, val-calib, test and test-matched.",
   "verified_remote_main": {
-    "sha": "ed65eb54632fc4373accebc88452ddf0ff9fadfe",
+    "sha": "4a1cc95913b430fee5c5e7d2e54cf48c9feeb8d8",
     "date": "2026-10-24",
-    "note": "PR22/23 merged; PR23 raw CI run40047344666/job120731984575 confirms1632passed7skips0failures; decisions unchanged"
+    "note": "PR #24 (E7b) merged; Actions run 40064513568 / job 120784837702 on head d1e0898 confirms 1771 passed (E4 107 + repository 1664), 7 skipped, 0 failed; decisions unchanged"
   }
 }
