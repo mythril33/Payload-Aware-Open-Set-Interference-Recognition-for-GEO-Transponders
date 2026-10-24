@@ -60,6 +60,11 @@ def render_markdown(summary):
             return f"{a.get('peak_rss_kib', 0) // 1024} (last heartbeat)", "-"
         return str(a.get("peak_rss_polled_kib", 0) // 1024), str(a.get("peak_rss_kib", 0) // 1024)
 
+    measured = [a for a in summary["attempts"] if not a.get("estimated")]
+    polled = [a["peak_rss_polled_kib"] // 1024 for a in measured]
+    same = all(a["peak_rss_kib"] == a["peak_rss_polled_kib"] for a in measured)
+    memory = (f"here it {'equals' if same else 'differs from'} the polled value in the {len(measured)} measured attempts, so the real generator's "
+              f"polled peak is {min(polled)}-{max(polled)} MiB" if polled else "no attempt was measured")
     rows = "\n".join(f"| {a['attempt_id']} | {a['reason']} | {a['exit_code']} | {a['elapsed_s']} | {round(a['cpu_user_s'] + a['cpu_sys_s'], 1)} | "
                      f"{peaks(a)[0]} | {peaks(a)[1]} | {'yes (upper-bound estimate)' if a.get('estimated') else 'no'} |"
                      for a in summary["attempts"])
@@ -95,7 +100,7 @@ Exit codes: 4 = dry run BLOCKED (authorization), 6 = interrupted and resumable, 
 ## Attempts
 
 `peak (polled)` is the child's own `VmHWM` sampled while it ran (a lower bound); `peak (ru_maxrss)` is `wait4`'s figure, an **upper bound** that
-can also carry the supervisor's own memory at fork (here it equals the polled value in the four measured attempts, so the real generator's peak is about 506-572 MiB; in general the polled value is the child's own).
+can also carry the supervisor's own memory at fork ({memory}; in general the polled value is the child's own).
 
 | Attempt | Reason | Exit | Wall (s) | CPU (s) | Peak polled (MiB) | Peak ru_maxrss (MiB) | Estimated |
 |---|---|---|---|---|---|---|---|
@@ -232,7 +237,7 @@ def main(argv=None):
         "timing_gates": [{k: r[k] for k in r if k not in ("prev", "schema", "sha256", "seq")} for r in records if r["event"] == "timing_gate"],
         "limitations": [
             "The journal holds scratch paths in argv/log fields; its chain verifies as committed (Journal.load on the two committed files).",
-            "peak_rss_kib is ru_maxrss, an upper bound that carries the supervisor's own peak at fork; peak_rss_polled_kib is a lower bound.",
+            "peak_rss_kib is ru_maxrss, an upper bound that can carry the supervisor's own peak at fork; peak_rss_polled_kib is a lower bound.",
             "The timing-gate figures subtract a fixed --timing-startup-s from 3-8 observation first shards; they are not per-observation costs and "
             "do not validate the 3.8-5.0 s/observation band. Use per_stage_attempts for whole-attempt wall per observation.",
             "A supervisor_lost attempt is charged by an upper-bound estimate (last heartbeat + one interval), not measured.",

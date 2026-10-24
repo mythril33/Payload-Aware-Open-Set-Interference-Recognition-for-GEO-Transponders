@@ -164,8 +164,9 @@ class Journal:
         head_path = Path(path).with_name(Journal.HEAD_NAME)
         count = len(records)
         if not head_path.exists():
-            quiet = {"run.json", "lock.json", "journal.jsonl", ".supervisor.lock"}
-            if count <= 1 and {p.name for p in Path(path).parent.iterdir()} <= quiet:
+            quiet = {"run.json", "lock.json", "journal.jsonl", Journal.HEAD_NAME + ".tmp", ".supervisor.lock"}
+            parent = Path(path).parent
+            if count <= 1 and (not parent.is_dir() or {p.name for p in parent.iterdir()} <= quiet):
                 return []                                    # a workdir that crashed right after its first record, nothing run yet
             return ["journal.head is missing: the journal cannot be shown to be untruncated"]
         try:
@@ -928,13 +929,14 @@ class Supervisor:
         done = sum(info["observations_committed"] for info in audit["roles"].values())
         return max(0, sum(self.plan["expected_observations"][stage].values()) - done)
 
-    def _check_attempt_budgets(self, usage, stage):
+    def _check_attempt_budgets(self, usage, stage, verifying_complete_root=False):
         ceilings = self.plan["ceilings"]
         if usage["failed_attempts"][stage] >= ceilings["max_failed_attempts_per_stage"]:
             raise SupervisorError(f"attempt budget exhausted for {stage}: {usage['failed_attempts'][stage]} failed attempts "
                                   f"(ceiling {ceilings['max_failed_attempts_per_stage']})", EXIT_FAILED)
         paused = usage["interruptions"][stage] + usage["lost_attempts"][stage]
-        if paused >= ceilings["max_interruptions_per_stage"]:
+        # the no-op attempt that verifies an already finished root cannot add an interruption's worth of lost work
+        if paused >= ceilings["max_interruptions_per_stage"] and not verifying_complete_root:
             raise SupervisorError(f"interruption budget exhausted for {stage}: {paused} interrupted or lost attempts "
                                   f"(ceiling {ceilings['max_interruptions_per_stage']})", EXIT_FAILED)
         if usage["attempts"][stage] >= MAX_TOTAL_ATTEMPTS_PER_STAGE:
@@ -961,7 +963,8 @@ class Supervisor:
                 quarantined = True
                 continue
             usage = self._usage()
-            if audit["state"] == "COMPLETE":
+            complete_root = audit["state"] == "COMPLETE"
+            if complete_root:
                 self._verify_inventory(stage, audit)
                 acceptable, why = last_attempt_acceptable(usage, stage)
                 if acceptable:
@@ -970,7 +973,7 @@ class Supervisor:
                 # A root that verifies but was not produced by a clean supervised attempt gets one (the generators treat a
                 # finished root as a no-op); it is accepted only if that attempt exits 0, and retried within the failure budget.
                 self.journal.append("stage_needs_supervised_attempt", stage=stage, reason=why)
-            self._check_attempt_budgets(usage, stage)
+            self._check_attempt_budgets(usage, stage, verifying_complete_root=complete_root)
             self._check_budgets(usage, self._remaining_observations(audit, stage))
             outcome = self._attempt(stage, audit, usage)
             if outcome["reason"] == "interrupted":
@@ -1000,7 +1003,9 @@ class Supervisor:
         logs = self.work / "logs"
         logs.mkdir(exist_ok=True)
         numbers = [int(m.group(1)) for p in logs.glob(f"{stage}-*.log") if (m := re.fullmatch(rf"{stage}-(\d+)\.log", p.name))]
-        attempt_no = max([usage["attempts"][stage]] + numbers) + 1       # a log left by a failed spawn is never reused
+        ids = [r["attempt"] for r in self.journal.read(self.journal.path)[0] if r["event"] == "attempt_start" and r["stage"] == stage
+               and isinstance(r.get("attempt"), int)]
+        attempt_no = max([usage["attempts"][stage]] + numbers + ids) + 1  # neither a failed spawn's log nor a journaled id is reused
         attempt_id = f"{stage}-{attempt_no:02d}"
         ceilings = self.plan["ceilings"]
         committed = sum(info["observations_committed"] for info in audit["roles"].values())
@@ -1101,7 +1106,7 @@ class Supervisor:
             self._usage()                                    # verifies the whole chain: damage during the last attempt ends the run
             self.journal.append("stages_complete", plan_fingerprint=digest(self.plan))
             return {"exit_code": EXIT_OK, "status": "STAGES_COMPLETE", "reasons": [], "benchmark_complete": False}
-        except (SupervisorError, OSError) as error:         # an unexpected I/O failure is a failed run, never a traceback
+        except (SupervisorError, OSError, KeyError, TypeError, AttributeError) as error:   # unexpected: a failed run, never a traceback
             code = error.code if isinstance(error, SupervisorError) else EXIT_FAILED
             message = str(error) if isinstance(error, SupervisorError) else f"{type(error).__name__}: {error}"
             event = "interrupted" if code == EXIT_INTERRUPTED else "run_failed"

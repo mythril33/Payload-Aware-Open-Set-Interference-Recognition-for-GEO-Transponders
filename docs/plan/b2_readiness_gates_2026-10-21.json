@@ -636,7 +636,7 @@
       "review_hardened": true,
       "journal_anchor": "journal.head",
       "tests_collected": 162,
-      "child_wrapper": "fixture diagnostic restricted to the repository's tests/ directory and hashed into the run identity",
+      "child_wrapper": "fixture diagnostic restricted to the repository's tests/b2_supervisor_standin.py and hashed into the run identity",
       "verification_script": "scripts/b2_e7a_capped_verification.py",
       "verification_commit": "bda315161775a7d30b4fd2ee52985c37d55b90df",
       "first_state_ci": {

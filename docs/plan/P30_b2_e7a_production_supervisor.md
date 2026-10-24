@@ -10,8 +10,8 @@ researcher gate or touches a frozen protocol, config, seed, count or artifact la
 
 ## 1. What it supervises
 
-The three existing generator CLIs as child processes (or, for fixtures only, a hashed diagnostic wrapper script inside the repository's
-`tests/` directory; see §2), in this order and only in this order: `geosim.b2_dataset` (known
+The three existing generator CLIs as child processes (or, for fixtures only, the hashed diagnostic stand-in
+`tests/b2_supervisor_standin.py` alone; see §2), in this order and only in this order: `geosim.b2_dataset` (known
 B2-feat/1, four roles) then `geosim.b2_test_dataset` then `geosim.b2_matched_dataset`, each bound to the finished known root.
 It adds no generation logic; shards, descriptors, manifests and their validators are the generators' own. It audits every
 stage root with the preflight (`audit_artifact`, `--known` binding, lock) before it starts, after every attempt and before the
@@ -26,7 +26,7 @@ next stage, so a damaged earlier stage can never be built upon.
 | Ceilings cannot stretch a fixture | a `--ceilings` file may only lower or modestly raise the fixture defaults: at most 4 wall hours, 16 core hours, 5 failed attempts, 50 interruptions, 16 GiB RSS, 120 s grace (`FIXTURE_CEILING_LIMITS`); integer ceilings must be whole numbers; the timing band, tolerance, startup allowance and gate size are range-checked |
 | No unbounded child | every spawned argv must contain `--limit-groups` of 1..2 (`assert_bounded`, checked again inside `run_child`); `stage_argv` refuses to build a command for an unbounded plan |
 | No arbitrary program | `--child-wrapper` (fixture diagnostic) accepts only this repository's `tests/b2_supervisor_standin.py`; it is hashed into the run identity and refused for `--production`. Children run with `PYTHONPATH=<repo>/src` first, so they import the locked tree |
-| Production ceilings only go down | a `--production` plan may lower the proposed ceilings but never raise them (`PRODUCTION_CEILING_LIMITS`); raising needs a researcher-approved record that this build cannot consume |
+| Production ceilings only go down | a `--production` plan may lower the proposed ceilings but never raise them (`PRODUCTION_CEILING_LIMITS`; the free-disk reserve is a floor and may only go up); raising needs a researcher-approved record that this build cannot consume |
 | Production is validation only | `plan --production` reports lock, caps, estimated wall/disk, host, authorization and the disabled launch (all BLOCKED/FAIL as appropriate); `run --production --execute` is refused with the exact missing gates; with every gate approved it is still refused ("not implemented in this build"); a production plan handed to `Supervisor.run()` is refused before the workdir is touched. `PRODUCTION_LAUNCH_ENABLED` is False and flipping it enables nothing because the command builder and the spawn guard stay bounded |
 | Authorization | `authorization(gates, memo)` needs `K18`, `K17d`, `OBS-CANCEL-2` and `full_generation` to PASS the preflight gate check (structured approval record, finite positive ceilings, gates/memorandum agreement). It never infers approval |
 

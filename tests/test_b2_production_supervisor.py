@@ -1740,3 +1740,54 @@ def test_the_limit_constants_are_pinned_to_literals():
                                    "max_rss_gib": 4.0, "min_free_disk_gib": 1.0, "grace_s": 10.0}
     assert sup.TIMING_LIMITS == {"tolerance": (0.0, 2.0), "startup_s": (0.0, 3600.0), "resume_verify_s_per_observation": (0.0, 1.0)}
     assert sup.MAX_TOTAL_ATTEMPTS_PER_STAGE == 60 and sup.FIXTURE_MAX_GROUPS == 2 and sup.PRODUCTION_LAUNCH_ENABLED is False
+
+
+# -- review of the hotfix (second independent read) ------------------------------------------------------------------------------
+
+def test_a_finished_root_is_verified_even_when_the_interruption_budget_is_spent(clone):
+    ceiling = json.loads((clone / "run.json").read_text())["plan"]["ceilings"]["max_interruptions_per_stage"]
+    journal = sup.Journal(clone / "journal.jsonl")
+    journal.open()
+    for number in range(2, 2 + ceiling):
+        journal.append("attempt_start", stage="matched", attempt_id=f"matched-{number:02d}", attempt=number,
+                       argv=["x", "--limit-groups", "1"], pid=1, committed_observations=0, remaining_shards=0)
+        journal.append("attempt_end", stage="matched", attempt_id=f"matched-{number:02d}", reason="interrupted", exit_code=-15,
+                       elapsed_s=1.0, cpu_user_s=1.0, cpu_sys_s=0.0)
+    result = make(clone).run()
+    assert result["exit_code"] == 0, result                 # a no-op verification adds no lost work, so the ceiling does not apply to it
+    assert records(clone, "stage_needs_supervised_attempt")[-1]["stage"] == "matched"
+
+
+def test_the_first_record_anchor_tolerance_covers_the_head_temp_file_and_a_missing_directory(tmp_path):
+    work = tmp_path / "w"
+    work.mkdir()
+    journal = sup.Journal(work / "journal.jsonl")
+    journal.open()
+    journal.append("supervisor_start")
+    (work / "journal.head.tmp").write_text("{}")             # the crash between writing the temp head and replacing it
+    (work / "journal.head").unlink()
+    assert sup.Journal.load(work / "journal.jsonl")[1] == []
+    (work / "marker.txt").write_text("something ran")
+    assert any("journal.head is missing" in p for p in sup.Journal.load(work / "journal.jsonl")[1])
+    assert sup.Journal.load(tmp_path / "nowhere" / "journal.jsonl") == ([], [])
+
+
+def test_an_internal_error_during_a_run_is_a_journaled_failed_run_not_a_refusal(tmp_path, monkeypatch):
+    work = tmp_path / "w"
+    supervisor = make(work)
+    monkeypatch.setattr(supervisor, "_attempt", lambda *args, **kwargs: {}["missing"])
+    result = supervisor.run()
+    assert result["exit_code"] == 3 and result["status"] == "FAILED" and "KeyError" in result["reasons"][0]
+    assert records(work)[-1]["event"] == "run_failed"
+
+
+def test_attempt_ids_never_reuse_a_journaled_number_even_without_logs(tmp_path, baseline):
+    work = adopted(tmp_path, baseline)
+    journal = sup.Journal(work / "journal.jsonl")
+    journal.open()
+    journal.append("attempt_start", stage="known", attempt_id="known-03", attempt=3, argv=["x", "--limit-groups", "1"], pid=1,
+                   committed_observations=0, remaining_shards=1)
+    journal.append("attempt_end", stage="known", attempt_id="known-03", reason="interrupted", exit_code=-15, elapsed_s=1.0,
+                   cpu_user_s=1.0, cpu_sys_s=0.0)
+    assert make(work).run()["exit_code"] == 0
+    assert [r["attempt_id"] for r in records(work, "attempt_start") if r["stage"] == "known"] == ["known-03", "known-04"]
