@@ -44,21 +44,47 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev,ml,xgb]"
-      - name: Fail closed if any researcher gate is implicitly approved
+      - name: Verify explicit scientific approvals and keep all compute gates closed
         run: |
           python - <<'PY'
           import json
+          from datetime import datetime
           from pathlib import Path
-          d = json.loads(Path("docs/plan/b2_readiness_gates_2026-10-21.json").read_text())
-          assert d["benchmark_complete"] is False
-          assert d["decisions"]["K18"]["status"] == "PENDING_RESEARCHER"
-          assert d["decisions"]["K17d"]["status"] == "PENDING_RESEARCHER"
-          assert d["decisions"]["OBS-CANCEL-2"]["status"] == "PENDING_RESEARCHER"
-          assert d["decisions"]["full_generation"]["status"] == "NOT_AUTHORIZED"
-          assert d["decisions"]["full_gpu_training"]["status"] == "NOT_AUTHORIZED"
-          assert d["decisions"]["full_loko_sweep"]["status"] == "NOT_AUTHORIZED"
-          for name, decision in d["decisions"].items():
-              assert decision.get("approval") is None, f"{name} carries an approval record"
+
+          root = Path("docs/plan")
+          gates = json.loads((root / "b2_readiness_gates_2026-10-21.json").read_text())
+          memo = json.loads((root / "b2_e5_decision_recommendations.json").read_text())
+          freeze = json.loads((root / "b2_e9_approved_scientific_protocol.json").read_text())
+          assert gates["benchmark_complete"] is memo["benchmark_complete"] is freeze["benchmark_complete"] is False
+          assert freeze["activation"] is False and freeze["production_authorized"] is False
+          assert freeze["status"] == "SCIENTIFIC_PROTOCOL_APPROVED_NOT_EXECUTABLE"
+          assert len(freeze["decisions"]) == 13
+          for key, choice in {"K18": "A", "K17d": "A+C", "OBS-CANCEL-2": "A"}.items():
+              gate, twin = gates["decisions"][key], memo["decisions"][key]
+              assert gate["status"] == twin["status"] == "APPROVED"
+              assert freeze["decisions"][key]["choice"] == choice
+              record = gate["approval"]
+              assert record["approved_by"] == twin["approved_by"] == freeze["approved_by"] == "mythril33"
+              assert record["approved_at"] == twin["approved_at"] == freeze["approved_at"]
+              datetime.fromisoformat(record["approved_at"].replace("Z", "+00:00"))
+              assert isinstance(record["decision"], str) and record["decision"].strip()
+              assert record["record"] == freeze["approval_record"]
+              assert (Path(record["record"])).is_file()
+          for key in ("full_generation", "full_gpu_training", "full_loko_sweep"):
+              gate, twin = gates["decisions"][key], memo["decisions"][key]
+              assert gate["status"] == twin["status"] == "NOT_AUTHORIZED"
+              assert gate["approval"] is None
+              assert twin["approved_by"] is None and twin["approved_at"] is None
+          assert gates["decisions"]["merge_to_main"]["status"] == "NOT_AUTHORIZED_BY_THIS_PLAN"
+          assert gates["decisions"]["merge_to_main"]["approval"] is None
+          assert freeze["unresolved_operational_decisions"]["gpu_probe"] == "NOT_AUTHORIZED"
+          assert freeze["unresolved_operational_decisions"]["production_launch"] == "DISABLED"
+          candidate = json.loads((root / "b2_e8_candidate_production_config.json").read_text())
+          assert candidate["approved"] is False and candidate["frozen"] is False
+          assert candidate["status"] == "UNAPPROVED_NOT_FROZEN"
+          assert all(x["status"] == "UNAPPROVED" for x in candidate["decision_recommendations"].values())
+          assert freeze["parameter_records"]["precision_and_determinism"]["value"]["cudnn_allow_tf32"] is False
+          assert freeze["parameter_records"]["precision_and_determinism"]["value"]["matmul_allow_tf32"] is False
           PY
       - name: Compile sources (syntax check)
         run: python -m compileall -q src tests scripts

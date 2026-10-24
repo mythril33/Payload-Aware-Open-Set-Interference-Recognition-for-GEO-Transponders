@@ -85,12 +85,18 @@ def test_estimates_reproduce_from_array_shapes_and_measured_costs(monkeypatch):
     assert {item["id"]: item["status"] for item in pre.check_estimates()}["estimates.wall"] == pre.FAIL
 
 
-def test_committed_gates_are_blocked_never_passed_and_benchmark_stays_incomplete():
+def test_committed_scientific_approvals_pass_but_compute_gates_remain_blocked():
     gates = json.loads((ROOT / pre.GATES_PATH).read_text())
     memo = json.loads((ROOT / pre.MEMO_PATH).read_text())
     status = {item["id"]: item["status"] for item in pre.check_gates(gates, memo)}
     assert status["gates.benchmark_complete"] == pre.PASS
-    assert {status[f"gates.{key}"] for key in pre.GATE_KEYS} == {pre.BLOCKED}
+    for key in ("K18", "K17d", "OBS-CANCEL-2"):
+        assert status[f"gates.{key}"] == pre.PASS
+        assert status[f"gates.{key}.consistency"] == pre.PASS
+    for key in ("full_generation", "full_gpu_training", "full_loko_sweep"):
+        assert status[f"gates.{key}"] == pre.BLOCKED
+        assert status[f"gates.{key}.consistency"] == pre.PASS
+        assert gates["decisions"][key]["approval"] is None
 
 
 def test_an_approval_needs_provenance_and_a_pending_gate_may_not_carry_one():
@@ -103,15 +109,16 @@ def test_an_approval_needs_provenance_and_a_pending_gate_may_not_carry_one():
         (mutate_memo or (lambda x: None))(m)
         return {item["id"]: item["status"] for item in pre.check_gates(g, m)}
 
-    bare = run(lambda g: g["decisions"]["K18"].update(status="APPROVED"),
-               lambda m: m["decisions"]["K18"].update(status="APPROVED"))
-    assert bare["gates.K18"] == pre.FAIL                                            # approved, no approval record
+    bare = run(lambda g: g["decisions"]["K18"].update(status="APPROVED", approval=None))
+    assert bare["gates.K18"] == pre.FAIL                      # approved requires a real approval record
     full = {"approved_by": "researcher", "approved_at": "2026-10-24T00:00:00Z", "decision": "retain P20", "record": "DR-E5-01"}
     both = run(lambda g: g["decisions"]["K18"].update(status="APPROVED", approval=full),
                lambda m: m["decisions"]["K18"].update(status="APPROVED"))
     assert both["gates.K18"] == pre.PASS
-    assert run(lambda g: g["decisions"]["K18"].update(status="APPROVED", approval=full))["gates.K18.consistency"] == pre.FAIL
-    assert run(lambda g: g["decisions"]["K17d"].update(approval=full))["gates.K17d"] == pre.FAIL
+    assert run(lambda g: g["decisions"]["K18"].update(status="PENDING_RESEARCHER", approval=None))["gates.K18.consistency"] == pre.FAIL
+    pending_with_record = run(lambda g: g["decisions"]["K17d"].update(status="PENDING_RESEARCHER", approval=full),
+                              lambda m: m["decisions"]["K17d"].update(status="PENDING_RESEARCHER"))
+    assert pending_with_record["gates.K17d"] == pre.FAIL       # pending gate must not carry an approval
     no_ceiling = run(lambda g: g["decisions"]["full_generation"].update(status="AUTHORIZED", approval=full),
                      lambda m: m["decisions"]["full_generation"].update(status="AUTHORIZED"))
     assert no_ceiling["gates.full_generation"] == pre.FAIL                          # no wall/core/disk ceilings

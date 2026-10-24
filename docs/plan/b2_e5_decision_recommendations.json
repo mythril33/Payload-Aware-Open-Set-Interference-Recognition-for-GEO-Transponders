@@ -3,25 +3,25 @@
   "benchmark_complete": false,
   "decisions": {
     "K18": {
-      "status": "PENDING_RESEARCHER",
-      "authority": "explicit researcher decision required",
-      "record": "docs/plan/B2_E5_RESEARCHER_DECISIONS.md#dr-e5-01--k18-primary-loss-convention",
-      "approved_by": null,
-      "approved_at": null
+      "status": "APPROVED",
+      "authority": "researcher-approved scientific method only; no compute authorization",
+      "record": "docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md",
+      "approved_by": "mythril33",
+      "approved_at": "2026-10-24T11:14:11.155Z"
     },
     "K17d": {
-      "status": "PENDING_RESEARCHER",
-      "authority": "explicit researcher decision required",
-      "record": "docs/plan/B2_E5_RESEARCHER_DECISIONS.md#dr-e5-02--k17d-asi-level-drift",
-      "approved_by": null,
-      "approved_at": null
+      "status": "APPROVED",
+      "authority": "researcher-approved scientific method only; no compute authorization",
+      "record": "docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md",
+      "approved_by": "mythril33",
+      "approved_at": "2026-10-24T11:14:11.155Z"
     },
     "OBS-CANCEL-2": {
-      "status": "PENDING_RESEARCHER",
-      "authority": "explicit researcher decision required",
-      "record": "docs/plan/B2_E5_RESEARCHER_DECISIONS.md#dr-e5-03--obs-cancel2-phase-tracking",
-      "approved_by": null,
-      "approved_at": null
+      "status": "APPROVED",
+      "authority": "researcher-approved scientific method only; no compute authorization",
+      "record": "docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md",
+      "approved_by": "mythril33",
+      "approved_at": "2026-10-24T11:14:11.155Z"
     },
     "full_generation": {
       "status": "NOT_AUTHORIZED",
