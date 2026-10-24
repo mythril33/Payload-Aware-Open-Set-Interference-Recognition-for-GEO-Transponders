@@ -76,6 +76,8 @@ INPUT_FILES = (pre.GATES_PATH, pre.MEMO_PATH, DECISIONS, k17d_check.IDENTITY, k1
 TOOLS = tuple(sorted(path.name for path in HERE.glob("*.py")))
 PASS, FAIL, BLOCKED = "PASS", "FAIL", "BLOCKED"
 HEX40, HEX64 = re.compile(r"[0-9a-f]{40}"), re.compile(r"[0-9a-f]{64}")
+# `pip install -e` leaves these inert metadata files next to the sources; entry_points.txt (a plugin hook) is deliberately not in the list.
+EDITABLE_INSTALL_METADATA = re.compile(r"src/[^/]+\.egg-info/(PKG-INFO|SOURCES\.txt|dependency_links\.txt|requires\.txt|top_level\.txt)")
 MAX_PLAN_BYTES = 4 * 2 ** 20
 MAX_DEPTH = 40
 MAX_RECORD_BYTES = 256 * 1024
@@ -480,7 +482,7 @@ def collect_reference(repo=ROOT, *, rederive=True, git=pre.run_git, evaluated_at
         others = _git(git, repo, "ls-files", "--others", "--", "src", "scripts", "configs").splitlines()
     except Exception:
         others = ["<git ls-files failed>"]
-    reference["untracked_source"] = sorted(name for name in others if name and "/__pycache__/" not in name)
+    reference["untracked_source"] = sorted(name for name in others if name and "/__pycache__/" not in name and not EDITABLE_INSTALL_METADATA.fullmatch(name))
     for path in record_paths:
         relative = _safe_repo_relative(path)
         if relative is not None and relative.parts[0] == "docs" and _committed(git, repo, path):

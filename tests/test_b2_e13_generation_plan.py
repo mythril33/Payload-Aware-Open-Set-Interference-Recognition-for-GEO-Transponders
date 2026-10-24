@@ -1592,6 +1592,17 @@ def test_collect_reference_lists_untracked_files_but_not_compiled_caches():
     assert G.collect_reference(rederive=False, git=failing_ls, evaluated_at=NOW)["untracked_source"] == ["<git ls-files failed>"]
 
 
+def test_editable_install_metadata_is_tolerated_but_entry_points_are_not():
+    inner = fake_git()
+    listing = "\n".join(["src/geosim.egg-info/PKG-INFO", "src/geosim.egg-info/SOURCES.txt", "src/geosim.egg-info/top_level.txt", "src/geosim.egg-info/requires.txt",
+                         "src/geosim.egg-info/dependency_links.txt", "src/geosim.egg-info/entry_points.txt", "src/other.egg-info/PKG-INFO/x", "src/geosim.egg-info/evil.py"])
+
+    def with_metadata(*args, repo=None):
+        return listing if args[2:4] == ("ls-files", "--others") else inner(*args, repo=repo)
+    snapshot = G.collect_reference(rederive=False, git=with_metadata, evaluated_at=NOW)
+    assert snapshot["untracked_source"] == ["src/geosim.egg-info/entry_points.txt", "src/geosim.egg-info/evil.py", "src/other.egg-info/PKG-INFO/x"]
+
+
 def test_every_script_is_hashed_so_a_future_launcher_voids_an_approval():
     assert set(G.TOOLS) == {path.name for path in (ROOT / "scripts").glob("*.py")} and "b2_production_supervisor.py" in G.TOOLS and "b2_e13_generation_plan.py" in G.TOOLS
 
