@@ -85,12 +85,18 @@ def test_estimates_reproduce_from_array_shapes_and_measured_costs(monkeypatch):
     assert {item["id"]: item["status"] for item in pre.check_estimates()}["estimates.wall"] == pre.FAIL
 
 
-def test_committed_gates_are_blocked_never_passed_and_benchmark_stays_incomplete():
+def test_committed_scientific_approvals_pass_but_compute_gates_remain_blocked():
     gates = json.loads((ROOT / pre.GATES_PATH).read_text())
     memo = json.loads((ROOT / pre.MEMO_PATH).read_text())
     status = {item["id"]: item["status"] for item in pre.check_gates(gates, memo)}
     assert status["gates.benchmark_complete"] == pre.PASS
-    assert {status[f"gates.{key}"] for key in pre.GATE_KEYS} == {pre.BLOCKED}
+    for key in ("K18", "K17d", "OBS-CANCEL-2"):
+        assert status[f"gates.{key}"] == pre.PASS
+        assert status[f"gates.{key}.consistency"] == pre.PASS
+    for key in ("full_generation", "full_gpu_training", "full_loko_sweep"):
+        assert status[f"gates.{key}"] == pre.BLOCKED
+        assert status[f"gates.{key}.consistency"] == pre.PASS
+        assert gates["decisions"][key]["approval"] is None
 
 
 def test_an_approval_needs_provenance_and_a_pending_gate_may_not_carry_one():

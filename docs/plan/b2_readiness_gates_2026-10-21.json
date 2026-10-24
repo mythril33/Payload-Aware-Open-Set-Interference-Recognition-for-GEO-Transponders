@@ -14,22 +14,37 @@
   "benchmark_complete": false,
   "decisions": {
     "K18": {
-      "status": "PENDING_RESEARCHER",
+      "status": "APPROVED",
       "observed": "P20 0.005 times summed squared distance vs P21b 0.01 times mean; D/2 difference",
       "proposal": "Retain P20 sum 0.005 and plan BCE 1.0; train-only center/CE diagnostic",
-      "approval": null
+      "approval": {
+        "approved_by": "mythril33",
+        "approved_at": "2026-10-24T11:14:11.155Z",
+        "decision": "A: P20 CE + 0.005 × batch-mean sum_d center squared distance + 1.0 × plan BCE; keep train-only observation diagnostics",
+        "record": "docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md"
+      }
     },
     "K17d": {
-      "status": "PENDING_RESEARCHER",
+      "status": "APPROVED",
       "observed": "35/500 held-out groups affected by co-feed carrier loss; median drift 0.71 dB, max 5.91 dB",
       "proposal": "Retain frozen K17d; flagged subgroup plus prespecified sensitivity; separately version B2-test/2 only if authorized",
-      "approval": null
+      "approval": {
+        "approved_by": "mythril33",
+        "approved_at": "2026-10-24T11:14:11.155Z",
+        "decision": "A+C: retain B2-test/1 all 500 groups, prespecify 35 co-feed missing-carrier groups (pol=0) and 465-group excluding-them sensitivity; metadata-only membership, before test read",
+        "record": "docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md"
+      }
     },
     "OBS-CANCEL-2": {
-      "status": "PENDING_RESEARCHER",
+      "status": "APPROVED",
       "observed": "obs-cancel/1 phase-noise depth ceiling ~21-25 dB",
       "proposal": "Separately version phase-tracking experiment; >=35 dB synthetic depth, <=0.1 dB gap-floor shift, <=2x runtime, no paired CuC regression",
-      "approval": null
+      "approval": {
+        "approved_by": "mythril33",
+        "approved_at": "2026-10-24T11:14:11.155Z",
+        "decision": "A: retain obs-cancel/1 as primary; document phase-noise-only 21.7 dB block / 22.8 dB stored-window theoretical depth under 150 Hz; no primary phase tracker",
+        "record": "docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md"
+      }
     },
     "full_generation": {
       "status": "NOT_AUTHORIZED",
