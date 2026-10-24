@@ -3,7 +3,7 @@
 **Branch:** `fix/b2-e10-scientific-integrity-hardening`.
 **Baseline at start:** `origin/main` `e43987ea8b6a50d0df9b6969e69e80d36d03f182` (PRs #30, #31, #32 merged).
 **Merged state:** PR #33 was merged by its maintainer at head `4efb7f0`; `origin/main` is now `293c487`, a merge commit whose tree equals `4efb7f0`. This report covers the follow-up work after that merge.
-**Code under test:** `68b13bb` (the follow-up code commit). The documentation commit that carries this report changes no file under `src/`, `tests/`, `scripts/` or `configs/`; this is checked with `git diff --stat 68b13bb HEAD` in section 7.
+**Code under test:** `9f99f3e` (the follow-up code commit, rebased onto `origin/main`). Its tree is identical to `68b13bb`, the commit the full suite ran on (`git diff --stat 68b13bb 9f99f3e` is empty). The documentation commit that carries this report changes no file under `src/`, `tests/`, `scripts/` or `configs/`; this is checked with `git diff --stat 68b13bb HEAD` in section 7.
 **Scope:** CPU-only verification. No dataset generation, no GPU, no training, no held-out evaluation, no LOKO, no new held-out observation opened.
 
 ## 1. Environment
@@ -22,12 +22,12 @@ All commands ran from the repository root with `PYTHONPATH=src` and the scratch 
 
 | # | Command | Scope | Result |
 |---|---|---|---|
-| T1 | `pytest tests/test_b2_e10_k17d.py tests/test_b2_e10_records.py tests/test_b2_e10_calibration.py -q` | E10 new tests | **PENDING_T1** |
-| T2 | `pytest tests/test_b2_execution.py -q` | isolated executor, including the calibration and evaluation isolation tests | **PENDING_T2** |
-| T3 | full suite, included in T4 | E9 contract and preflight gates | covered by T4 |
-| T4 | `pytest -q -rs -p no:cacheprovider` (full suite, CI-equivalent flags) at `68b13bb` | whole repository | **PENDING_T4** |
-| T5 | `python -m compileall -q src tests scripts` at `68b13bb` | syntax of every source file | **PENDING_T5** |
-| T6 | `python scripts/b2_e10_k17d_identity.py` at `68b13bb` | metadata-only K17d derivation over 500 test groups with the audit cross-check | **PENDING_T6** |
+| T1 | `pytest tests/test_b2_e10_k17d.py tests/test_b2_e10_records.py tests/test_b2_e10_calibration.py -q` | E10 new tests | **89 passed** (43 K17d + 11 records + 35 calibration), 5.61 s |
+| T2 | `pytest tests/test_b2_execution.py -q` | isolated executor, including the calibration and evaluation isolation tests | **42 passed**, 7.36 s |
+| T3 | full suite, included in T4 | E9 contract and preflight gates | covered by T4 (no separate failure) |
+| T4 | `pytest -q -rs -p no:cacheprovider` (full suite, CI-equivalent flags) at `68b13bb` | whole repository | **2115 passed, 0 failed, 0 skipped**, 46 warnings, 1243.83 s, exit 0. The warnings are matplotlib `PendingDeprecationWarning` from `scripts/plot_b2_scientific_results.py:166` (`cmap.set_bad`). Reconciliation: 2105 at `4efb7f0` plus the 10 new E10 tests (K17d +5, records +3, calibration +2) = 2115. |
+| T5 | `python -m compileall -q src tests scripts` at `68b13bb` | syntax of every source file | **passed**, exit 0 |
+| T6 | `python scripts/b2_e10_k17d_identity.py` at `68b13bb` | metadata-only K17d derivation over 500 test groups with the audit cross-check | **exit 0**: headline 500, co-feed 35, sensitivity 465, cross-feed 43, total missing 78; `agrees=True`; `observation_reads: 0`, `waveform_synthesis_calls: 0`. Re-running it leaves the committed record byte-identical (`git status` clean). |
 
 Failures and skips are recorded in section 4.
 
@@ -45,8 +45,8 @@ No assertion was weakened to pass. Each edit below was made because the test enc
 
 ## 4. Failures and skips
 
-- **Failures in the full run (T4):** PENDING_T4_FAILURES
-- **Skips (T4):** PENDING_T4_SKIPS
+- **Failures in the full run (T4):** none. The run ended with 2115 passed and exit 0.
+- **Skips (T4):** none. The log contains no `SKIPPED` line, and `-rs` reports no skipped test.
 - **Tripwires (unchanged):** `tests/test_b2_e8_tools.py:237` and `tests/test_b2_training_footprint.py:553` still encode the approved TF32 sequence. They pass at `68b13bb`.
 - **Failures found during development (before correction):** a `TrainConfig` constructor error, a `B2Source.index` fixture error, the `dict(**{7: ...})` keyword error in one new test (a `TypeError` in my own test code), and the two `test_b2_execution` failures in section 3. All were fixed in tests or helpers, not in approved code.
 
@@ -70,7 +70,7 @@ No assertion was weakened to pass. Each edit below was made because the test enc
 ## 7. Exact HEAD, file changes and CI
 
 - **Merged state:** PR #33 merged at `4efb7f0`. `origin/main` is `293c487`, tree identical to `4efb7f0`.
-- **Follow-up code commit under test:** `68b13bb` (rebased onto `293c487` for the follow-up PR; tree content unchanged by the rebase, since `origin/main` tree equals `4efb7f0` tree).
+- **Follow-up code commit under test:** `9f99f3e`, rebased onto `293c487`. Its tree equals `68b13bb`, the commit the full suite ran on, because the tree of `origin/main` equals that of `4efb7f0`.
 - **Protected paths:** `git diff --stat e43987e HEAD -- docs/plan/b2_e9_approved_scientific_protocol.json docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md docs/plan/B2_E8_DECISION_APPROVAL.md src/geoml/b2_e9_contract.py configs/ docs/plan/b2_e9_candidate_production_config.json` is **empty**.
 - **Documentation-only check:** `git diff --stat 68b13bb HEAD` lists only `docs/` paths for the documentation commit.
 - **CI:** the follow-up draft PR's exact-head check run is recorded in its description after it completes. The prior check on `4efb7f0` (run `40108670413`, job `120915592427`) passed; it is superseded.
