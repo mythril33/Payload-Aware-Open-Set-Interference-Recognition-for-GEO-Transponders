@@ -1,5 +1,11 @@
 # Proje durumu ve eksik kaydı
 
+## Güncel uygulama eki — 2026-10-24 (E9-Preflight: eşzamanlı birleşim doğrulaması)
+
+- PR #28 başı `1539831995b637a187330fd9ac937ee46bf364dc`: ham logla doğrulanan [CI 40095376387/job120876380654](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40095376387/job/120876380654) **1825 geçti, 0 başarısız, 0 atlama, 46 uyarı**. Yerel kalan-depo tekrarı **1710 geçti, 8 atlama**, 1323,91 s; RSS ve yedi makine/Torch altın-kayıt atlaması CI'ın sıfır atlamalı sonucu ile karıştırılmaz. PR dışarıdan birleştirildi; ajan merge/ready işlemi yapmadı.
+- Sonraki dış PR #29 birleşimi uzak main'i `a1d0afc522d2207739dc31f352cd9511f8c0a4bc` yaptı ve testte `gate_report` tanımından sonra kalan `blocked` başvurusuyla yeni `NameError` üretti. Yeni tabanda hedef test önce başarısız, yalnız test düzeltmesi sonrası başarılı çalıştı. [Ayrı birleşim kurtarma kanıtı](../results/B2_E9_PREFLIGHT_INTEGRATION_RECOVERY.md); önceki yeşil head sonraki main'in doğrulaması sayılmaz.
+- Bilimsel onay/provenance aynen korunur. Üretim/GPU/LOKO/prob yetkisiz; başlatıcı kapalı, `benchmark_complete=false`. Kaynak/config/iş akışı/protokol değişmedi. Son head tam test/CI kanıtı yeni taslak PR'da gerçekten tamamlanınca kaydedilir; E9 yürütücüsü geliştirilmedi.
+
 ## Güncel uygulama eki — 2026-10-24 (E9-Preflight: onay sonrası CI kurtarma)
 
 - Gerçek uzak main `d14f31de35ca9de3b88c0c0f8e55d99bbfd98bb7`; PR #26 birleşmiş. K18/K17d/OBS-CANCEL-2 ve R1–R10 bilimsel olarak onaylıdır. Aşağıdaki E7/E8 bekleyen-karar kayıtları tarihsel aday durumlarıdır; güncel onay kaydı [E9 bilimsel kayıt](B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md) dosyasıdır.
