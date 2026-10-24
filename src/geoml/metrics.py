@@ -54,10 +54,12 @@ def clean_alarm_threshold(clean_scores: np.ndarray, pfa: float) -> float:
 
 
 def threshold_at_pfa(clean_scores: np.ndarray, pfa: float) -> float:
-    """HISTORICAL linear-quantile threshold used by frozen stages (stage A, R1, A5, observed receiver, legacy coupled path).
+    """HISTORICAL linear-quantile threshold used by frozen stages. It is NOT the approved R10 rule.
 
-    Kept bit-for-bit so that archived results keep their meaning. It is NOT the approved R10 rule;
-    the E9 calibrate path uses ``clean_alarm_threshold``.
+    Kept bit-for-bit so that archived results keep their meaning. Call sites (E10 inventory, unchanged):
+    ``b2_observed_experiment.py:180``, ``dual_experiment.py:172``, ``b2_a5.py:220``, ``b2_experiment.py:522``
+    (legacy coupled path), ``robustness.py:129`` and ``pipeline.py:67``. The E9 calibrate path uses
+    ``clean_alarm_threshold``.
     """
     return float(np.quantile(clean_scores, 1 - pfa))
 

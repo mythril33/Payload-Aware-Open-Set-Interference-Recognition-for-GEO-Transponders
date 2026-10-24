@@ -22,17 +22,32 @@ from geosim import b2_k17d as K  # noqa: E402
 from geosim import b2_scenarios  # noqa: E402
 
 STATUS = "DERIVED_FROM_FROZEN_GENERATOR_METADATA_CROSS_CHECKED_PENDING_RESEARCHER_ACCEPTANCE"
+AUDIT = "docs/results/k17d_drift_audit.json"
 SOURCES = ("src/geosim/b2_scenarios.py", "src/geosim/b2_protocol.py", "src/geosim/b2_k17d.py")
 
 
-def _sha256_file(relative):
-    return hashlib.sha256((ROOT / relative).read_bytes()).hexdigest()
+def _sha256_file(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def package_digest():
+    """SHA-256 over every module of src/geosim, each bound to its repository-relative path.
+
+    Any edit to the generator or to this validator changes the digest, so a committed record that no longer
+    matches the current source is detected by the records test.
+    """
+    digest = hashlib.sha256()
+    files = sorted((ROOT / "src" / "geosim").glob("*.py"))
+    for path in files:
+        name = path.relative_to(ROOT).as_posix()
+        digest.update(name.encode("utf-8") + b"\0" + _sha256_file(path).encode("ascii") + b"\n")
+    return digest.hexdigest(), len(files)
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--out", default="docs/results/b2_e10_k17d_identity.json")
-    parser.add_argument("--audit", default="docs/results/k17d_drift_audit.json")
+    parser.add_argument("--audit", default=AUDIT)
     args = parser.parse_args(argv)
 
     calls = {"simulate_dual": 0}
@@ -42,8 +57,13 @@ def main(argv=None):
         raise RuntimeError("waveform synthesis attempted from the K17d metadata derivation")
 
     b2_scenarios.simulate_dual = forbidden
-    derived = K.derive_from_generator()
-    audit = json.loads((ROOT / args.audit).read_text())
+    try:
+        derived = K.derive_from_generator()
+    except RuntimeError as error:
+        print(f"FAIL-CLOSED: {error}", file=sys.stderr)
+        return 1
+    audit_path = ROOT / args.audit
+    audit = json.loads(audit_path.read_text())
     try:
         cross = K.cross_check_audit(derived, audit)
     except K.K17dError as error:
@@ -53,13 +73,18 @@ def main(argv=None):
         print("FAIL-CLOSED: waveform path was reached", file=sys.stderr)
         return 1
 
+    package_sha256, package_files = package_digest()
     record = {
         "schema": "B2-E10-k17d-identity-record/1",
         "status": STATUS,
         "authorizes": "nothing; the identity list is a candidate pending researcher acceptance",
         "observation_reads": 0,
         "waveform_synthesis_calls": calls["simulate_dual"],
-        "source_sha256": {path: _sha256_file(path) for path in SOURCES},
+        "package_sha256": package_sha256,
+        "package_files": package_files,
+        "source_sha256": {path: _sha256_file(ROOT / path) for path in SOURCES},
+        "audit_path": args.audit,
+        "audit_sha256": _sha256_file(audit_path),
         "derivation": {
             "generator": "geosim.b2_scenarios.prepare_scene (metadata only, label 'clean')",
             "groups": "frozen test role 3200000-3200499",
@@ -71,14 +96,16 @@ def main(argv=None):
         "counts": derived["counts"],
         "fingerprints": derived["fingerprints"],
         "audit_cross_check": cross,
+        "headline_ids": derived["headline_ids"],
         "co_feed_missing_ids": derived["co_feed_missing_ids"],
         "sensitivity_ids": derived["sensitivity_ids"],
         "cross_feed_missing_ids": derived["cross_feed_missing_ids"],
     }
-    out = ROOT / args.out
+    out = (ROOT / args.out).resolve()
+    label = out.relative_to(ROOT) if out.is_relative_to(ROOT) else out
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(K.canonical(record) + "\n")
-    print(f"wrote {out.relative_to(ROOT)}: counts={derived['counts']} agrees={cross['agrees']}")
+    print(f"wrote {label}: counts={derived['counts']} agrees={cross['agrees']}")
     return 0
 
 

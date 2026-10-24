@@ -197,10 +197,10 @@ def test_threshold_rule_matches_independent_power_probability_arithmetic(fixture
     alarm=json.loads((out/"alarm_co.json").read_text())
     # E10 (docs/engineering/B2_E10_R10_CLEAN_ALARM_CHANGE.md): the approved R10 clean-alarm rule is the higher
     # empirical quantile. The earlier interpolated expectation was the historical linear rule and is retired here.
-    expected=float(np.quantile(1.-p[clean,0],.95,method="higher"))
+    expected=float(np.quantile(p[clean,1:].sum(1),.95,method="higher"))
     assert alarm["threshold"]==pytest.approx(expected,abs=1e-12)
     assert alarm["n_clean_calibration"]==2
-    assert alarm["calibration_false_alarms"]==int(((1.-p[clean,0])>expected).sum())
+    assert alarm["calibration_false_alarms"]==int(((p[clean,1:].sum(1))>expected).sum())
     for method in cfg.methods:
         values=scorer.score(outputs["embedding"]) if method=="mahalanobis" else execution.unknown_scores(outputs["logits"],method)
         rejection=json.loads((out/f"rejection_co_{method}.json").read_text())

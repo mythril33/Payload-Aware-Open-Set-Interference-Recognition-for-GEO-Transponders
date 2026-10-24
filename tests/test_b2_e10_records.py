@@ -3,6 +3,8 @@
 CPU-only. Reads only committed JSON summaries. No held-out observation, checkpoint or artifact is opened.
 """
 import copy
+import hashlib
+import importlib.util
 import json
 from pathlib import Path
 
@@ -46,6 +48,42 @@ def test_record_fingerprints_recompute_from_its_own_lists(record):
     assert record["fingerprints"]["co_feed_missing_ids"] == K.sha256_of(ids)
     assert record["fingerprints"]["sensitivity_ids"] == K.sha256_of(record["sensitivity_ids"])
     assert ids == sorted(ids) and len(set(ids)) == len(ids)
+
+
+def _derivation_script():
+    spec = importlib.util.spec_from_file_location("b2_e10_k17d_identity", ROOT / "scripts" / "b2_e10_k17d_identity.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)  # top level defines functions only; main() is not run
+    return module
+
+
+def test_record_is_bound_to_the_current_source_and_the_committed_audit(record):
+    # A stale record (any edit under src/geosim, or a changed audit) fails here until the script is rerun.
+    assert record["package_sha256"] == _derivation_script().package_digest()[0]
+    assert record["audit_sha256"] == hashlib.sha256(AUDIT.read_bytes()).hexdigest()
+    for path, digest in record["source_sha256"].items():
+        assert digest == hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
+
+
+def test_record_headline_predicate_and_fingerprints_recompute(record):
+    assert record["headline_ids"] == list(K.TEST_IDS)
+    assert record["fingerprints"]["headline_ids"] == K.sha256_of(record["headline_ids"])
+    assert record["derivation"]["predicate"] == K.PREDICATE
+    assert record["counts"]["headline"] == len(record["headline_ids"]) == 500
+
+
+def test_record_reproduces_from_the_frozen_generator_metadata_without_waveforms(record, monkeypatch):
+    from geosim import b2_scenarios
+
+    def forbidden(*_args, **_kwargs):
+        raise AssertionError("waveform synthesis reached while reproducing the K17d record")
+
+    monkeypatch.setattr(b2_scenarios, "simulate_dual", forbidden)
+    derived = K.derive_from_generator()
+    assert derived["fingerprints"] == record["fingerprints"]
+    assert derived["co_feed_missing_ids"] == record["co_feed_missing_ids"]
+    assert derived["sensitivity_ids"] == record["sensitivity_ids"]
+    assert derived["cross_feed_missing_ids"] == record["cross_feed_missing_ids"]
 
 
 def test_record_agrees_with_the_committed_audit(record, audit):

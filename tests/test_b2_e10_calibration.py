@@ -95,6 +95,28 @@ def test_invalid_pfa_is_refused(pfa):
         clean_alarm_threshold(np.arange(10.0), pfa)
 
 
+# ---- the alarm score keeps its ordering for confidently clean samples -----------------------------------
+
+def test_saturated_clean_margin_keeps_a_positive_score_and_its_ordering():
+    # Clean logit 40 and 45 nats above the other classes. 1 - P(clean) by subtraction rounds to exactly 0.0 here.
+    logits = np.array([[40.0, 0.0, 0.0], [45.0, 0.0, 0.0]])
+    shifted = logits - logits.max(axis=1, keepdims=True)
+    probabilities = np.exp(shifted) / np.exp(shifted).sum(axis=1, keepdims=True)
+    assert np.all(1.-probabilities[:,0] == 0.0)                 # the historical subtraction saturates
+    scores = execution.clean_alarm_score(probabilities)
+    assert np.all(scores > 0.0)                                 # the non-clean sum still resolves the margin
+    assert scores[1] < scores[0]                                # the larger clean margin has the smaller score
+    assert scores[0] == pytest.approx(2*np.exp(-40.0)/(1+2*np.exp(-40.0)), rel=1e-12)
+
+
+def test_both_alarm_call_sites_use_the_saturation_free_score():
+    # The calibrate path and the evaluation path must score alarms with the same helper, never 1 - P(clean).
+    for function in (execution.calibrate_b2_models, execution.evaluate_b2_inventory):
+        source = inspect.getsource(function)
+        assert "clean_alarm_score(" in source
+        assert "1.-probabilities" not in source
+
+
 # ---- distinct known-acceptance and clean-alarm thresholds ----------------------------------------------
 
 def test_acceptance_and_clean_alarm_are_distinct_populations():
