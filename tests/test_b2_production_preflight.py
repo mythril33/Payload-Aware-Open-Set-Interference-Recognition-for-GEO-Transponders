@@ -585,7 +585,7 @@ def test_command_line_exit_codes_strict_json_and_no_overwrite(tmp_path, capsys, 
         "gates.full_generation", "gates.full_gpu_training", "gates.full_loko_sweep"}      # ... and only they
     assert all(statuses[f"gates.{key}"] == pre.PASS for key in ("K18", "K17d", "OBS-CANCEL-2"))   # approved science is not execution authority
     assert pre.main(["--allow-blocked", "gates"]) == 0
-    capsys.readouterr()
+    assert strict(capsys.readouterr().out) == blocked  # exit-code policy grants no execution authority
     out = tmp_path / "report.json"
     assert pre.main(["audit", "--stage", "known", "--root", str(stages.known), "--out", str(out)]) == 0
     assert strict(out.read_text())["checks"][0]["evidence"]["state"] == "COMPLETE"

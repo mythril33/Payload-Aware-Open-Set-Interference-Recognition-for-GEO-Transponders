@@ -3,6 +3,11 @@
 Date: 2026-10-24. Verified remote main:
 `d14f31de35ca9de3b88c0c0f8e55d99bbfd98bb7` (PR26 merged).
 This is a test/documentation recovery, not E9 executor implementation.
+During validation, PR27 was merged externally as
+`a5e3b7b8a87ed7b9fb41f513ddb8bb6b685ec4b1` before its two remaining
+test failures were fixed. The agent did not invoke merge. That main tree
+equals recovery head29db36a; the follow-up advances from it by fast-forward,
+preserving local work and all source/scientific records.
 
 ## Root cause, verified before modifications
 
@@ -24,6 +29,12 @@ The audit found further previously unreached test regressions:
 | Preflight approval test | Requires consistency PASS entries that the checker never emits | Compare the twins explicitly and reject consistency failures; retain mismatch negatives |
 | Two supervisor tests | Four blocked production prerequisites, first reason K18 | Three scientific prerequisites now pass; generation authorization remains blocked and no child may spawn |
 | Generated checklist | Three scientific rows still BLOCKED/PENDING | Regenerate with the unchanged checker;39PASS/0FAIL/16BLOCKED/1NOT_RUN, overall BLOCKED |
+| Full-regression CLI case | Six BLOCKED gates | Require four PASS/three BLOCKED and identical closed-authority JSON with or without --allow-blocked |
+| Full-regression E7 proposal case | Historical candidate gate snapshot equals today's gate state | Preserve historical PENDING/null candidate; separately check current scientific approval and closed compute |
+
+The final two rows were exposed by the subsequent complete regression,
+not the initial search. They were independently diagnosed and repaired only
+in tests; the historical E7 proposal JSON was not rewritten or activated.
 
 The original test failed locally before editing (one failure,3.44s).
 Five related current-state tests also failed before editing (five failures,
@@ -84,11 +95,40 @@ clear memorandum actor fields while retaining the gate's approval record,
 so that rejection cannot pass only because of unrelated memorandum fields.
 The reviewer edited nothing and ran no tests/experiments.
 
-The originally failing test, relevant safety/freeze/P31 checks, exact E4
-workflow matrix, full repository workflow command and syntax/diff checks
-will be recorded only after execution. Exact-head CI is separate from
-local evidence; pending or skipped execution is never called successful.
-See the draft PR for post-publication exact-head GitHub run/job evidence.
+Completed evidence on recovery revision
+`29db36ae17c7af15e8eb904a3b1e8ca59e484e72`:
+
+| Check | Passed | Failed | Skipped | Warnings | Pytest seconds |
+|---|---:|---:|---:|---:|---:|
+| Originally failing target |1|0|0|0|19.97|
+| Focused safety/freeze/candidate/P31 |68|0|0|0|13.56|
+| Local exact E4 matrix |107|0|0|0|216.76|
+| Local complete repository CI command |1708|2|8|46|1212.55|
+| GitHub E4, run40092535088/job120867990644 |107|0|0|0|143.84|
+| GitHub repository command, same run |1709|2|7|46|943.80|
+
+Both complete runs found the same CLI count and historical-proposal
+comparison failures. They are not passed suites. The final two-function
+repair plus candidate/freeze checks passed **11 tests in12.16s** before
+the follow-up commit; the ledger identifies the parent HEAD and exact
+modified test hashes rather than claiming that working-tree run tested a
+future commit. No source, config or scientific record changed.
+
+Local skips: one E1 peak-RSS check could not reset
+`/proc/self/clear_refs`; seven golden-capture comparisons do not reproduce
+on this machine/Torch build. Remote skips were the seven capture cases;
+the live original-loop parity tests remain applicable. The46 warnings are
+the existing Matplotlib `set_bad` PendingDeprecationWarning, not suppressed.
+
+Syntax compilation and diff checks passed. No separate lint tool is
+configured. The follow-up runs the complete repository CI command again
+with a fixed HEAD and immutable source/test/approval files. This file is
+a commit-time diagnostic snapshot. Current exact-head local/GitHub results,
+including final run/job links, are published in
+the successor draft PR for
+[the recovery branch](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/tree/fix/b2-e9-postmerge-ci-gate-regression)
+after execution. PR27 records the initial failed recovery revision;
+pending or skipped checks are never called successful.
 
 E9 executor engineering remains a separate future milestone after this
 recovery and independent review. All compute and release controls remain
