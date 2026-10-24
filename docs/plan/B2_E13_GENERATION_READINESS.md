@@ -47,7 +47,7 @@ Summary: of the twelve controls, **2 were fully implemented** (1, 10), **3 had a
 
 ### Plan sections and checks (finding IDs)
 
-`plan.shape`, `plan.mode`, `plan.fingerprint`, `plan.depth`, `plan.forbidden_key`, `plan.inventory`, `plan.inventory_independent`, `plan.roles`, `plan.stage_order`, `plan.stage_options`, `plan.paths`, `plan.generator_assumptions`, `source.git|clean|committed_inputs|files|tree_digest|configs|generator|known_request|tools|records`, `environment.pin|matches_host`, `lock.document|verify`, `scientific.record|ratified_no_execution|d1_exposure|d8_identity|k17d_verification|k17d_bindings`, `host.inventory|identity|cpu|ram|roots_exist|filesystems|disk`, `plan.paths_host`, `backup.device|capacity`, `ceilings.shape|values|explicit|status`, `timing.first_shard`, `stop_rules.defined`, `obligations.post_generation`, `release.evidence`, `authorization.shape|basis|record|record_content|provenance|binding|ceilings|scope|gate|supervisor_view|scientific_prerequisites|scope_isolation`.
+`plan.shape`, `plan.mode`, `plan.fingerprint`, `plan.depth`, `plan.forbidden_key`, `plan.inventory`, `plan.inventory_independent`, `plan.roles`, `plan.stage_order`, `plan.stage_options`, `plan.paths`, `plan.generator_assumptions`, `source.git|clean|committed_source|untracked_files|committed_inputs|files|tree_digest|configs|generator|known_request|tools|records`, `environment.pin|matches_host`, `lock.document|verify`, `scientific.record|ratified_no_execution|d1_exposure|d8_identity|k17d_verification|k17d_bindings`, `host.inventory|identity|cpu|ram|roots_exist|filesystems|disk|remeasured`, `plan.paths_host`, `backup.device|capacity`, `ceilings.shape|values|explicit|status`, `timing.first_shard`, `stop_rules.defined`, `obligations.post_generation`, `release.evidence`, `authorization.shape|basis|record|record_content|approver|provenance|binding|ceilings|scope|gate|supervisor_view|scientific_prerequisites|scope_isolation`.
 
 ### DR-04 authorization record (`B2-E13-dr04-authorization-record/1`)
 
@@ -84,7 +84,7 @@ A plan can carry one; the validator accepts it only if **all** hold: kind `compu
 
 ## 7. Independent review and what remains self-asserted
 
-A separate read-only reviewer examined two versions. **Round 1** (first version): 0 blockers, 6 major findings, all of the form "a document is accepted that should be rejected" or "an unstructured failure"; none opened a launch route. **Round 2** (after the fixes): 0 blockers, 2 major and several minor findings. Both rounds are answered:
+A separate read-only reviewer examined three versions. **Round 1** (first version): 0 blockers, 6 major findings, all of the form "a document is accepted that should be rejected" or "an unstructured failure"; none opened a launch route. **Round 2** (after the fixes): 0 blockers, 2 major and several minor findings. **Round 3** (after those fixes): 0 blockers, 0 major, minor residuals only, ending in `NO OPEN MATERIAL FINDING`. Every round is answered:
 
 | Round | Finding | Disposition |
 |---|---|---|
@@ -96,6 +96,10 @@ A separate read-only reviewer examined two versions. **Round 1** (first version)
 | 1-6, 2-D | host identity unverifiable | inventory must name the declared host, be recent, agree with the pins; **`host.remeasured`**: on the designated host this process re-measures device, filesystem and free space of both roots and compares; anywhere else the finding is `BLOCKED` |
 | 2-C | `git status` blind to skip-worktree / info-exclude | `source.committed_source` compares every hashed file with HEAD's blob |
 | 2-G | record check was a substring test; no way to get the digest | exact fenced JSON block; `digest --plan` command; bounded read |
-| 2-I | test gaps | boundary, state-leak, register-date and mutation-survivor tests added; environment-dependent assertions relaxed |
+| 2-I, 3-H | test gaps and state leakage | boundary, register-date and mutation-survivor tests added; the register-edit test now works on a fresh copy per step; the record-size test patches the cap; every volatile filesystem type is asserted individually; environment-dependent assertions relaxed |
+| 3-A | approver identity; quoted examples; TOOLS list fixed | `authorization.approver` requires the scientific protocol's approver; the approval block is found by a linear line scanner (CRLF normalised, four-backtick quotations are not blocks); every `scripts/*.py` is hashed |
+| 3-C | ignored extension modules and unhashed files invisible | `source.untracked_files`: `git ls-files --others` without ignore rules over src, scripts and configs (compiled caches excepted) |
+| 3-D | CPU/RAM only embedded | on the designated host `host.remeasured` also re-measures usable CPUs and available RAM |
+| 3-F | `/run/mount` exempted | only `/run/media` stays allowed; the filesystem type decides |
 
-**Still self-asserted, so not proof:** off the designated host the embedded inventory (CPU, RAM, devices, node) is the plan author's JSON (`host.remeasured` stays `BLOCKED`); storage ids; the independent-review and CI evidence in `release_evidence`; and that the researcher rather than the plan author wrote and committed the approver's record (a process separation, enforced by merge review, since the register itself carries no signature). `validate` run with `--lock` also invokes the preflight lock builder (`git`, `uname`). Python 3.12 (CI) was not available locally; the suite ran on 3.13.
+**Still self-asserted, so not proof:** off the designated host the embedded inventory (CPU, RAM, devices, node) is the plan author's JSON (`host.remeasured` stays `BLOCKED`); on the host the node name is the host's own claim (a machine renamed to match `host_id` passes) and BLAS/torch builds are not pinned; storage ids; the independent-review and CI evidence in `release_evidence`; and that the researcher rather than the plan author wrote and committed the approver's record (a process separation, enforced by merge review, since the register itself carries no signature). `validate` run with `--lock` also invokes the preflight lock builder (`git`, `uname`). Python 3.12 (CI) was not available locally; the suite ran on 3.13.

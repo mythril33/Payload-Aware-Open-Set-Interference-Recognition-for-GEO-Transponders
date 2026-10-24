@@ -72,7 +72,8 @@ PROTOCOL_JSON = "docs/plan/b2_e9_approved_scientific_protocol.json"
 SCIENTIFIC_RECORDS = ("docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md", PROTOCOL_JSON,
                       "docs/plan/B2_E12_D1_D8_SCIENTIFIC_APPROVAL_2026-10-24.md", DECISIONS)
 INPUT_FILES = (pre.GATES_PATH, pre.MEMO_PATH, DECISIONS, k17d_check.IDENTITY, k17d_check.AUDIT, PROTOCOL_JSON)
-TOOLS = ("b2_e13_generation_plan.py", "b2_production_supervisor.py", "b2_production_preflight.py", "b2_host_inventory.py", "b2_e12_verify_k17d.py")
+# Every script is hashed: a future launcher or executor lands in scripts/ and must void an approval made before it existed.
+TOOLS = tuple(sorted(path.name for path in HERE.glob("*.py")))
 PASS, FAIL, BLOCKED = "PASS", "FAIL", "BLOCKED"
 HEX40, HEX64 = re.compile(r"[0-9a-f]{40}"), re.compile(r"[0-9a-f]{64}")
 MAX_PLAN_BYTES = 4 * 2 ** 20
@@ -84,7 +85,7 @@ DISK_MARGIN = 1.1                                  # the supervisor's own artifa
 AUTH_MAX_VALIDITY = timedelta(days=30)             # E13 rule: an authorization is a short-lived, re-issuable record
 INVENTORY_MAX_AGE = timedelta(days=14)             # E13 rule: a host report older than this describes some other day
 VOLATILE_PREFIXES = ("/dev", "/proc", "/sys", "/run", "/tmp", "/var/tmp", "/var/run")
-DURABLE_UNDER_VOLATILE = ("/run/media", "/run/mount")      # removable drives are mounted there; the filesystem type still has to be durable
+DURABLE_UNDER_VOLATILE = ("/run/media",)                    # removable drives are mounted there; the filesystem type still has to be durable
 VOLATILE_FSTYPES = frozenset({"tmpfs", "ramfs", "devtmpfs", "proc", "sysfs", "cgroup", "cgroup2", "devpts", "mqueue", "securityfs", "debugfs",
                               "tracefs", "configfs", "fusectl", "pstore", "bpf", "hugetlbfs", "autofs", "binfmt_misc", "efivarfs"})
 BACKUP_REFUSED_FSTYPES = VOLATILE_FSTYPES | {"overlay", "squashfs"}
@@ -111,7 +112,6 @@ AUTH_GATE_CEILINGS = ("wall_hours", "core_hours", "working_disk_gib", "backup_di
 AUTH_BASIS = "researcher_written_compute_authorization"
 APPROVAL_BLOCK_SCHEMA = "B2-E13-dr04-approval-block/1"
 APPROVAL_BLOCK_KEYS = ("schema", "decision", "approved_by", "approved_plan_digest", "host_id", "expires_at")
-FENCED_JSON = re.compile(r"```json[ \t]*\n(.*?)\n```", re.DOTALL)
 OTHER_COMPUTE_GATES = ("full_gpu_training", "full_loko_sweep")
 NOT_GRANTED = ("gpu_probe", "full_gpu_training", "full_loko_sweep", "nine_cell_freeze", "held_out_final_evaluation",
                "production_launch_flag_change")
@@ -287,15 +287,26 @@ def approval_block(plan):
 
 
 def _approval_blocks(text):
-    """Valid fenced strict-JSON objects of the approval-block schema found in a record."""
-    blocks = []
-    for match in FENCED_JSON.finditer(text if isinstance(text, str) else ""):
-        try:
-            block = k17d_check._strict(match.group(1).encode("utf-8"))
-        except (k17d_check.K.K17dError, RecursionError):
-            continue
-        if block.get("schema") == APPROVAL_BLOCK_SCHEMA:
-            blocks.append(block)
+    """Valid fenced strict-JSON objects of the approval-block schema found in a record. A single linear pass over the lines.
+
+    A fence is a line that is exactly three backticks plus ``json`` (CRLF normalised); an unclosed fence is ignored, and a
+    longer fence (four or more backticks) is a quoted example, never a block.
+    """
+    blocks, current = [], None
+    for line in (text if isinstance(text, str) else "").replace("\r\n", "\n").split("\n"):
+        if current is None:
+            if line.rstrip(" \t") == "```json":
+                current = []
+        elif line == "```":
+            try:
+                block = k17d_check._strict("\n".join(current).encode("utf-8"))
+            except (k17d_check.K.K17dError, RecursionError):
+                block = None
+            if isinstance(block, dict) and block.get("schema") == APPROVAL_BLOCK_SCHEMA:
+                blocks.append(block)
+            current = None
+        else:
+            current.append(line)
     return blocks
 
 
@@ -405,6 +416,14 @@ def _measure_root(root):
         return {"exists": False, "device": None, "fstype": None, "free_gib": None}
 
 
+def _host_measurements(roots):
+    """What this process can see of the machine it runs on: node name, usable CPUs, available RAM and the declared roots."""
+    cpu, mem = host_inventory.cpu_facts(), host_inventory.memory_facts()
+    cpus = min(v for v in (cpu["logical_cpus"], cpu["schedulable_cpus"], cpu["cgroup_cpu_quota"]) if v is not None)
+    ram = None if mem["available_gib"] is None else min(v for v in (mem["available_gib"], mem["cgroup_limit_gib"]) if v is not None)
+    return {"node": platform.node(), "cpus": cpus, "ram_gib": ram, "roots": {root: _measure_root(root) for root in roots if _safe_abs_path(root)}}
+
+
 def _file_hash_or_none(path):
     try:
         return pre._file_hash(path) if Path(path).is_file() else None
@@ -448,7 +467,7 @@ def collect_reference(repo=ROOT, *, rederive=True, git=pre.run_git, evaluated_at
         "tools_sha256": {name: pre._file_hash(HERE / name) for name in TOOLS},
         "records_sha256": {name: first[2][name] for name in INPUT_FILES if name != pre.GATES_PATH},
         "committed_inputs": {name: _committed(git, repo, name) for name in INPUT_FILES},
-        "uncommitted_source": [], "host_measurements": {"node": platform.node(), "roots": {root: _measure_root(root) for root in roots if _safe_abs_path(root)}},
+        "uncommitted_source": [], "untracked_source": [], "host_measurements": _host_measurements(roots),
         "gates": pre._read_json(repo / pre.GATES_PATH), "memo": pre._read_json(repo / pre.MEMO_PATH),
         "scientific_protocol": pre._read_json(repo / PROTOCOL_JSON),
         "scientific_record_sha256": sorted(h for h in (_file_hash_or_none(repo / name) for name in SCIENTIFIC_RECORDS) if h),
@@ -457,6 +476,11 @@ def collect_reference(repo=ROOT, *, rederive=True, git=pre.run_git, evaluated_at
         "k17d_verification": k17d_check.verify_identity(root=repo, acceptance_path=DECISIONS, rederive=rederive),
         "record_files": {}, "record_texts": {}, "lock": None, "lock_problems": None}
     reference["uncommitted_source"] = [name for name in _source_files(repo, reference["files_sha256"]) if not _committed(git, repo, name)]
+    try:                                                # untracked files, ignore rules deliberately not applied; compiled caches are not source
+        others = _git(git, repo, "ls-files", "--others", "--", "src", "scripts", "configs").splitlines()
+    except Exception:
+        others = ["<git ls-files failed>"]
+    reference["untracked_source"] = sorted(name for name in others if name and "/__pycache__/" not in name)
     for path in record_paths:
         relative = _safe_repo_relative(path)
         if relative is not None and relative.parts[0] == "docs" and _committed(git, repo, path):
@@ -601,6 +625,8 @@ def _check_source(plan, ref, f):
     hidden = list(ref["uncommitted_source"])
     f.check("source.committed_source", not hidden, "every src file, locked config and tool the plan hashes is tracked and equal to HEAD's blob (catches "
             "skip-worktree edits and ignored extra files that git status does not show)", [], hidden[:6])
+    f.check("source.untracked_files", not ref["untracked_source"], "no untracked file (ignored or excluded ones included) sits under src, scripts or configs "
+            "outside __pycache__: an importable extension or module that no hash covers cannot ride along", [], list(ref["untracked_source"])[:6])
     uncommitted = sorted(name for name, committed in ref["committed_inputs"].items() if committed is not True)
     f.check("source.committed_inputs", not uncommitted, "the gates JSON, memorandum, decision register, K17d identity and audit and the scientific protocol "
             "record are regular tracked files equal to HEAD's blobs (not symlinks, not uncommitted edits)", [], uncommitted)
@@ -784,12 +810,14 @@ def _check_host_backup(plan, ref, f):
     else:
         mine = measured_here.get("roots") if isinstance(measured_here.get("roots"), dict) else {}
         gb_needed = gb * 1e9 / 2 ** 30 if _num(gb) else None
-        f.check("host.remeasured", all(isinstance(mine.get(root), dict) and mine[root].get("exists") is True and mine[root].get("device") == row.get("device")
+        f.check("host.remeasured", _num(measured_here.get("cpus")) and measured_here["cpus"] >= need_cpus and _num(measured_here.get("ram_gib"))
+                and measured_here["ram_gib"] >= host_ram
+                and all(isinstance(mine.get(root), dict) and mine[root].get("exists") is True and mine[root].get("device") == row.get("device")
                                        and norm(mine[root].get("fstype")) == norm(row.get("fstype")) for root, row in ((working["root"], work_row), (backup["root"], backup_row)))
                 and _num(mine.get(working["root"], {}).get("free_gib")) and mine[working["root"]]["free_gib"] >= need
                 and gb_needed is not None and _num(mine.get(backup["root"], {}).get("free_gib")) and mine[backup["root"]]["free_gib"] >= gb_needed,
-                "this process re-measured both roots on the declared host: same device and filesystem type as the inventory, enough free space now",
-                "device/fstype equal, free >= need", _short(mine))
+                "this process re-measured the declared host: usable CPUs and RAM cover the profile, both roots have the inventory's device and filesystem "
+                "type and enough free space now", "cpus/ram/device/fstype/free", _short(measured_here))
 
 
 def _check_ceilings(plan, f):
@@ -879,6 +907,10 @@ def _check_authorization(plan, ref, f):
     f.check("authorization.record_content", len(blocks) == 1 and _same(blocks[0], expected_block),
             "the approver's committed record holds exactly one fenced strict-JSON approval block with decision APPROVE and exactly this approver, approved-plan "
             "digest, host and expiry (the plan author cannot write them into a record the approver committed)", expected_block, _short(blocks)[:160])
+    protocol_approver = ref["scientific_protocol"].get("approved_by") if isinstance(ref.get("scientific_protocol"), dict) else None
+    f.check("authorization.approver", _text(protocol_approver) and auth["approved_by"] == protocol_approver,
+            "the DR-04 approver is the researcher who ratified the scientific protocol (policy of this validator; another approver needs a reviewed change here)",
+            protocol_approver, auth["approved_by"])
     approved, expires, now = _instant(auth["approved_at"]), _instant(auth["expires_at"]), _instant(ref["evaluated_at"])
     register_date = _instant(str(ref["decision_record"]["document"].get("date")) + "T00:00:00+00:00")
     f.check("authorization.provenance", _text(auth["approved_by"]) and _text(auth["decision"]) and approved is not None and expires is not None
