@@ -638,7 +638,7 @@
       "tests_collected": 162,
       "child_wrapper": "fixture diagnostic restricted to the repository's tests/b2_supervisor_standin.py and hashed into the run identity",
       "verification_script": "scripts/b2_e7a_capped_verification.py",
-      "verification_commit": "bda315161775a7d30b4fd2ee52985c37d55b90df",
+      "verification_commit": "92f78be06a0a0e2ccdc15534c980bb6fb3421ee8",
       "first_state_ci": {
         "pr": 21,
         "head_sha": "5903637d28d3607b606c78f06adfc8c47573edce",

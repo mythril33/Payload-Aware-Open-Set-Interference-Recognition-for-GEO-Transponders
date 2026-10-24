@@ -46,9 +46,9 @@
   ]
  },
  "lock": {
-  "git_commit": "bda315161775a7d30b4fd2ee52985c37d55b90df",
+  "git_commit": "92f78be06a0a0e2ccdc15534c980bb6fb3421ee8",
   "git_clean": true,
-  "lock_fingerprint": "d081aa2cb17956a65d03c745f262e38cd14e8a06f281e9c92be8f4f8abec0682",
+  "lock_fingerprint": "1eca7ed4284e73ea59e4a56045346f865d90e3a5a0cc2c7229bb9045ea664a05",
   "dirty_fixture_allowed": false,
   "environment": {
    "python": "3.13.17",
@@ -69,7 +69,7 @@
  "steps": [
   {
    "step": "dry_run",
-   "t_s": 4.1,
+   "t_s": 2.7,
    "exit": 4,
    "counts": {
     "PASS": 8,
@@ -81,7 +81,7 @@
   },
   {
    "step": "interrupted_after_first_shard",
-   "t_s": 45.1,
+   "t_s": 42.3,
    "exit": 6,
    "result": {
     "exit_code": 6,
@@ -94,25 +94,25 @@
   },
   {
    "step": "verify_while_unfinished",
-   "t_s": 47.9,
+   "t_s": 45.1,
    "exit": 5
   },
   {
    "step": "complete_refused_while_unfinished",
-   "t_s": 50.8,
+   "t_s": 47.8,
    "exit": 3,
    "marker_written": false
   },
   {
    "step": "supervisor_sigkilled_mid_attempt",
-   "t_s": 63.3,
+   "t_s": 60.3,
    "exit": -9,
-   "child_pid": 9641,
+   "child_pid": 12214,
    "child_gone": true
   },
   {
    "step": "resumed_to_completion",
-   "t_s": 392.0,
+   "t_s": 385.4,
    "exit": 0,
    "result": {
     "exit_code": 0,
@@ -123,13 +123,13 @@
   },
   {
    "step": "verify_complete",
-   "t_s": 394.9,
+   "t_s": 388.3,
    "exit": 0,
    "all_stages_verified": true
   },
   {
    "step": "complete",
-   "t_s": 398.0,
+   "t_s": 391.2,
    "exit": 0
   }
  ],
@@ -137,12 +137,12 @@
   "file": "b2_e7a_supervisor_journal.jsonl",
   "head_file": "b2_e7a_supervisor_journal.head",
   "records": 112,
-  "sha256": "0110afaff4ba321e10117ee5d9bd41d5179617e08af5406c8c88706d46e94906",
-  "head": "78d4d81b56456f83dc3d9492959630aedb3582032b7add4a0cba7b04fc69e8de"
+  "sha256": "36f24b4f833ecfc88a37047071b3742283d992a5a412be56db56791723dd2cfb",
+  "head": "d973da251b5485918f3816e7730d914f50b7cb55c59eae0091a79e5b531c6f5f"
  },
  "plan_fingerprint": "f5327829d7dc17b83c5e09012a25d6775d5c9800e5621d56218a68661950388c",
  "tools_sha256": {
-  "b2_production_supervisor.py": "ae7920065a758271c5b3d4964a5bb2029234516c45844be7b9fe2bcf70d11b2e",
+  "b2_production_supervisor.py": "16f9134780291bb0353c12f94a8fa08a6d858d2d4ddcce7290d1c390213dced6",
   "b2_production_preflight.py": "e11ebf87f1d37a190aaf39774e6c7237d9d20ef1dfa2e4926327d554f1d26582"
  },
  "completion_marker": {
@@ -153,13 +153,13 @@
   "benchmark_complete": false,
   "production_authorized": false,
   "plan_fingerprint": "f5327829d7dc17b83c5e09012a25d6775d5c9800e5621d56218a68661950388c",
-  "lock_fingerprint": "d081aa2cb17956a65d03c745f262e38cd14e8a06f281e9c92be8f4f8abec0682",
+  "lock_fingerprint": "1eca7ed4284e73ea59e4a56045346f865d90e3a5a0cc2c7229bb9045ea664a05",
   "child_launcher": "generators",
   "tools_sha256": {
-   "b2_production_supervisor.py": "ae7920065a758271c5b3d4964a5bb2029234516c45844be7b9fe2bcf70d11b2e",
+   "b2_production_supervisor.py": "16f9134780291bb0353c12f94a8fa08a6d858d2d4ddcce7290d1c390213dced6",
    "b2_production_preflight.py": "e11ebf87f1d37a190aaf39774e6c7237d9d20ef1dfa2e4926327d554f1d26582"
   },
-  "journal_head": "78d4d81b56456f83dc3d9492959630aedb3582032b7add4a0cba7b04fc69e8de",
+  "journal_head": "d973da251b5485918f3816e7730d914f50b7cb55c59eae0091a79e5b531c6f5f",
   "observations": {
    "known": {
     "train": 16,
@@ -175,15 +175,15 @@
    }
   },
   "stage_manifest_fingerprints": {
-   "known": "136afa103d3c833a67643fab111e557333dca8b6a17b9119b3ef5ad0b0e83dd4",
-   "test": "8f7358c56d15cb4877e9ce978506a607613a15d5af75826de888b4ed0eaf58fc",
-   "matched": "c23e0cbde4c65a58a1b97679de81cd8ab2263ff94923e924ab88cda7528dbfdc"
+   "known": "321a032e2faed18a4216adbb60fca51e2e4dc5d02d8551d6c7bf73fdbaf91294",
+   "test": "4f9d85ee45322161e92417f1947c218164ea946144dc153565961b1650769fc0",
+   "matched": "93ea058e7ab7286d3f8b78c9888e010a2f36d34910432023e78146ea01979a35"
   },
   "note": "data generation of the planned scope is complete and verified; this is not benchmark completion"
  },
  "usage": {
-  "wall_s": 379.662,
-  "cpu_s": 448.669,
+  "wall_s": 374.978,
+  "cpu_s": 442.526,
   "open_attempt": null,
   "open_attempt_heartbeat": null,
   "attempts": {
@@ -227,24 +227,24 @@
  "per_stage_attempts": {
   "known": {
    "attempts": 3,
-   "attempt_wall_s": 298.6,
-   "cpu_s": 354.9,
+   "attempt_wall_s": 293.4,
+   "cpu_s": 349.3,
    "observations": 64,
-   "wall_s_per_observation_including_startup_and_repeated_restarts": 4.67
+   "wall_s_per_observation_including_startup_and_repeated_restarts": 4.58
   },
   "test": {
    "attempts": 1,
-   "attempt_wall_s": 52.5,
-   "cpu_s": 60.5,
+   "attempt_wall_s": 52.7,
+   "cpu_s": 60.0,
    "observations": 10,
-   "wall_s_per_observation_including_startup_and_repeated_restarts": 5.25
+   "wall_s_per_observation_including_startup_and_repeated_restarts": 5.27
   },
   "matched": {
    "attempts": 1,
-   "attempt_wall_s": 28.6,
-   "cpu_s": 33.3,
+   "attempt_wall_s": 29.0,
+   "cpu_s": 33.2,
    "observations": 6,
-   "wall_s_per_observation_including_startup_and_repeated_restarts": 4.76
+   "wall_s_per_observation_including_startup_and_repeated_restarts": 4.83
   }
  },
  "attempts": [
@@ -253,22 +253,22 @@
    "stage": "known",
    "reason": "interrupted",
    "exit_code": -15,
-   "elapsed_s": 38.037,
-   "cpu_user_s": 32.018,
-   "cpu_sys_s": 12.742,
-   "peak_rss_kib": 584912,
-   "peak_rss_polled_kib": 584912,
-   "supervisor_peak_rss_kib": 572468
+   "elapsed_s": 36.686,
+   "cpu_user_s": 32.119,
+   "cpu_sys_s": 10.507,
+   "peak_rss_kib": 580152,
+   "peak_rss_polled_kib": 580152,
+   "supervisor_peak_rss_kib": 574212
   },
   {
    "attempt_id": "known-02",
    "stage": "known",
    "reason": "supervisor_lost",
    "exit_code": null,
-   "elapsed_s": 16.119,
-   "cpu_user_s": 24.11,
+   "elapsed_s": 16.135,
+   "cpu_user_s": 23.61,
    "cpu_sys_s": 0.0,
-   "peak_rss_kib": 518416,
+   "peak_rss_kib": 519216,
    "estimated": true
   },
   {
@@ -276,39 +276,54 @@
    "stage": "known",
    "reason": "exited",
    "exit_code": 0,
-   "elapsed_s": 244.475,
-   "cpu_user_s": 218.424,
-   "cpu_sys_s": 67.606,
-   "peak_rss_kib": 606064,
-   "peak_rss_polled_kib": 606064,
-   "supervisor_peak_rss_kib": 575500
+   "elapsed_s": 240.533,
+   "cpu_user_s": 214.144,
+   "cpu_sys_s": 68.921,
+   "peak_rss_kib": 596888,
+   "peak_rss_polled_kib": 596888,
+   "supervisor_peak_rss_kib": 577064
   },
   {
    "attempt_id": "test-01",
    "stage": "test",
    "reason": "exited",
    "exit_code": 0,
-   "elapsed_s": 52.478,
-   "cpu_user_s": 45.885,
-   "cpu_sys_s": 14.625,
-   "peak_rss_kib": 592724,
-   "peak_rss_polled_kib": 592724,
-   "supervisor_peak_rss_kib": 575856
+   "elapsed_s": 52.668,
+   "cpu_user_s": 46.109,
+   "cpu_sys_s": 13.921,
+   "peak_rss_kib": 596532,
+   "peak_rss_polled_kib": 596532,
+   "supervisor_peak_rss_kib": 577460
   },
   {
    "attempt_id": "matched-01",
    "stage": "matched",
    "reason": "exited",
    "exit_code": 0,
-   "elapsed_s": 28.553,
-   "cpu_user_s": 24.903,
-   "cpu_sys_s": 8.356,
-   "peak_rss_kib": 518412,
-   "peak_rss_polled_kib": 518412,
-   "supervisor_peak_rss_kib": 576052
+   "elapsed_s": 28.956,
+   "cpu_user_s": 25.363,
+   "cpu_sys_s": 7.832,
+   "peak_rss_kib": 595688,
+   "peak_rss_polled_kib": 595688,
+   "supervisor_peak_rss_kib": 577644
   }
  ],
  "timing_gates": [
+  {
+   "attempt_id": "known-01",
+   "band": [
+    3.8,
+    5.0
+   ],
+   "event": "timing_gate",
+   "observations": 8,
+   "outcome": "within_band",
+   "s_per_observation": 3.7602361738681793,
+   "stage": "known",
+   "startup_allowance_s": 6.0,
+   "time": "2026-10-24T00:48:06.038+00:00",
+   "tolerance": 0.25
+  },
   {
    "attempt_id": "known-03",
    "band": [
@@ -318,10 +333,10 @@
    "event": "timing_gate",
    "observations": 8,
    "outcome": "within_band",
-   "s_per_observation": 3.992538800239563,
+   "s_per_observation": 3.8977636599540713,
    "stage": "known",
    "startup_allowance_s": 6.08,
-   "time": "2026-10-24T00:30:42.146+00:00",
+   "time": "2026-10-24T00:52:27.314+00:00",
    "tolerance": 0.25
   },
   {
@@ -333,10 +348,10 @@
    "event": "timing_gate",
    "observations": 5,
    "outcome": "within_band",
-   "s_per_observation": 4.499532699584961,
+   "s_per_observation": 4.402724504470825,
    "stage": "test",
    "startup_allowance_s": 6.0,
-   "time": "2026-10-24T00:31:34.721+00:00",
+   "time": "2026-10-24T00:53:20.078+00:00",
    "tolerance": 0.25
   },
   {
@@ -348,19 +363,19 @@
    "event": "timing_gate",
    "observations": 3,
    "outcome": "faster_than_band",
-   "s_per_observation": 2.9743784268697104,
+   "s_per_observation": 2.9459067980448403,
    "stage": "matched",
    "startup_allowance_s": 6.0,
-   "time": "2026-10-24T00:32:03.365+00:00",
+   "time": "2026-10-24T00:53:49.132+00:00",
    "tolerance": 0.25
   }
  ],
  "limitations": [
   "The journal holds scratch paths in argv/log fields; its chain verifies as committed (Journal.load on the two committed files).",
-  "peak_rss_kib is ru_maxrss, an upper bound that carries the supervisor's own peak at fork; peak_rss_polled_kib is a lower bound.",
+  "peak_rss_kib is ru_maxrss, an upper bound that can carry the supervisor's own peak at fork; peak_rss_polled_kib is a lower bound.",
   "The timing-gate figures subtract a fixed --timing-startup-s from 3-8 observation first shards; they are not per-observation costs and do not validate the 3.8-5.0 s/observation band. Use per_stage_attempts for whole-attempt wall per observation.",
   "A supervisor_lost attempt is charged by an upper-bound estimate (last heartbeat + one interval), not measured.",
   "Two groups per stage say nothing about production-size memory, throughput or disk."
  ],
- "total_wall_s": 398.0
+ "total_wall_s": 391.2
 }
