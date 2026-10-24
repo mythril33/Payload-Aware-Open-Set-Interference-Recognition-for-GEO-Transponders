@@ -170,7 +170,7 @@ The 200-1,000 samples/s band says nothing about the CPU timings above and the CP
 ## 8. Reproduce and verify
 
 ```
-python -m pytest -q -p no:cacheprovider tests/test_b2_training_footprint.py      # 73 passed in about 12 s (this checkout)
+python -m pytest -q -p no:cacheprovider tests/test_b2_training_footprint.py      # 89 passed in about 12 s (this checkout)
 python scripts/b2_training_footprint.py --out runs/footprint/analytic.json --no-measure --views dual_residual --widths 8 16 32 --batches 8 32
 ```
 

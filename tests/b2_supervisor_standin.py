@@ -123,7 +123,7 @@ def main(argv):
     if os.environ.get("STANDIN_PID_FILE"):
         Path(os.environ["STANDIN_PID_FILE"]).write_text(str(os.getpid()))
     print(f"standin env CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES')!r} "
-          f"OMP_NUM_THREADS={os.environ.get('OMP_NUM_THREADS')!r}", flush=True)
+          f"OMP_NUM_THREADS={os.environ.get('OMP_NUM_THREADS')!r} PYTHONPATH={os.environ.get('PYTHONPATH')!r}", flush=True)
     if active:
         start_delay = _env_float("STANDIN_START_DELAY_S")
         if os.environ.get("STANDIN_ALLOC_MB"):

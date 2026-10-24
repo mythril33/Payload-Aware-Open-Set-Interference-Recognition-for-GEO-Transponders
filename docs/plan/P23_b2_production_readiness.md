@@ -1,6 +1,6 @@
 # P23 — B2 Production Readiness: bounded engineering plan and researcher gates
 
-> E7a current-status update (2026-10-23): PR #20 (E6) merged as `755b474` (Actions run 40004028017: 107 E4 + 1226 other = 1333 passed). The E7a draft adds the bounded [production supervisor (P30)](P30_b2_e7a_production_supervisor.md), observation-only K18 diagnostics and a candidate (not frozen) [training proposal](B2_E7_TRAINING_SPEC_PROPOSAL.md); gates and benchmark_complete=false are unchanged.
+> E7a current-status update (2026-10-23): PR #20 (E6) merged as `755b474` (Actions run 40004028017: 107 E4 + 1226 other = 1333 passed); E7a followed as PR #21 (`5d3f1a3`) and PR #22 (`0e8c467`, run 40035525938: 1486 passed, 7 skipped + E4 step). E7a added the bounded [production supervisor (P30)](P30_b2_e7a_production_supervisor.md), observation-only K18 diagnostics and a candidate (not frozen) [training proposal](B2_E7_TRAINING_SPEC_PROPOSAL.md); gates and benchmark_complete=false are unchanged.
 
 > E6 current-status update (2026-10-23): PR #19 (E5) merged as `59ed11d`; exact-head Actions run 39991726439 (head `7108ee8`) passed 107 E4 + 1132 other tests; the E5 PR text still said 'pending'. The E6 draft adds the read-only [production preflight](P29_b2_e6_production_preflight.md), a [decision packet](B2_E6_RESEARCHER_DECISION_PACKET.md) and a [readiness checklist](B2_E6_PRODUCTION_READINESS_CHECKLIST.md); gates and benchmark_complete=false are unchanged.
 

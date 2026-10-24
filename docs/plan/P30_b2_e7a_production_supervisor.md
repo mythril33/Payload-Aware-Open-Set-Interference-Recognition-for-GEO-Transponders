@@ -1,6 +1,6 @@
 # P30 — B2/1 fail-closed production supervisor (E7a)
 
-Date: 2026-10-23. First state merged as PR #21 (`main` `5d3f1a3`); this revision adds the independent-review hardening (section 9). `benchmark_complete=false`.
+Date: 2026-10-24. First state merged as PR #21 (`5d3f1a3`), independent-review hardening merged as PR #22 (`0e8c467`), post-merge audit fixes in the hotfix after it (section 9). `benchmark_complete=false`.
 Tool: [`scripts/b2_production_supervisor.py`](../../scripts/b2_production_supervisor.py) (separate from the E4 matrix runner);
 tests: [`tests/test_b2_production_supervisor.py`](../../tests/test_b2_production_supervisor.py) with the stand-in child
 [`tests/b2_supervisor_standin.py`](../../tests/b2_supervisor_standin.py). It builds on the read-only
@@ -10,8 +10,8 @@ researcher gate or touches a frozen protocol, config, seed, count or artifact la
 
 ## 1. What it supervises
 
-The three existing generator CLIs as child processes (or, for fixtures only, a hashed diagnostic wrapper script inside the repository's
-`tests/` directory; see §2), in this order and only in this order: `geosim.b2_dataset` (known
+The three existing generator CLIs as child processes (or, for fixtures only, the hashed diagnostic stand-in
+`tests/b2_supervisor_standin.py` alone; see §2), in this order and only in this order: `geosim.b2_dataset` (known
 B2-feat/1, four roles) then `geosim.b2_test_dataset` then `geosim.b2_matched_dataset`, each bound to the finished known root.
 It adds no generation logic; shards, descriptors, manifests and their validators are the generators' own. It audits every
 stage root with the preflight (`audit_artifact`, `--known` binding, lock) before it starts, after every attempt and before the
@@ -25,8 +25,8 @@ next stage, so a damaged earlier stage can never be built upon.
 | Fixture cap | `run --execute` requires `--max-groups 1..2` (groups per role, `--groups-per-shard` 1 or 2); anything else is refused |
 | Ceilings cannot stretch a fixture | a `--ceilings` file may only lower or modestly raise the fixture defaults: at most 4 wall hours, 16 core hours, 5 failed attempts, 50 interruptions, 16 GiB RSS, 120 s grace (`FIXTURE_CEILING_LIMITS`); integer ceilings must be whole numbers; the timing band, tolerance, startup allowance and gate size are range-checked |
 | No unbounded child | every spawned argv must contain `--limit-groups` of 1..2 (`assert_bounded`, checked again inside `run_child`); `stage_argv` refuses to build a command for an unbounded plan |
-| No arbitrary program | `--child-wrapper` (fixture diagnostic, used by the tests' stand-in) must be a file inside this repository's `tests/` directory; it is hashed into the run identity and refused for `--production` |
-| Production ceilings only go down | a `--production` plan may lower the proposed ceilings but never raise them (`PRODUCTION_CEILING_LIMITS`); raising needs a researcher-approved record that this build cannot consume |
+| No arbitrary program | `--child-wrapper` (fixture diagnostic) accepts only this repository's `tests/b2_supervisor_standin.py`; it is hashed into the run identity and refused for `--production`. Children run with `PYTHONPATH=<repo>/src` first, so they import the locked tree |
+| Production ceilings only go down | a `--production` plan may lower the proposed ceilings but never raise them (`PRODUCTION_CEILING_LIMITS`; the free-disk reserve is a floor and may only go up); raising needs a researcher-approved record that this build cannot consume |
 | Production is validation only | `plan --production` reports lock, caps, estimated wall/disk, host, authorization and the disabled launch (all BLOCKED/FAIL as appropriate); `run --production --execute` is refused with the exact missing gates; with every gate approved it is still refused ("not implemented in this build"); a production plan handed to `Supervisor.run()` is refused before the workdir is touched. `PRODUCTION_LAUNCH_ENABLED` is False and flipping it enables nothing because the command builder and the spawn guard stay bounded |
 | Authorization | `authorization(gates, memo)` needs `K18`, `K17d`, `OBS-CANCEL-2` and `full_generation` to PASS the preflight gate check (structured approval record, finite positive ceilings, gates/memorandum agreement). It never infers approval |
 
@@ -60,8 +60,8 @@ is not stopped.
 
 ## 4. Child supervision and resource safeguards
 
-Each attempt is a child in its own process group (`start_new_session`) that dies with the supervisor (`PR_SET_PDEATHSIG`,
-Linux), logs to a new exclusive `logs/<stage>-NN.log`, runs with `CUDA_VISIBLE_DEVICES=""` and the lock's BLAS/hash-seed
+Each attempt is a child in its own process group (`start_new_session`) that dies with the supervisor (`PR_SET_PDEATHSIG` with SIGKILL,
+so even a child that ignores SIGTERM cannot outlive it; Linux), logs to a new exclusive `logs/<stage>-NN.log`, runs with `CUDA_VISIBLE_DEVICES=""` and the lock's BLAS/hash-seed
 environment. The supervisor resets an inherited `SIGCHLD=SIG_IGN` to the default for the run (otherwise every status would be
 lost); if an exit status is nevertheless unobservable the attempt ends `wait_failed` and fails the stage without a retry. Exit
 status, user/system CPU and `ru_maxrss` come from `wait4` and are journaled exactly (a signal death is `exit_code` -N plus the
@@ -110,10 +110,12 @@ and are not resumed. One supervisor per workdir (`flock`).
 `complete` writes `completion.json` exactly once and only if the journal chain, anchor and run identity, the lock and all three
 stages verify COMPLETE at checksum depth with a deep-verified sample, every role holds exactly the planned inventory **and** was
 requested under the plan (`limit_groups` and `groups_per_shard` equal the plan's), every manifest exists, the **last supervised
-attempt of every stage ended cleanly** (exit 0, or an interruption / lost supervisor after which the audit still verifies) and the
+attempt of every stage exited 0** and the
 journal contains `stages_complete`. A root that verifies but was never produced by a clean supervised attempt (a child that did
-the work and then exited non-zero, or foreign data copied in) is not accepted: the supervisor gives it one supervised attempt (the
-generators treat a finished root as a no-op), retries within the failure budget, and fails the stage if the child keeps failing.
+the work and then exited non-zero, or foreign data copied in) is not accepted, and neither is a root whose last attempt was interrupted or lost (the root may have been replaced meanwhile): the
+supervisor gives it one supervised attempt (the generators treat a finished root as a no-op), retries within the failure budget, and
+fails the stage if the child keeps failing. `run.json` also records the SHA-256 of the supervisor and preflight scripts, so editing
+either between restarts is refused, and `verify` checks that `completion.json` names this plan, lock and a journal head in the chain.
 The marker states `generation_complete`, `scope` (`fixture`), `production_complete=false`, `benchmark_complete=false`,
 `production_authorized=false` and the `child_launcher` (a diagnostic-wrapper run says so in its note). A missing stage, role or
 manifest, a short inventory, a plan/root mismatch or a missing final record refuses it and writes nothing.
@@ -130,7 +132,10 @@ Evidence: the capped real-physics run is in [`docs/results/b2_e7a_supervisor_ver
 
 ## 8. Limits
 
-Single host and single child process; RSS polling looks at the child only (descendants are covered by `wait4` afterwards, as an
+Single host and single child process; any move of `HEAD` (even a docs-only commit) fails the lock check, so a long run must not be restarted
+across commits; `verify` reads the journal without the workdir lock and can show a transient FAIL on a half-written last line during a live
+run; building the lock imports torch and xgboost only to read their versions; `generation_complete` in the marker means the planned fixture
+scope only (see `scope`, `production_complete`); RSS polling looks at the child only (descendants are covered by `wait4` afterwards, as an
 upper bound); a lost attempt's charge is an estimate; PDEATHSIG and `/proc` are Linux-specific; the dry run creates and removes
 one transient `.b2_preflight_probe_*` file in the nearest existing directory (the atomic-rename probe) and nothing else; temporary
 `*.tmp` files a killed generator leaves behind are overwritten by the generator's own resume rather than quarantined; the timing band is an extrapolation; the hash chain and all digests detect accidental modification
@@ -156,3 +161,23 @@ honesty) found the following in the first version of this tool; all are fixed or
 
 Not changed: `--child-wrapper` children are still audited only through their output root; stand-in roots carry real source hashes, which is why
 the launcher is recorded in the identity and the completion marker.
+
+### Post-merge audit (hotfix after PR #22)
+
+A second read-only review of the merged state (supervisor, K18, gates, documentation) found no path to an unbounded spawn, a production
+launch, GPU training or LOKO, no change to any gate or frozen value, and the following, all fixed with regression tests:
+
+| Finding | Fix |
+|---|---|
+| A lost attempt's CPU charge multiplied by the largest value in the thread environment, which includes `PYTHONHASHSEED` (a seed of 100000 dead-ended a workdir) | only `OMP/OPENBLAS/MKL_NUM_THREADS` count |
+| Damage in the middle of the journal during the last attempt still ended `STAGES_COMPLETE` / exit 0 | the whole chain is verified before `stages_complete` |
+| A failed spawn left `logs/<stage>-NN.log` behind and every restart collided with it | attempt numbers skip existing logs |
+| A SIGTERM-ignoring child survived a killed supervisor | `PR_SET_PDEATHSIG` is SIGKILL |
+| A verifying root was accepted after an interrupted or lost last attempt (foreign data could be adopted) | only an attempt that exited 0 accepts a verifying root |
+| Children imported whatever `geosim` the environment offered | `PYTHONPATH=<repo>/src` first |
+| A production plan could pass its sub-checks with a loosened timing band or disk reserve | timing options refused, reserve has a floor |
+| The supervisor scripts were not part of any identity | SHA-256 of supervisor and preflight in `run.json` and the marker |
+| A one-record journal without its anchor erased the history | tolerated only while the workdir holds nothing but `run.json`, `lock.json` and the journal |
+| `completion.json` was never validated; malformed state files crashed with a traceback; real-time signals crashed the signal naming; `--child-wrapper` accepted any file under `tests/` | checked by `verify`; refused with exit 2; `SIG<n>`; stand-in only |
+| A second independent read (same branch): a finished root whose last attempt was the n-th interruption was refused for good; a crash between writing `journal.head.tmp` and its rename dead-ended a one-record journal; an internal `KeyError`/`TypeError` during `run` was reported as a refusal without a `run_failed` record; attempt ids ignored journaled numbers once logs were gone | the no-op verification attempt of a finished root is exempt from the interruption ceiling (failed-attempt count and total backstop still apply); the temp head is tolerated; internal errors end the run as `run_failed` (exit 3); ids skip journaled numbers |
+| Mutants that survived (limits at their boundary, `fsync`, lost supervisors in the interruption budget, children's CPU, the disk margin, the tail hash, genesis and fingerprint checks) | tests added, constants pinned to literals |
