@@ -8,9 +8,10 @@ generation metadata before any test observation is opened, and never from recogn
 This module is pure. ``derive`` and ``cross_check_audit`` take plain metadata mappings and never read a
 file, observation array, prediction, score or metric. Each record must carry exactly the fields in
 ``RECORD_KEYS``; any other key (for example a prediction, a score or an accuracy) is refused, so outcome data
-cannot enter the derivation by accident. ``derive_from_generator`` is the only function that touches the
-generator, and it calls ``prepare_scene``, which resolves plans, link and carrier activity from the group
-seeds without synthesising a waveform.
+cannot enter the derivation by accident. Accepted records are normalised to plain Python integers before
+fingerprinting. ``derive_from_generator`` is the only function that touches the generator, and it calls
+``prepare_scene``, which resolves plans, link and carrier activity from the group seeds without synthesising
+a waveform.
 """
 from __future__ import annotations
 
@@ -51,12 +52,18 @@ def _integer(value, name: str) -> int:
     return int(value)
 
 
+def _matches(value, expected: int) -> bool:
+    return not isinstance(value, bool) and isinstance(value, Integral) and int(value) == expected
+
+
 def _check_record(record, position: int):
+    """Validate one metadata record. Returns ``(group, normalised)`` where ``normalised`` holds plain ints only."""
     if not isinstance(record, dict):
         raise K17dError(f"record {position} is not a mapping")
     keys = set(record)
     missing = sorted(set(RECORD_KEYS) - keys)
-    unexpected = sorted(keys - set(RECORD_KEYS))
+    # repr() keeps the message well-defined when a hostile record carries keys of mixed types.
+    unexpected = sorted(repr(key) for key in keys - set(RECORD_KEYS))
     if missing:
         raise K17dError(f"record {position} lacks required fields {missing}")
     if unexpected:
@@ -72,9 +79,9 @@ def _check_record(record, position: int):
         raise K17dError(f"scenario {group} carries a diagnostic missing_carrier_override; K17d uses natural draws only")
     dropped = record["dropped_carrier"]
     if dropped is None:
-        consistency = 0
+        consistency, normalised_drop = 0, None
     else:
-        if not isinstance(dropped, dict) or tuple(sorted(dropped)) != tuple(sorted(DROP_KEYS)):
+        if not isinstance(dropped, dict) or set(dropped) != set(DROP_KEYS):
             raise K17dError(f"scenario {group} has a malformed dropped_carrier {dropped!r}")
         polarization = _integer(dropped["polarization"], "dropped_carrier.polarization")
         if polarization not in (CO_FEED_POLARIZATION, CROSS_FEED_POLARIZATION):
@@ -82,10 +89,17 @@ def _check_record(record, position: int):
         index = _integer(dropped["index"], "dropped_carrier.index")
         if index < 0:
             raise K17dError(f"scenario {group} drops a negative carrier index")
-        consistency = 1
+        consistency, normalised_drop = 1, {"polarization": polarization, "index": index}
     if _integer(record["plan_consistency"], "plan_consistency") != consistency:
         raise K17dError(f"scenario {group}: plan_consistency disagrees with dropped_carrier")
-    return group, dropped
+    normalised = {"scenario_id": group, "role": ROLE, "protocol": P.BASE_PROTOCOL, "plan_consistency": consistency,
+                  "dropped_carrier": normalised_drop, "missing_carrier_override": None}
+    return group, normalised
+
+
+def _polarization(normalised):
+    drop = normalised["dropped_carrier"]
+    return None if drop is None else drop["polarization"]
 
 
 def derive(records, *, expected_headline: int = HEADLINE_GROUPS) -> dict:
@@ -96,22 +110,20 @@ def derive(records, *, expected_headline: int = HEADLINE_GROUPS) -> dict:
         raise K17dError(f"expected {expected_headline} headline groups, got {len(records)}")
     table = {}
     for position, record in enumerate(records):
-        group, dropped = _check_record(record, position)
+        group, normalised = _check_record(record, position)
         if group in table:
             raise K17dError(f"duplicate scenario {group}")
-        table[group] = dropped
+        table[group] = normalised
     ids = sorted(table)
-    co = sorted(g for g, d in table.items() if d is not None and d["polarization"] == CO_FEED_POLARIZATION)
-    cross = sorted(g for g, d in table.items() if d is not None and d["polarization"] == CROSS_FEED_POLARIZATION)
+    co = sorted(g for g in ids if _polarization(table[g]) == CO_FEED_POLARIZATION)
+    cross = sorted(g for g in ids if _polarization(table[g]) == CROSS_FEED_POLARIZATION)
     if len(co) != CO_FEED_GROUPS:
         raise K17dError(f"expected {CO_FEED_GROUPS} co-feed missing-carrier groups, derived {len(co)}")
     co_set = set(co)
     sensitivity = [g for g in ids if g not in co_set]
     if len(sensitivity) != SENSITIVITY_GROUPS:
         raise K17dError(f"expected {SENSITIVITY_GROUPS} sensitivity groups, derived {len(sensitivity)}")
-    if len(co) + len(sensitivity) != expected_headline or set(co) | set(sensitivity) != set(ids) or co_set & set(sensitivity):
-        raise K17dError("headline, co-feed and sensitivity sets are not an exact partition")
-    metadata = [{"scenario_id": g, "dropped_carrier": table[g]} for g in ids]
+    metadata = [table[g] for g in ids]
     return {
         "schema": SCHEMA,
         "role": ROLE,
@@ -130,14 +142,17 @@ def derive(records, *, expected_headline: int = HEADLINE_GROUPS) -> dict:
 def cross_check_audit(derived: dict, audit: dict) -> dict:
     """Compare a derivation with a committed audit document (docs/results/k17d_drift_audit.json format).
 
-    Fails closed unless the audit's group set, polarization of each group and missing-group count agree exactly.
+    Fails closed unless the audit's header counts, its group set and the polarization of each group agree
+    exactly with the derivation.
     """
     if not isinstance(audit, dict) or not isinstance(audit.get("rows"), list):
         raise K17dError("audit document must carry a rows list")
-    if audit.get("n_test_groups") != HEADLINE_GROUPS:
+    if not _matches(audit.get("n_test_groups"), HEADLINE_GROUPS):
         raise K17dError(f"audit n_test_groups is {audit.get('n_test_groups')!r}, expected {HEADLINE_GROUPS}")
     audit_pol = {}
-    for row in audit["rows"]:
+    for position, row in enumerate(audit["rows"]):
+        if not isinstance(row, dict):
+            raise K17dError(f"audit row {position} is not a mapping")
         group = _integer(row.get("group"), "audit group")
         pol = _integer(row.get("pol"), "audit pol")
         if group in audit_pol:
@@ -148,6 +163,9 @@ def cross_check_audit(derived: dict, audit: dict) -> dict:
     only_derived = sorted(set(derived_missing) - set(audit_pol))
     only_audit = sorted(set(audit_pol) - set(derived_missing))
     pol_mismatch = sorted(g for g in set(derived_missing) & set(audit_pol) if derived_missing[g] != audit_pol[g])
+    header = {"n_missing_groups": len(derived_missing), "n_missing_co_feed": len(derived["co_feed_missing_ids"]),
+              "n_missing_cross_feed": len(derived["cross_feed_missing_ids"])}
+    header_mismatch = sorted(key for key, value in header.items() if not _matches(audit.get(key), value))
     report = {
         "schema": SCHEMA + "/audit-cross-check",
         "audit_rows": len(audit_pol),
@@ -156,11 +174,13 @@ def cross_check_audit(derived: dict, audit: dict) -> dict:
         "only_in_derived": only_derived,
         "only_in_audit": only_audit,
         "polarization_mismatch": pol_mismatch,
-        "agrees": not (only_derived or only_audit or pol_mismatch),
+        "header_mismatch": header_mismatch,
+        "agrees": not (only_derived or only_audit or pol_mismatch or header_mismatch),
     }
     if not report["agrees"]:
         raise K17dError(f"derivation disagrees with the audit: {len(only_derived)} derived-only, "
-                        f"{len(only_audit)} audit-only, {len(pol_mismatch)} polarization mismatches")
+                        f"{len(only_audit)} audit-only, {len(pol_mismatch)} polarization mismatches, "
+                        f"header mismatches {header_mismatch}")
     return report
 
 

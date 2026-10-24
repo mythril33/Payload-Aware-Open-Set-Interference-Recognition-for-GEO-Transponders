@@ -40,6 +40,12 @@ CAPS = {"groups_per_role":2, "epochs":2, "width":8, "batch":32}
 ALARM_RULE = "R10 higher empirical quantile at 1-pfa (clean_alarm_threshold); alarm strictly score > threshold"
 
 
+def clean_alarm_score(probabilities):
+    # Mathematically 1-P(clean). Summing the non-clean columns avoids the subtraction, which rounds to exactly 0
+    # once the clean margin exceeds about 37 nats and so erases the ordering of confidently clean samples.
+    return probabilities[:,1:].sum(1)
+
+
 def _runtime():
     return {"python":platform.python_version(), "numpy":np.__version__,
             "scipy":scipy.__version__, "torch":str(torch.__version__), "device":"cpu",
@@ -303,7 +309,7 @@ def calibrate_b2_models(data, runs, *, reuse=False, device="cpu", log=print):
     for view,(fitted,scorer) in loaded.items():
         outputs = infer_streaming(fitted,sources["val-calib"])
         probabilities = ex._softmax(outputs["logits"])
-        scores = 1.-probabilities[:,0]
+        scores = clean_alarm_score(probabilities)
         threshold = clean_alarm_threshold(scores[clean],config.pfa)
         alarm = {"score":"one_minus_softmax_clean","direction":"higher_is_more_anomalous",
                  "threshold":float(threshold),"target_clean_pfa":config.pfa,"rule":ALARM_RULE,
@@ -511,7 +517,7 @@ def evaluate_b2_inventory(data,inventory,out,*,unknown_data=None,matched_data=No
         unknown_out=infer_streaming(fitted,unknown_source) if unknown_source is not None else None
         matched_out=infer_streaming(fitted,matched_source) if matched_source is not None else None
         probabilities=ex._softmax(values["logits"]);prediction=values["logits"].argmax(1)
-        event=1.-probabilities[:,0];threshold=calibrated["alarm"]["threshold"];alarm=event>threshold;clean=labels==0
+        event=clean_alarm_score(probabilities);threshold=calibrated["alarm"]["threshold"];alarm=event>threshold;clean=labels==0
         calibrations={m:RejectionCalibration.from_dict(c) for m,c in calibrated["rejection"].items()}
         rejection={};scores={}
         for method,calibration in calibrations.items():

@@ -1,8 +1,9 @@
 # B2 E10 — verification report
 
 **Branch:** `fix/b2-e10-scientific-integrity-hardening`.
-**Baseline:** `origin/main` `e43987ea8b6a50d0df9b6969e69e80d36d03f182` (PRs #30, #31, #32 merged).
-**Exact HEAD of the change set:** `HEAD_PLACEHOLDER` (recorded after the commit; see section 7).
+**Baseline at start:** `origin/main` `e43987ea8b6a50d0df9b6969e69e80d36d03f182` (PRs #30, #31, #32 merged).
+**Merged state:** PR #33 was merged by its maintainer at head `4efb7f0`; `origin/main` is now `293c487`, a merge commit whose tree equals `4efb7f0`. This report covers the follow-up work after that merge.
+**Code under test:** `9f99f3e` (the follow-up code commit, rebased onto `origin/main`). Its tree is identical to `68b13bb`, the commit the full suite ran on (`git diff --stat 68b13bb 9f99f3e` is empty). The documentation commit that carries this report changes no file under `src/`, `tests/`, `scripts/` or `configs/`; this is checked with `git diff --stat 68b13bb HEAD` in section 7.
 **Scope:** CPU-only verification. No dataset generation, no GPU, no training, no held-out evaluation, no LOKO, no new held-out observation opened.
 
 ## 1. Environment
@@ -10,73 +11,78 @@
 | Item | Value |
 |---|---|
 | Local interpreter | Python 3.13.17 in a scratch venv under the session scratchpad (not in the repository) |
-| Pinned packages (from `scripts/setup_cloud.sh`) | numpy 2.5.4, scipy 1.18.1, pytest 9.1.1, matplotlib 3.11.2, torch 2.14.1 (PyPI build; the CPU index was blocked), xgboost-cpu 3.4.1 |
+| Pinned packages | numpy 2.5.4, scipy 1.18.1, pytest 9.1.1, matplotlib 3.11.2 and torch 2.14.1 from `scripts/setup_cloud.sh:10–12` (PyPI build, since the CPU index was blocked); xgboost-cpu 3.4.1 from the `xgb` extra in `pyproject.toml:15` |
 | Threads | `OMP_NUM_THREADS=2`, `OPENBLAS_NUM_THREADS=2` |
 | CI reference | `.github/workflows/b2-readiness-ci.yml` runs on Python 3.12 with `pip install -e ".[dev,ml,xgb]"`. **Local runs used Python 3.13, so they are not an exact reproduction of the CI interpreter.** |
 | Editable install | not performed; tests used `PYTHONPATH=src` |
 
 ## 2. Commands and results
 
-All commands were run from the repository root with `PYTHONPATH=src` and the scratch venv interpreter.
+All commands ran from the repository root with `PYTHONPATH=src` and the scratch venv interpreter, at `68b13bb`.
 
 | # | Command | Scope | Result |
 |---|---|---|---|
-| T1 | `pytest tests/test_b2_e10_k17d.py tests/test_b2_e10_records.py tests/test_b2_e10_calibration.py tests/test_ml.py tests/test_openset_metrics.py -q` | new E10 tests, plus stage-A metrics and open-set metrics | **103 passed** (after one test-fixture correction, described in section 3) |
-| T2 | `pytest tests/test_b2_execution.py -v` | isolated executor, including the calibration and evaluation isolation tests | **42 passed** after two test corrections (section 3) |
-| T3 | `pytest tests/test_b2_e9_contract.py tests/test_b2_production_preflight.py -v` | E9 contract and preflight gates | RESULT_T3 |
-| T4 | `pytest -q -rs` (full suite, all test files, CI-equivalent flags) | whole repository | FULL_RESULT |
-| T5 | `python -m compileall -q src tests scripts` | syntax of every source file | COMPILE_RESULT |
-| T6 | `python scripts/b2_e10_k17d_identity.py` | metadata-only K17d derivation over 500 test groups with the audit cross-check | **exit 0**: headline 500, co-feed 35, sensitivity 465, cross-feed 43, total missing 78; `agrees=True`; `observation_reads: 0`, `waveform_synthesis_calls: 0` |
+| T1 | `pytest tests/test_b2_e10_k17d.py tests/test_b2_e10_records.py tests/test_b2_e10_calibration.py -q` | E10 new tests | **89 passed** (43 K17d + 11 records + 35 calibration), 5.61 s |
+| T2 | `pytest tests/test_b2_execution.py -q` | isolated executor, including the calibration and evaluation isolation tests | **42 passed**, 7.36 s |
+| T3 | full suite, included in T4 | E9 contract and preflight gates | covered by T4 (no separate failure) |
+| T4 | `pytest -q -rs -p no:cacheprovider` (full suite, CI-equivalent flags) at `68b13bb` | whole repository | **2115 passed, 0 failed, 0 skipped**, 46 warnings, 1243.83 s, exit 0. The warnings are matplotlib `PendingDeprecationWarning` from `scripts/plot_b2_scientific_results.py:166` (`cmap.set_bad`). Reconciliation: 2105 at `4efb7f0` plus the 10 new E10 tests (K17d +5, records +3, calibration +2) = 2115. |
+| T5 | `python -m compileall -q src tests scripts` at `68b13bb` | syntax of every source file | **passed**, exit 0 |
+| T6 | `python scripts/b2_e10_k17d_identity.py` at `68b13bb` | metadata-only K17d derivation over 500 test groups with the audit cross-check | **exit 0**: headline 500, co-feed 35, sensitivity 465, cross-feed 43, total missing 78; `agrees=True`; `observation_reads: 0`, `waveform_synthesis_calls: 0`. Re-running it leaves the committed record byte-identical (`git status` clean). |
 
 Failures and skips are recorded in section 4.
 
 ## 3. Test corrections made during verification (and why each is legitimate)
 
-These were the only edits to existing tests. Each was made because the test encoded the historical linear rule, or because
-a refactor removed a name that a monkeypatch relied on. No assertion was weakened to pass.
+No assertion was weakened to pass. Each edit below was made because the test encoded the historical rule, the subtraction score, or a fixture that lacked a field the stricter validator now checks.
 
 | Test | Before | After | Reason |
 |---|---|---|---|
-| `tests/test_b2_execution.py::test_threshold_rule_matches_independent_power_probability_arithmetic` | expected `np.quantile(..., .95)` (linear) | expected `np.quantile(..., .95, method="higher")` | It asserted the historical rule. The approved R10 rule is `higher`, and the change note records the switch. |
-| `tests/test_b2_execution.py::test_fixture_evaluation_uses_only_frozen_objects_and_readonly_inputs` | monkeypatched `threshold_at_pfa` | the name is removed from the list; `clean_alarm_threshold` stays | `b2_execution` no longer imports `threshold_at_pfa`, so `monkeypatch.setattr` failed. The guard still applies to the function the calibrate path now calls. |
-| `tests/test_b2_e10_calibration.py` (own test, during development) | `TrainConfig()` | `TrainConfig(labels=...)` | `TrainConfig` requires `labels`. |
-| `tests/test_b2_e10_calibration.py` (own test, during development) | role-literal check by substring | AST string-constant check | The substring check matched the log sentence "no test source opened". |
+| `tests/test_b2_execution.py::test_threshold_rule_matches_independent_power_probability_arithmetic` | expected `np.quantile(1-p_clean, .95)` (linear) | expected `np.quantile(p[clean,1:].sum(1), .95, method="higher")` | The first change encoded the historical linear rule. The second uses the same non-cancelling score as the executor. For ordinary margins the two forms agree to rounding. |
+| `tests/test_b2_execution.py::test_fixture_evaluation_uses_only_frozen_objects_and_readonly_inputs` | monkeypatched `threshold_at_pfa` | the name is removed from the list; `clean_alarm_threshold` stays | `b2_execution` no longer imports `threshold_at_pfa`, so `monkeypatch.setattr` failed. |
+| `tests/test_b2_e10_k17d.py::fixture_audit` | header had `n_test_groups` and `n_missing_groups` | adds `n_missing_co_feed` and `n_missing_cross_feed` | The validator now checks these header counts against the derivation. The fixture was a real audit shape, so it had to carry the fields. |
+| `tests/test_b2_e10_k17d.py::test_cross_check_refuses_an_audit_missing_one_group` | `match="only_in_derived|disagrees"` | `match="1 derived-only"` | The loose pattern matched the word "disagrees" alone. |
+| `tests/test_b2_e10_k17d.py` AST allow-list | any `from . import x` accepted as a bare `"."` | exact set `{__future__, hashlib, json, numbers, .b2_protocol, .b2_scenarios}` | The old check did not constrain which sibling modules the validator imports. |
 
 ## 4. Failures and skips
 
-- **Failures in the final T1 and T2 runs:** none after the corrections in section 3.
-- **Failures found during development (before correction):** the four `TrainConfig` errors and the single `B2Source.index`
-  error in my own new calibration tests, and the two `test_b2_execution` failures in section 3. All were fixed in the tests or
-  in the helper function, not in the approved code.
-- **Skips:** SKIPS_PLACEHOLDER
+- **Failures in the full run (T4):** none. The run ended with 2115 passed and exit 0.
+- **Skips (T4):** none. The log contains no `SKIPPED` line, and `-rs` reports no skipped test.
+- **Tripwires (unchanged):** `tests/test_b2_e8_tools.py:237` and `tests/test_b2_training_footprint.py:553` still encode the approved TF32 sequence. They pass at `68b13bb`.
+- **Failures found during development (before correction):** a `TrainConfig` constructor error, a `B2Source.index` fixture error, the `dict(**{7: ...})` keyword error in one new test (a `TypeError` in my own test code), and the two `test_b2_execution` failures in section 3. All were fixed in tests or helpers, not in approved code.
 
 ## 5. New negative and regression tests (what each one proves)
 
 | File | Tests | What they prove |
 |---|---|---|
-| `tests/test_b2_e10_k17d.py` | 38 | Exact 500/35/465 partition; canonical and order-independent output; fingerprints change when identities change; refusal of wrong count, duplicate, out-of-range ID, wrong role or protocol, diagnostic override, malformed or out-of-range drop, `plan_consistency` mismatch, outcome-bearing keys (accuracy, prediction, unknown score), missing fields; audit disagreement (missing group, polarization mismatch, wrong total, duplicate row); the metadata path never reaches `simulate_dual` (patched to fail); the validator module imports nothing from `geoml`, torch, metrics or prediction code |
-| `tests/test_b2_e10_records.py` | 8 | The committed identity record declares zero observation reads and zero waveform calls; its counts and fingerprints recompute from its own lists; it agrees with the committed audit; **tampering with one co-feed ID is detected; tampering with one audit polarization is detected**; gate values in the approved protocol are unchanged (`benchmark_complete` false, production false, activation false, full generation/GPU/LOKO `NOT_AUTHORIZED`, production launch `DISABLED`); the contract still refuses every execution action |
-| `tests/test_b2_e10_calibration.py` | 33 | Hand-computed higher-quantile values (`arange(100)` gives 95.0, the historical helper gives 94.05); the threshold is an order statistic; monotone in Pfa; ties (strict `>` raises no alarm on equal scores); small samples n = 1, 2, 20; input order independence; refusal of empty, two-dimensional, NaN and infinite scores and of invalid Pfa; distinct acceptance and clean-alarm populations; **training refuses val-calib, test, test-matched and val-select sources, and accepts the train role**; the calibrate path opens only the `val-calib` role and contains no other role literal; the calibrate path calls the approved function and not the historical one; the alarm-rule label changed |
+| `tests/test_b2_e10_k17d.py` | 43 | Exact 500 / 35 / 465 partition; canonical and order-independent output; fingerprints change when identities change; refusal of wrong count, duplicate, out-of-range ID, wrong role or protocol, diagnostic override, malformed or out-of-range drop, `plan_consistency` mismatch, outcome-bearing keys, missing fields; audit disagreement (missing group, polarization mismatch, wrong total, duplicate row, **audit header count mismatch**, **non-mapping audit row raises `K17dError`**); **mixed-type record keys and mixed-type drop keys raise `K17dError`, not `TypeError`**; **numpy-typed metadata normalises to the same identities and fingerprints**; the metadata path never reaches `simulate_dual` (patched to fail); the validator module's import set is exactly the allow-list |
+| `tests/test_b2_e10_records.py` | 11 | The committed record declares zero observation reads and zero waveform calls; counts and fingerprints recompute from its own lists; **headline IDs, predicate and headline fingerprint recompute**; **`package_sha256` equals the digest of the current `src/geosim` tree**; **`audit_sha256` and `source_sha256` equal the files on disk**; **the derivation reproduces from the frozen generator with `simulate_dual` patched to fail**; tampering with one co-feed ID and one audit polarization is detected; gate values in the approved protocol are unchanged; the contract refuses every execution action |
+| `tests/test_b2_e10_calibration.py` | 35 | Hand-computed higher-quantile values (`arange(100)` gives 95.0, the historical helper gives 94.05); order statistic; monotone in Pfa; ties; small samples; refusals; distinct acceptance and clean-alarm populations; training refuses val-calib, test, test-matched and val-select sources; the calibrate path opens only `val-calib`; the calibrate path calls the approved function; **a clean sample with a 40 or 45 nat margin keeps a strictly positive ordered score, while `1 - P(clean)` by subtraction returns 0**; **both calibrate and evaluate bodies use `clean_alarm_score` and not `1.-probabilities`** |
+| `tests/test_b2_execution.py` | 42 | Unchanged count; expectations updated as in section 3 |
 
 ## 6. Gate invariants verified
 
 - `benchmark_complete` is false in the approved protocol, the readiness gates and the candidate configuration.
 - `full_generation`, `full_gpu_training`, `full_loko_sweep` and `gpu_probe` remain `NOT_AUTHORIZED`; `production_launch` is `DISABLED`.
 - `runtime_permitted()` is false and every `guard_execution(action)` raises `ExecutionNotAuthorized`.
-- No approved JSON, gate JSON or P-document in `docs/plan/` that carries a gate value was edited. The only edited planning
-  document is `docs/plan/P33_b2_e9_production_executor_readiness.md`, line 17, which withdrew an unsourced resource figure.
-- No file under `configs/` or `src/geoml/b2_e9_contract.py` changed.
+- The approved protocol JSON, the approval record, the E8 decision approval, `src/geoml/b2_e9_contract.py`, `configs/` and `docs/plan/b2_e8_candidate_production_config.json` are **byte-identical to `e43987e`** (section 7).
+- P33 is restored to its `e43987e` text. The `4efb7f0` edit that withdrew a resource figure was wrong and is reverted.
 
 ## 7. Exact HEAD, file changes and CI
 
-- **Exact HEAD:** `HEAD_PLACEHOLDER`, pushed to `fix/b2-e10-scientific-integrity-hardening`.
-- **CI status (exact head):** CI_PLACEHOLDER
-- **File changes:** see the draft pull request description.
+- **Merged state:** PR #33 merged at `4efb7f0`. `origin/main` is `293c487`, tree identical to `4efb7f0`.
+- **Follow-up code commit under test:** `9f99f3e`, rebased onto `293c487`. Its tree equals `68b13bb`, the commit the full suite ran on, because the tree of `origin/main` equals that of `4efb7f0`.
+- **Protected paths:** `git diff --stat e43987e HEAD -- docs/plan/b2_e9_approved_scientific_protocol.json docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md docs/plan/B2_E8_DECISION_APPROVAL.md src/geoml/b2_e9_contract.py configs/ docs/plan/b2_e8_candidate_production_config.json` is **empty**.
+- **Documentation-only check:** `git diff --stat 68b13bb HEAD` lists only `docs/` paths for the documentation commit.
+- **CI:** the follow-up draft PR's exact-head check run is recorded in its description after it completes. The prior check on `4efb7f0` (run `40108670413`, job `120915592427`) passed; it is superseded.
+- **Local-versus-CI interpreter:** local runs used Python 3.13; CI uses Python 3.12. CI is the authoritative exact-head evidence for 3.12.
 
-## 8. What this report does not show
+## 8. Independent review and dispositions
 
-- It shows that the code and the records behave as specified on synthetic fixtures and on the committed records. It does **not**
-  show any recognition performance, and no such number is claimed here.
-- The K17d identity list is a candidate derived from the frozen generator at the recorded source hashes. Its scientific
-  acceptance is a researcher decision.
-- Local tests ran on Python 3.13 with torch 2.14.1 from PyPI. The CI interpreter is Python 3.12, and CI was not reproduced locally.
+A review workflow (`wf_38b51234-8d4`) ran on `4efb7f0` with three reviewers (scientific and statistical; leakage and safety; code), and a second agent re-checked every material finding against the cited line. Its findings and dispositions are in the closure document, section 8 (N-1 to N-8). Fixed in `68b13bb`: N-1 (score saturation), N-6 (validator normalisation, mixed keys, non-mapping rows, header counts, tautological partition, script ordering), N-7 (record binding). Recorded as decisions or errata: N-2 (packet D-7), N-3 and N-4 (closure E-10 and E-11), N-5 (packet D-6), N-8 (corrections in this PR's text). This review is an automated workflow. It is not a human researcher review, and independent human review of the calibration rule, the K17d validator and the decision packet is still requested.
+
+## 9. What this report does not show
+
+- It shows that the code and the records behave as specified on synthetic fixtures and on the committed records. It does **not** show any recognition performance, and no such number is claimed here.
+- The K17d identity list is a candidate derived from the frozen generator at the recorded source hashes. The approval asks for committed production generation metadata; that is a researcher decision (packet D-8).
+- Local tests ran on Python 3.13 with torch 2.14.1 from PyPI. The CI interpreter is Python 3.12.
+- The historical stages keep the linear rule and the subtraction score (closure E-10). The E7b evidence was produced by the linear-rule executor (closure E-11); no rerun is performed here.

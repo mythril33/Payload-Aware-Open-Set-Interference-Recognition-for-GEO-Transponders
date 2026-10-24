@@ -9,6 +9,7 @@ import copy
 import json
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from geosim import b2_k17d as K
@@ -42,7 +43,9 @@ def fixture_records(co=35, cross=43, total=500):
 def fixture_audit(records):
     rows = [{"group": r["scenario_id"], "pol": r["dropped_carrier"]["polarization"]}
             for r in records if r["dropped_carrier"] is not None]
-    return {"n_test_groups": 500, "n_missing_groups": len(rows), "rows": rows}
+    co = sum(1 for row in rows if row["pol"] == 0)
+    return {"n_test_groups": 500, "n_missing_groups": len(rows), "n_missing_co_feed": co,
+            "n_missing_cross_feed": len(rows) - co, "rows": rows}
 
 
 # ---- derivation: exact arithmetic and canonical output -------------------------------------------
@@ -173,7 +176,7 @@ def test_cross_check_refuses_an_audit_missing_one_group():
     records = fixture_records()
     audit = fixture_audit(records)
     audit["rows"] = audit["rows"][:-1]
-    with pytest.raises(K.K17dError, match="only_in_derived|disagrees"):
+    with pytest.raises(K.K17dError, match="1 derived-only"):
         K.cross_check_audit(K.derive(records), audit)
 
 
@@ -194,6 +197,54 @@ def test_cross_check_refuses_wrong_test_group_total_and_duplicate_rows():
     duplicated = dict(audit, rows=audit["rows"] + [audit["rows"][0]])
     with pytest.raises(K.K17dError, match="twice"):
         K.cross_check_audit(K.derive(records), duplicated)
+
+
+def test_audit_header_counts_must_match_the_derivation():
+    records = fixture_records()
+    audit = fixture_audit(records)
+    audit["n_missing_co_feed"] = 34                       # rows still agree; only the header is wrong
+    with pytest.raises(K.K17dError, match="header mismatches \\['n_missing_co_feed'\\]"):
+        K.cross_check_audit(K.derive(records), audit)
+    missing_header = dict(fixture_audit(records))
+    del missing_header["n_missing_cross_feed"]
+    with pytest.raises(K.K17dError, match="n_missing_cross_feed"):
+        K.cross_check_audit(K.derive(records), missing_header)
+
+
+def test_non_mapping_audit_row_is_refused_as_k17d_error_not_attribute_error():
+    records = fixture_records()
+    audit = fixture_audit(records)
+    audit["rows"][2] = [3200001, 0]
+    with pytest.raises(K.K17dError, match="audit row 2 is not a mapping"):
+        K.cross_check_audit(K.derive(records), audit)
+
+
+def test_mixed_type_keys_in_a_record_are_refused_as_k17d_error_not_type_error():
+    records = fixture_records()
+    records[4] = {**records[4], 7: "stray"}               # int key next to str keys
+    with pytest.raises(K.K17dError, match="outside the metadata contract"):
+        K.derive(records)
+
+
+def test_mixed_type_keys_in_a_drop_are_refused_as_malformed():
+    records = fixture_records()
+    records[0] = record(TEST_IDS[0], drop={"polarization": 0, 1: 0}, consistent=1)
+    with pytest.raises(K.K17dError, match="malformed dropped_carrier"):
+        K.derive(records)
+
+
+def test_numpy_typed_metadata_is_normalised_to_the_same_identities_and_fingerprints():
+    plain = fixture_records()
+    typed = copy.deepcopy(plain)
+    for item in typed:
+        item["scenario_id"] = np.int64(item["scenario_id"])
+        item["plan_consistency"] = np.int64(item["plan_consistency"])
+        if item["dropped_carrier"] is not None:
+            item["dropped_carrier"] = {"polarization": np.int64(item["dropped_carrier"]["polarization"]),
+                                       "index": np.int64(item["dropped_carrier"]["index"])}
+    derived_typed = K.derive(typed)                       # would raise TypeError in canonical() if not normalised
+    assert derived_typed == K.derive(plain)
+    assert K.canonical(derived_typed)
 
 
 # ---- generator adapter: metadata only ----------------------------------------------------------------
@@ -243,10 +294,14 @@ def test_validator_module_has_no_model_metric_or_observation_imports():
     imported = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
-            imported.add(("." * node.level) + (node.module or ""))
+            prefix = "." * node.level
+            if node.module:
+                imported.add(prefix + node.module)
+            else:  # `from . import x` names the sibling module x, so the alias is the module
+                imported.update(prefix + alias.name for alias in node.names)
         elif isinstance(node, ast.Import):
             imported.update(alias.name for alias in node.names)
-    # Relative `from . import x` appears as the bare "." module name; the set is the whole allow-list.
-    assert imported <= {".", "__future__", "hashlib", "json", "numbers"}
+    # The whole allow-list: stdlib helpers, the protocol constants, and the scene-metadata adapter (lazy import).
+    assert imported == {"__future__", "hashlib", "json", "numbers", ".b2_protocol", ".b2_scenarios"}
     for banned in ("torch", "geoml", "metrics", "openset", "calibration", "predict", "numpy"):
         assert not any(banned in name for name in imported)
