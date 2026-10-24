@@ -33,8 +33,32 @@ def cluster_ci(values: np.ndarray, groups: np.ndarray, n_boot: int = 2000, seed:
     return float(lo), float(hi)
 
 
+CLEAN_ALARM_QUANTILE_METHOD = "higher"
+
+
+def clean_alarm_threshold(clean_scores: np.ndarray, pfa: float) -> float:
+    """Approved R10 clean-alarm threshold: the higher empirical quantile at level 1 - pfa.
+
+    The alarm rule is applied by the caller as strictly ``score > threshold``. Inputs must be a
+    non-empty finite vector of clean known-only calibration scores; anything else is refused.
+    Used by the E9 calibrate path only (src/geoml/b2_execution.py).
+    """
+    values = np.asarray(clean_scores, dtype=float)
+    if values.ndim != 1 or values.size == 0:
+        raise ValueError("clean calibration scores must be a non-empty one-dimensional vector")
+    if not np.all(np.isfinite(values)):
+        raise ValueError("clean calibration scores must be finite")
+    if isinstance(pfa, (bool, np.bool_)) or not isinstance(pfa, (int, float, np.floating)) or not 0.0 < float(pfa) < 1.0:
+        raise ValueError("pfa must be a number in (0, 1)")
+    return float(np.quantile(values, 1.0 - float(pfa), method=CLEAN_ALARM_QUANTILE_METHOD))
+
+
 def threshold_at_pfa(clean_scores: np.ndarray, pfa: float) -> float:
-    """Score threshold exceeded by a fraction `pfa` of the given clean (validation) scores."""
+    """HISTORICAL linear-quantile threshold used by frozen stages (stage A, R1, A5, observed receiver, legacy coupled path).
+
+    Kept bit-for-bit so that archived results keep their meaning. It is NOT the approved R10 rule;
+    the E9 calibrate path uses ``clean_alarm_threshold``.
+    """
     return float(np.quantile(clean_scores, 1 - pfa))
 
 

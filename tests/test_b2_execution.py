@@ -134,7 +134,7 @@ def test_fixture_evaluation_uses_only_frozen_objects_and_readonly_inputs(fixture
     execution.freeze_inventory([out],inventory,seeds=(0,),profile="fixture")
     before={str(p):_sha(p) for p in out.rglob("*") if p.is_file()};before[str(inventory)]=_sha(inventory)
     fixture[2].clear()
-    for name in ["fit_streaming","fit_mahalanobis","calibrate_scores","threshold_at_pfa"]:
+    for name in ["fit_streaming","fit_mahalanobis","calibrate_scores","clean_alarm_threshold"]:
         monkeypatch.setattr(execution,name,lambda *_a,**_k:pytest.fail("evaluation fitted/calibrated"))
     result=execution.evaluate_b2_inventory(fixture[3],inventory,tmp_path/"eval",profile="fixture",log=lambda *_:None)
     assert fixture[2]==[("test",),("test",)]  # opening and final artifact snapshot verification
@@ -195,8 +195,9 @@ def test_threshold_rule_matches_independent_power_probability_arithmetic(fixture
     logits=outputs["logits"].astype(np.float64);p=np.exp(logits-logits.max(1,keepdims=True));p/=p.sum(1,keepdims=True)
     clean=source.index["label"]==0
     alarm=json.loads((out/"alarm_co.json").read_text())
-    # Existing P20 neural arithmetic uses the interpolated quantile, not EDSC's higher quantile.
-    expected=float(np.quantile(1.-p[clean,0],.95))
+    # E10 (docs/engineering/B2_E10_R10_CLEAN_ALARM_CHANGE.md): the approved R10 clean-alarm rule is the higher
+    # empirical quantile. The earlier interpolated expectation was the historical linear rule and is retired here.
+    expected=float(np.quantile(1.-p[clean,0],.95,method="higher"))
     assert alarm["threshold"]==pytest.approx(expected,abs=1e-12)
     assert alarm["n_clean_calibration"]==2
     assert alarm["calibration_false_alarms"]==int(((1.-p[clean,0])>expected).sum())
