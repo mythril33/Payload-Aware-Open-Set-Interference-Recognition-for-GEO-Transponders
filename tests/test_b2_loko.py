@@ -8,6 +8,7 @@ import pytest
 from geoml import b2_loko as lk
 from geoml.b2_stream import B2Source
 from geosim.b2_protocol import LABELS
+from geosim.cancellation import CancellationConfig
 from test_b2_experiment import _config, _split
 from test_b2_artifacts import feature_generator, generator  # noqa: F401
 
@@ -15,10 +16,22 @@ from test_b2_artifacts import feature_generator, generator  # noqa: F401
 @pytest.fixture
 def dataset(monkeypatch, tmp_path):
     parts = {role: _split(role, 2, i) for i, role in enumerate(lk.ROLES)}
-    manifest = {"protocol": "B2-feat/1", "labels": list(LABELS), "benchmark_complete": False}
+    manifest = {"protocol": "B2-feat/1", "labels": list(LABELS), "benchmark_complete": False,
+                "cancellation": CancellationConfig().to_dict()}
     monkeypatch.setattr(lk, "open_b2_known", lambda _: (manifest, "f" * 64,
         {role: B2Source.from_arrays(part, role=role) for role, part in parts.items()}))
     monkeypatch.setattr(lk, "_source_identity", lambda: {"revision": "test", "files_sha256": {"fixture": "0" * 64}})
+    # Metadata-only planning does not open any role observations. The scoped
+    # reader is the only fixture path that exposes spectra; tests spy on it.
+    def header(_):
+        manifest["roles"] = {role: {"scenario_seeds": sorted(set(part["seed"].tolist()))}
+                             for role, part in parts.items()}
+        return manifest, "f" * 64
+    monkeypatch.setattr(lk, "_plan_header", header)
+    monkeypatch.setattr(lk, "_verify_artifact_snapshot", lambda *_: None)  # arrays, no disk artifact in this fixture
+    monkeypatch.setattr(lk, "open_b2_known_roles", lambda _, roles: (
+        manifest, "f" * 64,
+        {role: B2Source.from_arrays(parts[role], role=role) for role in roles}))
     return parts, manifest, tmp_path / "data"
 
 
@@ -216,6 +229,65 @@ def test_end_to_end_smoke_excludes_heldout_from_every_fit_calibrates_before_test
     with pytest.raises(ValueError, match="no compatible checkpoint"):
         lk.run_smoke(config(), data, incomplete, holdout="cw", reuse=True)
     assert (incomplete / "unrelated.txt").read_text() == "preserve"
+
+
+def test_loko_does_not_read_test_observations_before_frozen_file_receipt(dataset, tmp_path, monkeypatch):
+    _, _, data = dataset
+    out = tmp_path / "isolated"
+    actual_open = lk.open_b2_known_roles
+    opened = []
+    def scoped(root, roles):
+        opened.extend(roles)
+        if "test" in roles:
+            frozen = json.loads((out / "freeze.json").read_text())
+            assert frozen["files_sha256"]["model.pt"] == lk._sha256(out / "model.pt")
+            assert set(frozen["files_sha256"]) == {"model.pt", "mahalanobis.npz",
+                "rejection_msp.json", "rejection_energy.json", "rejection_mahalanobis.json"}
+            for name, digest in frozen["files_sha256"].items():
+                assert lk._sha256(out / name) == digest
+        return actual_open(root, roles)
+    monkeypatch.setattr(lk, "open_b2_known_roles", scoped)
+    monkeypatch.setattr(lk, "open_b2_known", lambda *_: pytest.fail("whole-role opener reads held-out inputs too early"))
+    lk.run_smoke(config(), data, out, holdout="cw", bootstrap=10, log=lambda *_: None)
+    assert opened == ["train", "val-select", "val-calib", "test"]
+
+
+@pytest.mark.parametrize("drift", ["source", "runtime", "checkpoint", "threshold"])
+def test_mid_test_identity_or_frozen_file_drift_prevents_results_publication(dataset, tmp_path, monkeypatch, drift):
+    _, _, data = dataset
+    out = tmp_path / "drift"
+    real_infer = lk.infer_streaming
+    source, runtime = lk._source_identity(), lk._runtime_identity()
+    changed = {"test_finished":False}
+    if drift == "source":
+        monkeypatch.setattr(lk,"_source_identity",lambda: source if not changed["test_finished"] else {
+            **source,"files_sha256":{"foreign":"1"*64}})
+    if drift == "runtime":
+        monkeypatch.setattr(lk,"_runtime_identity",lambda: runtime if not changed["test_finished"] else {
+            **runtime,"torch_threads":runtime["torch_threads"]+1})
+    def infer(fitted, source, **kwargs):
+        result = real_infer(fitted,source,**kwargs)
+        if source.role == "test":
+            changed["test_finished"] = True
+            if drift in ("checkpoint","threshold"):
+                path = out / ("model.pt" if drift == "checkpoint" else "rejection_msp.json")
+                path.write_bytes(path.read_bytes()+b"tampered")
+        return result
+    monkeypatch.setattr(lk,"infer_streaming",infer)
+    with pytest.raises(ValueError,match="changed during"):
+        lk.run_smoke(config(),data,out,holdout="cw",bootstrap=10,log=lambda *_:None)
+    assert not (out / "results.json").exists()
+
+
+def test_output_alias_and_noncanonical_cancellation_fail_before_fitting(dataset, tmp_path, monkeypatch):
+    _, manifest, data = dataset
+    monkeypatch.setattr(lk,"fit_streaming",lambda *_a,**_k:pytest.fail("invalid request fitted"))
+    for out in (data, data / "nested", data.parent):
+        with pytest.raises(ValueError,match="disjoint"):
+            lk.run_smoke(config(),data,out,holdout="cw")
+    manifest["cancellation"] = {**manifest["cancellation"],"phase_grid":32}
+    with pytest.raises(ValueError,match="P20"):
+        lk.run_smoke(config(),data,tmp_path / "foreign",holdout="cw")
 
 
 def test_cli_defaults_to_plan_only(dataset, tmp_path, monkeypatch):

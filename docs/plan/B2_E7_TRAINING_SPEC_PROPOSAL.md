@@ -1,5 +1,26 @@
 # E7a candidate production-training specification — PROPOSAL, NOT FROZEN, NOT APPROVED
 
+**E7b capability note — 2026-10-24, base main `ed65eb54632fc4373accebc88452ddf0ff9fadfe` (PR22/23 merged).**
+The29 parameter records and R1–R10 remain unapproved, with their existing
+values, authority and alternatives unchanged. [P31](P31_b2_e7b_isolated_execution.md)
+adds separate train-only, known-val-calib, freeze and evaluation phases;
+legacy coupled pilot statements below remain a historical description of
+the baseline path, which is retained with a12groups/role cap. The new
+CPU-only path is limited to two groups/role, two epochs, width8 and batch32;
+its proposed-full evaluation admission requires all three views × three
+explicit seeds before any test observation/inference. Fixture validation
+does not authorize production. Bounded LOKO can execute at most two
+immutable selected smoke cells; full21/63-fit execution stays unavailable.
+Actual tests/status belong in [delivery evidence](../results/b2_e7b_execution.md),
+not the historical footprint measurements below. See the
+[R1–R10 recommendation table](B2_E7B_DECISION_RECOMMENDATIONS.md): width16
+is still an unapproved candidate, the width8 resource budget does not carry
+over, and R10 explicitly asks to confirm the calibration/Mahalanobis
+constants. Source changes invalidate historical checkpoint identities.
+No P20 loss/augmentation/optimizer/cancellation choice, JSON approval or
+researcher gate is changed; non-P6-default choices/sizing still require
+the stated P18 §10 entry and version before fitting.
+
 Date: 2026-10-23. Base commit `755b474`. `benchmark_complete=false`. Machine-readable twin:
 [`b2_e7_training_proposal.json`](b2_e7_training_proposal.json) (schema `B2-training-proposal/1`, every parameter with value, basis,
 source, `needs_researcher_approval`, alternatives, consequence and `approval: null`). Footprint tool:

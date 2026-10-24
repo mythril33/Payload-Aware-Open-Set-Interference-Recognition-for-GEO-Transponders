@@ -1,9 +1,9 @@
 {
  "schema": "B2-E6-audit-findings/1",
- "as_of": "2026-10-23",
+ "as_of": "2026-10-24",
  "base_main": "755b474b7a2c506ec03441a7d15ed365c47addb1",
  "benchmark_complete": false,
- "note": "Manual audit of the 21,350-observation production plan against the merged code. PASS needs a named test or an inspected location; FAIL is a verified engineering gap or mismatch; BLOCKED needs a researcher decision, authorization, hardware or a measurement; NOT_RUN was not executed. Nothing here approves a gate. E7a update (2026-10-23): the supervisor and the K18 diagnostic findings are resolved for bounded fixtures; production launch stays unimplemented. E7a review update: independent multi-lens review of the supervisor, K18 diagnostics, training proposal and documentation; the material findings are fixed with regression tests (P30 section 9). Items touched by E7a cite line numbers at the E7a head; untouched items cite 755b474. Main moved to 5d3f1a3 when PR #21 (the first, pre-review E7a state) was merged; this round is its follow-up. The audit base for items not touched by E7a stays 755b474. Main is now 0e8c467 (PR #22 merged the review hardening); a post-merge audit and its fixes are in the hotfix that follows.",
+ "note": "Manual audit of the 21,350-observation production plan against the merged code. PASS needs a named test or an inspected location; FAIL is a verified engineering gap or mismatch; BLOCKED needs a researcher decision, authorization, hardware or a measurement; NOT_RUN was not executed. Nothing here approves a gate. E7a update (2026-10-23): the supervisor and the K18 diagnostic findings are resolved for bounded fixtures; production launch stays unimplemented. E7a review update: independent multi-lens review of the supervisor, K18 diagnostics, training proposal and documentation; the material findings are fixed with regression tests (P30 section 9). Items touched by E7a cite line numbers at the E7a head; untouched items cite 755b474. Main moved to 5d3f1a3 when PR #21 (the first, pre-review E7a state) was merged; this round is its follow-up. The audit base for items not touched by E7a stays 755b474. Main is now 0e8c467 (PR #22 merged the review hardening); a post-merge audit and its fixes are in the hotfix that follows. E7b reconciliation: verified main ed65eb5 contains PR22/23; the raw PR23 job log confirms 1632 passed and seven skips. Separate bounded training/calibration/freeze/evaluation and a bounded LOKO matrix close engineering gaps without authorizing production or choosing R1-R10. Untouched audit items retain historical citations.",
  "items": [
   {
    "id": "audit.generator_cli",
@@ -188,6 +188,16 @@
    "verified_by": "ci:40035525938 job log tail read in the E7a post-merge hotfix"
   },
   {
+   "id": "audit.e7a_hotfix_ci",
+   "title": "The merged E7a post-merge hotfix (PR23) passed GitHub Actions",
+   "status": "PASS",
+   "message": "Head7a46f5774ddcf9f99af425265a6b0cc2b0ebdb57, run40047344666/job120731984575 completed success:107 E4 tests in106.48s +1525 repository tests,7 skips,46 warnings in716.07s =1632 passed,zero failures. Old quiet logs omit skip node IDs/reasons. Merged ased65eb54632fc4373accebc88452ddf0ff9fadfe; this is baseline evidence only.",
+   "evidence": [
+    "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40047344666"
+   ],
+   "verified_by": "ci:40047344666 run/jobs API and raw job log read during E7b"
+  },
+  {
    "id": "audit.production_training_config_missing",
    "title": "No frozen production training configuration exists; a candidate specification awaits researcher decisions",
    "status": "BLOCKED",
@@ -227,12 +237,15 @@
   },
   {
    "id": "audit.loko_dispatcher_missing",
-   "title": "Full LOKO execution and multi-seed aggregation are not implemented",
-   "status": "FAIL",
-   "message": "geoml.b2_loko plans all folds but executes exactly one view, one fold on CPU under epoch/width/batch caps. Not needed to generate data; needed before DR-E5-06 could be exercised.",
+   "title": "A deterministic bounded LOKO planner, dispatcher and verified multi-seed aggregator exist",
+   "status": "PASS",
+   "message": "P31 plans seven non-clean holdouts x three seeds x explicit views. An immutable selection permits at most two capped CPU cells per output root; native artifacts, COMPLETE status, source/data/config bindings, score rows and point-metric denominators are verified. Missing full inventories fail closed; explicit partial summaries have null full-matrix metrics. Seed spread and shared-scenario intervals stay separate; no scores are pooled across seeds or held-out tasks. No production/full21/full63 sweep is enabled or run.",
    "evidence": [
-    "src/geoml/b2_loko.py:163-170"
-   ]
+    "src/geoml/b2_loko_matrix.py",
+    "tests/test_b2_loko_matrix.py",
+    "docs/plan/P31_b2_e7b_isolated_execution.md"
+   ],
+   "verified_by": "tests/test_b2_loko_matrix.py::test_two_seed_smoke_freezes_each_cell_and_partial_summary_is_not_complete"
   },
   {
    "id": "audit.training_interruption_recovery",
@@ -276,9 +289,9 @@
   },
   {
    "id": "audit.pr_head_ci",
-   "title": "GitHub Actions on this post-merge hotfix pull-request head",
+   "title": "GitHub Actions on the new E7b pull-request head",
    "status": "NOT_RUN",
-   "message": "Recorded in the draft PR description after publication; CI for any other head, including the merged E5, E6 and E7a heads, does not certify it.",
+   "message": "Not run before publication. The exact head/run/job and raw results are recorded in the draft PR after publication; historical merged-head CI does not certify this new head.",
    "evidence": [
     "pull request description"
    ]
@@ -319,13 +332,15 @@
   },
   {
    "id": "audit.runner_couples_training_and_test",
-   "title": "The experiment runner trains and evaluates the test role in one invocation",
-   "status": "BLOCKED",
-   "message": "E5 plan step 7 asks for all nine models to be frozen before any test evaluation; geoml.b2_experiment has no train-only mode and one seed per invocation. Either a procedural freeze or a reviewed train-only mode is needed (researcher decision R8).",
+   "title": "Independent bounded training, calibration and frozen-inventory evaluation modes exist",
+   "status": "PASS",
+   "message": "Train-only opens train/val-select only, Mahalanobis uses train only, and a separate calibration opens known val-calib. Proposed-full admission validates nine native view/seed cells and frozen thresholds before held-out opening; evaluation fits nothing and preserves input bytes. Fixture admission is explicit and cannot masquerade as full-protocol admission. New execution remains CPU <=2groups/role, <=2epochs,width<=8,batch<=32; the legacy coupled pilot is capped at12groups/role. R8 and all production decisions remain unapproved; no production-width16/30epoch executor is authorized.",
    "evidence": [
-    "docs/plan/B2_E7_TRAINING_SPEC_PROPOSAL.md",
-    "docs/plan/B2_E5_PRODUCTION_EXECUTION_PLAN.md:71-73"
-   ]
+    "src/geoml/b2_execution.py",
+    "src/geoml/b2_stream.py::open_b2_known_roles",
+    "docs/plan/P31_b2_e7b_isolated_execution.md"
+   ],
+   "verified_by": "tests/test_b2_execution_integration.py::test_native_artifact_train_calibrate_freeze_evaluate"
   },
   {
    "id": "audit.loader_synchronous",

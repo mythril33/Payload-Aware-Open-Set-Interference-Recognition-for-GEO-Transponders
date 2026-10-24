@@ -1,0 +1,626 @@
+{
+  "schema": "B2-E7b-engineering-evidence/1",
+  "date": "2026-10-24",
+  "benchmark_complete": false,
+  "production_authorized": false,
+  "branch": "feature/b2-e7b-isolated-execution",
+  "base_main": "ed65eb54632fc4373accebc88452ddf0ff9fadfe",
+  "source_files_fingerprint": "38dda15e6c626d8ef1c155276a16efa66abf319856fa1c0efb908635be3f3bae",
+  "source_files_sha256": {
+    "geoml/__init__.py": "36d9afb2c93bdf7bf87734caae8a96946e6b41aab5000c2402909589e14095a9",
+    "geoml/artifacts.py": "642bc0ec1d0155460be5c609a08e0d2775705ff393e5d1a9064168d011055477",
+    "geoml/b2_a5.py": "64e24110cc7f08b45a5cb86827040b4ffbf46deacaa88596a7259f6852fa555f",
+    "geoml/b2_a5_plan.py": "938622a6f558c2d808e3b16c9163efe33394235d6ffefb20fbe6afbae65f1600",
+    "geoml/b2_a5_replay.py": "5bfbb4d188b17ee88523c985011943f7484feb7736bd1af1303fbf61b9380aeb",
+    "geoml/b2_data.py": "4928c7e4bc2fd47d7c561f8480525e9b8d52352a4bd96eb37e8908e14b91c8e1",
+    "geoml/b2_edsc.py": "382204e426669201f2c8b97de15d05dbafd3f199aa208193c7475a192c301a01",
+    "geoml/b2_edsc_metrics.py": "11ce46ae2236ae30e64570ca31e0071c73151dabf08c634f470cf8eea0f0c61b",
+    "geoml/b2_execution.py": "edd4fb8151659fc83946e109ddc881aaf00c03ca08379e7a418c19a700800265",
+    "geoml/b2_experiment.py": "e0fd87cf547b0c074c9584b9c5d92a954b7796450a5b6dd9b4ec6e75191ccaad",
+    "geoml/b2_expert.py": "6a274d808862843cfa32a68e80e264567c3c5f1598599d4d6e978895257e5562",
+    "geoml/b2_loko.py": "c6e65dae7c2719a4d6d1c9f035896778a367fa564f70dc5d7c2575581aef311a",
+    "geoml/b2_loko_matrix.py": "9c23f19d91e54752d112e4de926bf68bcb01a958a8c7dcfa2f6854398989a7d7",
+    "geoml/b2_model.py": "96d444780f547a47042f9bbf8644841ca9250e7f383297e9aa03891c849fe610",
+    "geoml/b2_observed_experiment.py": "c888942fea9c6fd17cbf6e455bfe1b8a4a05503de04006f18afcabbf44a12cb4",
+    "geoml/b2_stream.py": "f9eb808111508bfb4b554ba0b0a319a2afefebc1b7cccc67e7e102f3079d6f96",
+    "geoml/b2_train.py": "4d6d8798515f0cfa055a25d006d27db37187a8f14617fb9846ba1183dad044d7",
+    "geoml/b2_xgb.py": "59244a39fc1ff30fe1eb5f9e03e35e7c6ec25ad97966369ce062733ff2e0821b",
+    "geoml/b2_xgb_metrics.py": "fe007b24f75b3fbdf1542b002969a09da5662df3f52d6c520a57a0c2a05985bc",
+    "geoml/b2_xgb_model.py": "5ddc01511c93274dd4bb5cb9a0eefb17538b864c334dca0d0cbb812cc3e3ff47",
+    "geoml/calibration.py": "081cf3fdcc5954a422bc40c7017ff95750a88d8cba7c808c3f2fd7fe4b6da1ae",
+    "geoml/cfar.py": "7278de278fd1b29fb04ac5fabaf009a4f4e5ee4e9cb3ebe462dc8e22eb567c8d",
+    "geoml/data.py": "928d9c76c1b6697d7b4c12d7d92ec96f8afdedec656edeb321b536391b29e959",
+    "geoml/dual_experiment.py": "5e8777aa409afa054f812cc69821f7ecfb4220f0cc9d7be35b47a64f7b10bb9a",
+    "geoml/edsc.py": "6bb8e2a6fba89c0bb85f28e6d4eaa99da97da9d5c82f87b6385589742a542061",
+    "geoml/evaluation.py": "87792c84c85352b366a6dd36c9465400017c9b18a6e30927e0bfd22db4ae2162",
+    "geoml/experiment.py": "5569efff230a955ab6c943c13e62b0b7ecdc67c8150ad9ac50214ff142394f98",
+    "geoml/mahalanobis.py": "0fbbc984e0af6317ce12b100efeeec46f36e0e7ea9f1e8efd5e774b9d2713ac0",
+    "geoml/metrics.py": "bfd1e93460b695fc265b796803e80954c052a6bb2e30dfa7c7b3b5231852e54c",
+    "geoml/model.py": "0abe5bc4f76e5aa54a5e6080dcd8b05151536f12d058e7cf0b61951848a8d1f9",
+    "geoml/openset.py": "d1cd61b4d2a398ae547718573d3403acc1ed24310b8b6415b7096e8f6e87a4a9",
+    "geoml/openset_metrics.py": "81c1cffcf1f53bb07713eca70ddc4d8358283d142cb8b6a05205133bc4b45e66",
+    "geoml/pipeline.py": "e9c2dfa34d69d029644c09fb69a00427fbbdb9c4b13285f6d1e91faed7945f0c",
+    "geoml/plan_shortcut.py": "9e5d233d1842efd11dbe023870ae34f41080d1482755a50b360625897d1464e6",
+    "geoml/robustness.py": "f694ea899a5cc499228d1bf34a97d18466cd99e86ef27749cf463670b650c248",
+    "geoml/train.py": "3bc6ea3e9df25671f6cfec72075909aa727b8fc544124fa30d82cf94af823c0a",
+    "geosim/__init__.py": "fed3f675bdd0ce44073fec6a170ec73f752e5225927215dc460de04dab6da007",
+    "geosim/asi.py": "f229e259dfef0ab46f7408c59d2dfa1cb2a5509cd69ff37bf7313e2bc535fb21",
+    "geosim/b2_dataset.py": "2a215a438e04ccd0d53a7ffa9d72fcc8f7700c9862e172f633f6a9de58bdd62c",
+    "geosim/b2_features.py": "5172e59228c1a54aa0aa866c9a5bdfb7e4e558bb54cca750b24e89ee3b98143e",
+    "geosim/b2_matched_dataset.py": "cb175fed5f5fdd7c5a1738f62c3c52e72fd9df3682ea4b1ad1bdbf52d939883f",
+    "geosim/b2_protocol.py": "510f6dcd1e8ce0bda98b23cd8ec19ff7bbcfbdd4e3373bfe82876fc15ae2feb5",
+    "geosim/b2_scenarios.py": "688e5275af0d44527e152d6c520087f5a0f2464f5e1bc382851c916e0dc66012",
+    "geosim/b2_test_dataset.py": "9f6371fa8112cb88c2b7ea9837b5c1b431242929adca1a4229caec0c5948408c",
+    "geosim/cancellation.py": "0e93258e565fde5d568a3a74d2c0e8b694a7c70d993be663aaf02bf0ffe6c3b2",
+    "geosim/cid.py": "1b52f9289b72146af70350846b7147c307b878ff6da75fb2d7f1b5072950f350",
+    "geosim/classes.py": "0c28a077afe3e9da49718aed04588cc519febc19b96e85352007f8b094a36c7b",
+    "geosim/dataset.py": "4f743e89428a76dd79b2234edbac7d2364a71d75fe113e94ef452ebcf2e5faea",
+    "geosim/dual.py": "20f3652a458fd9fbdabaf23b612880414c5e869302ddf8feb5e57f99eec14d18",
+    "geosim/dual_dataset.py": "6160eeeee3fe8292c340f4df0adf2757871fa827b57fd416486527118e2fa280",
+    "geosim/event_dataset.py": "aa0a5c9d7e648b25d3ed8b63b3c157ebeb13df045e1458dae7cc04d12cb0cc78",
+    "geosim/events.py": "7b56ff6d8d8657d7e9863eedafc0ec11eb6a038f55d2175b558feec954e98f92",
+    "geosim/interferers.py": "eb2d20c999b4a1f744e93f8aec062576e519c8df7be935012e371a671efa0383",
+    "geosim/observed_receiver.py": "7dae7440ea07197232649ed0e8ea127974aef3c4d8c1b3a22eeae4fa780ec736",
+    "geosim/payload.py": "01e364122bc6742ac3613a1ae2db28aa196ad33f60351d936ba36258d13a19aa",
+    "geosim/phase_noise.py": "529493b773f81df9e0e51b020b74a0bd52fdb4d4e5effc2cb741a18165142a96",
+    "geosim/plan.py": "470bd9aef9729940d510fc9c883ee9df50bcff6800738bea13902e8f8edd14b2",
+    "geosim/polarization.py": "0d8c4c20a5d38b1e02287bbb74e81ad86172437b4d2b3d10beefaeedcf7ca7f7",
+    "geosim/protocol.py": "815c8861eaf33f2d78239c0cbb676770f0c40d43b496f48c3f86b4d6f822c16f",
+    "geosim/scenario.py": "ac15f57154c9af1c5d0c5cc79420dfff58884ac9def95eef0fbec8e64d2d592d",
+    "geosim/sensor.py": "e78151a893e617b7eaa3af8016b4e47ee25a61e15eb30e37093bbf84971c3226",
+    "geosim/unknowns.py": "5c5219b52c6133f0168f2eecd47880f71f8f21326cd15a641b99971db19fef23",
+    "geosim/waveform.py": "308641f19a573b7ee5897d7cac11d0d87e28e1200e0c53c61ddff09fd9abdf90",
+    "geosim/data/dvbs2_twta.json": "0da3a624f9e94058ed100d6c06b62aff08f49f3a5a93df3ddc23f4b3f082c4f1",
+    "geosim/data/mux_fir.npz": "58b78bdaf6b749f9f45e8c1f0541674ad0d81f9bd6f17762e667965cd8ba11e8",
+    "geosim/data/opendpd_mp.json": "4ff38b21739fa93d4c232603dbf469e439f6dc4c2dd67ff78ceee23fe11c7dce"
+  },
+  "changed_source_sha256": {
+    "src/geoml/b2_execution.py": "edd4fb8151659fc83946e109ddc881aaf00c03ca08379e7a418c19a700800265",
+    "src/geoml/b2_stream.py": "f9eb808111508bfb4b554ba0b0a319a2afefebc1b7cccc67e7e102f3079d6f96",
+    "src/geoml/b2_experiment.py": "e0fd87cf547b0c074c9584b9c5d92a954b7796450a5b6dd9b4ec6e75191ccaad",
+    "src/geoml/b2_loko.py": "c6e65dae7c2719a4d6d1c9f035896778a367fa564f70dc5d7c2575581aef311a",
+    "src/geoml/b2_loko_matrix.py": "9c23f19d91e54752d112e4de926bf68bcb01a958a8c7dcfa2f6854398989a7d7"
+  },
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "torch": "2.14.1+cpu",
+    "xgboost": "3.4.1",
+    "torch_threads": 2,
+    "torch_interop_threads": 3,
+    "cuda_used": false,
+    "thread_environment": {
+      "OMP_NUM_THREADS": "2",
+      "OPENBLAS_NUM_THREADS": "2",
+      "MKL_NUM_THREADS": "2",
+      "PYTHONHASHSEED": "0"
+    }
+  },
+  "base_ci": {
+    "pr": 23,
+    "head_sha": "7a46f5774ddcf9f99af425265a6b0cc2b0ebdb57",
+    "run_id": 40047344666,
+    "job_id": 120731984575,
+    "conclusion": "success",
+    "e4_passed": 107,
+    "remaining_passed": 1525,
+    "skipped": 7,
+    "failed": 0,
+    "skip_node_ids_and_reasons_visible": false
+  },
+  "integrity": {
+    "base": "ed65eb54632fc4373accebc88452ddf0ff9fadfe",
+    "frozen_paths_unchanged": [
+      "src/geosim",
+      "configs",
+      "docs/plan/P18_b2_protocol.md",
+      "docs/plan/P19_b2_base_observations.md",
+      "docs/plan/P20_b2_cancellation_residual.md",
+      "docs/plan/P21_b2_test_families.md",
+      "docs/plan/P21_b2_observed_receiver.md",
+      "docs/plan/P22_b2_matched_asi.md",
+      "docs/plan/P28_b2_e4_dual_pol_a5.md",
+      "src/geoml/train.py",
+      "src/geoml/model.py"
+    ],
+    "researcher_decisions_unchanged": true,
+    "proposal_json_byte_identical": true,
+    "benchmark_complete": false,
+    "existing_streaming_definitions_ast_identical": 18,
+    "new_streaming_definitions": [
+      "open_b2_known_roles"
+    ]
+  },
+  "independent_review": {
+    "status": "NO_OPEN_MATERIAL_FINDING",
+    "reviewers": 2,
+    "read_only": true,
+    "reviewer_pytest_runs": 0,
+    "final_matrix_sha256": "9c23f19d91e54752d112e4de926bf68bcb01a958a8c7dcfa2f6854398989a7d7",
+    "qualification": "Saved per-cell CI/bootstrap metadata are hash-checked; point metrics and denominators recomputed. Complete aggregate group intervals recomputed."
+  },
+  "local_runs": {
+    "native-smoke": {
+      "command": [
+        "timeout",
+        "240s",
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs",
+        "tests/test_b2_execution_integration.py"
+      ],
+      "cwd": "/workspace/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
+      "wall_seconds": 9.390443358999619,
+      "peak_child_rss_kib": 557344,
+      "exit_code": 0,
+      "python": "3.12.14",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "threads": {
+        "OMP_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "MKL_NUM_THREADS": "2",
+        "PYTHONHASHSEED": "0"
+      },
+      "status": "PASS",
+      "passed": 1,
+      "skipped": 0,
+      "failed": 0,
+      "pytest_summary": [
+        "1 passed in 8.30s"
+      ]
+    },
+    "focused": {
+      "command": [
+        "timeout",
+        "600s",
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs",
+        "tests/test_b2_execution.py",
+        "tests/test_b2_execution_cli.py",
+        "tests/test_b2_execution_integration.py",
+        "tests/test_b2_role_loader.py",
+        "tests/test_b2_loko.py",
+        "tests/test_b2_loko_matrix.py",
+        "tests/test_b2_experiment.py",
+        "tests/test_b2_train_diagnostics.py",
+        "tests/test_b2_production_preflight.py"
+      ],
+      "cwd": "/workspace/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
+      "wall_seconds": 600.113988391,
+      "peak_child_rss_kib": 653532,
+      "exit_code": 124,
+      "python": "3.12.14",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "threads": {
+        "OMP_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "MKL_NUM_THREADS": "2",
+        "PYTHONHASHSEED": "0"
+      },
+      "status": "TIMEOUT",
+      "passed": null,
+      "skipped": null,
+      "failed": null,
+      "observed_failure": "audit verifier reference format before correction",
+      "observed_skip_markers": 7,
+      "unavailable_reason": "600s cap ended the combined run before pytest emitted its final summary; not counted as a pass",
+      "resolution": "The verifier references were corrected; three affected ledger checks passed in a separate run. Final native/LOKO45 also passed; full regression is separate."
+    },
+    "final-affected": {
+      "command": [
+        "timeout",
+        "300s",
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs",
+        "tests/test_b2_execution_integration.py",
+        "tests/test_b2_loko.py",
+        "tests/test_b2_loko_matrix.py"
+      ],
+      "cwd": "/workspace/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
+      "wall_seconds": 97.02490235200094,
+      "peak_child_rss_kib": 557596,
+      "exit_code": 0,
+      "python": "3.12.14",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "threads": {
+        "OMP_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "MKL_NUM_THREADS": "2",
+        "PYTHONHASHSEED": "0"
+      },
+      "status": "PASS",
+      "passed": 45,
+      "skipped": 0,
+      "failed": 0,
+      "pytest_summary": [
+        "45 passed in 93.49s (0:01:33)"
+      ]
+    },
+    "ledger-fix": {
+      "command": [
+        "timeout",
+        "120s",
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs",
+        "tests/test_b2_production_preflight.py::test_findings_are_well_formed_and_every_pass_names_an_existing_test_or_command",
+        "tests/test_b2_production_preflight.py::test_the_committed_checklist_equals_a_fresh_rendering",
+        "tests/test_b2_production_preflight.py::test_the_static_checklist_never_authorizes_or_completes_the_benchmark"
+      ],
+      "cwd": "/workspace/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
+      "wall_seconds": 3.0909839540036046,
+      "peak_child_rss_kib": 90220,
+      "exit_code": 0,
+      "python": "3.12.14",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "threads": {
+        "OMP_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "MKL_NUM_THREADS": "2",
+        "PYTHONHASHSEED": "0"
+      },
+      "status": "PASS",
+      "passed": 3,
+      "skipped": 0,
+      "failed": 0,
+      "pytest_summary": [
+        "3 passed in 2.28s"
+      ]
+    },
+    "k18-inert": {
+      "command": [
+        "timeout",
+        "180s",
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs",
+        "tests/test_b2_train_diagnostics.py::test_instrumented_trainers_are_bit_identical_to_the_original_loops",
+        "tests/test_b2_train_diagnostics.py::test_gradients_update_and_components_match_the_original_formula",
+        "tests/test_b2_train_diagnostics.py::test_losses_are_evaluated_once_per_training_batch",
+        "tests/test_b2_train_diagnostics.py::test_validation_data_never_enters_the_diagnostics",
+        "tests/test_b2_train_diagnostics.py::test_update_only_reads_detached_values_and_leaves_the_autograd_graph_intact"
+      ],
+      "cwd": "/workspace/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
+      "wall_seconds": 30.328044127003523,
+      "peak_child_rss_kib": 374024,
+      "exit_code": 0,
+      "python": "3.12.14",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "threads": {
+        "OMP_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "MKL_NUM_THREADS": "2",
+        "PYTHONHASHSEED": "0"
+      },
+      "status": "PASS",
+      "passed": 15,
+      "skipped": 0,
+      "failed": 0,
+      "pytest_seconds": 29.15
+    },
+    "full_initial": {
+      "command": [
+        "timeout",
+        "1800s",
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs"
+      ],
+      "cwd": "/workspace/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
+      "wall_seconds": 1167.7364477209994,
+      "peak_child_rss_kib": 923788,
+      "exit_code": -9,
+      "python": "3.12.14",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "threads": {
+        "OMP_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "MKL_NUM_THREADS": "2",
+        "PYTHONHASHSEED": "0"
+      },
+      "status": "INVALIDATED_BY_IN_SESSION_GATE_EDIT",
+      "passed": null,
+      "skipped": null,
+      "failed": null,
+      "unavailable_reason": "Run stopped without a pytest summary after live supervisor lock checks correctly detected the integrator\u2019s gate JSON edit. Not a passed regression."
+    },
+    "full_final": {
+      "status": "PLANNED_ON_FROZEN_COMMIT",
+      "command": [
+        "timeout",
+        "1800s",
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs"
+      ],
+      "passed": null,
+      "skipped": null,
+      "failed": null,
+      "unavailable_reason": "Will execute after the reviewed commit is created; source, tests, gate JSON and HEAD will remain fixed for the entire run"
+    },
+    "supervisor_diagnosis": {
+      "command": [
+        "timeout",
+        "120s",
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-x",
+        "tests/test_b2_production_supervisor.py::test_stages_run_in_order_with_journaled_exit_codes_and_resources"
+      ],
+      "cwd": "/workspace/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
+      "wall_seconds": 25.14110168899788,
+      "peak_child_rss_kib": 259008,
+      "exit_code": 0,
+      "python": "3.12.14",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "threads": {
+        "OMP_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "MKL_NUM_THREADS": "2",
+        "PYTHONHASHSEED": "0"
+      },
+      "status": "PASS",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "pytest_seconds": 24.33
+    },
+    "ledger_final": {
+      "command": [
+        "timeout",
+        "120s",
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs",
+        "tests/test_b2_production_preflight.py::test_findings_are_well_formed_and_every_pass_names_an_existing_test_or_command",
+        "tests/test_b2_production_preflight.py::test_the_committed_checklist_equals_a_fresh_rendering",
+        "tests/test_b2_production_preflight.py::test_the_static_checklist_never_authorizes_or_completes_the_benchmark"
+      ],
+      "cwd": "/workspace/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
+      "wall_seconds": 1.4349542989948532,
+      "peak_child_rss_kib": 90424,
+      "exit_code": 0,
+      "python": "3.12.14",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "threads": {
+        "OMP_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "MKL_NUM_THREADS": "2",
+        "PYTHONHASHSEED": "0"
+      },
+      "status": "PASS",
+      "passed": 3,
+      "skipped": 0,
+      "failed": 0,
+      "pytest_seconds": 1.01
+    }
+  },
+  "bounded_native_fixture": {
+    "physics": "deterministic stand-in",
+    "artifact_writer_and_validators": "canonical E1/B2-feat/1",
+    "observations_per_role": 16,
+    "groups_per_role": 2,
+    "roles": [
+      "train",
+      "val-select",
+      "val-calib",
+      "test"
+    ],
+    "total_observations": 64,
+    "views": [
+      "dual_residual"
+    ],
+    "training_seeds": [
+      0
+    ],
+    "epochs": 1,
+    "width": 1,
+    "time_pool": 8,
+    "batch": 8,
+    "clean_calibration_samples": 2,
+    "full_protocol_admission": false,
+    "recognition_performance_claim": false
+  },
+  "limits": {
+    "cpu_only": true,
+    "new_groups_per_role_max": 2,
+    "epochs_max": 2,
+    "width_max": 8,
+    "batch_max": 32,
+    "legacy_groups_per_role_max": 12,
+    "loko_unique_cells_per_output_root_max": 2,
+    "full21_or63_fit_execution": false,
+    "production_generation": false,
+    "gpu_training": false
+  },
+  "measurement_note": "Wall times include pytest/import/fixture overhead and concurrent local validation load. Peak child ru_maxrss is a single-process high-water mark including waited descendants, not summed concurrent tree RSS. No throughput/recognition inference is made.",
+  "historical_vs_final_note": "The initial standalone native smoke preceded the final matrix-cap source edit. The final-affected run repeats native composition and both LOKO suites on the final source; the full suite is separately recorded. The early combined focused run observed a malformed audit verifier reference, subsequently corrected and checked by three ledger tests; its actual final result is retained.",
+  "final_head_ci": {
+    "status": "NOT_RUN_BEFORE_PUBLICATION",
+    "head_sha": null,
+    "run_id": null,
+    "job_id": null,
+    "reason": "exact new PR head does not exist until publication"
+  },
+  "remaining_decisions": [
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "R9",
+    "R10",
+    "K18",
+    "K17d",
+    "OBS-CANCEL/2",
+    "DR-04 generation",
+    "DR-05 target-host/GPU probe and training",
+    "DR-06 full LOKO"
+  ],
+  "implementation_focused_runs": {
+    "cli_and_legacy": {
+      "command": [
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_b2_execution_cli.py",
+        "tests/test_b2_experiment.py"
+      ],
+      "wall_seconds": 30.605878007001593,
+      "peak_rss_kib": 397116,
+      "exit_code": 0,
+      "passed": 47,
+      "skipped": 0,
+      "failed": 0,
+      "pytest_seconds": 28.33
+    },
+    "scoped_loader": {
+      "command": [
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_b2_role_loader.py"
+      ],
+      "wall_seconds": 73.14054262699938,
+      "peak_rss_kib": 557556,
+      "exit_code": 0,
+      "passed": 25,
+      "skipped": 0,
+      "failed": 0,
+      "pytest_seconds": 72.38
+    },
+    "loko_final": {
+      "command": [
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_b2_loko.py",
+        "tests/test_b2_loko_matrix.py"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 73.67731751700194,
+      "peak_rss_kib": 519368,
+      "sources_unchanged_during_run": true,
+      "tested_files_sha256": {
+        "src/geoml/b2_loko.py": "c6e65dae7c2719a4d6d1c9f035896778a367fa564f70dc5d7c2575581aef311a",
+        "src/geoml/b2_loko_matrix.py": "9c23f19d91e54752d112e4de926bf68bcb01a958a8c7dcfa2f6854398989a7d7",
+        "tests/test_b2_loko.py": "ce11d75dd985e81f675c52049b3566562326d4705bd93a523e57aa84ba54b4e2",
+        "tests/test_b2_loko_matrix.py": "bac4c9479e76dbf552867391fde9647b5efbc6fda2aa306a4b233e16aa9db400"
+      },
+      "scope": "Final native LOKO and bounded matrix tests after global-cap negative fix; stand-ins only; no RF/GPU/full sweep",
+      "passed": 44,
+      "skipped": 0,
+      "failed": 0,
+      "pytest_seconds": 68.3
+    },
+    "isolated_phases": {
+      "command": [
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_b2_execution.py"
+      ],
+      "passed": 42,
+      "skipped": 0,
+      "failed": 0,
+      "exit_code": 0,
+      "pytest_seconds": 8.11,
+      "peak_rss_kib": null,
+      "process_wall_seconds": null,
+      "unavailable_reason": "phase-owner final command reported pytest elapsed time; no separate RSS/process-wall measurement was retained"
+    }
+  },
+  "fixture_preservation": {
+    "source": "/tmp/pytest-of-agent/pytest-20",
+    "destination": "/workspace/b2-e7b-execution-evidence/timed-out-focused-pytest-20",
+    "reason": "Preserve only this session\u2019s terminated600s pytest fixtures while freeing the4.9GiB tmp filesystem for the still-running full suite",
+    "former_pytest_pid": 5321,
+    "former_process_confirmed_inactive": true,
+    "files_deleted": false,
+    "active_full_suite_tree_untouched": "/tmp/pytest-of-agent/pytest-23"
+  },
+  "delivered_files": [
+    ".github/workflows/b2-readiness-ci.yml",
+    "CLAUDE.md",
+    "README.md",
+    "docs/plan/B2_E6_PRODUCTION_READINESS_CHECKLIST.md",
+    "docs/plan/B2_E6_RESEARCHER_DECISION_PACKET.md",
+    "docs/plan/B2_E7B_DECISION_RECOMMENDATIONS.md",
+    "docs/plan/B2_E7_TRAINING_SPEC_PROPOSAL.md",
+    "docs/plan/DURUM.md",
+    "docs/plan/P23_b2_production_readiness.md",
+    "docs/plan/P31_b2_e7b_isolated_execution.md",
+    "docs/plan/b2_e6_audit_findings.json",
+    "docs/plan/b2_readiness_gates_2026-10-21.json",
+    "docs/research/b2_e7b_review.md",
+    "docs/results/b2_e7b_execution.json",
+    "docs/results/b2_e7b_execution.md",
+    "src/geoml/b2_execution.py",
+    "src/geoml/b2_experiment.py",
+    "src/geoml/b2_loko.py",
+    "src/geoml/b2_loko_matrix.py",
+    "src/geoml/b2_stream.py",
+    "tests/test_b2_execution.py",
+    "tests/test_b2_execution_cli.py",
+    "tests/test_b2_execution_integration.py",
+    "tests/test_b2_loko.py",
+    "tests/test_b2_loko_matrix.py",
+    "tests/test_b2_role_loader.py"
+  ],
+  "e7a_collection_check": {
+    "command": [
+      "/workspace/.venvs/geosim/bin/python",
+      "-m",
+      "pytest",
+      "--collect-only",
+      "-q",
+      "tests/test_b2_production_supervisor.py"
+    ],
+    "collected": 166,
+    "pytest_seconds": 1.32,
+    "scope": "collection only; not a test execution or repeated supervisor experiment"
+  },
+  "invalidation_evidence": {
+    "cause": "Integrator edited a file already hashed by a live module-scoped supervisor fixture; no code regression inferred from those contaminated results",
+    "locked_gate_sha256": "8287444ed521155be1b58624b698f00a19a26d3abb2b42a318ec046f62b68ec2",
+    "observed_gate_sha256": "c0ddeb3d846ad99bc909db333da4182702cdac1211380ade07153e0bf71fd508",
+    "journal_reason": "source/config/environment drift since the lock was created: config file modified: docs/plan/b2_readiness_gates_2026-10-21.json",
+    "fresh_stable_supervisor_baseline_passed": true,
+    "stopped_process": {
+      "pytest_pid": 5476,
+      "owned_descendants_stopped": [],
+      "reason": "Root changed a gate JSON hashed by a live module-scoped supervisor fixture. SIGINT was caught by that fixture; stopped only this invalidated test process tree. No assertion or source code was changed."
+    },
+    "preserved_fixture_tree": "/workspace/b2-e7b-execution-evidence/invalidated-full-pytest-23",
+    "assertions_weakened": false
+  }
+}

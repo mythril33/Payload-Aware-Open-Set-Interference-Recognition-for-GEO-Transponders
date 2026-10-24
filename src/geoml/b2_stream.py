@@ -44,14 +44,16 @@ from __future__ import annotations
 import time
 from dataclasses import asdict
 from functools import partial
+from pathlib import Path
 
 import numpy as np
 import torch
 from torch import nn
 
+from geosim import b2_dataset as _known_artifacts
 from geosim.b2_dataset import _fingerprint, iter_b2_shards, read_b2_manifest
 from geosim.b2_matched_dataset import iter_b2_matched_shards, read_b2_matched_manifest
-from geosim.b2_protocol import LABELS, role_for_group
+from geosim.b2_protocol import BASE_ROLES, LABELS, role_for_group
 from geosim.b2_scenarios import MATCHED_LABELS, TEST_FAMILIES
 from geosim.b2_test_dataset import iter_b2_test_shards, read_b2_test_manifest
 
@@ -243,6 +245,59 @@ def open_b2_known(root):
         sources[role] = B2Source("known", _concat(indexes[role]), counts[role], partial(iter_b2_shards, root, role),
                                  role=role, root=root, has_residual=residual[role] == {True})
     return manifest, _fingerprint(manifest), sources
+
+
+def open_b2_known_roles(root, roles):
+    """Verify and index only explicitly requested known-data observation roles.
+
+    The canonical manifest/request/calibration and every role's descriptor
+    inventory are validated as metadata. Only selected roles' NPZ/JSONL
+    contents are opened. The returned identity is the same whole-artifact
+    manifest fingerprint as ``open_b2_known``; it is not a certificate that
+    unrequested observation bytes have been read or verified. Final evaluation
+    must separately verify its requested test role.
+
+    Selected readers bind the opening manifest snapshot and its per-shard
+    checksums, so a consistently re-signed artifact change during fitting is
+    refused rather than silently acquiring a new identity between epochs.
+    """
+    if (not isinstance(roles, (tuple, list)) or not roles
+            or any(not isinstance(role, str) or role not in BASE_ROLES for role in roles)
+            or len(set(roles)) != len(roles)):
+        raise ValueError(f"roles must be a nonempty sequence of distinct known roles from {BASE_ROLES}")
+    root = Path(root)
+    try:
+        manifest, config = _known_artifacts._header(root)
+        if any(role not in manifest["roles"] for role in roles):
+            raise ValueError("requested roles were not generated in this artifact")
+    except _known_artifacts._READ_ERRORS as error:
+        raise ValueError(f"invalid role-scoped B2 artifact {root}: {error}") from error
+    identity = _fingerprint(manifest)
+
+    def read_role(role, order=None):
+        try:
+            current, _ = _known_artifacts._header(root)
+            if _fingerprint(current) != identity:
+                raise ValueError("B2 artifact identity changed since the scoped role was opened")
+            descriptors = manifest["roles"][role]["shards"]
+            for index in _known_artifacts._shard_order(order, len(descriptors)):
+                yield _known_artifacts._verify_part(root, manifest["request"], role, index,
+                                                    descriptors[index], config, manifest["calibration"])
+        except _known_artifacts._READ_ERRORS as error:
+            raise ValueError(f"invalid role-scoped B2 artifact {root}: {error}") from error
+
+    sources = {}
+    for role in roles:
+        indexes, counts, residual = [], [], set()
+        for shard in read_role(role):
+            indexes.append(_small(shard, "known"))
+            counts.append(len(shard["seed"]))
+            residual.add("residual" in shard)
+        if len(residual) != 1:
+            raise ValueError(f"{role} mixes shards with and without the stored residual")
+        sources[role] = B2Source("known", _concat(indexes), counts, partial(read_role, role),
+                                 role=role, root=root, has_residual=residual == {True})
+    return manifest, identity, sources
 
 
 def open_b2_test(root):

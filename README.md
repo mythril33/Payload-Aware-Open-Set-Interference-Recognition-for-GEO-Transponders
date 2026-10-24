@@ -1,5 +1,31 @@
 # Payload-Aware Open-Set Interference Recognition for GEO Transponders
 
+**E7b execution engineering (2026-10-24):** verified base main
+`ed65eb54632fc4373accebc88452ddf0ff9fadfe` includes merged PR #22 and
+PR #23. The additive [P31 execution path](docs/plan/P31_b2_e7b_isolated_execution.md)
+separates `train-only`, `calibrate`, `freeze` and `evaluate`: fitting and
+Mahalanobis statistics read train only, selection reads val-select, and a
+separate known-val-calib step freezes thresholds. Proposed-full evaluation
+verifies all three views × three explicit seeds before the first test
+observation or inference. The new modes are capped CPU smoke only
+(two groups/role, two epochs, width≤8, batch≤32); legacy coupled pilots
+remain available with at most12groups/role. Bounded LOKO plans seven
+non-clean holdouts × three seeds × selected views, but an immutable output
+selection can execute at most two smoke cells; no21/63-fit launch exists.
+See [delivery evidence](docs/results/b2_e7b_execution.md) for actual E7b
+tests and [R1–R10 recommendations](docs/plan/B2_E7B_DECISION_RECOMMENDATIONS.md)
+for unapproved choices. Source-hash changes invalidate historical checkpoint
+reuse; no checkpoint is relabelled. Width16 is a candidate, not an
+authorization. All researcher/production gates remain pending/closed and
+`benchmark_complete=false`.
+
+The base PR #23 head `7a46f5774ddcf9f99af425265a6b0cc2b0ebdb57` passed
+[run40047344666/job120731984575](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40047344666/job/120731984575):
+107E4 tests in106.48s plus1525passed/7skipped in716.07s,1632passed
+in total. The raw `-q` log did not print skip reasons; no particular skip
+node or cause is inferred. This is base-head evidence, not E7b-head CI.
+The E7a readiness paragraph below is a historical snapshot.
+
 **B2 production supervisor (E7a, merged; post-merge hotfix 2026-10-24):** verified main `0e8c467` contains merged PR #22 (the independent-review hardening; Actions [run 40035525938](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40035525938): 1486 passed, 7 skipped + E4 step) after PR #21 (first E7a state), PR #20 (E6, run 40004028017: 1333 passed). E7a adds a fail-closed [staged production supervisor](docs/plan/P30_b2_e7a_production_supervisor.md) (dry run by default; known -> test-only -> matched; immutable lock, anchored hash-chained journal, ceilings, heartbeats, first-shard timing gate, interruption and orphan quarantine; bounded to two groups per stage, the production launch is not implemented), observation-only K18 training diagnostics, a candidate [training specification](docs/plan/B2_E7_TRAINING_SPEC_PROPOSAL.md) (not frozen, not approved; decisions R1-R10) and a capped real-physics [verification](docs/results/b2_e7a_supervisor_verification.md). The hotfix branch adds the fixes of a second read-only audit. [Readiness checklist](docs/plan/B2_E6_PRODUCTION_READINESS_CHECKLIST.md): PASS 31 / FAIL 1 / BLOCKED 15 / NOT_RUN 1. No full generation, GPU training or LOKO was run; all gates remain closed and `benchmark_complete=false`. Earlier sections below are historical development records; [current status](docs/plan/DURUM.md) supersedes their pending-work snapshots.
 
 

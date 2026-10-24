@@ -7,19 +7,23 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import platform
 import time
 from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
+import scipy
 import torch
 
 from geosim.b2_protocol import FEATURE_PROTOCOL, LABELS
+from geosim import b2_dataset as _artifacts
+from geosim.cancellation import CancellationConfig
 
 from .artifacts import fingerprint
 from .b2_experiment import B2ExperimentConfig, ROLES, _check_roles, _rate
-from .b2_stream import B2Source, fit_streaming, infer_streaming, open_b2_known
+from .b2_stream import B2Source, fit_streaming, infer_streaming, open_b2_known, open_b2_known_roles
 from .calibration import RejectionCalibration, calibrate_scores
 from .experiment import _sha256, _source_identity, _write_json
 from .mahalanobis import MahalanobisScorer, fit_mahalanobis
@@ -30,6 +34,117 @@ from .train import load, save
 PROTOCOL = "B2-LOKO-harness/1"
 SMOKE_MAX_GROUPS = 2
 RANKING_KEYS = ("unknown_auroc", "unknown_aupr", "oscr_auc", "unknown_fpr_at_95_tpr")
+
+
+def _runtime_identity():
+    return {"python":platform.python_version(), "numpy":np.__version__, "scipy":scipy.__version__,
+            "torch":str(torch.__version__), "device":"cpu",
+            "torch_threads":torch.get_num_threads(), "torch_interop_threads":torch.get_num_interop_threads(),
+            "torch_deterministic_algorithms":torch.are_deterministic_algorithms_enabled(),
+            "torch_deterministic_debug_mode":torch.get_deterministic_debug_mode(),
+            "mkldnn_enabled":torch.backends.mkldnn.enabled,
+            "mkldnn_deterministic":getattr(torch.backends.mkldnn,"deterministic",None),
+            "thread_environment":{name:os.environ.get(name) for name in
+                ("OMP_NUM_THREADS","OPENBLAS_NUM_THREADS","MKL_NUM_THREADS","NUMEXPR_NUM_THREADS","PYTHONHASHSEED")}}
+
+
+def _check_stage(manifest, config):
+    if (manifest["protocol"] != config.protocol or tuple(manifest["labels"]) != LABELS
+            or manifest["benchmark_complete"] is not False):
+        raise ValueError("artifact does not match the requested incomplete B2 stage")
+    if config.protocol == FEATURE_PROTOCOL and manifest.get("cancellation") != CancellationConfig().to_dict():
+        raise ValueError("LOKO requires the frozen P20 obs-cancel/1 settings")
+
+
+def _check_output_path(data, out):
+    data, out = Path(data).resolve(), Path(out).resolve()
+    if data == out or data in out.parents or out in data.parents:
+        raise ValueError("LOKO data and output paths must be disjoint (no nesting or aliases)")
+
+
+def _verify_artifact_snapshot(data, identity):
+    """Recheck consumed artifact bytes after scoring without any fitting or inference."""
+    manifest, current = _plan_header(data)
+    if current != identity:
+        raise ValueError("LOKO artifact identity changed during execution")
+    for role, info in manifest["roles"].items():
+        for descriptor in info["shards"]:
+            for name, expected in descriptor["sha256"].items():
+                if _sha256(Path(data) / role / name) != expected:
+                    raise ValueError("LOKO artifact bytes changed during execution")
+
+
+def _read_json(path):
+    def unique(pairs):
+        out = {}
+        for key, value in pairs:
+            if key in out:
+                raise ValueError(f"duplicate JSON key: {key}")
+            out[key] = value
+        return out
+    def reject(value):
+        raise ValueError(f"nonfinite JSON value: {value}")
+    value = json.loads(Path(path).read_text(), object_pairs_hook=unique, parse_constant=reject)
+    json.dumps(value, allow_nan=False)
+    return value
+
+
+def _plan_header(data):
+    """Canonical metadata identity only; never opens role NPZ/JSONL observations."""
+    manifest, _ = _artifacts._header(Path(data))
+    request = manifest["request"]
+    for role, info in manifest["roles"].items():
+        for index, descriptor in enumerate(info["shards"]):
+            part, meta, descriptor_path = _artifacts._paths(Path(data), role, index)
+            groups = _artifacts._groups(request, role, index)
+            if (descriptor.get("part") != part.name or descriptor.get("meta") != meta.name
+                    or descriptor.get("role") != role or descriptor.get("scenario_seeds") != groups
+                    or descriptor.get("n_samples") != len(groups) * len(LABELS)
+                    or descriptor.get("request_fingerprint") != manifest["request_fingerprint"]
+                    or _read_json(descriptor_path) != descriptor):
+                raise ValueError("incompatible B2 planning shard descriptor")
+            hashes = descriptor.get("sha256", {})
+            if set(hashes) != {part.name, meta.name} or any(
+                    not isinstance(h, str) or len(h) != 64 or set(h) - set("0123456789abcdef") for h in hashes.values()):
+                raise ValueError("invalid B2 planning shard hashes")
+    return manifest, _artifacts._fingerprint(manifest)
+
+
+class _DeclaredRole:
+    """Bookkeeping declared by the canonical paired artifact contract, not observations."""
+    kind = "known"
+    def __init__(self, role, groups):
+        self.role, self.groups = role, np.asarray(groups, dtype=np.int64)
+        self.index = {"seed": np.repeat(self.groups, len(LABELS)),
+                      "label": np.tile(np.arange(len(LABELS)), len(self.groups))}
+    def split(self):
+        return self.index
+
+
+def metadata_plan(data, config, *, seeds=(0, 1, 2)):
+    """Plan from verified request/calibration/descriptors without reading test observations."""
+    manifest, identity = _plan_header(data)
+    _check_stage(manifest, config)
+    if set(manifest["roles"]) != set(ROLES):
+        raise ValueError("artifact does not match the requested incomplete B2 stage and roles")
+    declared = {role: _DeclaredRole(role, manifest["roles"][role]["scenario_seeds"]) for role in ROLES}
+    return manifest, identity, build_plan(declared, identity, config, seeds=seeds)
+
+
+def _open_roles(data, config, roles, identity):
+    manifest, actual, sources = open_b2_known_roles(data, roles)
+    _check_stage(manifest, config)
+    if actual != identity or manifest["protocol"] != config.protocol or set(sources) != set(roles):
+        raise ValueError("scoped LOKO artifact identity or roles changed since planning")
+    _check_roles({role: source.split() for role, source in sources.items()})
+    for role, source in sources.items():
+        expected = manifest["roles"][role]["scenario_seeds"]
+        if source.groups.tolist() != expected or any(
+                np.sum(source.index["seed"] == group) != len(LABELS) for group in source.groups):
+            raise ValueError(f"{role} contains an incomplete paired scenario group")
+        if config.protocol == FEATURE_PROTOCOL and not source.has_residual:
+            raise ValueError("B2-feat/1 requires the stored observation-derived residual")
+    return sources
 
 
 def known_labels(holdout):
@@ -171,16 +286,18 @@ def run_smoke(config, data, out, *, holdout, reuse=False, bootstrap=200, log=pri
         raise ValueError("smoke caps: epochs<=2, width<=8, batch<=32")
     if isinstance(bootstrap, bool) or not isinstance(bootstrap, int) or not 1 <= bootstrap <= 1000:
         raise ValueError("bootstrap must be an integer in [1, 1000]")
-    manifest, identity, sources = _open(data, config)
-    plan = build_plan(sources, identity, config)
-    if any(len(source.groups) > SMOKE_MAX_GROUPS for source in sources.values()):
+    _check_output_path(data, out)
+    manifest, identity, plan = metadata_plan(data, config)
+    if any(len(part["scenario_seeds"]) > SMOKE_MAX_GROUPS for part in manifest["roles"].values()):
         raise ValueError("smoke execution requires an artifact with at most 2 groups per role; full LOKO is not authorized")
+    sources = _open_roles(data, config, ROLES[:-1], identity)
     fold = next(f for f in plan["folds"] if f["holdout_label"] == holdout)
     filtered = {role: fold_source(sources[role], holdout) for role in ROLES if role != "test"}
     source = _source_identity()
+    runtime = _runtime_identity()
     provenance = {"protocol": PROTOCOL, "data_fingerprint": identity, "holdout_label": holdout,
                   "fold": fold, "config": config.resolved(), "window_shards": config.window_shards,
-                  "source_files_sha256": source["files_sha256"]}
+                  "source_files_sha256": source["files_sha256"], "runtime_identity": runtime}
     experiment_id = fingerprint(provenance)
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
@@ -201,21 +318,48 @@ def run_smoke(config, data, out, *, holdout, reuse=False, bootstrap=200, log=pri
     checkpoint_sha = _sha256(path)
     derived_id = fingerprint({"experiment": experiment_id, "checkpoint_sha256": checkpoint_sha})
     train = infer_streaming(fitted, filtered["train"])
-    calib = infer_streaming(fitted, filtered["val-calib"])
     # Freeze scorer and all thresholds BEFORE reading any test inputs.
     scorer = fit_mahalanobis(train["embedding"], filtered["train"].index["label"], len(labels),
                              config.mahalanobis_regularization, provenance=derived_id)
     scorer_path = out / "mahalanobis.npz"
     if scorer_path.exists() and MahalanobisScorer.load(scorer_path).to_dict() != scorer.to_dict():
         raise ValueError("existing Mahalanobis scorer does not match checkpoint/training data")
+    if not scorer_path.exists():
+        scorer.save(scorer_path)
+    calib = infer_streaming(fitted, filtered["val-calib"])
     calibrations = {}
     for method in config.methods:
         scores = scorer.score(calib["embedding"]) if method == "mahalanobis" else unknown_scores(calib["logits"], method)
         calibration = calibrate_scores(scores, method, config.target_acceptance, provenance=derived_id)
         calibration_path = out / f"rejection_{method}.json"
-        if calibration_path.exists() and RejectionCalibration.load(calibration_path) != calibration:
+        if calibration_path.exists() and RejectionCalibration.from_dict(_read_json(calibration_path)) != calibration:
             raise ValueError("existing rejection calibration does not match checkpoint/known val-calib data")
         calibrations[method] = calibration
+        if not calibration_path.exists():
+            calibration.save(calibration_path)
+    files = ["model.pt", "mahalanobis.npz"] + [f"rejection_{method}.json" for method in config.methods]
+    frozen = {"schema": "B2-LOKO-frozen/1", "benchmark_complete": False,
+              "experiment_fingerprint": experiment_id, "data_fingerprint": identity,
+              "holdout_label": holdout, "known_labels": list(labels), "fold": fold,
+              "config": json.loads(json.dumps(config.resolved())),
+              "runtime_identity": runtime,
+              "files_sha256": {name: _sha256(out / name) for name in files}}
+    frozen["freeze_fingerprint"] = fingerprint(frozen)
+    freeze_path = out / "freeze.json"
+    if freeze_path.exists() and _read_json(freeze_path) != frozen:
+        raise ValueError("existing frozen LOKO files differ from checkpoint/scorer/calibration identity")
+    if not freeze_path.exists():
+        _write_json(freeze_path, frozen)
+    def verify_frozen():
+        if _source_identity()["files_sha256"] != source["files_sha256"] or _runtime_identity() != runtime:
+            raise ValueError("LOKO source or runtime identity changed during execution")
+        if (_sha256(freeze_path) != fingerprint_freeze or _read_json(freeze_path) != frozen
+                or any(_sha256(out / name) != digest for name, digest in frozen["files_sha256"].items())):
+            raise ValueError("LOKO frozen files changed during evaluation")
+    fingerprint_freeze = _sha256(freeze_path)
+    verify_frozen()
+    # No test observations are opened until the complete disk state is frozen.
+    sources.update(_open_roles(data, config, ("test",), identity))
     test = infer_streaming(fitted, sources["test"])
     original = sources["test"].index["label"]
     groups = sources["test"].index["seed"]
@@ -233,14 +377,16 @@ def run_smoke(config, data, out, *, holdout, reuse=False, bootstrap=200, log=pri
             "known_correct_acceptance": _rate((predictions == local)[~held] & accepted[~held], groups[~held]),
             "unknown_rejection": _rate(~accepted[held], groups[held])}
         score_rows[method] = scores
-        calibration.save(out / f"rejection_{method}.json")
-    scorer.save(out / "mahalanobis.npz")
+    verify_frozen()
+    _verify_artifact_snapshot(data, identity)
     result = {"protocol": PROTOCOL, "benchmark_complete": False, "mode": "BOUNDED_CPU_SMOKE",
               "holdout_label": holdout, "known_labels": list(labels), "fold": fold,
               "plan_fingerprint": plan["plan_fingerprint"], "experiment_fingerprint": experiment_id,
               "data_fingerprint": identity, "config": config.resolved(), "source": source,
               "checkpoint_sha256": checkpoint_sha, "history": fitted["history"],
+              "runtime_identity": runtime,
               "best_epoch": fitted.get("best_epoch"), "best_val_macro_f1": fitted.get("best_val_macro_f1"),
+              "freeze_manifest_sha256": _sha256(freeze_path), "frozen_files_sha256": frozen["files_sha256"],
               "train_diagnostics": fitted.get("train_diagnostics"),       # K18, observation only
               "n_mahalanobis_training": len(filtered["train"]), "methods": methods,
               "denominators": {"known_acceptance": "all seven retained test variants per scenario",
@@ -272,8 +418,7 @@ def main(argv=None):
     if args.smoke_holdout:
         run_smoke(config, args.data, args.out, holdout=args.smoke_holdout, reuse=args.reuse)
     else:
-        _, identity, sources = _open(args.data, config)
-        plan = build_plan(sources, identity, config)
+        _, _, plan = metadata_plan(args.data, config)
         out = Path(args.out)
         out.mkdir(parents=True, exist_ok=True)
         path = out / "plan.json"

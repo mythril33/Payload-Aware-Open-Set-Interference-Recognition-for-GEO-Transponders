@@ -1,6 +1,31 @@
 # CLAUDE.md — Claude Code context for this repository
 
-**Readiness status (2026-10-24, E7a merged, post-merge hotfix):** actual main `0e8c467` contains merged PR #22 (the independent-review hardening of E7a; Actions [run 40035525938](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40035525938) on head `8d5bf9b`: 1486 passed, 7 skipped (the K18 golden tests skip on that runner's CPU by design) + E4 step) on top of PR #21 (the first, pre-review E7a state `5903637`; run 40017354368), PR #20 (E6 preflight; run 40004028017: 1333 passed), PR #19 (E5 atlas) and PR #18. E7a adds the fail-closed staged production supervisor ([P30](docs/plan/P30_b2_e7a_production_supervisor.md), `scripts/b2_production_supervisor.py`: dry run by default, known -> test-only -> matched, lock/identity/anchored hash-chained journal, ceilings, heartbeats, first-shard timing gate, interruption, orphan quarantine, completion marker only after a clean supervised attempt; bounded to `--limit-groups` 1..2 - **the production launch is not implemented**), observation-only K18 training diagnostics (`train_diagnostics`, `best_epoch`; training is bit-identical on CPU fp32, GPU parity untested; editing `src/geoml` changes checkpoint source provenance, earlier checkpoints are refused for reuse, never relabelled), a candidate production-training proposal ([not frozen, not approved](docs/plan/B2_E7_TRAINING_SPEC_PROPOSAL.md), decisions R1-R10) and a capped real-physics verification ([2 groups/stage, interrupted and SIGKILLed once](docs/results/b2_e7a_supervisor_verification.md)). The hotfix branch records a second read-only audit of the merged state (P30 section 9). Readiness [checklist](docs/plan/B2_E6_PRODUCTION_READINESS_CHECKLIST.md): PASS 31, FAIL 1 (LOKO dispatcher, out of scope), BLOCKED 15, NOT_RUN 1; full suite 1639 tests. K18/K17d/OBS-CANCEL/2 remain PENDING_RESEARCHER; full generation/GPU/LOKO remain NOT_AUTHORIZED; benchmark_complete=false. Older milestone sections below are historical; consult DURUM's top appendix for current status.
+**Current E7b execution scope (2026-10-24):** base main
+`ed65eb54632fc4373accebc88452ddf0ff9fadfe`, PR22/23 merged. Read
+[P31](docs/plan/P31_b2_e7b_isolated_execution.md) for the additive canonical
+`train-only` → `calibrate` → `freeze` → `evaluate` modes. Train/val-select
+only fit/select; Mahalanobis fits train only; separate known-val-calib
+freezes thresholds; the complete three-view × three-seed inventory is
+verified before test observations/inference. New execution is CPU-only,
+≤2groups/role, ≤2epochs, width≤8, batch≤32. The legacy coupled pilot is
+retained with ≤12groups/role. LOKO orchestration plans seven non-clean
+holdouts × three seeds × explicit views, while each immutable selection
+may execute at most two CPU smoke cells. No unrestricted production or
+21/63-fit GPU launch is added. Source hashes change and historical
+checkpoints must be refused, never relabelled. Actual E7b validation is
+recorded in [delivery evidence](docs/results/b2_e7b_execution.md).
+
+R1–R10 and all29 candidate parameters stay unapproved; consult the
+[recommendations](docs/plan/B2_E7B_DECISION_RECOMMENDATIONS.md). Width16
+is not authorized by the width8 smoke cap. K18/K17d/OBS-CANCEL/2 remain
+pending, full generation/GPU/LOKO remain unauthorized, benchmark_complete=false.
+Verified base-head CI is run40047344666/job120731984575 on
+`7a46f5774ddcf9f99af425265a6b0cc2b0ebdb57`:107passed106.48s and
+1525passed/7skipped716.07s (1632passed total). The raw `-q` log did not
+print skip reasons; do not infer their node IDs or causes. Earlier
+readiness/count snapshots below are historical, not E7b test evidence.
+
+**Readiness status (2026-10-24, E7a merged, post-merge hotfix):** actual main `0e8c467` contains merged PR #22 (the independent-review hardening of E7a; Actions [run 40035525938](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40035525938) on head `8d5bf9b`: 1486 passed, 7 skipped (the historical raw -q log did not identify skip reasons) + E4 step) on top of PR #21 (the first, pre-review E7a state `5903637`; run 40017354368), PR #20 (E6 preflight; run 40004028017: 1333 passed), PR #19 (E5 atlas) and PR #18. E7a adds the fail-closed staged production supervisor ([P30](docs/plan/P30_b2_e7a_production_supervisor.md), `scripts/b2_production_supervisor.py`: dry run by default, known -> test-only -> matched, lock/identity/anchored hash-chained journal, ceilings, heartbeats, first-shard timing gate, interruption, orphan quarantine, completion marker only after a clean supervised attempt; bounded to `--limit-groups` 1..2 - **the production launch is not implemented**), observation-only K18 training diagnostics (`train_diagnostics`, `best_epoch`; training is bit-identical on CPU fp32, GPU parity untested; editing `src/geoml` changes checkpoint source provenance, earlier checkpoints are refused for reuse, never relabelled), a candidate production-training proposal ([not frozen, not approved](docs/plan/B2_E7_TRAINING_SPEC_PROPOSAL.md), decisions R1-R10) and a capped real-physics verification ([2 groups/stage, interrupted and SIGKILLed once](docs/results/b2_e7a_supervisor_verification.md)). The hotfix branch records a second read-only audit of the merged state (P30 section 9). Readiness [checklist](docs/plan/B2_E6_PRODUCTION_READINESS_CHECKLIST.md): PASS 31, FAIL 1 (LOKO dispatcher, out of scope), BLOCKED 15, NOT_RUN 1; full suite 1639 tests. K18/K17d/OBS-CANCEL/2 remain PENDING_RESEARCHER; full generation/GPU/LOKO remain NOT_AUTHORIZED; benchmark_complete=false. Older milestone sections below are historical; consult DURUM's top appendix for current status.
 
 
 Read `AGENTS.md` first; it holds the binding repository rules. This file adds
