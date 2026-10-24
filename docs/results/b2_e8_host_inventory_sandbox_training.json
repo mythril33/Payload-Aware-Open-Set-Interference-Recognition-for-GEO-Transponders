@@ -1,0 +1,134 @@
+{
+ "schema": "B2-host-inventory/1",
+ "role": "training",
+ "read_only": true,
+ "gpu_computation_performed": false,
+ "host_designated": false,
+ "requirements_status": "PROPOSED_UNAPPROVED",
+ "requirements": {
+  "logical_cpus": 2,
+  "ram_gib": 16,
+  "working_disk_gib": 25,
+  "gpu_vram_gib_minimum": 8,
+  "gpu_vram_gib_preferred": 12
+ },
+ "inventory": {
+  "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+  "python": "3.13.16",
+  "cpu": {
+   "logical_cpus": 4,
+   "schedulable_cpus": 4,
+   "model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+   "cgroup_cpu_quota": null
+  },
+  "memory": {
+   "total_gib": 15.71,
+   "available_gib": 15.1,
+   "cgroup_limit_gib": null
+  },
+  "disks": [
+   {
+    "path": "/home/user/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/data/e8-root",
+    "queried": "/home/user/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/data",
+    "device": 65024,
+    "total_gib": 251.97,
+    "free_gib": 19.69
+   },
+   {
+    "path": "/tmp",
+    "queried": "/tmp",
+    "device": 65024,
+    "total_gib": 251.97,
+    "free_gib": 19.69
+   }
+  ],
+  "gpu": {
+   "devices": [],
+   "device_nodes": [],
+   "note": "nvidia-smi is not installed or not on PATH"
+  },
+  "libraries": {
+   "torch": "2.14.1",
+   "numpy": "2.5.4",
+   "scipy": "1.18.1",
+   "xgboost-cpu": "3.4.1",
+   "nvidia_runtime_wheels": [
+    "nvidia-cublas",
+    "nvidia-cuda-cupti",
+    "nvidia-cuda-nvrtc",
+    "nvidia-cuda-runtime",
+    "nvidia-cudnn-cu13",
+    "nvidia-cufft",
+    "nvidia-cufile",
+    "nvidia-curand",
+    "nvidia-cusolver",
+    "nvidia-cusparse",
+    "nvidia-cusparselt-cu13",
+    "nvidia-nccl-cu13",
+    "nvidia-nvjitlink",
+    "nvidia-nvshmem-cu13",
+    "nvidia-nvtx"
+   ]
+  },
+  "environment": {
+   "OMP_NUM_THREADS": null,
+   "OPENBLAS_NUM_THREADS": null,
+   "MKL_NUM_THREADS": null,
+   "CUDA_VISIBLE_DEVICES": null,
+   "PYTHONHASHSEED": null
+  }
+ },
+ "benchmark_complete": false,
+ "production_authorized": false,
+ "counts": {
+  "PASS": 2,
+  "FAIL": 2,
+  "BLOCKED": 2,
+  "NOT_RUN": 0
+ },
+ "verdict": "FAIL",
+ "checks": [
+  {
+   "id": "host.cpu",
+   "title": "CPU capacity",
+   "status": "PASS",
+   "message": "4 usable CPUs (logical 4, schedulable 4, cgroup quota None) versus the proposed 2",
+   "evidence": {}
+  },
+  {
+   "id": "host.ram",
+   "title": "Available RAM",
+   "status": "FAIL",
+   "message": "15.1 GiB available (cgroup limit None) versus the proposed 16 GiB",
+   "evidence": {}
+  },
+  {
+   "id": "host.working_disk",
+   "title": "Free space for /home/user/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/data/e8-root",
+   "status": "FAIL",
+   "message": "19.69 GiB free (queried /home/user/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/data) versus the proposed 25 GiB",
+   "evidence": {}
+  },
+  {
+   "id": "host.gpu",
+   "title": "GPU for the bounded probe and the nine fits",
+   "status": "BLOCKED",
+   "message": "no NVIDIA GPU is visible (nvidia-smi is not installed or not on PATH); training numbers stay assumptions",
+   "evidence": {}
+  },
+  {
+   "id": "host.torch_cuda_runtime",
+   "title": "CUDA runtime wheels next to torch",
+   "status": "PASS",
+   "message": "torch 2.14.1; 15 nvidia-* runtime wheels installed. Metadata only: whether this build reaches a GPU is decided by the authorized probe, not here",
+   "evidence": {}
+  },
+  {
+   "id": "host.designation",
+   "title": "Host designated by the researcher",
+   "status": "BLOCKED",
+   "message": "no host is designated or authorized; this report describes the machine it ran on",
+   "evidence": {}
+  }
+ ]
+}
