@@ -1,0 +1,366 @@
+{
+  "schema": "B2-E9-preflight-integration-recovery/1",
+  "date": "2026-10-24",
+  "verified_base": "a1d0afc522d2207739dc31f352cd9511f8c0a4bc",
+  "branch": "fix/b2-e9-postmerge-ci-integration",
+  "scope": "Test/documentation repair of NameError introduced by external concurrent PR28/PR29 merge; no source/config/execution changes",
+  "root_cause": "gate_report defined while later full JSON equality still references undefined blocked",
+  "records": [
+    {
+      "label": "integration-before-fix",
+      "command": [
+        "timeout",
+        "180s",
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs",
+        "tests/test_b2_production_preflight.py::test_command_line_exit_codes_strict_json_and_no_overwrite"
+      ],
+      "cwd": "/workspace/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
+      "head_sha": "a1d0afc522d2207739dc31f352cd9511f8c0a4bc",
+      "wall_seconds": 10.894690405999427,
+      "peak_child_rss_kib": 134868,
+      "exit_code": 1,
+      "python": "3.12.14",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "environment": {
+        "OMP_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "MKL_NUM_THREADS": "2",
+        "PYTHONHASHSEED": "0",
+        "MPLBACKEND": "Agg"
+      },
+      "protected_state_unchanged": true,
+      "pytest": {
+        "passed": 0,
+        "failed": 1,
+        "skipped": 0,
+        "warnings": 0,
+        "pytest_seconds": 10.35
+      },
+      "test_sha256": "e3000460e53a189425cecb5f8e80f7e1b4b55ac239c114330f68128b99fcc2a7",
+      "raw_log_sha256": "43e415a28e66b05d99bd41e49dad0e10472157ab196a21d1db6ac67c022ecf2f"
+    },
+    {
+      "label": "integration-target-fixed",
+      "command": [
+        "timeout",
+        "180s",
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs",
+        "tests/test_b2_production_preflight.py::test_command_line_exit_codes_strict_json_and_no_overwrite"
+      ],
+      "cwd": "/workspace/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
+      "head_sha": "a1d0afc522d2207739dc31f352cd9511f8c0a4bc",
+      "wall_seconds": 11.762923275004141,
+      "peak_child_rss_kib": 258728,
+      "exit_code": 0,
+      "python": "3.12.14",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "environment": {
+        "OMP_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "MKL_NUM_THREADS": "2",
+        "PYTHONHASHSEED": "0",
+        "MPLBACKEND": "Agg"
+      },
+      "protected_state_unchanged": true,
+      "pytest": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "warnings": 0,
+        "pytest_seconds": 10.95
+      },
+      "test_sha256": "af5c77373bb244463c89e402d2a8deaa7c7ac9c84f450f8a0b505e9a224cc83c",
+      "raw_log_sha256": "726832bde2f7585b0172c8496d04be025a9215b3a376f87975ac92bd53215abb"
+    },
+    {
+      "label": "integration-safety-fast",
+      "command": [
+        "timeout",
+        "600s",
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs",
+        "tests/test_b2_e9_scientific_freeze.py",
+        "tests/test_b2_e8_tools.py",
+        "tests/test_b2_production_preflight.py::test_committed_scientific_approvals_pass_but_compute_gates_remain_blocked",
+        "tests/test_b2_production_preflight.py::test_an_approval_needs_provenance_and_a_pending_gate_may_not_carry_one",
+        "tests/test_b2_production_preflight.py::test_approved_scientific_gate_rejects_each_missing_provenance_field",
+        "tests/test_b2_production_preflight.py::test_pending_scientific_gate_cannot_keep_an_approval_record",
+        "tests/test_b2_production_preflight.py::test_current_scientific_approval_must_agree_with_the_memorandum",
+        "tests/test_b2_production_preflight.py::test_compute_status_change_needs_its_own_authorization",
+        "tests/test_b2_production_preflight.py::test_an_approval_record_must_be_a_real_structured_record",
+        "tests/test_b2_production_preflight.py::test_report_flags_cannot_be_overridden_by_a_caller",
+        "tests/test_b2_production_preflight.py::test_the_static_checklist_never_authorizes_or_completes_the_benchmark",
+        "tests/test_b2_production_preflight.py::test_the_committed_checklist_equals_a_fresh_rendering",
+        "tests/test_b2_production_supervisor.py::test_the_committed_gates_do_not_authorize_and_synthetic_approvals_are_judged_structurally",
+        "tests/test_b2_production_supervisor.py::test_production_execution_is_refused_without_authorization_and_spawns_nothing",
+        "tests/test_b2_production_supervisor.py::test_production_execution_stays_refused_even_with_every_gate_approved",
+        "tests/test_b2_scientific_figures.py::test_historical_fixtures_remain_separate_and_gates_closed",
+        "tests/test_b2_execution.py::test_incomplete_inventory_is_rejected_before_any_test_read",
+        "tests/test_b2_execution.py::test_all_nine_inventory_cells_are_validated_before_test_access",
+        "tests/test_b2_execution.py::test_fixture_evaluation_uses_only_frozen_objects_and_readonly_inputs"
+      ],
+      "cwd": "/workspace/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
+      "head_sha": "a1d0afc522d2207739dc31f352cd9511f8c0a4bc",
+      "wall_seconds": 13.517730573003064,
+      "peak_child_rss_kib": 376356,
+      "exit_code": 0,
+      "python": "3.12.14",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "environment": {
+        "OMP_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "MKL_NUM_THREADS": "2",
+        "PYTHONHASHSEED": "0",
+        "MPLBACKEND": "Agg"
+      },
+      "protected_state_unchanged": true,
+      "pytest": {
+        "passed": 68,
+        "failed": 0,
+        "skipped": 0,
+        "warnings": 0,
+        "pytest_seconds": 12.06
+      },
+      "test_sha256": "af5c77373bb244463c89e402d2a8deaa7c7ac9c84f450f8a0b505e9a224cc83c",
+      "raw_log_sha256": "520b83fb7ae20c8455518a0115d23103eb1479a665cf402dd2ac658fe611e615"
+    },
+    {
+      "label": "integration-safety-focused",
+      "command": [
+        "timeout",
+        "300s",
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs",
+        "tests/test_b2_production_preflight.py",
+        "tests/test_b2_e9_scientific_freeze.py",
+        "tests/test_b2_training_footprint.py"
+      ],
+      "cwd": "/workspace/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
+      "head_sha": "a1d0afc522d2207739dc31f352cd9511f8c0a4bc",
+      "wall_seconds": 300.10112353999284,
+      "peak_child_rss_kib": 318928,
+      "exit_code": 124,
+      "python": "3.12.14",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "environment": {
+        "OMP_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "MKL_NUM_THREADS": "2",
+        "PYTHONHASHSEED": "0",
+        "MPLBACKEND": "Agg"
+      },
+      "protected_state_unchanged": true,
+      "pytest": {
+        "passed": null,
+        "failed": null,
+        "skipped": null,
+        "warnings": null,
+        "pytest_seconds": null,
+        "reason": "300-second cap; no terminal pytest summary; not a passed suite"
+      },
+      "test_sha256": "af5c77373bb244463c89e402d2a8deaa7c7ac9c84f450f8a0b505e9a224cc83c",
+      "raw_log_sha256": "103e3fd871b946b6bf28c8a15ba37e9510fd674d8ac39f8dbc6445c14adf5713"
+    }
+  ],
+  "precommit_identity_note": "Fixed runs identify base SHA plus exact changed test SHA; final commit is not invented in advance. Complete exact-head local/remote outcomes are published in the draft PR after execution.",
+  "official_record_sha256": {
+    "b2_readiness_gates_2026-10-21.json": "8cd5917a49d7cdd280f519fc71474392e8934845898bd449bf4a7f6e03711f99",
+    "b2_e5_decision_recommendations.json": "137430f6886877cd6292a28b30740eed9ed1e8d8e2a14cfd4156bbb6900a9704",
+    "b2_e9_approved_scientific_protocol.json": "ab96b933284ad134411db638bc3e18540efb749db60de4654beb00c7d1cc6eb1",
+    "B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md": "225c10258a4cb1ca3694c6f9e64579b035f95f461e8b730e21bba41e2ff178e5",
+    "P33_b2_e9_production_executor_readiness.md": "9b5bbc59d10daad4fe781ca8eed0a3ac81f480771cbcea13cd1ab74fb955f803",
+    "P18_b2_protocol.md": "08477e958fa26a1a0aa3c8a00651438dacec2018f15b2cd07ab3e6d525abefaf",
+    "P20_b2_cancellation_residual.md": "6b2a0790e82f4ae4c46b9c64ea74b7012e26a6d8ad1041190dcd11445b6d18b6",
+    "P31_b2_e7b_isolated_execution.md": "6b99dbff7c0bc4d0a67ec551ca07fc0ece0c5b3ca68ab2dc1c3e77459ec732f1"
+  },
+  "unchanged_git_tree_ids": {
+    "src": "e8e00232e385389e63a5e6f98ecc5f68e1d66f80",
+    "configs": "d43808ae1d1e6e62d805af230a0127aa0d9ae858",
+    "scripts": "f4338cfe3b5dc308f3f2a5e544d2d463ed1c5372",
+    ".github": "1f68be1cac3e89ba2b6f76a1eca8899b48cce05e"
+  },
+  "prior_pr28_exact_head": {
+    "schema": "B2-E9-independent-CI-review/1",
+    "reviewer": "/root/e9_safety_audit",
+    "repository": "mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
+    "pull_request": 28,
+    "head_sha": "1539831995b637a187330fd9ac937ee46bf364dc",
+    "run_id": 40095376387,
+    "run_attempt": 1,
+    "job_id": 120876380654,
+    "status": "completed",
+    "conclusion": "success",
+    "synthetic_merge_sha": "69278f5eff4ea04fe832487a12c237ea524aeb3a",
+    "python": "3.12.15",
+    "run_started_at": "2026-10-24T12:47:16Z",
+    "run_updated_at": "2026-10-24T13:03:32Z",
+    "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40095376387",
+    "job_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40095376387/job/120876380654",
+    "e4": {
+      "passed": 107,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 0,
+      "pytest_seconds": 117.82,
+      "raw_summary": "2026-10-24T12:50:38.0217495Z 107 passed in 117.82s (0:01:57)"
+    },
+    "repository_tests": {
+      "passed": 1718,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 46,
+      "pytest_seconds": 747.71,
+      "raw_summary": "2026-10-24T13:03:06.7601878Z 1718 passed, 46 warnings in 747.71s (0:12:27)"
+    },
+    "total_passed": 1825,
+    "total_failed": 0,
+    "total_skipped": 0,
+    "total_warnings": 46,
+    "pytest_seconds_sum": 865.53,
+    "grouped_skip_lines": [],
+    "skip_detail_note": "No skipped tests in either completed pytest summary; do not carry CIA/local skip counts into B",
+    "failures": [],
+    "warning_categories": [
+      "DeprecationWarning",
+      "PendingDeprecationWarning"
+    ],
+    "scientific_provenance_and_closed_compute_gate_step": {
+      "name": "Verify explicit scientific approvals and keep all compute gates closed",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5
+    },
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1
+      },
+      {
+        "name": "Run actions/checkout@v4",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2
+      },
+      {
+        "name": "Run actions/setup-python@v5",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3
+      },
+      {
+        "name": "Install project and test dependencies",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4
+      },
+      {
+        "name": "Verify explicit scientific approvals and keep all compute gates closed",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5
+      },
+      {
+        "name": "Compile sources (syntax check)",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6
+      },
+      {
+        "name": "E4 A5 plan-corruption checks (bounded, CPU only)",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7
+      },
+      {
+        "name": "Run repository tests on bounded CI runner",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8
+      },
+      {
+        "name": "Post Run actions/setup-python@v5",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 15
+      },
+      {
+        "name": "Post Run actions/checkout@v4",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 16
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 17
+      }
+    ],
+    "pr_state_at_verification": {
+      "state": "closed",
+      "draft": false,
+      "merged": true,
+      "head_sha": "1539831995b637a187330fd9ac937ee46bf364dc",
+      "merge_commit_sha": "d7df413e04032f7abdbb3bb7134b037d680908b7",
+      "merged_at": "2026-10-24T12:59:11Z",
+      "merged_by": "mythril33"
+    },
+    "raw_log_path": "/tmp/b2-e9-preflight/ci-b.log",
+    "raw_log_sha256": "481a10102e68cf735514f5c71ccbc4f728367803c84aaba472bacdeb192bb084",
+    "raw_log_bytes": 55519,
+    "raw_log_normalization": "Decoded UTF-8 job log, LF newlines, one terminal newline; no lines filtered",
+    "safety_scope": "Independent read-only CI audit. No source/config/approval/workflow/HEAD edits or local tests/experiments by reviewer. Bounded test success does not authorize compute or certify production execution.",
+    "base_sha": "a5e3b7b8a87ed7b9fb41f513ddb8bb6b685ec4b1",
+    "base_sha_source": "Full raw checkout merge message; PR association may be empty after external merge"
+  },
+  "safety": {
+    "scientific_gates": "APPROVED with unchanged provenance",
+    "full_generation": "NOT_AUTHORIZED",
+    "full_gpu_training": "NOT_AUTHORIZED",
+    "full_loko_sweep": "NOT_AUTHORIZED",
+    "compute_approval_fields": null,
+    "gpu_probe": "NOT_AUTHORIZED",
+    "production_launch_enabled": false,
+    "benchmark_complete": false,
+    "no_production_or_gpu_execution": true,
+    "r6_tf32": "Approved scientific policy; no executable GPU-runner enforcement claim",
+    "p31": "unchanged"
+  },
+  "readiness_snapshot": {
+    "PASS": 39,
+    "FAIL": 0,
+    "BLOCKED": 16,
+    "NOT_RUN": 1,
+    "verdict": "BLOCKED"
+  },
+  "independent_review": {
+    "agent": "/root/e9_safety_audit",
+    "mode": "read-only; no experiments/edits",
+    "findings_resolved": [
+      "undefined report name",
+      "restore explicit verdict and authority guards lost by concurrent merge"
+    ],
+    "open_material_findings": []
+  },
+  "exact_head_local_full": "NOT_YET_RUN at commit-time snapshot",
+  "exact_head_ci": "NOT_YET_RUN at commit-time snapshot",
+  "syntax_and_whitespace": "compileall src/scripts/tests and git diff --check exited0",
+  "production_authorized": false,
+  "benchmark_complete": false
+}
