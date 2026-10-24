@@ -5,6 +5,7 @@ Deliberately corrupted fixtures, not only well-formed ones. Uses the determinist
 """
 import json
 import shutil
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -331,10 +332,35 @@ def test_results_contain_no_nan_and_no_unknown_family_metrics(tmp_path):
     assert result["benchmark_complete"] is False and all("NOT_AUTHORIZED" in v or "PENDING" in v for v in result["authorization"].values())
 
 
-def test_a_pilot_never_changes_the_readiness_gates():
-    gates = json.loads(GATES.read_text())
+def test_a_pilot_never_changes_the_readiness_gates(tmp_path):
+    before = GATES.read_bytes()
+    gates = json.loads(before)
+    ws = support.workspace()  # deterministic stand-ins, never production observations
+    result = _run(ws / "known", ws / "runs", tmp_path)
+    assert GATES.read_bytes() == before
+    assert json.loads(GATES.read_bytes()) == gates
+    assert result["benchmark_complete"] is False
+    for key in ("full_b2_production", "full_gpu_training", "full_loko_sweep"):
+        assert result["authorization"][key] == "NOT_AUTHORIZED_NOT_STARTED"
+
+    # Scientific approval is independent of permission to execute compute.
+    freeze = json.loads((GATES.parent / "b2_e9_approved_scientific_protocol.json").read_text())
+    memo = json.loads((GATES.parent / "b2_e5_decision_recommendations.json").read_text())
     assert gates["benchmark_complete"] is False
+    assert freeze["benchmark_complete"] is memo["benchmark_complete"] is False
+    assert freeze["activation"] is freeze["production_authorized"] is False
+    assert freeze["unresolved_operational_decisions"]["gpu_probe"] == "NOT_AUTHORIZED"
     for key in ("K18", "K17d", "OBS-CANCEL-2"):
-        assert gates["decisions"][key]["status"] == "PENDING_RESEARCHER" and gates["decisions"][key]["approval"] is None
+        assert gates["decisions"][key]["status"] == memo["decisions"][key]["status"] == "APPROVED"
+        approval = gates["decisions"][key]["approval"]
+        assert all(isinstance(approval[field], str) and approval[field].strip()
+                   for field in ("approved_by", "approved_at", "decision", "record"))
+        assert datetime.fromisoformat(approval["approved_at"].replace("Z", "+00:00")).utcoffset() is not None
+        assert approval["approved_by"] == memo["decisions"][key]["approved_by"] == freeze["approved_by"]
+        assert approval["approved_at"] == memo["decisions"][key]["approved_at"] == freeze["approved_at"]
+        assert approval["record"] == freeze["approval_record"]
+        assert (GATES.parents[2] / approval["record"]).is_file()
     for key in ("full_generation", "full_gpu_training", "full_loko_sweep"):
-        assert gates["decisions"][key]["status"] == "NOT_AUTHORIZED"
+        assert gates["decisions"][key]["status"] == memo["decisions"][key]["status"] == "NOT_AUTHORIZED"
+        assert gates["decisions"][key]["approval"] is None
+        assert memo["decisions"][key]["approved_by"] is memo["decisions"][key]["approved_at"] is None
