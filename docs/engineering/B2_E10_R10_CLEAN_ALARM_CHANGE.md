@@ -18,7 +18,7 @@ differently.
 | File | Change |
 |---|---|
 | `src/geoml/metrics.py` | New `clean_alarm_threshold(clean_scores, pfa)`: explicit `method="higher"`; refuses empty, multi-dimensional, non-finite scores and `pfa` outside (0,1), booleans and strings. New constant `CLEAN_ALARM_QUANTILE_METHOD = "higher"`. `threshold_at_pfa` is **unchanged** in value and labelled HISTORICAL. |
-| `src/geoml/b2_execution.py` | The E9 calibrate path imports and calls `clean_alarm_threshold` (line 307). `ALARM_RULE` changes to `"R10 higher empirical quantile at 1-pfa (clean_alarm_threshold); alarm strictly score > threshold"`. |
+| `src/geoml/b2_execution.py` | The E9 calibrate path imports and calls `clean_alarm_threshold` (line 313). The alarm score is `clean_alarm_score` (defined at line 43): the sum of the non-clean probabilities, which equals `1 - P(clean)` without the subtraction. The subtraction rounds to exactly 0 once the clean margin exceeds about 37 nats, so confidently clean samples would tie. The evaluate path (line 520) uses the same helper. `ALARM_RULE` changes to `"R10 higher empirical quantile at 1-pfa (clean_alarm_threshold); alarm strictly score > threshold"`. |
 | `tests/test_b2_execution.py` | The isolation test that forbids calibration during evaluation now also monkeypatches `clean_alarm_threshold`. |
 | `tests/test_b2_e10_calibration.py` | New regression tests (see below). |
 
@@ -38,16 +38,16 @@ No threshold value was tuned, and no test result was used to choose the method.
 | `src/geoml/robustness.py:129` | R1-eval/1 robustness | frozen protocol, linear |
 | `src/geoml/dual_experiment.py:172` | dual development (D1-dev) | historical, linear |
 | `src/geoml/b2_observed_experiment.py:180` | B2-observed-dev/1 | historical, linear |
-| `src/geoml/b2_a5.py:220` | B2-A5-eval/1 (E4 dual-pol A5) | frozen, linear; A5 results remain valid only under their recorded rule |
-| `src/geoml/b2_experiment.py:522` | legacy coupled pilot (`--mode legacy`) | historical, not the E9 path |
+| `src/geoml/b2_a5.py:220` | B2-A5-eval/1 (E4 dual-pol A5) | frozen; the linear helper is applied to the subtraction score `1 - P(clean)` (closure E-10). A5 results hold only under their recorded rule |
+| `src/geoml/b2_experiment.py:522` | legacy coupled pilot (the default of `--mode`, `b2_experiment.py:788–789`) | historical, not the E9 path. The default mode reads the test role (packet D-7) |
 | `tests/test_ml.py:46` | asserts the linear value 94.05 | kept to guard the historical behaviour |
 
 - The change alters the source fingerprint of `src/geoml`. Earlier checkpoint reuse is refused by the existing provenance
   checks; that is the intended behaviour, not a new failure mode.
-- The committed P31 smoke evidence (`docs/results/b2_e7b_execution.md`) was produced before this change and is historical.
-  Its JSON does not store the rule string (a search for `threshold_at_pfa` in `docs/results/b2_e7b_execution.json` finds
-  nothing), so whether it used the linear rule is **not verified** by this note; the source-hash provenance is what
-  refuses any reuse.
+- The committed P31 evidence (`docs/results/b2_e7b_execution.json`) records the SHA-256 of `src/geoml/b2_execution.py` as
+  `edd4fb81…800265` (lines 18 and 78). That equals the `e43987e` file, which uses `threshold_at_pfa` and the rule string
+  `P20 threshold_at_pfa` (verified with `sha256sum`). The E7b evidence was therefore produced by the linear-rule executor and is
+  historical (closure E-11). Source-hash provenance refuses any reuse of its checkpoints under this branch.
 
 ## Regression tests (`tests/test_b2_e10_calibration.py`)
 
@@ -64,6 +64,10 @@ No threshold value was tuned, and no test result was used to choose the method.
 - Calibrate path: `open_b2_known_roles` is called exactly once, with `("val-calib",)`, and the calibrate body contains no
   test-role literal. The calibrate body calls `clean_alarm_threshold` and not `threshold_at_pfa`.
 - The alarm rule label changed, so historical alarm records fail verification.
+- Saturation: a clean sample with a 40-nat and a 45-nat clean margin gets a strictly positive, ordered score, while
+  `1 - P(clean)` by subtraction returns exactly 0 (`test_saturated_clean_margin_keeps_a_positive_score_and_its_ordering`).
+- Both alarm call sites (calibrate and evaluate) use `clean_alarm_score` and not `1.-probabilities`
+  (`test_both_alarm_call_sites_use_the_saturation_free_score`).
 
 ## Non-goals
 

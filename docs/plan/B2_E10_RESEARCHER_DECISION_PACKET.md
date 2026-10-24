@@ -20,7 +20,10 @@ recommendation depends on.
 | D-3 | Meaning of the auxiliary plan-consistency target under the K17b plan shift | M-9 | scientific clarification (possible protocol change) |
 | D-4 | Primary endpoint, multiplicity and statistical reporting plan | Mo-5 | scientific reporting decision |
 | D-5 | Receiver plan-error sensitivity experiment for observation-based cancellation | M-3 | scientific assumption and optional experiment |
-| D-6 | Items deliberately not decided | — | — |
+| D-6 | Order-statistic convention of the approved "higher empirical quantile" (R10 clean alarm) | N-5 | scientific clarification (dated amendment) |
+| D-7 | Whether the default CLI mode (`--mode legacy`) may read the test role | N-2, M-10 | engineering-scientific policy |
+| D-8 | Identity source for the K17d 500/35/465 record (generator metadata versus committed production metadata) | C-2 | researcher acceptance; affects the approval text |
+| D-9 | Items deliberately not decided | — | — |
 
 ## D-1 — C-1: prior held-out test exposure (test and test-matched roles)
 
@@ -52,7 +55,9 @@ Committed artifacts carrying outcome-level content on these IDs:
 | `docs/results/b2_test_pilot.json` | a09429b (2026-10-21) | 3200000, 3200001 | accuracy, FPR@95TPR, alarm, known-closed accuracy |
 | `docs/results/b2_full_pilot.json` | ba98d6b (2026-10-21) | 3200000, 3200001, 3300000, 3300001 | accuracy, macro-F1, per-class recall, ECE, alarm, matched-pair alarms |
 | `docs/results/b2_matched_pilot.md` | ba98d6b (2026-10-21) | 3300000, 3300001 | matched-pair physics and pilot evaluation summary |
-| `docs/results/b2_xgb_baseline.json` | d88c689 (2026-10-23) | 3200000, 3200001 | accuracy, AUPR, class predictions, binary score |
+| `docs/results/b2_xgb_baseline.json` | d88c689 (2026-10-23) | 3200000, 3200001 | accuracy, AUPR, class predictions, binary score; the status file publishes known-test 6/16 and clean test alarm 1/2 (`docs/plan/DURUM.md:82`) |
+| `docs/results/b2_edsc_baseline.json` | ec47a90 (2026-10-23; evidence date 2026-10-22) | test-role counts and metric blocks | E3a EDSC baseline on the test role |
+| `docs/results/b2_physical_figure_data.json` (atlas figures) | 7108ee8 (2026-10-23) | 3200000 | **observation-level**: spectrogram arrays of the held-out group, clean and carrier-under-carrier; the atlas selection rule was 'clean and CuC, before examining outputs' (`docs/results/B2_SCIENTIFIC_RESULTS_ATLAS.md:36`) |
 | `docs/results/b2_a5_dual_pol_pilot.json` | 3c0068e (2026-10-23) | 3200000, 3200001, 3300000, 3300001 | alarm, logits, counterfactual agreement |
 | `docs/results/b2_a5_postmerge_partial_pilot.json` | 5e824fe (2026-10-23) | 3200000, 3200001, 3300000, 3300001 | change vs original prediction, clean false alarm |
 | `docs/results/b2_figure_manifest.json` (figures C1, C3, unknown AUROC/AUPR rows) | 7108ee8 (2026-10-23) | 3200000 | figure values derived from test-scene outcomes |
@@ -64,7 +69,8 @@ Metadata or physics-only exposure (no model output), which is weaker but not zer
 | `docs/results/k17d_drift_audit.json` (committed ba98d6b, 2026-10-21) | 78 test groups | drop identity, polarization, drift in dB |
 | `docs/results/b2_feat_cancellation_check.json`, `b2_test_family_check.json` | 3200000, 3200001 | residual and PSD physics of test scenes |
 | `docs/results/b2_matched_check.json` | 3300000, 3300001 | injected-power and placement physics |
-| `docs/results/b2_physical_figure_data.json` | 3200000 | physical figure data |
+
+**Verified scope (verification workflow `wf_40562391-242`).** At least seven pipelines read or reported held-out groups, and at least one of them (the atlas figure data for group 3200000) contains observation-level arrays, not only outcomes. The two governance texts that state the freeze barrier (`approval:39`; `b2_e9_approved_scientific_protocol.json` `test_evaluation_coupling`) do not record any prior read. The statement that no decision cites a test outcome is therefore weaker than it reads: it is a statement about decision documents only.
 
 **What was exposed to a reader:** for the outcome-bearing set, the per-scene predictions and summary metrics of pilot
 checkpoints (width 8, three epochs, batch 8, seed 0; per `b2_full_pilot.json` config) and of bounded E3b/E4 baselines.
@@ -77,7 +83,7 @@ the exposure of those two groups.
 Timeline (git commit dates, UTC):
 
 - 2026-10-20 22:26 — `46b13fc` introduces `center_loss_weight = 0.005` and `plan_loss_weight = 1.0` in
-  `configs/b2_feat.json` (code comment: "frozen before training"). **In the same commit it commits
+  `configs/b2_feat.json`. The `TrainConfig` default (`src/geoml/train.py:37`) is `0.0`, with the comment "frozen before training". **In the same commit it commits
   `docs/results/b2_feat_pilot.json`, whose test partition (groups 3200000, 3200001) already reports test accuracy 0.125
   and open-set metrics.** The first committed test-role outcome is therefore contemporaneous with the center-weight value.
   The commit cannot show which came first inside it.
@@ -87,13 +93,15 @@ Timeline (git commit dates, UTC):
   search was run.
 - 2026-10-21 04:39 onwards — further test-role outcomes (`24feaa6`, `a09429b`, `ba98d6b`). `a09429b` introduces the K17b
   plan-shift augmentation in the same commit as its test-role outcome.
-- 2026-10-23 — XGBoost (E3b, `d88c689`) and A5 (E4, `3c0068e`, `5e824fe`) runs commit outcomes on test scenes.
+- 2026-10-23 — EDSC (E3a, `ec47a90`), XGBoost (E3b, `d88c689`), A5 (E4, `3c0068e`, `5e824fe`) and the atlas figures (`7108ee8`) commit outcomes or observation-level content of test scenes.
 - 2026-10-24 — approval record (R1–R10, K18, K17d, OBS-CANCEL-2) committed in `d3f71d6`.
 
 Findings from reading the decision-stage documents:
 
-1. `docs/plan/B2_E8_DECISION_APPROVAL.md:11` states that "val-calib outcome informed any recommendation". It makes **no
-   equivalent statement for test-role outcomes**. The disclaimer is incomplete.
+1. `docs/plan/B2_E8_DECISION_APPROVAL.md:10–11` states, verbatim: "No test, test-only, matched or val-calib outcome informed any
+   recommendation; they follow P18/P20/P6, the pilots' pre-registered configs and committed analytic evidence only." This
+   covers the E8 recommendations. It does not address the earlier committed reads in the table above, and it does not say
+   whether they preceded the design choices they bear on.
 2. `docs/plan/B2_E6_RESEARCHER_DECISION_PACKET.md:44–46` used the behaviour of "degenerate three-epoch pilots" to argue
    that the center weight cannot be calibrated, and recommended keeping `0.005`. The argument relies on training-role
    behaviour, not on test metrics, and it argues against tuning. It is still a documented use of pilot results in a
@@ -101,7 +109,8 @@ Findings from reading the decision-stage documents:
 3. `docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md` cites no test-role outcome number. Its rationales are
    engineering and protocol rationales.
 4. `docs/results/B2_SCIENTIFIC_RESULTS_ATLAS.md` and `docs/plan/DURUM.md` publish the test-role pilot numbers
-   (for example "12.5 % known-test accuracy", "6/16 correct"). Those numbers are visible to every later reader.
+   (for example "12.5 % known-test accuracy", "6/16 correct"). Those numbers are visible to every later reader. `docs/plan/P20_b2_cancellation_residual.md:143` also publishes the 12.5 % pilot
+   accuracy and the zero-positive plan-consistency observation.
 
 **Assessment:** the committed record shows **no decision that cites a test-role outcome**. The earliest test-role outcome (`46b13fc`, 2026-10-20) is contemporaneous with the K17 and K18 values, and the record cannot establish the order within that commit. That is a real limitation, not a finding of influence. It does **not** prove that no
 decision-maker saw those outcomes, because the outcomes were public in the repository and in figures before the approval.
@@ -165,7 +174,7 @@ The residual influence risk is small in magnitude (2 + 2 groups, pilot checkpoin
 
 > The test role `B2-test/1` (500 groups) and the test-matched role (150 groups) are **not pristine**. Pilot checkpoints
 > produced per-scene metrics and predictions on test groups 3200000 and 3200001 and matched groups 3300000 and 3300001
-> (commits 24feaa6, a09429b, ba98d6b, d88c689, and the 2026-10-23 A5 pilots). The E9 approval recorded no decision
+> (commits 46b13fc, 24feaa6, a09429b, ba98d6b, ec47a90, d88c689, 3c0068e, 5e824fe and 7108ee8; the last holds observation-level spectrogram arrays of group 3200000). The E9 approval recorded no decision
 > citing those outcomes, but the record cannot exclude their influence. Any final result must report a sensitivity row
 > that excludes these four groups. Nothing in this disclosure is a recognition-performance claim.
 
@@ -185,7 +194,9 @@ monitors and which plans are declared.
 - `docs/plan/P14_dual_polarization.md:24` already assumes "two monitored IQ / PSD streams and two operator plans". The
   architecture therefore presupposes a dual-polarization monitor. It is not written as a contract with availability
   assumptions.
-- `docs/plan/P18_b2_protocol.md:30–35` defines channels 1 and 3 as the calibrated cross-pol spectrum and the cross-pol plan mask.
+- `docs/plan/P18_b2_protocol.md:30–35` lists five channels, 1-based: 1 calibrated co-pol spectrum, 2 calibrated cross-pol
+  spectrum, 3 co-pol plan mask, 4 cross-pol plan mask, 5 co-pol cancellation residual. The table in D-2.2 uses 0-based model
+  indices, so the cross-pol spectrum is index 1 and the cross-pol plan is index 3.
 - `src/geosim/b2_protocol.py` (the `FIFTH_CHANNEL` definition) states that the canceller input is "calibrated co-pol monitor
   IQ and the co-pol operator plan only", and lists "cross-pol observations" among its excluded inputs.
 - `.claude/rules/scientific-invariants.md` item 1 allows "calibrated PSDs, operator plan masks" in general. It names only
@@ -207,6 +218,8 @@ which quantity an operator would hold, with what precision and under which error
 | Co-pol operator plan | 2, 4 (canceller) | declared | P14:81 | **no** (exact in P20:120–121) |
 | Cross-pol operator plan | 3 | declared | P14:24, P14:81 | **no** |
 | Co-pol residual | 4 | derived from co IQ and co plan only | P20 and `FIFTH_CHANNEL` | plan exactness (see D-5) |
+
+Channel numbers in this table are 0-based model indices. P18 numbers the same five channels 1 to 5 (see D-2.1).
 
 ### D-2.3 Options
 
@@ -235,7 +248,8 @@ and a declared cross plan are assumed), and state whether `co` is reported along
   where `dropped` is the removed planned carrier (`b2_scenarios.py:125–140`). It is therefore "a planned carrier is absent in
   the transmitted scene", i.e. the frozen activity state.
 - The K17b shift changes only the operator plan mask. `_apply_plan_shift` rebuilds masks and leaves the target unchanged
-  (`src/geoml/train.py:186–208`; the target is read at `src/geoml/b2_stream.py:424, 533`).
+  (`src/geoml/train.py:186–208`; in the streaming trainer the target is read at `src/geoml/b2_stream.py:424` and `:549`, and the
+  shift is applied at `:533`).
 - `docs/plan/P18_b2_protocol.md:170–188` (K17b) defines the second output as `plan_consistency ∈ {tutarlı, planlı taşıyıcı
   yok}` (consistent, planned carrier missing), states that it is independent of the main label, and calls the shift
   "kaydırma, etiketi koruyan artırım" (label-preserving augmentation).
@@ -337,9 +351,110 @@ condition of Option 2 in every residual-based claim. Option 3 is not recommended
 **Researcher decision still needed:** approve or decline the sweep, its magnitudes and its roles, and state whether the
 depth curve may be reported in main results or only in a supplement.
 
-## D-6 — Items deliberately not decided here
+## D-6 — N-5: order-statistic convention of the approved "higher empirical quantile"
+
+**Decision needed:** confirm which order statistic the R10 clean-alarm threshold denotes. The approved wording does not settle it.
+
+### D-6.1 Evidence
+
+- Approved record: `docs/plan/b2_e9_approved_scientific_protocol.json:334` reads "higher empirical quantile, inclusive
+  acceptance". The approval markdown fixes Pfa 0.05 (R10, line 35) and names no convention.
+- Implemented in E10: `clean_alarm_threshold` uses NumPy `method="higher"`, the 0-based index `ceil((n-1)(1-Pfa))`, and the
+  alarm is strictly `score > threshold`. The known-acceptance quantile already uses the same method
+  (`src/geoml/calibration.py:131`), so the two thresholds share one convention.
+- Numerical check on the scores 0 to 99 (n = 100, Pfa = 0.05), run in this PR:
+
+  | Method | Threshold | Clean scores above it | Calibration alarm rate |
+  |---|---|---|---|
+  | `higher` (implemented) | 95.0 | 4 of 100 | 4 % |
+  | `inverted_cdf` (smallest order statistic with at most n·Pfa scores above) | 94.0 | 5 of 100 | 5 % |
+  | linear (historical `threshold_at_pfa`) | 94.05 | 5 of 100 | 5 % |
+
+- The calibration unit is a flat clean sample, not a scenario group (Mo-3). The choice of convention does not change that.
+
+### D-6.2 Options
+
+- **Option A — NumPy `higher` (implemented).** Conservative: the calibration alarm rate is at most Pfa, and one order
+  statistic below the tighter rule in general. Matches the acceptance quantile in `calibration.py:131`.
+- **Option B — smallest order statistic with at most n·Pfa clean scores above it (`inverted_cdf`).** The most sensitive
+  threshold that still meets Pfa on the calibration set. Changes the E9 threshold by one order statistic (95 to 94 in the
+  example). No frozen artifact depends on the E9 path.
+- **Option C — linear interpolation.** The historical rule, kept for frozen stages. It is not the approved wording and is
+  not an option for the E9 path.
+
+**Recommended (advisory):** Option A. The code already uses it for the acceptance quantile, and it is the conservative
+reading. Choose Option B only if "higher" is meant as the tightest order statistic that attains Pfa.
+
+**Researcher decision still needed:** A or B. Either choice is recorded by a dated amendment to the approved text, not by a
+silent change.
+
+## D-7 — N-2 / M-10: the default CLI mode reads the test role
+
+**Decision needed:** whether the default `--mode legacy` of `python -m geoml.b2_experiment` may keep reading the test role.
+
+### D-7.1 Evidence
+
+- `src/geoml/b2_experiment.py:788–789`: `--mode` defaults to `legacy` ("legacy preserves capped small pilots").
+- The legacy coupled path opens the known roles at `:436`, loads the test partition at `:480`, and runs per-view test
+  inference at `:501`. Its docstring at `:9` says "``test`` is evaluated once", which the code does not do.
+- The legacy path is capped at 12 groups per role (`LEGACY_MAX_GROUPS`, `:54`). The committed pilots use it.
+- The E9 chain (`src/geoml/b2_execution.py`) is a separate path. Its calibration reads only the val-calib role, and tests
+  enforce that.
+
+### D-7.2 Options
+
+- **Option A — keep the default and document it.** The committed pilots reproduce unchanged. The risk remains that a user
+  who runs the default command reads the test role.
+- **Option B — refuse test reads by default.** The default requires an explicit flag, for example `--allow-test-read`, to
+  reach the legacy path. Pilot reproduction needs one extra flag. No committed result changes.
+- **Option C — retire the legacy mode** after archiving the committed pilots. This removes the route for reproducing them, so
+  it needs its own decision.
+
+**Recommended (advisory):** Option B. It removes an accidental held-out read at the cost of one flag, and it changes no
+committed result.
+
+**Researcher decision still needed:** A, B or C. Option B is an engineering change and is not implemented here.
+
+## D-8 — C-2: identity source for the K17d 500 / 35 / 465 record
+
+**Decision needed:** whether the candidate identity record, derived from the frozen generator's scene metadata, may serve as
+the K17d identity list, or whether the approval's requirement must be met first.
+
+### D-8.1 Evidence
+
+- The approval (`docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md:16`) says: "Re-derive group identities from
+  committed production generation metadata before any test observation is opened; verify the co-feed drop predicate against
+  `docs/results/k17d_drift_audit.json`."
+- No committed production generation metadata exists, because production generation is `NOT_AUTHORIZED`.
+- The E10 candidate (`docs/results/b2_e10_k17d_identity.json`) is derived by `prepare_scene` metadata from the frozen
+  generator at the recorded source hashes, with zero waveform calls. It reproduces the committed audit exactly: 500 / 35 /
+  465 / 43 / 78, and every one of the 78 group IDs and polarizations agrees.
+- The audit records no generator, predicate or hash (`k17d_drift_audit.json`, committed in `ba98d6b`). Its agreement is
+  therefore evidence of consistency, not of an independent source.
+
+### D-8.2 Options
+
+- **Option A — accept the generator-derived candidate.** The approval wording is amended by a dated entry to "re-derive
+  from the frozen generator metadata at the recorded source hashes". The production run would use the same generator. The
+  record binds all 28 `src/geosim` modules and the audit hash, so any change forces a re-derivation. No generation is
+  needed.
+- **Option B — require committed production generation metadata first.** This needs a generation authorization (DR-04), which
+  is not granted. K17d stays pending, and no test observation is opened.
+
+**Recommended (advisory):** Option A, with the amendment recorded, because the generator is the one a production run would
+use and the record binds its source. Choose Option B if the researcher wants production metadata to exist before any test
+read.
+
+**Researcher decision still needed:** accept A or require B. Until one is recorded, no K17d test observation is opened.
+
+## D-9 — Items deliberately not decided here
 
 - R1–R10 and the K18, K17d and OBS-CANCEL-2 records are unchanged. No new approval is recorded in this packet.
 - No test protocol is chosen or implemented (see D-1).
 - No generation, GPU probe, training, held-out evaluation or LOKO is authorized or started.
 - Production launch remains disabled; `benchmark_complete` remains `false`.
+- The R6 TF32 enforcement stays deferred to the reviewed executor, as the approval requires (M-2).
+- Frozen A5 and E3b values, which use the linear helper or the subtraction score, are kept as archived (closure E-10). No
+  re-run is made here.
+- The E7b CPU evidence was produced by the linear-rule executor (closure E-11). A bounded rerun on this branch's
+  `ALARM_RULE` is engineering work and is not run in this PR.
