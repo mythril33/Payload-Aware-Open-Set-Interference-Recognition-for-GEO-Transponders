@@ -46,9 +46,9 @@
   ]
  },
  "lock": {
-  "git_commit": "dd5d9655f191d27558e0f185a954e93ca68eff80",
+  "git_commit": "bda315161775a7d30b4fd2ee52985c37d55b90df",
   "git_clean": true,
-  "lock_fingerprint": "975c6206e3484892e73394211280ce32f2ca5cc59fa75b17a4c7720ce78551d3",
+  "lock_fingerprint": "d081aa2cb17956a65d03c745f262e38cd14e8a06f281e9c92be8f4f8abec0682",
   "dirty_fixture_allowed": false,
   "environment": {
    "python": "3.13.17",
@@ -69,7 +69,7 @@
  "steps": [
   {
    "step": "dry_run",
-   "t_s": 3.2,
+   "t_s": 4.1,
    "exit": 4,
    "counts": {
     "PASS": 8,
@@ -81,7 +81,7 @@
   },
   {
    "step": "interrupted_after_first_shard",
-   "t_s": 44.7,
+   "t_s": 45.1,
    "exit": 6,
    "result": {
     "exit_code": 6,
@@ -94,25 +94,25 @@
   },
   {
    "step": "verify_while_unfinished",
-   "t_s": 47.7,
+   "t_s": 47.9,
    "exit": 5
   },
   {
    "step": "complete_refused_while_unfinished",
-   "t_s": 50.6,
+   "t_s": 50.8,
    "exit": 3,
    "marker_written": false
   },
   {
    "step": "supervisor_sigkilled_mid_attempt",
-   "t_s": 63.1,
+   "t_s": 63.3,
    "exit": -9,
-   "child_pid": 19636,
+   "child_pid": 9641,
    "child_gone": true
   },
   {
    "step": "resumed_to_completion",
-   "t_s": 393.3,
+   "t_s": 392.0,
    "exit": 0,
    "result": {
     "exit_code": 0,
@@ -123,24 +123,28 @@
   },
   {
    "step": "verify_complete",
-   "t_s": 396.3,
+   "t_s": 394.9,
    "exit": 0,
    "all_stages_verified": true
   },
   {
    "step": "complete",
-   "t_s": 399.3,
+   "t_s": 398.0,
    "exit": 0
   }
  ],
  "journal": {
   "file": "b2_e7a_supervisor_journal.jsonl",
   "head_file": "b2_e7a_supervisor_journal.head",
-  "records": 113,
-  "sha256": "c8fc4ef7b8b0d126196e1d3c4a54fdeb78de0b0c5bc9041dee12ee07aa3c0745",
-  "head": "5275503704054c070d93317aedbb7993b1fb300fad479b545525450e60e2e72a"
+  "records": 112,
+  "sha256": "0110afaff4ba321e10117ee5d9bd41d5179617e08af5406c8c88706d46e94906",
+  "head": "78d4d81b56456f83dc3d9492959630aedb3582032b7add4a0cba7b04fc69e8de"
  },
  "plan_fingerprint": "f5327829d7dc17b83c5e09012a25d6775d5c9800e5621d56218a68661950388c",
+ "tools_sha256": {
+  "b2_production_supervisor.py": "ae7920065a758271c5b3d4964a5bb2029234516c45844be7b9fe2bcf70d11b2e",
+  "b2_production_preflight.py": "e11ebf87f1d37a190aaf39774e6c7237d9d20ef1dfa2e4926327d554f1d26582"
+ },
  "completion_marker": {
   "schema": "B2-production-completion/1",
   "generation_complete": true,
@@ -149,9 +153,13 @@
   "benchmark_complete": false,
   "production_authorized": false,
   "plan_fingerprint": "f5327829d7dc17b83c5e09012a25d6775d5c9800e5621d56218a68661950388c",
-  "lock_fingerprint": "975c6206e3484892e73394211280ce32f2ca5cc59fa75b17a4c7720ce78551d3",
+  "lock_fingerprint": "d081aa2cb17956a65d03c745f262e38cd14e8a06f281e9c92be8f4f8abec0682",
   "child_launcher": "generators",
-  "journal_head": "5275503704054c070d93317aedbb7993b1fb300fad479b545525450e60e2e72a",
+  "tools_sha256": {
+   "b2_production_supervisor.py": "ae7920065a758271c5b3d4964a5bb2029234516c45844be7b9fe2bcf70d11b2e",
+   "b2_production_preflight.py": "e11ebf87f1d37a190aaf39774e6c7237d9d20ef1dfa2e4926327d554f1d26582"
+  },
+  "journal_head": "78d4d81b56456f83dc3d9492959630aedb3582032b7add4a0cba7b04fc69e8de",
   "observations": {
    "known": {
     "train": 16,
@@ -167,15 +175,15 @@
    }
   },
   "stage_manifest_fingerprints": {
-   "known": "443091bc2c3262bee9b39dc140e86685cd02cdb60756dec526b21b0cefe44b51",
-   "test": "5fc2118794cf62ff85c11853f2741bdd97d7fc0b883084ddfb4bad5c6bc723aa",
-   "matched": "0aac65f893cde5bf2f7f4ae14e0fd40b108b4505a1ddc6b41fdf4256373af03f"
+   "known": "136afa103d3c833a67643fab111e557333dca8b6a17b9119b3ef5ad0b0e83dd4",
+   "test": "8f7358c56d15cb4877e9ce978506a607613a15d5af75826de888b4ed0eaf58fc",
+   "matched": "c23e0cbde4c65a58a1b97679de81cd8ab2263ff94923e924ab88cda7528dbfdc"
   },
   "note": "data generation of the planned scope is complete and verified; this is not benchmark completion"
  },
  "usage": {
-  "wall_s": 381.706,
-  "cpu_s": 451.53299999999996,
+  "wall_s": 379.662,
+  "cpu_s": 448.669,
   "open_attempt": null,
   "open_attempt_heartbeat": null,
   "attempts": {
@@ -219,24 +227,24 @@
  "per_stage_attempts": {
   "known": {
    "attempts": 3,
-   "attempt_wall_s": 299.2,
-   "cpu_s": 356.5,
+   "attempt_wall_s": 298.6,
+   "cpu_s": 354.9,
    "observations": 64,
    "wall_s_per_observation_including_startup_and_repeated_restarts": 4.67
   },
   "test": {
    "attempts": 1,
-   "attempt_wall_s": 52.9,
-   "cpu_s": 60.7,
+   "attempt_wall_s": 52.5,
+   "cpu_s": 60.5,
    "observations": 10,
-   "wall_s_per_observation_including_startup_and_repeated_restarts": 5.29
+   "wall_s_per_observation_including_startup_and_repeated_restarts": 5.25
   },
   "matched": {
    "attempts": 1,
-   "attempt_wall_s": 29.6,
-   "cpu_s": 34.3,
+   "attempt_wall_s": 28.6,
+   "cpu_s": 33.3,
    "observations": 6,
-   "wall_s_per_observation_including_startup_and_repeated_restarts": 4.94
+   "wall_s_per_observation_including_startup_and_repeated_restarts": 4.76
   }
  },
  "attempts": [
@@ -245,22 +253,22 @@
    "stage": "known",
    "reason": "interrupted",
    "exit_code": -15,
-   "elapsed_s": 38.563,
-   "cpu_user_s": 32.677,
-   "cpu_sys_s": 13.173,
-   "peak_rss_kib": 580400,
-   "peak_rss_polled_kib": 580400,
-   "supervisor_peak_rss_kib": 574484
+   "elapsed_s": 38.037,
+   "cpu_user_s": 32.018,
+   "cpu_sys_s": 12.742,
+   "peak_rss_kib": 584912,
+   "peak_rss_polled_kib": 584912,
+   "supervisor_peak_rss_kib": 572468
   },
   {
    "attempt_id": "known-02",
    "stage": "known",
    "reason": "supervisor_lost",
    "exit_code": null,
-   "elapsed_s": 16.081,
-   "cpu_user_s": 23.99,
+   "elapsed_s": 16.119,
+   "cpu_user_s": 24.11,
    "cpu_sys_s": 0.0,
-   "peak_rss_kib": 519316,
+   "peak_rss_kib": 518416,
    "estimated": true
   },
   {
@@ -268,54 +276,39 @@
    "stage": "known",
    "reason": "exited",
    "exit_code": 0,
-   "elapsed_s": 244.529,
-   "cpu_user_s": 219.274,
-   "cpu_sys_s": 67.397,
-   "peak_rss_kib": 585904,
-   "peak_rss_polled_kib": 585904,
-   "supervisor_peak_rss_kib": 577564
+   "elapsed_s": 244.475,
+   "cpu_user_s": 218.424,
+   "cpu_sys_s": 67.606,
+   "peak_rss_kib": 606064,
+   "peak_rss_polled_kib": 606064,
+   "supervisor_peak_rss_kib": 575500
   },
   {
    "attempt_id": "test-01",
    "stage": "test",
    "reason": "exited",
    "exit_code": 0,
-   "elapsed_s": 52.906,
-   "cpu_user_s": 46.847,
-   "cpu_sys_s": 13.901,
-   "peak_rss_kib": 581820,
-   "peak_rss_polled_kib": 581820,
-   "supervisor_peak_rss_kib": 577936
+   "elapsed_s": 52.478,
+   "cpu_user_s": 45.885,
+   "cpu_sys_s": 14.625,
+   "peak_rss_kib": 592724,
+   "peak_rss_polled_kib": 592724,
+   "supervisor_peak_rss_kib": 575856
   },
   {
    "attempt_id": "matched-01",
    "stage": "matched",
    "reason": "exited",
    "exit_code": 0,
-   "elapsed_s": 29.627,
-   "cpu_user_s": 25.757,
-   "cpu_sys_s": 8.517,
-   "peak_rss_kib": 519096,
-   "peak_rss_polled_kib": 519096,
-   "supervisor_peak_rss_kib": 578124
+   "elapsed_s": 28.553,
+   "cpu_user_s": 24.903,
+   "cpu_sys_s": 8.356,
+   "peak_rss_kib": 518412,
+   "peak_rss_polled_kib": 518412,
+   "supervisor_peak_rss_kib": 576052
   }
  ],
  "timing_gates": [
-  {
-   "attempt_id": "known-01",
-   "band": [
-    3.8,
-    5.0
-   ],
-   "event": "timing_gate",
-   "observations": 8,
-   "outcome": "within_band",
-   "s_per_observation": 4.008649945259094,
-   "stage": "known",
-   "startup_allowance_s": 6.0,
-   "time": "2026-10-23T22:09:03.949+00:00",
-   "tolerance": 0.25
-  },
   {
    "attempt_id": "known-03",
    "band": [
@@ -325,10 +318,10 @@
    "event": "timing_gate",
    "observations": 8,
    "outcome": "within_band",
-   "s_per_observation": 3.8524361753463747,
+   "s_per_observation": 3.992538800239563,
    "stage": "known",
    "startup_allowance_s": 6.08,
-   "time": "2026-10-23T22:13:29.830+00:00",
+   "time": "2026-10-24T00:30:42.146+00:00",
    "tolerance": 0.25
   },
   {
@@ -340,10 +333,10 @@
    "event": "timing_gate",
    "observations": 5,
    "outcome": "within_band",
-   "s_per_observation": 4.48872480392456,
+   "s_per_observation": 4.499532699584961,
    "stage": "test",
    "startup_allowance_s": 6.0,
-   "time": "2026-10-23T22:14:22.838+00:00",
+   "time": "2026-10-24T00:31:34.721+00:00",
    "tolerance": 0.25
   },
   {
@@ -354,11 +347,11 @@
    ],
    "event": "timing_gate",
    "observations": 3,
-   "outcome": "within_band",
-   "s_per_observation": 3.1346983909606934,
+   "outcome": "faster_than_band",
+   "s_per_observation": 2.9743784268697104,
    "stage": "matched",
    "startup_allowance_s": 6.0,
-   "time": "2026-10-23T22:14:52.552+00:00",
+   "time": "2026-10-24T00:32:03.365+00:00",
    "tolerance": 0.25
   }
  ],
@@ -369,5 +362,5 @@
   "A supervisor_lost attempt is charged by an upper-bound estimate (last heartbeat + one interval), not measured.",
   "Two groups per stage say nothing about production-size memory, throughput or disk."
  ],
- "total_wall_s": 399.3
+ "total_wall_s": 398.0
 }
