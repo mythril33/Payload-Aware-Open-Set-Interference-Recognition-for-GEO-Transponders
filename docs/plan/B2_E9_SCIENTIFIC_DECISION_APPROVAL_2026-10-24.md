@@ -51,3 +51,49 @@
 
 **E9 engineering preparation:** [P33_b2_e9_production_executor_readiness.md](P33_b2_e9_production_executor_readiness.md).  
 **Historical decision context:** [E8 decision recommendations](B2_E8_DECISION_APPROVAL.md), [E8 NO-GO](B2_E8_GO_NO_GO.md), [P18 protocol](P18_b2_protocol.md).
+
+## Dated scientific addendum — E12 D-1–D-8 (2026-10-24)
+
+The researcher explicitly ratified D-1=A, D-2=1, D-3=A, D-4=1-FPR,
+D-5=1 (preregistration only), D-6=A, D-7=B and D-8=A in the conversation.
+The [dated E12 approval](B2_E12_D1_D8_SCIENTIFIC_APPROVAL_2026-10-24.md)
+and [decision register](b2_e12_d1_d8_decisions_2026-10-24.json) record the
+full assumptions, provenance, limitations and prospective amendments.
+GitHub recording remains pending review; this is not a cryptographic signature.
+The original approval and all R1–R10 parameter values above remain historical
+records, not silently replaced decisions.
+
+- **D1/R8 exposure amendment:** preserve the500 test and150 matched headline
+  groups; disclose prior pilot exposure of3200000/3200001 and3300000/3300001,
+  including observation-level content for3200000, and require498/148
+  exposure-excluded sensitivity rows. Do not call this population pristine.
+  Freeze-before-read refers prospectively to the separately authorized final
+  evaluation and does not erase earlier reads.
+- **D2/D3 clarification:** conditional calibrated co/cross receiver monitors
+  and two declared plans; P20 residual still uses only co IQ plus co plan.
+  The auxiliary target remains physical missing-carrier state, unchanged by
+  K17b mask shift. No loss/label/augmentation/training setting changes.
+- **D4 reporting:** near-family pooled unknown-positive FPR@95TPR on
+  dual_residual is primary; report seeds0/1/2 and a descriptive mean,
+  conditional scenario-group bootstrap, exploratory secondary comparisons.
+  No confirmatory superiority or unadjusted multiplicity inference.
+- **D5/D6/D7:** plan-error sensitivity is preregistered but not authorized
+  to run; clean val-calib uses NumPy higher quantile, Pfa0.05, strict
+  score>threshold and E9's saturation-free sum(P(non-clean)); legacy test
+  access is default-denied with explicit restricted historical intent.
+- **D8/K17d metadata-source amendment:** accept the immutable generator-derived
+  identity artifact SHA256
+  `ccdf0a8f40e71d7ddb388068e455a77a131214f5644ab332a16c8268cfc49c6d`
+  at its recorded generator/package/audit hashes. This establishes metadata
+  identity500/35/465 (cross-feed43, total drops78), not observation-level
+  test verification. Later separately authorized production generation
+  metadata must be cross-checked fail-closed before final evaluation; that
+  check is NOT RUN. Generator/predicate/audit changes require re-derivation
+  and review. The historical identity artifact stays unchanged and grants
+  no authority itself.
+
+**SCIENTIFIC DECISIONS RATIFIED — EXECUTION NO-GO.** Full generation, GPU
+probe/training, full LOKO and final held-out evaluation remain unauthorized;
+compute approvals stay null, production activation disabled and
+`benchmark_complete=false`. No sweep, generation, training, held-out read,
+freeze/evaluation, production workload or automatic merge is authorized.

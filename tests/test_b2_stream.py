@@ -52,6 +52,19 @@ def artifact(tmp_path, monkeypatch, feature_generator):
     return root
 
 
+@pytest.fixture
+def historical_artifact(tmp_path, monkeypatch, feature_generator):
+    """Two exposed groups/role in two shards for explicit legacy API tests.
+
+    The separate three-group fixture continues to exercise partial shards,
+    batching, training parity and memory without a legacy test-access grant.
+    """
+    _randomize_spectra(monkeypatch)
+    root = tmp_path / "historical-feat"
+    ds.generate_b2_dataset(root, roles=BASE_ROLES, limit_groups=2, groups_per_shard=1, cancellation=CANCELLATION)
+    return root
+
+
 def _cfg(**overrides):
     base = dict(labels=LABELS, input_mode="dual_residual", plan_consistency=True, center_loss_weight=0.005,
                 plan_shift_fraction=0.5, epochs=2, batch=8, width=4, augment=True)
@@ -229,7 +242,7 @@ def test_base_stage_artifact_has_no_residual_and_feature_experiments_refuse_it(t
                                                                    "center_loss_weight": 0.005, "augment": False})
     # The protocol check precedes the residual check; a feature stage without residual cannot exist by construction.
     with pytest.raises(ValueError, match="does not match"):
-        run_b2_experiment(config, root, tmp_path / "run", log=lambda *_: None)
+        run_b2_experiment(config, root, tmp_path / "run", log=lambda *_: None, allow_test_read=True)
     # A manifest retagged as the feature stage is inconsistent with its request and never verifies.
     manifest = root / "manifest.json"
     text = manifest.read_text()
@@ -238,7 +251,7 @@ def test_base_stage_artifact_has_no_residual_and_feature_experiments_refuse_it(t
         open_b2_known(root)
     manifest.write_text(text)
     base_config = B2ExperimentConfig(protocol="B2-base/1", views=("co",), window_shards=1, training=config.training)
-    result = run_b2_experiment(base_config, root, tmp_path / "base-run", log=lambda *_: None)
+    result = run_b2_experiment(base_config, root, tmp_path / "base-run", log=lambda *_: None, allow_test_read=True)
     assert result["protocol"] == "B2-base/1" and result["methods"]["co"]["input_channels"] == 2
 
 
@@ -315,39 +328,49 @@ def test_in_memory_source_contract():
 
 # ---- 8.-11. end-to-end runner on a disk artifact: thresholds, Mahalanobis, outputs, reuse ----------------
 
-def test_runner_streams_a_disk_artifact_with_frozen_roles_thresholds_and_compatible_outputs(artifact, tmp_path):
+def test_runner_refuses_an_unexposed_third_test_group_before_full_reader(artifact, tmp_path, monkeypatch):
+    from geoml import b2_experiment as ex
+    monkeypatch.setattr(ex, "open_b2_known", lambda path:pytest.fail("unexposed test reader was invoked"))
+    config = B2ExperimentConfig(views=("co",), training={"epochs":1,"batch":8,"width":4,"center_loss_weight":0.005})
+    with pytest.raises(ValueError, match="exposed historical test groups"):
+        run_b2_experiment(config, artifact, tmp_path / "refused", allow_test_read=True)
+    assert not (tmp_path / "refused").exists()
+
+
+def test_runner_streams_a_disk_artifact_with_frozen_roles_thresholds_and_compatible_outputs(historical_artifact, tmp_path):
+    artifact = historical_artifact
     config = B2ExperimentConfig(views=("co", "dual_residual"), window_shards=1,
                                 training={"epochs": 1, "batch": 8, "width": 4, "seed": 0, "center_loss_weight": 0.005,
                                           "augment": False, "plan_shift_fraction": 0.5})
     out = tmp_path / "run"
     logs = []
-    result = run_b2_experiment(config, artifact, out, log=logs.append)
+    result = run_b2_experiment(config, artifact, out, log=logs.append, allow_test_read=True)
     assert result["data_fingerprint"] == ds.b2_fingerprint(artifact) and result["benchmark_complete"] is False
     assert result["runtime"]["loader"] == {"mode": "streaming", "window_shards": 1,
-                                           "shard_counts": {role: [16, 8] for role in BASE_ROLES},
+                                           "shard_counts": {role: [8, 8] for role in BASE_ROLES},
                                            "note": result["runtime"]["loader"]["note"]}
     for role in BASE_ROLES:
-        assert result["partitions"][role]["scenario_ids"] == scenario_ids(role, 3)
-        assert result["partitions"][role]["n_samples"] == 24
+        assert result["partitions"][role]["scenario_ids"] == scenario_ids(role, 2)
+        assert result["partitions"][role]["n_samples"] == 16
     for view in config.views:
         values = result["methods"][view]
         scorer = values["mahalanobis_scorer"]
-        assert scorer["n_training"] == 24 and scorer["class_counts"] == [3] * 8      # train role only
+        assert scorer["n_training"] == 16 and scorer["class_counts"] == [2] * 8      # train role only
         for metrics in values["rejection"].values():
-            assert metrics["calibration"]["n_calibration"] == 24                      # val-calib known only
-        assert values["alarm"]["n_clean_calibration"] == 3
-        assert sum(sum(row) for row in values["confusion"]) == 24
-        assert values["plan_consistency"]["n_samples"] == 24
+            assert metrics["calibration"]["n_calibration"] == 16                      # val-calib known only
+        assert values["alarm"]["n_clean_calibration"] == 2
+        assert sum(sum(row) for row in values["confusion"]) == 16
+        assert values["plan_consistency"]["n_samples"] == 16
     for view in config.views:                                                         # K18: observation-only training diagnostics
         block = result["methods"][view]["train_diagnostics"]
         assert block["schema"] == "B2-train-diagnostics/1" and block["split"] == "train" and block["affects_training"] is False
-        assert len(block["epochs"]) == 1 and block["epochs"][0]["n_samples"] == 24
-        assert block["epochs"][0]["center_to_ce_ratio"] is not None and block["epochs"][0]["n_plan_samples"] == 24
+        assert len(block["epochs"]) == 1 and block["epochs"][0]["n_samples"] == 16
+        assert block["epochs"][0]["center_to_ce_ratio"] is not None and block["epochs"][0]["n_plan_samples"] == 16
         method = result["methods"][view]                                              # which epoch the evaluated weights come from
         scores = [row["val_macro_f1"] for row in method["history"]]
         assert method["best_epoch"] == scores.index(max(scores)) == 0 and method["best_val_macro_f1"] == max(scores)    # zero-based, first maximum
         assert block["epochs"][method["best_epoch"]]["epoch"] == method["best_epoch"]
-    assert len(json.loads((out / "predictions.json").read_text())) == 24
+    assert len(json.loads((out / "predictions.json").read_text())) == 16
     summary = json.loads((out / "results_summary.json").read_text())
     assert summary["summary_rule"]["dropped_keys"] == list(__import__("geoml.b2_experiment", fromlist=["x"]).SUMMARY_DROPPED)
     assert set(summary["methods"]["co"]) == set(result["methods"]["co"]) - {"history", "confusion", "mahalanobis_scorer"}
@@ -355,7 +378,7 @@ def test_runner_streams_a_disk_artifact_with_frozen_roles_thresholds_and_compati
     assert "## Partitions" in (out / "results.md").read_text()
     assert any("streaming 1 shard" in line for line in logs)
     # Frozen thresholds and checkpoints are reused unchanged; a different window policy changes the fingerprint only.
-    again = run_b2_experiment(config, artifact, out, reuse=True, log=logs.append)
+    again = run_b2_experiment(config, artifact, out, reuse=True, log=logs.append, allow_test_read=True)
     assert again["methods"]["co"]["checkpoint_sha256"] == result["methods"]["co"]["checkpoint_sha256"]
     assert again["methods"]["co"]["train_diagnostics"] == result["methods"]["co"]["train_diagnostics"]   # via the checkpoint
     for view in config.views:

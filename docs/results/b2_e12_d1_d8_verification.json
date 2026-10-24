@@ -1,0 +1,294 @@
+{
+  "schema": "B2-E12-verification/1",
+  "date": "2026-10-24",
+  "base_sha": "a335eed5fd3ac22eb341aa7ecf148f4efe7bd023",
+  "code_commit": "da3770d1fe9c1f1728d6ba686f1dd5e257390601",
+  "branch": "docs/b2-e12-d1-d8-scientific-ratification",
+  "scope": "Synthetic CPU unit tests and metadata only; final exact-head authorized CI recorded in draft PR",
+  "pytest_summary": {
+    "passed": 187,
+    "failed": 0,
+    "skipped": 0,
+    "warnings": 0,
+    "pytest_seconds": 18.43
+  },
+  "records": [
+    {
+      "label": "synthetic-exact-code",
+      "command": [
+        "timeout",
+        "180s",
+        "/workspace/.venvs/geosim/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs",
+        "tests/test_b2_e12_legacy_access.py",
+        "tests/test_b2_e12_k17d_integrity.py",
+        "tests/test_b2_execution_cli.py",
+        "tests/test_b2_e10_calibration.py",
+        "tests/test_b2_e9_scientific_freeze.py",
+        "tests/test_b2_e10_records.py",
+        "tests/test_b2_experiment.py::test_all_matched_bins_keep_full_denominators_without_legacy_observation_access",
+        "tests/test_b2_execution.py::test_incomplete_inventory_is_rejected_before_any_test_read",
+        "tests/test_b2_execution.py::test_all_nine_inventory_cells_are_validated_before_test_access"
+      ],
+      "head_sha": "da3770d1fe9c1f1728d6ba686f1dd5e257390601",
+      "wall_seconds": 19.576040863001253,
+      "peak_child_rss_kib": 346952,
+      "exit_code": 0,
+      "python": "3.12.14",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "environment": {
+        "OMP_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "MKL_NUM_THREADS": "2",
+        "PYTHONHASHSEED": "0",
+        "MPLBACKEND": "Agg"
+      },
+      "tracked_state_unchanged": true,
+      "log_sha256": "924b102d8f54e00cc99b3c3ccc18d34bd2366738ffbf00a97e8e7b6e7352b746"
+    },
+    {
+      "label": "metadata-exact-code",
+      "command": [
+        "timeout",
+        "60s",
+        "/workspace/.venvs/geosim/bin/python",
+        "scripts/b2_e12_verify_k17d.py",
+        "--acceptance",
+        "docs/plan/b2_e12_d1_d8_decisions_2026-10-24.json"
+      ],
+      "head_sha": "da3770d1fe9c1f1728d6ba686f1dd5e257390601",
+      "wall_seconds": 11.947777806999511,
+      "peak_child_rss_kib": 85484,
+      "exit_code": 0,
+      "python": "3.12.14",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "environment": {
+        "OMP_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "MKL_NUM_THREADS": "2",
+        "PYTHONHASHSEED": "0",
+        "MPLBACKEND": "Agg"
+      },
+      "tracked_state_unchanged": true,
+      "log_sha256": "858310f11638a46260eb1c5e21dec609c3c198a30c08e7039f6e5afa7a58d889"
+    },
+    {
+      "label": "gates-exact-code",
+      "command": [
+        "timeout",
+        "30s",
+        "/workspace/.venvs/geosim/bin/python",
+        "scripts/b2_production_preflight.py",
+        "gates"
+      ],
+      "head_sha": "da3770d1fe9c1f1728d6ba686f1dd5e257390601",
+      "wall_seconds": 6.2562815560086165,
+      "peak_child_rss_kib": 82832,
+      "exit_code": 4,
+      "python": "3.12.14",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "environment": {
+        "OMP_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "MKL_NUM_THREADS": "2",
+        "PYTHONHASHSEED": "0",
+        "MPLBACKEND": "Agg"
+      },
+      "tracked_state_unchanged": true,
+      "log_sha256": "fce0e8613332b358fcd589468718f560668c9fabecd6af8e27ce55d5da716a49"
+    }
+  ],
+  "packages": {
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "torch": "2.14.1+cpu",
+    "pytest": "9.1.1",
+    "xgboost-cpu": "3.4.1"
+  },
+  "verified_file_sha256": {
+    "docs/plan/B2_E12_D1_D8_SCIENTIFIC_APPROVAL_2026-10-24.md": "817380b9fa10871da0774b1cc9cd043a56ae868c211b83f2967a0d6b6c372842",
+    "docs/plan/b2_e12_d1_d8_decisions_2026-10-24.json": "ce900de1ae1b324d5de73997a8b303f2158fddf33fd544337347bb3df91689b1",
+    "docs/plan/b2_e5_decision_recommendations.json": "137430f6886877cd6292a28b30740eed9ed1e8d8e2a14cfd4156bbb6900a9704",
+    "docs/plan/b2_e9_approved_scientific_protocol.json": "ab96b933284ad134411db638bc3e18540efb749db60de4654beb00c7d1cc6eb1",
+    "docs/plan/b2_readiness_gates_2026-10-21.json": "8cd5917a49d7cdd280f519fc71474392e8934845898bd449bf4a7f6e03711f99",
+    "docs/results/b2_e10_k17d_identity.json": "ccdf0a8f40e71d7ddb388068e455a77a131214f5644ab332a16c8268cfc49c6d",
+    "docs/results/k17d_drift_audit.json": "be4e2434bcd562f6521821da3403a5c5d5a14b8951ec6174ba0a795564fda65e",
+    "scripts/b2_e12_verify_k17d.py": "42d11fb4cd18e7955d0159e9842cfcc2b8085e234a1114a59aadf59aafef2d72",
+    "src/geoml/b2_experiment.py": "72f498c46d7df115ef83f19f9b3aa35cdea048dc8816a0fc74c9ceb1f84536f2",
+    "tests/test_b2_e12_k17d_integrity.py": "c28576444ee0f84d958f8f0f65af558ff5f7d6bb98855542bde12ce13328947a",
+    "tests/test_b2_e12_legacy_access.py": "1147923c7ba7d5540bedc769389129c1d6e33353547ee7e0c163e8cfd1fb4515"
+  },
+  "metadata_report": {
+    "acceptance_record_sha256": "ce900de1ae1b324d5de73997a8b303f2158fddf33fd544337347bb3df91689b1",
+    "audit_agrees": true,
+    "audit_sha256": "be4e2434bcd562f6521821da3403a5c5d5a14b8951ec6174ba0a795564fda65e",
+    "benchmark_complete": false,
+    "counts": {
+      "co_feed_missing": 35,
+      "cross_feed_missing": 43,
+      "headline": 500,
+      "missing_total": 78,
+      "sensitivity": 465
+    },
+    "execution_authorized": false,
+    "fingerprints": {
+      "co_feed_missing_ids": "0c1b7df960f521e34ad798abc63edc8907fe10a065d51205e81259da1ef5880f",
+      "headline_ids": "0eb3ea7b6a6000ee33542b33f2b9700464f4dae98e3f75bab739a1bcd6aeb73b",
+      "scene_metadata": "557a76436e38b905849c8140791a97c555d9b385db869e8fcf0ea0a538fc7804",
+      "sensitivity_ids": "9a13b0d2071351b0165e2beec12aa8b0ec2d01cb628bd049c3363f2d9621de1e"
+    },
+    "generator_rederived": true,
+    "identity_sha256": "ccdf0a8f40e71d7ddb388068e455a77a131214f5644ab332a16c8268cfc49c6d",
+    "observation_reads": 0,
+    "package_sha256": "01c4f2697a9ff80e5bd7e644bdbf27562cb33d303685ace6f362c868b607fc4b",
+    "production_metadata_cross_check": "NOT_RUN_REQUIRES_SEPARATE_AUTHORIZATION",
+    "schema": "B2-E12-K17d-verification/1",
+    "source_sha256": {
+      "src/geosim/b2_k17d.py": "6c2d80e2cf13445ea1cf7826c464e48661baae0248d280d7d8b19d1c6c6248e9",
+      "src/geosim/b2_protocol.py": "510f6dcd1e8ce0bda98b23cd8ec19ff7bbcfbdd4e3373bfe82876fc15ae2feb5",
+      "src/geosim/b2_scenarios.py": "688e5275af0d44527e152d6c520087f5a0f2464f5e1bc382851c916e0dc66012"
+    },
+    "waveform_synthesis_calls": 0
+  },
+  "gates_report": {
+    "schema": "B2-production-preflight/1",
+    "benchmark_complete": false,
+    "production_authorized": false,
+    "counts": {
+      "PASS": 4,
+      "FAIL": 0,
+      "BLOCKED": 3,
+      "NOT_RUN": 0
+    },
+    "verdict": "BLOCKED",
+    "checks": [
+      {
+        "id": "gates.benchmark_complete",
+        "title": "benchmark_complete is false everywhere",
+        "status": "PASS",
+        "message": "scientific completion is never inferred",
+        "evidence": {
+          "gates": false,
+          "memo": false
+        }
+      },
+      {
+        "id": "gates.K18",
+        "title": "Gate K18",
+        "status": "PASS",
+        "message": "approved with provenance",
+        "evidence": {
+          "gate_status": "APPROVED"
+        }
+      },
+      {
+        "id": "gates.K17d",
+        "title": "Gate K17d",
+        "status": "PASS",
+        "message": "approved with provenance",
+        "evidence": {
+          "gate_status": "APPROVED"
+        }
+      },
+      {
+        "id": "gates.OBS-CANCEL-2",
+        "title": "Gate OBS-CANCEL-2",
+        "status": "PASS",
+        "message": "approved with provenance",
+        "evidence": {
+          "gate_status": "APPROVED"
+        }
+      },
+      {
+        "id": "gates.full_generation",
+        "title": "Gate full_generation",
+        "status": "BLOCKED",
+        "message": "NOT_AUTHORIZED: needs an explicit researcher decision",
+        "evidence": {
+          "gate_status": "NOT_AUTHORIZED"
+        }
+      },
+      {
+        "id": "gates.full_gpu_training",
+        "title": "Gate full_gpu_training",
+        "status": "BLOCKED",
+        "message": "NOT_AUTHORIZED: needs an explicit researcher decision",
+        "evidence": {
+          "gate_status": "NOT_AUTHORIZED"
+        }
+      },
+      {
+        "id": "gates.full_loko_sweep",
+        "title": "Gate full_loko_sweep",
+        "status": "BLOCKED",
+        "message": "NOT_AUTHORIZED: needs an explicit researcher decision",
+        "evidence": {
+          "gate_status": "NOT_AUTHORIZED"
+        }
+      }
+    ]
+  },
+  "local_full_regression": "NOT_RUN; local authorization synthetic/metadata only; complete regression delegated to existing authorized bounded CI",
+  "final_pr_head_ci": "NOT_YET_RUN_AT_REPORT_COMMIT; actual final head/run/job/outcome in draft PR",
+  "development_runs": [
+    {
+      "scope": "D7 initial",
+      "passed": 42,
+      "failed": 0,
+      "pytest_seconds": 4.21
+    },
+    {
+      "scope": "combined precommit",
+      "passed": 136,
+      "failed": 0,
+      "pytest_seconds": 15.72
+    },
+    {
+      "scope": "D8 overbroad static-FIR spy",
+      "passed": 42,
+      "failed": 1,
+      "pytest_seconds": 1.97
+    },
+    {
+      "scope": "D8 overflow red",
+      "passed": 3,
+      "failed": 1,
+      "deselected": 46,
+      "pytest_seconds": 1.28
+    },
+    {
+      "scope": "D8 corrected",
+      "passed": 51,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 0,
+      "pytest_seconds": 5.91
+    }
+  ],
+  "syntax_and_integrity": {
+    "compileall_src_tests_scripts": "PASS exit0",
+    "git_diff_check": "PASS exit0",
+    "unchanged_config_physics_loss_isolated_execution_and_compute_records": "PASS; compared bytewise against base",
+    "e9_approval": "original prefix unchanged; dated append only"
+  },
+  "independent_review": {
+    "mode": "separate read-only scientific/engineering audit; no edits/experiments/observations",
+    "resolved_findings": [
+      "non-finite1e999 JSON overflow",
+      "accurate description of new restrictive historical ceilings"
+    ],
+    "open_material_patch_findings": [],
+    "limitations": [
+      "immutable artifact contract; no hostile writer lock",
+      "D4 single primary scorer remains unspecified; no test selection",
+      "production metadata cross-check not run"
+    ]
+  },
+  "execution_authorized": false,
+  "production_authorized": false,
+  "benchmark_complete": false,
+  "verdict": "SCIENTIFIC DECISIONS RATIFIED — EXECUTION NO-GO"
+}
