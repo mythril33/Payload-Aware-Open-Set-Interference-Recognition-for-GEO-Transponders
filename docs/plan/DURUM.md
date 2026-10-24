@@ -1,5 +1,11 @@
 # Proje durumu ve eksik kaydı
 
+## Güncel uygulama eki — 2026-10-24 (E13: DR-04 üretim hazırlığı mühendisliği)
+
+- Doğrulanmış taban `943f8c29c00309a7e40f544ea0e57d8bebcc110c` (PR #36 birleşmiş; tam-head CI [run 40127961148](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40127961148): 2213 geçti, 0 başarısız/atlama). **Karar: E13 GENERATION ENGINEERING PREPARED — DR-04 NO-GO — NO COMPUTE AUTHORIZED.**
+- Yeni, başlatmayan ve veri üretmeyen [`scripts/b2_e13_generation_plan.py`](../../scripts/b2_e13_generation_plan.py): önerilen bir tam-üretim *planını* (21.350 gözlem, rol/grup/varyant/shard sınırları, kaynak/config/ortam kimlikleri, host, bağımsız yedek aygıtı, açık tavanlar, ilk-shard zamanlama ve durdurma kuralları, D-1 maruziyet ve D-8 K17d yükümlülükleri, DR-04 yetki kaydı) kontrol eder. Rapor her zaman `NO-GO`, `execution_permitted=false`; `src/`, config, kapı ve `PRODUCTION_LAUNCH_ENABLED=False` değişmedi, subprocess/komut üreticisi/callback yok. Testler: `tests/test_b2_e13_generation_plan.py` (sentetik, metadata-only).
+- [Hazırlık analizi](B2_E13_GENERATION_READINESS.md) (12 DR-04 kontrolünün gerçek durumu), [DR-04 onay kontrol listesi](../operations/B2_E13_DR04_APPROVAL_CHECKLIST.md), [doğrulama raporu](../results/B2_E13_VERIFICATION.md). Çözülmemiş: DR-04 yazılı yetkisi, host/yedek/tavan tasarımı, kilit (kapı JSON'u kilitte hash'lendiği için onaydan *sonra*), gözden geçirilmiş başlatıcı, üretim ölçeğinde süre/RSS ölçümü, üretim K17d çapraz kontrolü.
+
 ## Güncel uygulama eki — 2026-10-24 (E12: D1–D8 bilimsel karar kaydı ve tarihsel test erişimi)
 
 - Doğrulanmış taban `a335eed5fd3ac22eb341aa7ecf148f4efe7bd023`; PR #33/#34/#35 birleşmiş. [Tarihli D1–D8 eki](B2_E12_D1_D8_SCIENTIFIC_APPROVAL_2026-10-24.md) ve [JSON kayıt](b2_e12_d1_d8_decisions_2026-10-24.json) araştırmacının sekiz seçimini kaydeder; önceki onay geçmişi, R1–R10 parametreleri ve compute kapıları değiştirilmez. Aşağıdaki eski bekleyen-karar anlık görüntüleri güncel bilimsel onay sayılmaz.

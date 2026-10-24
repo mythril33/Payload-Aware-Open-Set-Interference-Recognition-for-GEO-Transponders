@@ -15,9 +15,11 @@ import argparse
 import json
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timezone
 from importlib import metadata
 from pathlib import Path
 
@@ -76,6 +78,24 @@ def memory_facts(read=_read):
             "cgroup_limit_gib": round(int(limit) / 2 ** 30, 2) if limit.isdigit() else None}
 
 
+def fstype_of(path, read=_read):
+    """Filesystem type of the mount that holds ``path`` (longest mount-point prefix in /proc/self/mountinfo), or None."""
+    try:
+        real = os.path.realpath(path)
+    except (OSError, ValueError):
+        return None
+    best = None
+    for line in (read("/proc/self/mountinfo") or "").splitlines():
+        left, _, right = line.partition(" - ")
+        fields = left.split()
+        if len(fields) < 5 or not right.split():
+            continue
+        mount = re.sub(r"\\([0-7]{3})", lambda match: chr(int(match.group(1), 8)), fields[4])
+        if (mount == "/" or real == mount or real.startswith(mount.rstrip("/") + "/")) and (best is None or len(mount) >= len(best[0])):
+            best = (mount, right.split()[0])
+    return best[1] if best else None
+
+
 def disk_facts(paths, disk_usage=shutil.disk_usage):
     """stat-only: an existing ancestor of each path is queried; nothing is created."""
     rows = []
@@ -85,7 +105,8 @@ def disk_facts(paths, disk_usage=shutil.disk_usage):
             target = target.parent
         usage = disk_usage(target)
         rows.append({"path": str(raw), "queried": str(target), "device": os.stat(target).st_dev,
-                     "total_gib": round(usage.total / 2 ** 30, 2), "free_gib": round(usage.free / 2 ** 30, 2)})
+                     "fstype": fstype_of(target), "total_gib": round(usage.total / 2 ** 30, 2),
+                     "free_gib": round(usage.free / 2 ** 30, 2)})
     return rows
 
 
@@ -130,7 +151,8 @@ def library_facts(version=metadata.version, distributions=metadata.distributions
 
 def collect(paths, backup_path=None, *, facts=None):
     facts = facts or {}
-    return {"platform": platform.platform(), "python": platform.python_version(),
+    return {"platform": platform.platform(), "python": platform.python_version(), "node": platform.node(),
+            "collected_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "cpu": facts.get("cpu") or cpu_facts(), "memory": facts.get("memory") or memory_facts(),
             "disks": facts.get("disks") or disk_facts(paths + ([backup_path] if backup_path else [])),
             "gpu": facts.get("gpu") or gpu_facts(), "libraries": facts.get("libraries") or library_facts(),
