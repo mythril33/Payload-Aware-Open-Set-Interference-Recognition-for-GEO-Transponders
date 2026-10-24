@@ -426,8 +426,16 @@ def test_proposal_is_an_unfrozen_unapproved_candidate(proposal):
     assert proposal["benchmark_complete"] is False and proposal["configs_touched"] is False
     assert "does not authorize" in proposal["statement"]
     gates = strict((ROOT / "docs" / "plan" / "b2_readiness_gates_2026-10-21.json").read_text())["decisions"]
-    assert proposal["gates"] == {name: gates[name]["status"] for name in proposal["gates"]}
+    # E9 approvals do not rewrite or activate the historical E7 candidate.
+    assert proposal["gates"] == {"K18": "PENDING_RESEARCHER", "K17d": "PENDING_RESEARCHER",
+                                 "OBS-CANCEL-2": "PENDING_RESEARCHER", "full_generation": "NOT_AUTHORIZED",
+                                 "full_gpu_training": "NOT_AUTHORIZED", "full_loko_sweep": "NOT_AUTHORIZED"}
     assert set(proposal["gates"]) == {"K18", "K17d", "OBS-CANCEL-2", "full_generation", "full_gpu_training", "full_loko_sweep"}
+    for key in ("K18", "K17d", "OBS-CANCEL-2"):
+        assert gates[key]["status"] == "APPROVED"
+        assert gates[key]["approval"]["record"] == "docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md"
+    for key in ("full_generation", "full_gpu_training", "full_loko_sweep"):
+        assert gates[key]["status"] == "NOT_AUTHORIZED" and gates[key]["approval"] is None
 
 
 def test_every_parameter_record_is_complete_and_unapproved(proposal):

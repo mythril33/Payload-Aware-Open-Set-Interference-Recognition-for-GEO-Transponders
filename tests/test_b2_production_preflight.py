@@ -578,9 +578,12 @@ def test_command_line_exit_codes_strict_json_and_no_overwrite(tmp_path, capsys, 
     result = strict(capsys.readouterr().out)
     assert result["benchmark_complete"] is False and result["production_authorized"] is False and result["verdict"] == "PASS"
     assert pre.main(["gates"]) == 4
-    assert strict(capsys.readouterr().out)["counts"]["BLOCKED"] == 6
+    blocked = strict(capsys.readouterr().out)
+    assert blocked["counts"] == {"PASS": 4, "FAIL": 0, "BLOCKED": 3, "NOT_RUN": 0}
+    assert blocked["verdict"] == "BLOCKED"
+    assert blocked["production_authorized"] is blocked["benchmark_complete"] is False
     assert pre.main(["--allow-blocked", "gates"]) == 0
-    capsys.readouterr()
+    assert strict(capsys.readouterr().out) == blocked  # exit-code policy grants no execution authority
     out = tmp_path / "report.json"
     assert pre.main(["audit", "--stage", "known", "--root", str(stages.known), "--out", str(out)]) == 0
     assert strict(out.read_text())["checks"][0]["evidence"]["state"] == "COMPLETE"
