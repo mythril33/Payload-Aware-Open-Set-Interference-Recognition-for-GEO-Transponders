@@ -1,0 +1,309 @@
+{
+  "schema": "B2-E12-scientific-decisions/1",
+  "date": "2026-10-24",
+  "scientific_decisions_ratified": true,
+  "github_recording_status": "PENDING_REVIEW",
+  "verdict": "SCIENTIFIC DECISIONS RATIFIED — EXECUTION NO-GO",
+  "approval_record": "docs/plan/B2_E12_D1_D8_SCIENTIFIC_APPROVAL_2026-10-24.md",
+  "verified_base_sha": "a335eed5fd3ac22eb341aa7ecf148f4efe7bd023",
+  "provenance": {
+    "approved_by": "mythril33",
+    "source": "explicit researcher choices in the conversation and user-supplied B2 — D-1–D-8 Birleşik Bilimsel Karar Tutanağı v1.0",
+    "decision_date": "2026-10-24",
+    "user_packet_sha256": "9abeef0ba8229d8fbd9ec3788f7855cc7fa1efa9b9745fbaa84f66204ee9e96b",
+    "cryptographic_signature": false,
+    "per_decision_timestamp_fabricated": false
+  },
+  "decisions": {
+    "D-1": {
+      "choice": "A",
+      "test_role": "B2-test/1",
+      "headline_test_groups": 500,
+      "headline_matched_groups": 150,
+      "exposed_test_ids": [
+        3200000,
+        3200001
+      ],
+      "exposed_matched_ids": [
+        3300000,
+        3300001
+      ],
+      "exposure_includes": [
+        "historical outcome reads",
+        "committed observation-level spectrogram content for3200000"
+      ],
+      "existing_test_pristine": false,
+      "mandatory_exposure_excluded_groups": {
+        "test": 498,
+        "test-matched": 148
+      },
+      "k17d_headline_co_feed_sensitivity": [
+        500,
+        35,
+        465
+      ],
+      "new_roles_or_seeds": false,
+      "historical_results_rewritten": false,
+      "status": "RESEARCHER_APPROVED"
+    },
+    "D-2": {
+      "choice": "1",
+      "receiver_contract": "conditional calibrated co-pol and cross-pol IQ/PSD monitors plus two separately declared polarization operator plans",
+      "universally_available": false,
+      "headline_view": "dual_residual",
+      "comparator_views": [
+        "co",
+        "dual"
+      ],
+      "training_seeds": [
+        0,
+        1,
+        2
+      ],
+      "planned_fits": 9,
+      "cancellation_inputs": [
+        "calibrated co-pol IQ",
+        "co-pol operator plan"
+      ],
+      "canceller": "obs-cancel/1",
+      "cross_or_oracle_cancellation_inputs": false,
+      "status": "RESEARCHER_APPROVED"
+    },
+    "D-3": {
+      "choice": "A",
+      "target": "plan_consistency = int(dropped is not None)",
+      "meaning": "planned carrier physically absent in scene",
+      "general_plan_spectrum_alignment_detector": false,
+      "k17b_shift_preserves_physical_target": true,
+      "labels_losses_augmentations_changed": false,
+      "status": "RESEARCHER_APPROVED"
+    },
+    "D-4": {
+      "choice": "1-FPR",
+      "primary_endpoint": "near-family pooled unknown-positive FPR@95TPR",
+      "primary_scorer_designation": "OPEN: the accepted choice does not select MSP, energy or Mahalanobis; designate and freeze reporting before any authorized final test read; no test-guided scorer selection",
+      "headline_view": "dual_residual",
+      "near_families": [
+        "pulsed",
+        "intermittent_bursts",
+        "adjacent_satellite_downlink"
+      ],
+      "positive_class": "unknown",
+      "tpr_denominator": "unknown test samples",
+      "fpr_denominator": "known test samples",
+      "individual_seeds": [
+        0,
+        1,
+        2
+      ],
+      "seed_mean": "descriptive arithmetic mean; no best-seed selection",
+      "bootstrap": "whole scenario-group clusters, paired variants preserved, conditional on frozen model and calibrator",
+      "seed_level_confidence_interval_claim": false,
+      "secondary_metrics": [
+        "AUROC",
+        "AUPR",
+        "Macro-F1",
+        "OSCR",
+        "operating-point metrics",
+        "comparisons and ablations"
+      ],
+      "secondary_reporting": "exploratory",
+      "confirmatory_superiority_claim": false,
+      "unadjusted_multiple_testing_significance_claim": false,
+      "unknown_tpr_distinct_from_known_acceptance": true,
+      "status": "RESEARCHER_APPROVED"
+    },
+    "D-5": {
+      "choice": "1",
+      "scope": "scientific preregistration only; no sweep permission even for a small CPU pilot",
+      "frequency_errors_hz": [
+        0,
+        -250000,
+        250000,
+        -500000,
+        500000,
+        -1000000,
+        1000000
+      ],
+      "relative_symbol_rate_errors": [
+        0,
+        -0.01,
+        0.01,
+        -0.02,
+        0.02
+      ],
+      "rolloff_errors": [
+        0,
+        -0.05,
+        0.05
+      ],
+      "modulation": "correct and controlled mismatched declarations",
+      "eligible_roles": [
+        "train",
+        "val-select"
+      ],
+      "endpoints": [
+        "cancellation depth",
+        "decision SNR"
+      ],
+      "reporting": "supplementary physical sensitivity",
+      "open_design": [
+        "decision-SNR definition",
+        "controlled modulation pairs",
+        "sampling and paired design",
+        "combined-error treatment",
+        "CPU resource ceilings"
+      ],
+      "sweep_authorized": false,
+      "classifier_training_authorized": false,
+      "held_out_access_authorized": false,
+      "status": "RESEARCHER_APPROVED"
+    },
+    "D-6": {
+      "choice": "A",
+      "clean_alarm_pfa": 0.05,
+      "threshold": "np.quantile(clean_scores,1-Pfa,method=\"higher\")",
+      "alarm": "score > threshold",
+      "equality_alarm": false,
+      "calibration_population": "eligible clean val-calib only",
+      "score": "sum(P(non-clean))",
+      "score_equivalence": "mathematically1-P(clean), computed without subtraction saturation",
+      "historical_linear_results_rewritten": false,
+      "calibration_pfa_is_independent_test_guarantee": false,
+      "status": "RESEARCHER_APPROVED"
+    },
+    "D-7": {
+      "choice": "B",
+      "legacy_test_access_default": false,
+      "intent_flag": "--allow-test-read",
+      "flag_scope": "only already documented capped historical pilot identities; no actual observation read during implementation",
+      "entry_points": [
+        "CLI",
+        "direct Python API"
+      ],
+      "guarded_paths": [
+        "test",
+        "test-only",
+        "matched",
+        "aliases"
+      ],
+      "historical_group_caps_unchanged": true,
+      "additional_historical_access_limits": {
+        "scope": "restrictive engineering guard; not approved production training parameters or execution authorization",
+        "device": "cpu",
+        "max_epochs": 3,
+        "max_width": 8,
+        "max_batch_size": 32,
+        "legacy_max_groups_per_role_retained": 12,
+        "test_id_allowlist": [3200000, 3200001],
+        "matched_id_allowlist": [3300000, 3300001]
+      },
+      "gpu_cuda_permitted": false,
+      "flag_authorizes_final_evaluation_or_freeze": false,
+      "flag_authorizes_compute_or_production": false,
+      "source_edit_changes_checkpoint_provenance": true,
+      "historical_checkpoint_relabelling_permitted": false,
+      "verification": "synthetic CPU fixtures and independent review only",
+      "status": "RESEARCHER_APPROVED"
+    },
+    "D-8": {
+      "choice": "A",
+      "acceptance_scope": "frozen-generator metadata identity; not observation-level test verification",
+      "counts": {
+        "co_feed_missing": 35,
+        "cross_feed_missing": 43,
+        "headline": 500,
+        "missing_total": 78,
+        "sensitivity": 465
+      },
+      "predicate": "dropped_carrier is not None and dropped_carrier['polarization'] == 0 (co feed); natural draw only",
+      "identity_record_immutable": true,
+      "identity_record_authorizes": "nothing; acceptance lives in external dated record",
+      "production_metadata_exists_claim": false,
+      "future_production_metadata_cross_check": "MANDATORY_FAIL_CLOSED_NOT_RUN",
+      "source_predicate_or_audit_change": "requires re-derivation and independent review before reuse",
+      "test_role_silent_reversion_permitted": false,
+      "status": "RESEARCHER_APPROVED"
+    }
+  },
+  "k17d_identity": {
+    "path": "docs/results/b2_e10_k17d_identity.json",
+    "sha256": "ccdf0a8f40e71d7ddb388068e455a77a131214f5644ab332a16c8268cfc49c6d"
+  },
+  "k17d_bindings": {
+    "schema": "B2-E10-k17d-identity-record/1",
+    "source_sha256": {
+      "src/geosim/b2_k17d.py": "6c2d80e2cf13445ea1cf7826c464e48661baae0248d280d7d8b19d1c6c6248e9",
+      "src/geosim/b2_protocol.py": "510f6dcd1e8ce0bda98b23cd8ec19ff7bbcfbdd4e3373bfe82876fc15ae2feb5",
+      "src/geosim/b2_scenarios.py": "688e5275af0d44527e152d6c520087f5a0f2464f5e1bc382851c916e0dc66012"
+    },
+    "package_files": 28,
+    "package_sha256": "01c4f2697a9ff80e5bd7e644bdbf27562cb33d303685ace6f362c868b607fc4b",
+    "audit_path": "docs/results/k17d_drift_audit.json",
+    "audit_sha256": "be4e2434bcd562f6521821da3403a5c5d5a14b8951ec6174ba0a795564fda65e",
+    "fingerprints": {
+      "co_feed_missing_ids": "0c1b7df960f521e34ad798abc63edc8907fe10a065d51205e81259da1ef5880f",
+      "headline_ids": "0eb3ea7b6a6000ee33542b33f2b9700464f4dae98e3f75bab739a1bcd6aeb73b",
+      "scene_metadata": "557a76436e38b905849c8140791a97c555d9b385db869e8fcf0ea0a538fc7804",
+      "sensitivity_ids": "9a13b0d2071351b0165e2beec12aa8b0ec2d01cb628bd049c3363f2d9621de1e"
+    },
+    "observation_reads_in_identity_derivation": 0,
+    "waveform_synthesis_calls_in_identity_derivation": 0
+  },
+  "existing_r1_r10_parameters_changed": false,
+  "historical_artifacts_or_results_changed": false,
+  "execution_authorized": false,
+  "production_authorized": false,
+  "activation": false,
+  "production_launch_enabled": false,
+  "benchmark_complete": false,
+  "compute_gates": {
+    "full_generation": {
+      "status": "NOT_AUTHORIZED",
+      "approval": null
+    },
+    "gpu_probe": {
+      "status": "NOT_AUTHORIZED",
+      "approval": null
+    },
+    "full_gpu_training": {
+      "status": "NOT_AUTHORIZED",
+      "approval": null
+    },
+    "full_loko_sweep": {
+      "status": "NOT_AUTHORIZED",
+      "approval": null
+    },
+    "held_out_final_evaluation": {
+      "status": "NOT_AUTHORIZED",
+      "approval": null
+    }
+  },
+  "permitted_work": [
+    "scientific documentation",
+    "narrow D7 fail-closed access guard",
+    "bounded synthetic CPU unit tests",
+    "metadata-only integrity verification",
+    "authorized CI",
+    "draft PR"
+  ],
+  "prohibited_execution": [
+    "RF sensitivity sweeps, including small CPU pilots",
+    "dataset generation",
+    "GPU probe",
+    "training",
+    "LOKO",
+    "held-out observations or model inference",
+    "freeze/evaluation",
+    "production execution",
+    "automatic merge"
+  ],
+  "remaining_blockers": [
+    "DR-04/DR-05/DR-06 host/resource/backup/run approvals",
+    "reviewed production executor and source/environment lock",
+    "D5 detailed design and separate execution approval",
+    "complete nine fits and frozen inventory",
+    "future production-metadata K17d cross-check",
+    "separate final held-out evaluation authorization"
+  ]
+}

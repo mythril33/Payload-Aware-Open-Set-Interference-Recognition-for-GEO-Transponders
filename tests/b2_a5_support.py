@@ -88,7 +88,7 @@ def workspace() -> Path:
                                    cancellation=CANCELLATION)
             md.generate_b2_matched_dataset(root / "matched", root / "known", B2Config(), limit_groups=2,
                                            groups_per_shard=1, cancellation=CANCELLATION)
-            run_b2_experiment(EXPERIMENT, root / "known", root / "runs", log=lambda *_: None)
+            run_b2_experiment(EXPERIMENT, root / "known", root / "runs", log=lambda *_: None, allow_test_read=True)
         _WORKSPACE = root
     return _WORKSPACE
 

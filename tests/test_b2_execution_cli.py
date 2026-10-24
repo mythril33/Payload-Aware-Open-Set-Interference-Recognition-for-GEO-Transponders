@@ -9,13 +9,13 @@ import pytest
 
 from geoml import b2_experiment as ex
 from geoml import b2_execution as execution
-from geosim.b2_protocol import LABELS
+from geosim.b2_protocol import LABELS, ROLE_STARTS
 
 
 @pytest.fixture
 def calls(monkeypatch):
     out = []
-    monkeypatch.setattr(ex, "_legacy_cli_preflight", lambda data:out.append(("preflight", data)))
+    monkeypatch.setattr(ex, "_legacy_cli_preflight", lambda data, **kwargs:out.append(("preflight", data, kwargs)))
     for name in ("fit_b2_models", "calibrate_b2_models", "freeze_inventory", "evaluate_b2_inventory"):
         monkeypatch.setattr(execution, name, lambda *a, _name=name, **k:out.append((_name,a,k)))
     monkeypatch.setattr(ex, "run_b2_experiment", lambda *a, **k:out.append(("legacy",a,k)))
@@ -30,14 +30,21 @@ def config(tmp_path):
     return str(path)
 
 
-def test_default_cli_preserves_legacy_dispatch_and_options(calls, config):
+def test_default_cli_refuses_before_preflight_or_legacy_dispatch(calls, config):
+    with pytest.raises(SystemExit) as error:
+        ex.main(["--config",config,"--data","known","--out","result"])
+    assert error.value.code == 2 and calls == []
+
+
+def test_explicit_historical_cli_preserves_legacy_dispatch_and_options(calls, config):
     ex.main(["--config",config,"--data","known","--out","result","--reuse",
-             "--unknown-data","unknown","--matched-data","matched"])
-    assert calls[0] == ("preflight","known")
+             "--unknown-data","unknown","--matched-data","matched","--allow-test-read"])
+    assert calls[0] == ("preflight","known",{"unknown_data":"unknown","matched_data":"matched"})
     name,args,kwargs = calls[1]
     assert name == "legacy" and isinstance(args[0],ex.B2ExperimentConfig)
     assert args[1:] == ("known","result")
-    assert kwargs == {"reuse":True,"device":"cpu","unknown_data":"unknown","matched_data":"matched"}
+    assert kwargs == {"reuse":True,"device":"cpu","unknown_data":"unknown","matched_data":"matched",
+                      "allow_test_read":True}
 
 
 def test_train_only_dispatch_uses_canonical_config_type(calls, config):
@@ -147,7 +154,7 @@ def test_cli_legacy_guard_rejects_before_dispatch_or_observation_read(monkeypatc
     monkeypatch.setattr(ds,"_header",lambda path:({"roles":{"train":{"n_scenarios":13}}},None))
     monkeypatch.setattr(ex,"run_b2_experiment",lambda *a,**k:pytest.fail("coupled reader was invoked"))
     with pytest.raises(SystemExit) as error:
-        ex.main(["--config",config,"--data","metadata-only","--out","not-created"])
+        ex.main(["--config",config,"--data","metadata-only","--out","not-created","--allow-test-read"])
     assert error.value.code == 2
 
 
@@ -159,30 +166,38 @@ def test_cli_corrupt_header_is_an_artifact_refusal_without_dispatch(monkeypatch,
     monkeypatch.setattr(ds,"_header",corrupt)
     monkeypatch.setattr(ex,"run_b2_experiment",lambda *a,**k:pytest.fail("corrupt artifact was dispatched"))
     with pytest.raises(SystemExit) as exit_error:
-        ex.main(["--config",config,"--data","corrupt","--out","not-created"])
+        ex.main(["--config",config,"--data","corrupt","--out","not-created","--allow-test-read"])
     assert exit_error.value.code == 2
     assert "invalid legacy pilot artifact" in capsys.readouterr().err
 
 
 def test_legacy_api_twelve_groups_pass_size_guard_without_training(monkeypatch,tmp_path):
-    cfg=ex.B2ExperimentConfig(views=("co",),training={"center_loss_weight":0.005})
-    manifest={"protocol":"wrong-protocol","labels":list(LABELS),"benchmark_complete":False}
-    sources={role:SimpleNamespace(groups=np.arange(12),has_residual=True) for role in ex.ROLES}
+    from geosim import b2_dataset as ds
+    cfg=ex.B2ExperimentConfig(views=("co",),training={"epochs":1,"batch":8,"width":4,"center_loss_weight":0.005})
+    groups={role:np.arange(ROLE_STARTS[role],ROLE_STARTS[role]+(2 if role=="test" else 12)) for role in ex.ROLES}
+    manifest={"protocol":"wrong-protocol","labels":list(LABELS),"benchmark_complete":False,
+              "roles":{role:{"n_scenarios":len(ids),"scenario_seeds":ids.tolist()} for role,ids in groups.items()}}
+    monkeypatch.setattr(ds,"_header",lambda path:(manifest,None))
+    sources={role:SimpleNamespace(groups=ids,has_residual=True) for role,ids in groups.items()}
     monkeypatch.setattr(ex,"open_b2_known",lambda data:(manifest,"a"*64,sources))
     # Reaching the pre-existing protocol check proves the exact 12-group cap
-    # accepts the E1 memory fixture without fitting or using held-out content.
+    # accepts twelve train/validation groups and only the two historical test IDs,
+    # without fitting or using held-out content.
     with pytest.raises(ValueError,match="does not match the experiment"):
-        ex.run_b2_experiment(cfg,"not-read",tmp_path/"out")
+        ex.run_b2_experiment(cfg,"not-read",tmp_path/"out", allow_test_read=True)
     assert not (tmp_path/"out").exists()
 
 
 def test_legacy_api_refuses_large_coupled_work_before_any_fitting(monkeypatch,tmp_path):
+    from geosim import b2_dataset as ds
     cfg=ex.B2ExperimentConfig(views=("co",),training={"epochs":1,"batch":8,"width":4,"seed":0,
                                                    "center_loss_weight":0.005})
-    manifest={"protocol":"B2-feat/1","labels":list(LABELS),"benchmark_complete":False}
-    sources={role:SimpleNamespace(groups=np.arange(13),has_residual=True) for role in ex.ROLES}
-    monkeypatch.setattr(ex,"open_b2_known",lambda data:(manifest,"a"*64,sources))
+    manifest={"roles":{role:{"n_scenarios":13 if role=="train" else 2,
+                              "scenario_seeds":list(range(ROLE_STARTS[role],ROLE_STARTS[role]+(13 if role=="train" else 2)))}
+                       for role in ex.ROLES}}
+    monkeypatch.setattr(ds,"_header",lambda data:(manifest,None))
+    monkeypatch.setattr(ex,"open_b2_known",lambda data:pytest.fail("observation reader began before pilot guard"))
     monkeypatch.setattr(ex,"fit_streaming",lambda *a,**k:pytest.fail("fitting began before pilot guard"))
     with pytest.raises(ValueError,match="legacy.*pilot"):
-        ex.run_b2_experiment(cfg,"not-read",tmp_path/"out")
+        ex.run_b2_experiment(cfg,"not-read",tmp_path/"out", allow_test_read=True)
     assert not (tmp_path/"out").exists()

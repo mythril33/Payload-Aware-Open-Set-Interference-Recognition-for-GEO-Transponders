@@ -1,5 +1,6 @@
 """Frozen-role B2 learning slice: role integrity, known-only calibration, reuse and reports."""
 import json
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -29,6 +30,7 @@ def _split(role, n_groups, seed, with_residual=True):
 
 @pytest.fixture
 def dataset(monkeypatch, tmp_path):
+    from geosim import b2_dataset as ds
     splits = {role: _split(role, 2, index) for index, role in enumerate(ex.ROLES)}
     manifest = {"protocol": "B2-feat/1", "parent_protocol": "B2/1", "labels": list(LABELS), "benchmark_complete": False,
                 "config": {"bandwidth": 36e6}, "cancellation": {"version": "obs-cancel/1"},
@@ -37,6 +39,11 @@ def dataset(monkeypatch, tmp_path):
     # at call time, so tests may mutate the splits before running.
     monkeypatch.setattr(ex, "open_b2_known", lambda path: (
         manifest, "f" * 64, {role: B2Source.from_arrays(splits[role], role=role) for role in splits}))
+    # Exercise the real access guard against metadata derived from the same
+    # synthetic arrays as the reader; do not bypass the guard for fixtures.
+    monkeypatch.setattr(ds, "_header", lambda path: ({**manifest, "roles": {
+        role: {"n_scenarios":len(np.unique(split["seed"])),
+               "scenario_seeds":np.unique(split["seed"]).tolist()} for role,split in splits.items()}}, None))
     monkeypatch.setattr(ex, "_source_identity", lambda: {"revision": "test", "files_sha256": {"x.py": "0" * 64}})
     return splits, manifest, tmp_path / "data"
 
@@ -64,7 +71,7 @@ def test_run_reports_roles_rejection_plan_head_and_reuses_artifacts(dataset, tmp
     out = tmp_path / "run"
     config = _config()
     logs = []
-    result = run_b2_experiment(config, data, out, log=logs.append)
+    result = run_b2_experiment(config, data, out, log=logs.append, allow_test_read=True)
     assert result["benchmark_complete"] is False and set(result["methods"]) == {"co", "dual_residual"}
     assert result["methods"]["dual_residual"]["input_channels"] == 5 and result["methods"]["co"]["input_channels"] == 2
     for view in config.views:
@@ -89,12 +96,12 @@ def test_run_reports_roles_rejection_plan_head_and_reuses_artifacts(dataset, tmp
     text = (out / "results.md").read_text()
     assert "null (n_unknown=0)" in text and "benchmark complete: **False**" in text
     with pytest.raises(ValueError, match="already exists"):
-        run_b2_experiment(config, data, out, log=logs.append)
-    again = run_b2_experiment(config, data, out, reuse=True, log=logs.append)
+        run_b2_experiment(config, data, out, log=logs.append, allow_test_read=True)
+    again = run_b2_experiment(config, data, out, reuse=True, log=logs.append, allow_test_read=True)
     assert again["methods"]["co"]["checkpoint_sha256"] == result["methods"]["co"]["checkpoint_sha256"]
     assert any("reusing compatible co checkpoint" in line for line in logs)
     with pytest.raises(ValueError, match="does not match"):
-        run_b2_experiment(_config(training={**config.training, "seed": 1}), data, out, reuse=True, log=logs.append)
+        run_b2_experiment(_config(training={**config.training, "seed": 1}), data, out, reuse=True, log=logs.append, allow_test_read=True)
 
 
 def test_role_leakage_and_out_of_range_groups_are_rejected(dataset, tmp_path):
@@ -103,26 +110,26 @@ def test_role_leakage_and_out_of_range_groups_are_rejected(dataset, tmp_path):
     # Test groups relabelled as val-calib: the source refuses groups outside the role's frozen range.
     splits["val-calib"]["seed"][:] = splits["test"]["seed"]
     with pytest.raises(ValueError, match="outside its frozen"):
-        run_b2_experiment(_config(), data, tmp_path / "leak", log=lambda *_: None)
+        run_b2_experiment(_config(), data, tmp_path / "leak", log=lambda *_: None, allow_test_read=True)
     # Two groups collapsed onto one id: duplicate (group, label) pairs are refused before anything else.
     splits["val-calib"]["seed"][:] = original[0]
     with pytest.raises(ValueError, match="duplicate scenario-group/label"):
-        run_b2_experiment(_config(), data, tmp_path / "dup", log=lambda *_: None)
+        run_b2_experiment(_config(), data, tmp_path / "dup", log=lambda *_: None, allow_test_read=True)
     # Same group id in two roles (no duplicates inside a role): the role cross-check catches the leakage.
     splits["val-calib"]["seed"][:] = original
     splits["val-select"]["seed"][:] = original
     with pytest.raises(ValueError, match="outside its frozen|leakage"):
-        run_b2_experiment(_config(), data, tmp_path / "leak2", log=lambda *_: None)
+        run_b2_experiment(_config(), data, tmp_path / "leak2", log=lambda *_: None, allow_test_read=True)
 
 
 def test_dataset_protocol_and_residual_requirements(dataset, tmp_path):
     splits, manifest, data = dataset
     with pytest.raises(ValueError, match="does not match"):
-        run_b2_experiment(_config(protocol="B2-base/1", views=("co",)), data, tmp_path / "p", log=lambda *_: None)
+        run_b2_experiment(_config(protocol="B2-base/1", views=("co",)), data, tmp_path / "p", log=lambda *_: None, allow_test_read=True)
     for split in splits.values():
         split.pop("residual")
     with pytest.raises(ValueError, match="stored residual"):
-        run_b2_experiment(_config(), data, tmp_path / "r", log=lambda *_: None)
+        run_b2_experiment(_config(), data, tmp_path / "r", log=lambda *_: None, allow_test_read=True)
 
 
 def test_plan_consistency_accuracy_is_null_when_one_class_is_absent():
@@ -154,19 +161,22 @@ def _unknown_split(n_groups, seed):
 
 @pytest.fixture
 def unknown_dataset(monkeypatch, dataset):
+    from geosim import b2_test_dataset as td
     _, manifest, data = dataset
     unknown = _unknown_split(2, 99)
     test_manifest = {"protocol": "B2-test/1", "config": manifest["config"], "cancellation": manifest["cancellation"],
                      "request": {"known": {"known_data_fingerprint": "f" * 64}}}
     monkeypatch.setattr(ex, "open_b2_test", lambda path: (
         test_manifest, "e" * 64, B2Source.from_arrays(unknown, kind="test", role="test")))
+    monkeypatch.setattr(td, "_header", lambda path: ({**test_manifest, "role":"test",
+                                                   "scenario_seeds":np.unique(unknown["seed"]).tolist()}, None))
     return unknown, test_manifest, data
 
 
 def test_test_only_families_are_scored_with_frozen_thresholds_and_reported_per_group(unknown_dataset, tmp_path):
     unknown, _, data = unknown_dataset
     result = run_b2_experiment(_config(views=("dual_residual",)), data, tmp_path / "os", log=lambda *_: None,
-                               unknown_data=tmp_path / "unknown")
+                               unknown_data=tmp_path / "unknown", allow_test_read=True)
     assert result["test_only_protocol"] == "B2-test/1" and result["partitions"]["test_only"]["n_samples"] == 10
     values = result["methods"]["dual_residual"]
     for method, metrics in values["rejection"].items():
@@ -208,15 +218,17 @@ def test_test_only_artifact_must_be_bound_to_the_same_known_data(unknown_dataset
     unknown, test_manifest, data = unknown_dataset
     test_manifest["request"]["known"]["known_data_fingerprint"] = "0" * 64
     with pytest.raises(ValueError, match="different known dataset"):
-        run_b2_experiment(_config(views=("co",)), data, tmp_path / "a", log=lambda *_: None, unknown_data="x")
+        run_b2_experiment(_config(views=("co",)), data, tmp_path / "a", log=lambda *_: None, unknown_data="x", allow_test_read=True)
     test_manifest["request"]["known"]["known_data_fingerprint"] = "f" * 64
     test_manifest["cancellation"] = {"version": "other"}
     with pytest.raises(ValueError, match="cancellation differ"):
-        run_b2_experiment(_config(views=("co",)), data, tmp_path / "b", log=lambda *_: None, unknown_data="x")
+        run_b2_experiment(_config(views=("co",)), data, tmp_path / "b", log=lambda *_: None, unknown_data="x", allow_test_read=True)
     test_manifest["cancellation"] = {"version": "obs-cancel/1"}
     unknown["seed"] += 7                     # still test-role groups, but not the known test groups in use
-    with pytest.raises(ValueError, match="known test groups"):
-        run_b2_experiment(_config(views=("co",)), data, tmp_path / "c", log=lambda *_: None, unknown_data="x")
+    # New identities are now refused by the historical-access metadata guard,
+    # before the test-only source can be opened.
+    with pytest.raises(ValueError, match="exposed historical"):
+        run_b2_experiment(_config(views=("co",)), data, tmp_path / "c", log=lambda *_: None, unknown_data="x", allow_test_read=True)
 
 
 # ---- K17c matched set (B2-match/1) ----
@@ -247,44 +259,49 @@ def _matched_split(n_groups, seed):
 
 @pytest.fixture
 def matched_dataset(monkeypatch, dataset):
+    from geosim import b2_matched_dataset as md
     _, manifest, data = dataset
-    matched = _matched_split(4, 7)
+    matched = _matched_split(2, 7)  # Only the two already-exposed legacy IDs are eligible for API access.
     matched_manifest = {"protocol": "B2-match/1", "config": manifest["config"], "cancellation": manifest["cancellation"],
                         "request": {"known": {"known_data_fingerprint": "f" * 64}}}
     monkeypatch.setattr(ex, "open_b2_matched", lambda path: (
         matched_manifest, "d" * 64, B2Source.from_arrays(matched, kind="matched", role="test-matched")))
+    monkeypatch.setattr(md, "_header", lambda path: ({**matched_manifest, "role":"test-matched",
+                                                   "scenario_seeds":np.unique(matched["seed"]).tolist()}, None))
     return matched, matched_manifest, data
 
 
 def test_matched_set_is_evaluated_with_frozen_thresholds_and_full_denominators(matched_dataset, tmp_path):
     matched, _, data = matched_dataset
     result = run_b2_experiment(_config(views=("dual_residual",)), data, tmp_path / "m", log=lambda *_: None,
-                               matched_data=tmp_path / "matched")
-    assert result["matched_protocol"] == "B2-match/1" and result["partitions"]["test_matched"]["n_samples"] == 12
-    assert result["partitions"]["test_matched"]["per_label"] == {"clean": 4, "adjacent_satellite": 4, "unauthorized": 4}
+                               matched_data=tmp_path / "matched", allow_test_read=True)
+    assert result["matched_protocol"] == "B2-match/1" and result["partitions"]["test_matched"]["n_samples"] == 6
+    assert result["partitions"]["test_matched"]["per_label"] == {"clean": 2, "adjacent_satellite": 2, "unauthorized": 2}
     m = result["methods"]["dual_residual"]["matched"]
-    assert m["n_samples"] == 12 and m["n_groups"] == 4 and m["per_bin_groups"] == {"4-7": 2, "7-10": 1, "10-13": 1}
+    assert m["n_samples"] == 6 and m["n_groups"] == 2 and m["per_bin_groups"] == {"4-7": 1, "7-10": 1, "10-13": 0}
     assert set(m["confusion"]) == {"clean", "unauthorized", "adjacent_satellite"}
-    assert all(sum(row.values()) == 4 for row in m["confusion"].values())
+    assert all(sum(row.values()) == 2 for row in m["confusion"].values())
     for method in ("msp", "energy", "mahalanobis"):
         by = m["by_method"][method]
         pair = by["pair"]
-        assert pair["n_samples"] == 8 and pair["denominator"].startswith("all matched")
+        assert pair["n_samples"] == 4 and pair["denominator"].startswith("all matched")
         bd = pair["prediction_breakdown"]
         for name in ("adjacent_satellite", "unauthorized"):
-            assert bd[name]["predicted_clean"] + bd[name]["predicted_other_known"] + bd[name]["predicted_pair_class"] == 4
-            assert bd[name]["n"] == 4
+            assert bd[name]["predicted_clean"] + bd[name]["predicted_other_known"] + bd[name]["predicted_pair_class"] == 2
+            assert bd[name]["n"] == 2
         assert sum(sum(r.values()) for r in pair["two_by_two"].values()) == sum(v["predicted_pair_class"] for v in bd.values())
-        assert all(sum(row.values()) == 4 for row in by["confusion_with_rejection"].values())
-        assert by["per_bin"]["4-7"]["n_samples"] == 4 and by["per_bin"]["10-13"]["n_samples"] == 2
+        assert all(sum(row.values()) == 2 for row in by["confusion_with_rejection"].values())
+        assert by["per_bin"]["4-7"]["n_samples"] == 2 and by["per_bin"]["10-13"]["n_samples"] == 0
+        assert by["per_bin"]["10-13"]["pair_accuracy"] is None
         # Thresholds are the val-calib ones (16 known samples), untouched by the matched set.
         assert result["methods"]["dual_residual"]["rejection"][method]["calibration"]["n_calibration"] == 16
-    assert m["per_class"]["adjacent_satellite"]["n_true"] == 4
+    assert m["per_class"]["adjacent_satellite"]["n_true"] == 2
     assert m["natural_comparison"]["classes"]["unauthorized"]["recall_overall"]["n_samples"] == 2
     assert m["natural_comparison"]["classes"]["unauthorized"]["recall_by_matched_bin"]["7-10"]["n_samples"] == 0
     reps = m["representatives"]
     assert reps["rule"].startswith("numpy default_rng([20261021])")
-    assert len(reps["groups"]["4-7"]) == 2 and len(reps["groups"]["7-10"]) == 1
+    assert len(reps["groups"]["4-7"]) == 1 and len(reps["groups"]["7-10"]) == 1
+    assert reps["groups"]["10-13"] == []
     assert "figures" in reps and (reps["figures"].get("written") is not None)
     text = (tmp_path / "m" / "results.md").read_text()
     assert "K17c level-matched" in text and "7-10" in text
@@ -292,15 +309,33 @@ def test_matched_set_is_evaluated_with_frozen_thresholds_and_full_denominators(m
     assert summary["methods"]["dual_residual"]["matched"]["by_method"]["msp"]["pair"]["pair_accuracy"] is not None
 
 
+def test_all_matched_bins_keep_full_denominators_without_legacy_observation_access():
+    # The four-group all-bin metric fixture is synthetic and calls no artifact
+    # reader or experiment. Legacy API execution is restricted to two IDs.
+    matched = _matched_split(4, 7)
+    logits = np.zeros((12, len(LABELS)))
+    logits[np.arange(12), matched["label"]] = 4
+    calibration = SimpleNamespace(accept=lambda scores:np.ones(len(scores), dtype=bool))
+    result = ex._matched_metrics(matched, {"logits":logits}, {"msp":calibration}, None, 0.5, None, None)
+    assert result["n_samples"] == 12 and result["n_groups"] == 4
+    assert result["per_bin_groups"] == {"4-7":2, "7-10":1, "10-13":1}
+    pair = result["by_method"]["msp"]["pair"]
+    assert pair["n_samples"] == 8 and pair["pair_accuracy"]["mean"] == 1.0
+    assert {name:value["n_samples"] for name,value in result["by_method"]["msp"]["per_bin"].items()} == {
+        "4-7":4, "7-10":2, "10-13":2}
+    representatives = ex._select_representatives(matched)
+    assert {name:len(groups) for name,groups in representatives["groups"].items()} == {"4-7":2,"7-10":1,"10-13":1}
+
+
 def test_matched_artifact_binding_and_role_are_enforced(matched_dataset, tmp_path):
     matched, matched_manifest, data = matched_dataset
     matched_manifest["request"]["known"]["known_data_fingerprint"] = "0" * 64
     with pytest.raises(ValueError, match="different known dataset"):
-        run_b2_experiment(_config(views=("co",)), data, tmp_path / "a", log=lambda *_: None, matched_data="x")
+        run_b2_experiment(_config(views=("co",)), data, tmp_path / "a", log=lambda *_: None, matched_data="x", allow_test_read=True)
     matched_manifest["request"]["known"]["known_data_fingerprint"] = "f" * 64
     matched["seed"][:3] = ROLE_STARTS["test"]
-    with pytest.raises(ValueError, match="test-matched role"):
-        run_b2_experiment(_config(views=("co",)), data, tmp_path / "b", log=lambda *_: None, matched_data="x")
+    with pytest.raises(ValueError, match="test-matched.*exposed historical"):
+        run_b2_experiment(_config(views=("co",)), data, tmp_path / "b", log=lambda *_: None, matched_data="x", allow_test_read=True)
 
 
 def test_pair_metrics_count_clean_other_and_rejected_predictions_explicitly():
@@ -335,7 +370,7 @@ def test_natural_comparison_bins_follow_the_frozen_edges(matched_dataset, tmp_pa
             record["event"] = {"kind": "adjacent_satellite", "c_over_i_psd_db": next(values)}
         elif LABELS[int(label)] == "unauthorized":
             record["event"] = {"kind": "unauthorized", "c_over_i_psd_db": next(unauth_values)}
-    result = run_b2_experiment(_config(views=("co",)), data, tmp_path / "n", log=lambda *_: None, matched_data="x")
+    result = run_b2_experiment(_config(views=("co",)), data, tmp_path / "n", log=lambda *_: None, matched_data="x", allow_test_read=True)
     natural = result["methods"]["co"]["matched"]["natural_comparison"]["classes"]
     asi = natural["adjacent_satellite"]["recall_by_matched_bin"]
     assert asi["7-10"]["n_samples"] == 1 and asi["10-13"]["n_samples"] == 1 and asi["4-7"]["n_samples"] == 0

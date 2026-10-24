@@ -1,12 +1,18 @@
 """Known-class B2 learning slice on frozen roles with the five-channel model.
 
     python -m geoml.b2_experiment --config configs/b2_feat.json \
-        --data data/b2-feat-pilot --out runs/b2-feat-pilot
+        --data data/b2-feat-pilot --out runs/b2-feat-pilot --allow-test-read
+
+Legacy test access is denied by default. The explicit switch is limited to
+already exposed historical CPU pilots; it grants no final held-out or
+production authorization. Use the isolated phases for the separate workflow.
 
 Roles follow P18 §4 exactly: ``train`` fits weights and Mahalanobis statistics,
 ``val-select`` picks the checkpoint, ``val-calib`` (known classes only) sets the
 MSP/energy/Mahalanobis acceptance thresholds and the clean alarm threshold, and
-``test`` is evaluated once. Matched views (``co``, ``dual``, ``dual_residual``)
+final ``test`` evaluation belongs to the separately guarded isolated workflow.
+This legacy entry point only repeats explicitly requested exposed pilots.
+Matched views (``co``, ``dual``, ``dual_residual``)
 share data, budget and seeds. The optional independent ``plan_consistency``
 head is trained and reported separately (P18 §7a).
 
@@ -52,6 +58,8 @@ ROLES = ("train", "val-select", "val-calib", "test")
 METHODS = ("msp", "energy", "mahalanobis")
 VIEWS = ("co", "dual", "dual_residual")
 LEGACY_MAX_GROUPS = 12  # Coupled fit/test is retained only for the historical small-pilot workflow.
+HISTORICAL_TEST_GROUPS = frozenset((3200000, 3200001))
+HISTORICAL_MATCHED_GROUPS = frozenset((3300000, 3300001))
 
 
 @dataclass(frozen=True)
@@ -430,13 +438,27 @@ def _paired_figures(matched, fetch, selection, out_dir, view):
 
 
 def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, device="cpu", log=print,
-                      unknown_data=None, matched_data=None):
+                      unknown_data=None, matched_data=None, allow_test_read=False):
+    """Repeat an exposed historical CPU pilot only after explicit test-read intent.
+
+    This switch grants no final-evaluation, production, GPU or LOKO authority.
+    Metadata admission precedes the full readers, which verify observation shards.
+    """
+    _legacy_access_intent(allow_test_read, device)
+    access = _legacy_cli_preflight(data, unknown_data=unknown_data, matched_data=matched_data)
+    training = config.train_config(config.views[0])
+    if training.epochs > 3 or training.width > 8 or training.batch > 32:
+        raise ValueError("historical legacy pilot exceeds CPU budget (epochs<=3, width<=8, batch<=32); "
+                         "test-read intent cannot authorize production training")
+    log("WARNING: explicitly requested historical exposed-pilot test access; not a pristine held-out evaluation")
     data, out = Path(data), Path(out)
     # One bounded verification pass per artifact; only small per-sample arrays stay resident (E1).
     manifest, identity, sources = open_b2_known(data)
     if any(len(source.groups) > LEGACY_MAX_GROUPS for source in sources.values()):
         raise ValueError(f"legacy coupled execution is pilot-only (at most {LEGACY_MAX_GROUPS} groups per role); "
                          "use the isolated training/calibration/inventory/evaluation phases")
+    if "test" in sources and not set(sources["test"].groups.tolist()) <= HISTORICAL_TEST_GROUPS:
+        raise ValueError("legacy test groups differ from the exposed historical pilot")
     if manifest["protocol"] != config.protocol or list(manifest["labels"]) != list(LABELS):
         raise ValueError(f"dataset protocol {manifest['protocol']!r} does not match the experiment {config.protocol!r}")
     if manifest["benchmark_complete"] is not False:
@@ -585,6 +607,7 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
         decisions[view]["alarm"] = alarm
         decisions[view]["plan_logit"] = None if test_out["plan_logits"] is None else test_out["plan_logits"][:, 0]
     result = {"protocol": config.protocol, "parent_protocol": manifest["parent_protocol"], "benchmark_complete": False,
+              "historical_test_access": access, "production_authorized": False,
               "test_only_protocol": None if test_manifest is None else test_manifest["protocol"],
               "test_only_fingerprint": test_identity,
               "matched_protocol": None if matched_manifest is None else matched_manifest["protocol"],
@@ -672,7 +695,9 @@ def report(result):
     lines = [f"# B2 known-class learning slice ({result['protocol']})", "",
              f"Parent protocol `{result['parent_protocol']}`; eight known labels; benchmark complete: **{result['benchmark_complete']}**.", "",
              "Roles are the frozen P18 §4 groups: train fits weights and Mahalanobis statistics, val-select picks the",
-             "checkpoint, val-calib (known only) fits acceptance and alarm thresholds, test is evaluated once.",
+             ("checkpoint, val-calib (known only) fits thresholds; test is an explicitly repeated exposed historical pilot."
+              if result.get("historical_test_access") else
+              "checkpoint, val-calib (known only) fits acceptance and alarm thresholds, test is evaluated once."),
              ("Test-only families come from a bound B2-test/1 artifact and are scored with the frozen thresholds; the"
               " matched ASI set is a later stage." if result.get("test_only_protocol") else
               "No unknown families, CID overlays or matched ASI sets were supplied; their metrics are null."), "",
@@ -768,19 +793,57 @@ def report(result):
     for role, values in result["partitions"].items():
         lines.append(f"| {role} | {values['n_samples']} | {len(values['scenario_ids'])} | {values['n_planned_carrier_missing']} |")
     lines += ["", f"Experiment fingerprint: `{result['experiment_fingerprint']}`; data fingerprint: `{result['data_fingerprint']}`.", ""]
+    if result.get("historical_test_access"):
+        lines += ["Historical exposed-pilot repetition: test access was explicitly requested; these groups are not pristine.",
+                  "This intent grants no final held-out, production, GPU or LOKO authorization.", ""]
     return "\n".join(lines)
 
 
-def _legacy_cli_preflight(data):
-    """Refuse a production-sized coupled CLI before any observation shard is opened."""
+def _legacy_access_intent(allow_test_read, device):
+    if allow_test_read is not True:
+        raise ValueError("legacy test observation access is denied by default; --allow-test-read "
+                         "(API allow_test_read=True) is required for an exposed historical pilot only")
+    if device != "cpu":
+        raise ValueError("historical legacy pilots are CPU-only; GPU work is not authorized")
+
+
+def _legacy_cli_preflight(data, *, unknown_data=None, matched_data=None):
+    """Admit historical identities using descriptors only, before any observation read.
+
+    As with the existing verified readers, artifact directories must be immutable
+    during a run. The intent flag is not an authorization credential or a lock.
+    """
     from geosim.b2_dataset import _READ_ERRORS, _header
+    from geosim.b2_test_dataset import _header as test_header
+    from geosim.b2_matched_dataset import _header as matched_header
     try:
         manifest, _ = _header(Path(data))
         if any(info["n_scenarios"] > LEGACY_MAX_GROUPS for info in manifest["roles"].values()):
             raise ValueError(f"legacy coupled execution is pilot-only (at most {LEGACY_MAX_GROUPS} groups per role); "
                              "use --mode train-only/calibrate/freeze/evaluate")
+        if set(manifest["roles"]) != set(ROLES):
+            raise ValueError("historical known pilot must contain exactly the four frozen roles")
+        groups = manifest["roles"]["test"]["scenario_seeds"]
+        if not groups or not set(groups) <= HISTORICAL_TEST_GROUPS:
+            raise ValueError("only the already exposed historical test groups 3200000/3200001 are permitted")
+        for path, reader, role, allowed in ((unknown_data, test_header, "test", set(groups)),
+                                            (matched_data, matched_header, "test-matched", HISTORICAL_MATCHED_GROUPS)):
+            if path is None:
+                continue
+            other, _ = reader(Path(path))
+            if (other["role"] != role or not other["scenario_seeds"]
+                    or not set(other["scenario_seeds"]) <= allowed):
+                raise ValueError(f"{role} is outside the exposed historical pilot identities")
     except _READ_ERRORS as error:
         raise ValueError(f"invalid legacy pilot artifact {data}: {error}") from error
+    return {"schema": "B2-historical-test-access/1", "explicit_intent": True,
+            "test_groups": sorted(groups),
+            "exposed_test_groups": sorted(HISTORICAL_TEST_GROUPS),
+            "exposed_matched_groups": sorted(HISTORICAL_MATCHED_GROUPS),
+            "unknown_data_requested": unknown_data is not None,
+            "matched_data_requested": matched_data is not None,
+            "warning": "historically exposed pilot; not pristine held-out evaluation",
+            "production_authorized": False, "benchmark_complete": False}
 
 
 def main(argv=None):
@@ -791,6 +854,9 @@ def main(argv=None):
     parser.add_argument("--data")
     parser.add_argument("--out")
     parser.add_argument("--reuse", action="store_true")
+    parser.add_argument("--allow-test-read", action="store_true",
+                        help="explicit legacy-only intent to repeat exposed historical CPU pilots; "
+                             "not final held-out or production authorization")
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     parser.add_argument("--unknown-data", help="verified B2-test/1 artifact bound to --data (test-only families)")
     parser.add_argument("--matched-data", help="verified B2-match/1 artifact bound to --data (K17c matched set)")
@@ -805,7 +871,7 @@ def main(argv=None):
     required = {"legacy":("config", "data", "out"), "train-only":("config", "data", "out"),
                 "calibrate":("data", "runs"), "freeze":("bundle", "out"),
                 "evaluate":("data", "inventory", "out")}
-    allowed = {"legacy":{"config", "data", "out", "reuse", "unknown_data", "matched_data"},
+    allowed = {"legacy":{"config", "data", "out", "reuse", "unknown_data", "matched_data", "allow_test_read"},
                "train-only":{"config", "data", "out", "reuse"},
                "calibrate":{"data", "runs", "reuse"},
                "freeze":{"bundle", "out", "seeds", "profile"},
@@ -820,10 +886,11 @@ def main(argv=None):
         parser.error("isolated execution is CPU-only; production GPU training is not authorized")
     try:
         if args.mode == "legacy":
-            _legacy_cli_preflight(args.data)
+            _legacy_access_intent(args.allow_test_read, args.device)
+            _legacy_cli_preflight(args.data, unknown_data=args.unknown_data, matched_data=args.matched_data)
             return run_b2_experiment(B2ExperimentConfig.from_file(args.config), args.data, args.out,
                                      reuse=args.reuse, device=args.device, unknown_data=args.unknown_data,
-                                     matched_data=args.matched_data)
+                                     matched_data=args.matched_data, allow_test_read=args.allow_test_read)
         # A `python -m` entry point creates a __main__ class; use the canonical
         # imported class expected by the isolated module's type/provenance checks.
         from .b2_experiment import B2ExperimentConfig as CanonicalConfig
