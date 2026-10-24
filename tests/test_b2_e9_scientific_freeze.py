@@ -2,7 +2,10 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from geoml import b2_execution
+from geoml.b2_experiment import B2ExperimentConfig
 
 ROOT = Path(__file__).resolve().parents[1]
 PLAN = ROOT / "docs" / "plan"
@@ -71,3 +74,10 @@ def test_r6_and_r8_security_contracts_are_explicit_and_production_stays_capped()
     assert d["R10"]["mahalanobis_regularization"] == 0.1
     assert b2_execution.CAPS == {"groups_per_role": 2, "epochs": 2, "width": 8, "batch": 32}
     assert "B2-R6-fp32-tf32-off/1" in (PLAN / "P18_b2_protocol.md").read_text()
+
+
+@pytest.mark.parametrize("filename", ["b2_e7_training_proposal.json", "b2_e8_candidate_production_config.json",
+                                   "b2_e9_approved_scientific_protocol.json"])
+def test_historical_candidates_and_scientific_approval_are_not_executable_configs(filename):
+    with pytest.raises(ValueError):
+        B2ExperimentConfig.from_file(PLAN / filename)

@@ -602,7 +602,11 @@ def spy(monkeypatch):
 def test_the_committed_gates_do_not_authorize_and_synthetic_approvals_are_judged_structurally():
     gates, memo = pre._read_json(ROOT / pre.GATES_PATH), pre._read_json(ROOT / pre.MEMO_PATH)
     ok, reasons = sup.authorization(gates, memo)
-    assert ok is False and len(reasons) == 4 and all("BLOCKED" in r for r in reasons)
+    assert ok is False and len(reasons) == 1
+    assert "full_generation" in reasons[0] and "BLOCKED" in reasons[0]
+    assert all(gates["decisions"][key]["status"] == "NOT_AUTHORIZED"
+               and gates["decisions"][key]["approval"] is None
+               for key in ("full_generation", "full_gpu_training", "full_loko_sweep"))
     ok, reasons = sup.authorization(*approved(gates, memo))
     assert ok is True and reasons == []
     bad_gates, bad_memo = approved(gates, memo)
@@ -617,7 +621,8 @@ def test_production_execution_is_refused_without_authorization_and_spawns_nothin
     work = tmp_path / "prod"
     code = sup.main(["run", "--workdir", str(work), "--production", "--execute"])
     out = strict(capsys.readouterr().out)
-    assert code == 2 and out["status"] == "REFUSED" and "K18" in out["reasons"][0] and not work.exists() and spy == []
+    assert code == 2 and out["status"] == "REFUSED" and "full_generation" in out["reasons"][0]
+    assert not work.exists() and spy == []
 
 
 def test_production_execution_stays_refused_even_with_every_gate_approved(tmp_path, spy, capsys, monkeypatch):

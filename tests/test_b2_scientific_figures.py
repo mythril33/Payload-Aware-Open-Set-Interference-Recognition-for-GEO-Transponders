@@ -86,6 +86,8 @@ def test_historical_fixtures_remain_separate_and_gates_closed():
     gates = atlas.strict_json(ROOT / "docs/plan/b2_readiness_gates_2026-10-21.json")
     assert gates["benchmark_complete"] is False
     for key in ("K18", "K17d", "OBS-CANCEL-2"):
-        assert gates["decisions"][key]["status"] == "PENDING_RESEARCHER"
+        assert gates["decisions"][key]["status"] == "APPROVED"
+        assert gates["decisions"][key]["approval"]["record"] == "docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md"
     for key in ("full_generation", "full_gpu_training", "full_loko_sweep"):
         assert gates["decisions"][key]["status"] == "NOT_AUTHORIZED"
+        assert gates["decisions"][key]["approval"] is None
