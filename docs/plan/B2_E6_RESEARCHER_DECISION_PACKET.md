@@ -1,5 +1,23 @@
 # Researcher decision packet — K18, K17d, OBS-CANCEL/2 (E6)
 
+**Engineering scope note — E7b, 2026-10-24.** Verified base main
+`ed65eb54632fc4373accebc88452ddf0ff9fadfe` includes PR22/23. This packet's
+E6 evidence, option/approval wording and decision authority remain intact.
+E7a's bounded [P30 supervisor](P30_b2_e7a_production_supervisor.md) and
+observation-only K18 diagnostics already exist; the old missing-capability
+findings below are historical. [P31](P31_b2_e7b_isolated_execution.md)
+adds isolated train/selection, train-only Mahalanobis, separate known-only
+val-calib, frozen inventory and evaluation, with all nine proposed-full
+view/seed cells verified before test access. Execution is capped CPU smoke
+only; full generation/GPU/LOKO remains unauthorized and unlaunched. The
+new source hashes invalidate old checkpoint reuse rather than relabelling
+it. Current [R1–R10 recommendations](B2_E7B_DECISION_RECOMMENDATIONS.md)
+review all29 unapproved candidate records, including width8/16 resource
+discrepancy and the R10 calibration/Mahalanobis confirmation. They do not
+record K18/K17d/OBS-CANCEL/2 decisions or authorize compute. See the
+[E7b delivery evidence](../results/b2_e7b_execution.md) for actual validation;
+no new test/readiness count is inferred from these capability statements.
+
 Date: 2026-10-23. Base: merged `main` `59ed11d60ace609a826f6379491c9a8dbd26d64d`. `benchmark_complete=false`.
 **This packet records no decision.** Every status in [the readiness gates](b2_readiness_gates_2026-10-21.json) stays
 `PENDING_RESEARCHER` / `NOT_AUTHORIZED`; every recommendation below is a proposal that only the researcher can adopt, in

@@ -1,6 +1,6 @@
 {
   "schema": "b2-readiness-gates/1",
-  "as_of": "2026-10-23",
+  "as_of": "2026-10-24",
   "baseline": {
     "repository": "mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
     "branch": "main",
@@ -62,11 +62,17 @@
       "merge_sha": "5a65062e6a5d4e727567f65d01c77be158ecb76b"
     },
     "loko_a8": {
-      "status": "BOUNDED_HARNESS_IMPLEMENTED_MERGED_PR_10",
+      "status": "BOUNDED_MATRIX_IMPLEMENTED_REVIEWED",
       "evidence": "docs/plan/P25_b2_e2_loko_harness.md; tests/test_b2_loko.py",
-      "scope": "Plan-only default plus one bounded CPU fold; production dispatcher and cross-seed aggregation remain unimplemented; no full sweep authorized or run",
+      "scope": "Seven folds x three seeds x explicit views; immutable maximum-two-cell CPU selection; strict native artifacts/status/provenance; deterministic multi-seed summaries and shared-scenario CI without pooling. No full sweep enabled or authorized.",
       "merge_sha": "2cc473fad07fc08984c17e212a06ddb26409a9cd",
-      "pr_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/10"
+      "pr_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/10",
+      "protocol": "B2-LOKO-matrix/1",
+      "e7b_evidence": [
+        "docs/plan/P31_b2_e7b_isolated_execution.md",
+        "docs/results/b2_e7b_execution.md",
+        "tests/test_b2_loko_matrix.py"
+      ]
     },
     "edsc": {
       "status": "IMPLEMENTED_MERGED_PR_11_DELIVERY_EVIDENCE_MERGED_PR_12",
@@ -509,51 +515,75 @@
       }
     },
     "github_actions_ci": {
-      "pr": 15,
-      "head_sha": "a595bcfae465e30dd8263cbeb57fae29b7dc9102",
-      "run_id": 39947778403,
-      "job_id": 120394555595,
+      "status": "VERIFIED_SUCCESS_ON_MERGED_PR_23_HEAD",
+      "pr": 23,
+      "head_sha": "7a46f5774ddcf9f99af425265a6b0cc2b0ebdb57",
+      "run_id": 40047344666,
+      "job_id": 120731984575,
       "conclusion": "success",
-      "status": "VERIFIED_SUCCESS_ON_MERGED_PR_15_HEAD",
-      "synthetic_merge_sha": "2d570bf26e99e94325a543d4da3cdcbb82c399d4",
+      "synthetic_merge_sha": "182e5dd1be1655c23275bb030dc070c97c8450c6",
       "e4_tests": {
-        "passed": 95,
+        "passed": 107,
         "skipped": 0,
         "failed": 0,
-        "pytest_seconds": 116.27
+        "pytest_seconds": 106.48
       },
       "remaining_tests": {
-        "passed": 1087,
-        "skipped": 0,
+        "passed": 1525,
+        "skipped": 7,
         "failed": 0,
-        "pytest_seconds": 234.45
+        "pytest_seconds": 716.07
       },
-      "scope": "Historical merged E4 implementation evidence; not the postmerge recovery branch CI",
-      "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39947778403",
-      "historical_e3a_records": {
-        "pr": 12,
-        "head_sha": "bb589b4b4290da63ffa923add8d893b655b8149c",
-        "synthetic_merge_sha_prefix": "9036bcf",
-        "run_id": 39922726893,
-        "job_id": 120311592843,
+      "skip_reasons_visible_in_raw_log": false,
+      "scope": "Merged baseline only; new E7b head requires separate CI",
+      "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40047344666",
+      "historical_e4_records": {
+        "pr": 15,
+        "head_sha": "a595bcfae465e30dd8263cbeb57fae29b7dc9102",
+        "run_id": 39947778403,
+        "job_id": 120394555595,
         "conclusion": "success",
-        "passed": 1024,
-        "skipped": 0,
-        "failed": 0,
-        "pytest_seconds": 223.5,
-        "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39922726893",
-        "job_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39922726893/job/120311592843",
-        "status": "VERIFIED_SUCCESS_ON_PR_12_HEAD",
-        "workflow": ".github/workflows/b2-readiness-ci.yml",
-        "scope": "Remote full repository tests1024passed0skips; local1023passed1RSSskip remains separate",
-        "historical_e2": {
-          "status": "VERIFIED_SUCCESS_ON_PR_10_HEAD",
+        "status": "VERIFIED_SUCCESS_ON_MERGED_PR_15_HEAD",
+        "synthetic_merge_sha": "2d570bf26e99e94325a543d4da3cdcbb82c399d4",
+        "e4_tests": {
+          "passed": 95,
+          "skipped": 0,
+          "failed": 0,
+          "pytest_seconds": 116.27
+        },
+        "remaining_tests": {
+          "passed": 1087,
+          "skipped": 0,
+          "failed": 0,
+          "pytest_seconds": 234.45
+        },
+        "scope": "Historical merged E4 implementation evidence; not the postmerge recovery branch CI",
+        "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39947778403",
+        "historical_e3a_records": {
+          "pr": 12,
+          "head_sha": "bb589b4b4290da63ffa923add8d893b655b8149c",
+          "synthetic_merge_sha_prefix": "9036bcf",
+          "run_id": 39922726893,
+          "job_id": 120311592843,
+          "conclusion": "success",
+          "passed": 1024,
+          "skipped": 0,
+          "failed": 0,
+          "pytest_seconds": 223.5,
+          "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39922726893",
+          "job_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39922726893/job/120311592843",
+          "status": "VERIFIED_SUCCESS_ON_PR_12_HEAD",
           "workflow": ".github/workflows/b2-readiness-ci.yml",
-          "run_id": 39741030340,
-          "head_sha": "a138608faed6beae16c24170ccec06aa6dba3f9b",
-          "job_id": 119698005413,
-          "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39741030340",
-          "scope": "GitHub evidence for E2 head only; no E3a CI claim"
+          "scope": "Remote full repository tests1024passed0skips; local1023passed1RSSskip remains separate",
+          "historical_e2": {
+            "status": "VERIFIED_SUCCESS_ON_PR_10_HEAD",
+            "workflow": ".github/workflows/b2-readiness-ci.yml",
+            "run_id": 39741030340,
+            "head_sha": "a138608faed6beae16c24170ccec06aa6dba3f9b",
+            "job_id": 119698005413,
+            "run_url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39741030340",
+            "scope": "GitHub evidence for E2 head only; no E3a CI claim"
+          }
         }
       }
     },
@@ -621,7 +651,7 @@
       }
     },
     "production_supervisor": {
-      "status": "E7A_MERGED_PR_21_AND_PR_22_POST_MERGE_AUDIT_FIXES_IN_HOTFIX",
+      "status": "E7A_MERGED_PR_21_PR_22_AND_PR_23",
       "contract": "docs/plan/P30_b2_e7a_production_supervisor.md",
       "tool": "scripts/b2_production_supervisor.py",
       "tests": "tests/test_b2_production_supervisor.py",
@@ -635,7 +665,7 @@
       "gates_changed": false,
       "review_hardened": true,
       "journal_anchor": "journal.head",
-      "tests_collected": 162,
+      "tests_collected": 166,
       "child_wrapper": "fixture diagnostic restricted to the repository's tests/b2_supervisor_standin.py and hashed into the run identity",
       "verification_script": "scripts/b2_e7a_capped_verification.py",
       "verification_commit": "92f78be06a0a0e2ccdc15534c980bb6fb3421ee8",
@@ -664,10 +694,21 @@
           "skipped": 7,
           "pytest_seconds": 820.01
         }
+      },
+      "hotfix_ci": {
+        "pr": 23,
+        "head_sha": "7a46f5774ddcf9f99af425265a6b0cc2b0ebdb57",
+        "merge_sha": "ed65eb54632fc4373accebc88452ddf0ff9fadfe",
+        "run_id": 40047344666,
+        "job_id": 120731984575,
+        "conclusion": "success",
+        "total_passed": 1632,
+        "skipped": 7,
+        "scope": "full baseline suite; skip reasons not visible in old quiet raw log"
       }
     },
     "k18_train_diagnostics": {
-      "status": "E7A_MERGED_PR_22",
+      "status": "E7A_MERGED_PR_22_REVIEWED_PR_23",
       "schema": "B2-train-diagnostics/1",
       "observation_only": true,
       "affects_training": false,
@@ -696,6 +737,27 @@
       "researcher_decisions": "R1-R10",
       "configs_touched": false,
       "p18_note": "values other than the P6 / TrainConfig defaults, and any data-driven epoch sizing, need a P18 section 10 entry before the first fit"
+    },
+    "isolated_execution": {
+      "status": "IMPLEMENTED_BOUNDED_CPU_REVIEWED",
+      "protocol": "B2-isolated-execution/1",
+      "modes": [
+        "train-only",
+        "calibrate",
+        "freeze",
+        "evaluate"
+      ],
+      "scope": "CPU<=2groups/role,epochs<=2,width<=8,batch<=32. Complete nine-cell admission tested on stand-ins; not production training authorization. Legacy pilot <=12groups/role.",
+      "evidence": [
+        "docs/plan/P31_b2_e7b_isolated_execution.md",
+        "src/geoml/b2_execution.py",
+        "tests/test_b2_execution.py",
+        "tests/test_b2_execution_integration.py"
+      ]
+    },
+    "e7b_head_ci": {
+      "status": "NOT_RUN_BEFORE_PUBLICATION",
+      "scope": "Exact new head/run/job and actual results are recorded in the draft PR after publication; no baseline CI substitution."
     }
   },
   "permitted_without_new_researcher_decisions": [
@@ -725,8 +787,8 @@
   ],
   "integrity_note": "Proposed researcher decisions are not approvals. Preserve frozen semantics and strictly segregate train, val-select, val-calib, test and test-matched.",
   "verified_remote_main": {
-    "sha": "0e8c4675c1f0806ae2feff6ac23c3b4b254f8435",
+    "sha": "ed65eb54632fc4373accebc88452ddf0ff9fadfe",
     "date": "2026-10-24",
-    "note": "PR22 merged the review hardening (head 8d5bf9b, run 40035525938: 1486 passed, 7 skipped + E4 step); decisions unchanged"
+    "note": "PR22/23 merged; PR23 raw CI run40047344666/job120731984575 confirms1632passed7skips0failures; decisions unchanged"
   }
 }

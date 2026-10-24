@@ -51,6 +51,7 @@ from .train import TrainConfig, load, save
 ROLES = ("train", "val-select", "val-calib", "test")
 METHODS = ("msp", "energy", "mahalanobis")
 VIEWS = ("co", "dual", "dual_residual")
+LEGACY_MAX_GROUPS = 12  # Coupled fit/test is retained only for the historical small-pilot workflow.
 
 
 @dataclass(frozen=True)
@@ -433,6 +434,9 @@ def run_b2_experiment(config: B2ExperimentConfig, data, out, *, reuse=False, dev
     data, out = Path(data), Path(out)
     # One bounded verification pass per artifact; only small per-sample arrays stay resident (E1).
     manifest, identity, sources = open_b2_known(data)
+    if any(len(source.groups) > LEGACY_MAX_GROUPS for source in sources.values()):
+        raise ValueError(f"legacy coupled execution is pilot-only (at most {LEGACY_MAX_GROUPS} groups per role); "
+                         "use the isolated training/calibration/inventory/evaluation phases")
     if manifest["protocol"] != config.protocol or list(manifest["labels"]) != list(LABELS):
         raise ValueError(f"dataset protocol {manifest['protocol']!r} does not match the experiment {config.protocol!r}")
     if manifest["benchmark_complete"] is not False:
@@ -767,20 +771,75 @@ def report(result):
     return "\n".join(lines)
 
 
+def _legacy_cli_preflight(data):
+    """Refuse a production-sized coupled CLI before any observation shard is opened."""
+    from geosim.b2_dataset import _READ_ERRORS, _header
+    try:
+        manifest, _ = _header(Path(data))
+        if any(info["n_scenarios"] > LEGACY_MAX_GROUPS for info in manifest["roles"].values()):
+            raise ValueError(f"legacy coupled execution is pilot-only (at most {LEGACY_MAX_GROUPS} groups per role); "
+                             "use --mode train-only/calibrate/freeze/evaluate")
+    except _READ_ERRORS as error:
+        raise ValueError(f"invalid legacy pilot artifact {data}: {error}") from error
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--config", required=True)
-    parser.add_argument("--data", required=True)
-    parser.add_argument("--out", required=True)
+    parser.add_argument("--mode", choices=("legacy", "train-only", "calibrate", "freeze", "evaluate"),
+                        default="legacy", help="legacy preserves capped small pilots; isolated phases are bounded CPU-only")
+    parser.add_argument("--config")
+    parser.add_argument("--data")
+    parser.add_argument("--out")
     parser.add_argument("--reuse", action="store_true")
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     parser.add_argument("--unknown-data", help="verified B2-test/1 artifact bound to --data (test-only families)")
     parser.add_argument("--matched-data", help="verified B2-match/1 artifact bound to --data (K17c matched set)")
+    parser.add_argument("--runs", help="existing training bundle for separate calibration")
+    parser.add_argument("--inventory", help="frozen inventory JSON used only by evaluation")
+    parser.add_argument("--bundle", action="append", help="calibrated training bundle; repeat for freeze inventory")
+    parser.add_argument("--seeds", nargs="+", type=int,
+                        help="declared inventory seeds (default 0 1 2; proposed-full requires three distinct seeds)")
+    parser.add_argument("--profile", choices=("proposed-full", "fixture"),
+                        help="freeze/evaluate admission profile (default proposed-full; fixture must be explicit)")
     args = parser.parse_args(argv)
+    required = {"legacy":("config", "data", "out"), "train-only":("config", "data", "out"),
+                "calibrate":("data", "runs"), "freeze":("bundle", "out"),
+                "evaluate":("data", "inventory", "out")}
+    allowed = {"legacy":{"config", "data", "out", "reuse", "unknown_data", "matched_data"},
+               "train-only":{"config", "data", "out", "reuse"},
+               "calibrate":{"data", "runs", "reuse"},
+               "freeze":{"bundle", "out", "seeds", "profile"},
+               "evaluate":{"data", "inventory", "out", "unknown_data", "matched_data", "profile"}}
+    for name in required[args.mode]:
+        if not getattr(args, name):
+            parser.error(f"--{name.replace('_', '-')} is required for --mode {args.mode}")
+    for name, value in vars(args).items():
+        if name not in allowed[args.mode] | {"mode", "device"} and value is not None and value is not False:
+            parser.error(f"--{name.replace('_', '-')} is not used by --mode {args.mode}")
+    if args.mode != "legacy" and args.device != "cpu":
+        parser.error("isolated execution is CPU-only; production GPU training is not authorized")
     try:
-        run_b2_experiment(B2ExperimentConfig.from_file(args.config), args.data, args.out,
-                          reuse=args.reuse, device=args.device, unknown_data=args.unknown_data,
-                          matched_data=args.matched_data)
+        if args.mode == "legacy":
+            _legacy_cli_preflight(args.data)
+            return run_b2_experiment(B2ExperimentConfig.from_file(args.config), args.data, args.out,
+                                     reuse=args.reuse, device=args.device, unknown_data=args.unknown_data,
+                                     matched_data=args.matched_data)
+        # A `python -m` entry point creates a __main__ class; use the canonical
+        # imported class expected by the isolated module's type/provenance checks.
+        from .b2_experiment import B2ExperimentConfig as CanonicalConfig
+        from .b2_execution import (calibrate_b2_models, evaluate_b2_inventory,
+                                   fit_b2_models, freeze_inventory)
+        if args.mode == "train-only":
+            return fit_b2_models(CanonicalConfig.from_file(args.config), args.data, args.out,
+                                  reuse=args.reuse, device=args.device)
+        if args.mode == "calibrate":
+            return calibrate_b2_models(args.data, args.runs, reuse=args.reuse, device=args.device)
+        if args.mode == "freeze":
+            return freeze_inventory(args.bundle, args.out, seeds=args.seeds if args.seeds is not None else (0, 1, 2),
+                                    profile=args.profile or "proposed-full")
+        return evaluate_b2_inventory(args.data, args.inventory, args.out,
+                                      unknown_data=args.unknown_data, matched_data=args.matched_data,
+                                      profile=args.profile or "proposed-full")
     except (ValueError, FileNotFoundError) as error:
         parser.exit(2, f"error: {error}\n")
 
