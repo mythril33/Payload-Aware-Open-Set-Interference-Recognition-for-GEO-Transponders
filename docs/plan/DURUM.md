@@ -1,5 +1,12 @@
 # Proje durumu ve eksik kaydı
 
+## Güncel uygulama eki — 2026-10-25 (E14: kapalı üretim mimarisi)
+
+- Güncel uzak taban `5ba972da6d3dee097cfee9cb79a5c1b27a1c139b`; PR #37 birleşmiş. PR #37 son-head CI [40144143316](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40144143316), job `121021801383`: 2938 geçti, 0 başarısız, 7 ortam/torch golden-capture atlaması (geçti sayılmadı), 46 mevcut Matplotlib uyarısı. Önceki E13 belge snapshot'ındaki taslak ifadesi tarihsel kayıttır.
+- [E14 mimari kararı](B2_E14_PRODUCTION_LAUNCHER_ARCHITECTURE.md): değişmez hash'li, çalıştırılamayan 739-shard planı ve E13'e bağlı kabul kontrolü; sentetik iki-grup/64-KiB dayanıklılık-karantina/restore referansı; gelecekteki K17d metadata karşılaştırıcısı. Kaynak fizik, konfigürasyonlar, onaylar, E9 guard ve eski fixture sınırları aynı. Yeni script kimlikleri gelecek plan/release kilitlerine bağlanmalıdır; geçmiş sonuç/checkpoint yeniden etiketlenmez.
+- [Release kontrol listesi](../operations/B2_E14_RELEASE_GATE_CHECKLIST.md), [yedek/kurtarma prosedürü](../operations/B2_E14_BACKUP_RECOVERY_PROCEDURE.md), [gerçek doğrulama kayıtları](../results/B2_E14_VERIFICATION.md). Bağımsız model-agent incelemesindeki üç önemli sözleşme/TOCTOU bulgusu düzeltildi; dondurulmuş altı dosyada 294 sentetik test geçti, 0 başarısız/atlama/uyarı (12,29 s). Son commit testleri ve CI kanıtı doğrulama raporu/PR'da ayrı verilir; bu inceleme insan onayı değildir.
+- Üretim yürütücüsü, fiziksel üreteçlere fsync entegrasyonu, gerçek yedek/restore ve gerçek production K17d karşılaştırması **yok/çalıştırılmadı**. DR-04, host, kalıcı bağımsız yedek, kaynak tavanları, temiz son lock ve ayrı release incelemesi açık. Üretim, GPU probe/eğitim, LOKO, D-5 veya final held-out çalışması yapılmadı. `PRODUCTION_LAUNCH_ENABLED=False`, `benchmark_complete=false`; hiçbir compute kapısı açılmadı.
+
 ## Güncel uygulama eki — 2026-10-24 (E13: DR-04 üretim hazırlığı mühendisliği)
 
 - Doğrulanmış taban `943f8c29c00309a7e40f544ea0e57d8bebcc110c` (PR #36 birleşmiş; tam-head CI [run 40127961148](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40127961148): 2213 geçti, 0 başarısız/atlama). **Karar: E13 GENERATION ENGINEERING PREPARED — DR-04 NO-GO — NO COMPUTE AUTHORIZED.**
