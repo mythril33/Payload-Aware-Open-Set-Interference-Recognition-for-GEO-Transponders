@@ -1,0 +1,147 @@
+# E15 forbids waveform generation. Do not dispatch the full RF readiness suite
+# for this dossier: use this fixed synthetic/metadata-only allowlist instead.
+name: B2 E15 operational dossier CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/b2-e15-operational-ci.yml"
+      - "docs/operations/B2_E15_HOST_QUALIFICATION.md"
+      - "docs/operations/B2_E15_RESOURCE_AND_BACKUP_ASSESSMENT.md"
+      - "docs/plan/B2_E15_DR04_DECISION_DOSSIER.md"
+      - "docs/plan/B2_E15_RELEASE_SEQUENCE.md"
+      - "docs/results/B2_E15_VERIFICATION.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: b2-e15-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qualification:
+    name: E15 synthetic metadata and dossier checks (no RF)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      OMP_NUM_THREADS: "2"
+      OPENBLAS_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
+      PYTHONHASHSEED: "0"
+      MPLBACKEND: Agg
+      CUDA_VISIBLE_DEVICES: ""
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install CPU-only test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch==2.14.1+cpu --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e ".[dev,ml]"
+      - name: Preserve the reviewed implementation and scientific authority
+        run: |
+          git diff --exit-code 9e176ad20aa1f355adac06e5a22c77b38a616099 HEAD -- \
+            src scripts tests configs pyproject.toml .github/workflows/b2-readiness-ci.yml \
+            docs/plan/P18_b2_protocol.md \
+            docs/plan/b2_readiness_gates_2026-10-21.json docs/plan/b2_e5_decision_recommendations.json \
+            docs/plan/b2_e9_approved_scientific_protocol.json \
+            docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md \
+            docs/plan/B2_E12_D1_D8_SCIENTIFIC_APPROVAL_2026-10-24.md \
+            docs/plan/b2_e12_d1_d8_decisions_2026-10-24.json \
+            docs/results/b2_e10_k17d_identity.json docs/results/k17d_drift_audit.json
+      - name: Validate blank qualification fields, documents and closed gates
+        run: |
+          python - <<'E15'
+          import json, math, re
+          from pathlib import Path
+
+          def pairs(items):
+              result = {}
+              for key, value in items:
+                  assert key not in result, f"duplicate JSON key: {key}"
+                  result[key] = value
+              return result
+
+          def finite(value):
+              result = float(value)
+              assert math.isfinite(result), "nonfinite JSON"
+              return result
+
+          def forbidden(value):
+              raise ValueError("nonfinite JSON")
+
+          def strict(raw):
+              value = json.loads(raw, object_pairs_hook=pairs, parse_constant=forbidden, parse_float=finite)
+              json.dumps(value, allow_nan=False)
+              return value
+
+          root = Path.cwd()
+          paths = [
+              "docs/operations/B2_E15_HOST_QUALIFICATION.md",
+              "docs/operations/B2_E15_RESOURCE_AND_BACKUP_ASSESSMENT.md",
+              "docs/plan/B2_E15_DR04_DECISION_DOSSIER.md",
+              "docs/plan/B2_E15_RELEASE_SEQUENCE.md",
+              "docs/results/B2_E15_VERIFICATION.md",
+              "docs/plan/DURUM.md",
+          ]
+          blocks = {}
+          for name in paths:
+              path = root / name
+              assert path.is_file() and not path.is_symlink(), name
+              text = path.read_text()
+              assert all(line == line.rstrip() for line in text.splitlines()), name
+              if name != "docs/plan/DURUM.md":
+                  assert "NO-GO" in text, name
+                  blocks[name] = [strict(raw) for raw in re.findall(r"```json\s*\n(.*?)\n```", text, re.S)]
+                  for target in re.findall(r"\]\(([^)]+)\)", text):
+                      if "://" not in target and not target.startswith("#"):
+                          assert (path.parent / target.split("#", 1)[0]).resolve().is_file(), (name, target)
+          host, = blocks[paths[0]]
+          assert host["status"] == "BLOCKED_NO_DESIGNATED_HOST"
+          for key, value in host.items():
+              if key not in {"schema", "status", "production_authorized", "benchmark_complete"}:
+                  assert value is None, f"invented host measurement: {key}"
+          assert host["production_authorized"] is host["benchmark_complete"] is False
+          worksheet, = blocks[paths[2]]
+          for key, value in worksheet.items():
+              if key == "ceilings":
+                  assert all(v is None for v in value.values())
+              elif key not in {"schema", "valid_for_execution", "engineering_recommendation", "requested_scope", "launch_authorized", "benchmark_complete"}:
+                  assert value is None, f"pre-filled researcher decision: {key}"
+          assert worksheet["valid_for_execution"] is worksheet["launch_authorized"] is worksheet["benchmark_complete"] is False
+          assert worksheet["engineering_recommendation"] == "NO-GO"
+          gates = strict((root / "docs/plan/b2_readiness_gates_2026-10-21.json").read_bytes())
+          memo = strict((root / "docs/plan/b2_e5_decision_recommendations.json").read_bytes())
+          protocol = strict((root / "docs/plan/b2_e9_approved_scientific_protocol.json").read_bytes())
+          assert gates["benchmark_complete"] is memo["benchmark_complete"] is protocol["benchmark_complete"] is False
+          for key in ("full_generation", "full_gpu_training", "full_loko_sweep"):
+              gate, twin = gates["decisions"][key], memo["decisions"][key]
+              assert gate["status"] == twin["status"] == "NOT_AUTHORIZED"
+              assert gate["approval"] is twin.get("approved_by") is twin.get("approved_at") is None
+          for key in ("K18", "K17d", "OBS-CANCEL-2"):
+              assert gates["decisions"][key]["status"] == memo["decisions"][key]["status"] == "APPROVED"
+          assert protocol["activation"] is protocol["production_authorized"] is False
+          assert protocol["unresolved_operational_decisions"]["gpu_probe"] == "NOT_AUTHORIZED"
+          assert protocol["unresolved_operational_decisions"]["production_launch"] == "DISABLED"
+          print("E15 dossier fields and authority checks passed; no measurements or approvals created.")
+          E15
+      - name: Compile unchanged code
+        run: python -m compileall -q src scripts tests
+      - name: Existing synthetic and metadata safety tests only
+        run: |
+          # No real-physics replay, real observations, model fitting or inference.
+          # K17d scene re-derivation is metadata only with synthesis patched off.
+          python -m pytest -q -rs \
+            tests/test_b2_e14_launch_contract.py tests/test_b2_e14_storage.py \
+            tests/test_b2_e14_metadata.py tests/test_b2_e13_generation_plan.py \
+            tests/test_b2_e9_contract.py tests/test_b2_e9_scientific_freeze.py \
+            tests/test_b2_e12_k17d_integrity.py tests/test_b2_e12_legacy_access.py
