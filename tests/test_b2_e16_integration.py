@@ -271,9 +271,9 @@ def test_a_missing_adapter_is_a_missing_fact_not_a_pass(world, name):
     adapters = {k: v for k, v in world.adapters("after_known").items() if k != name}
     report = I.evaluate_release_boundary(world.plan, world.ref, world.spec, boundary="after_known", requested_scope=copy.deepcopy(SCOPE), now=CLOCK, adapters=adapters)
     assert_closed(report)
-    assert report["document_conditions_met"] is False or name == "consumer_declaration"
+    assert report["document_conditions_met"] is False
     if name == "consumer_declaration":
-        assert status(report)["isolation.consumers"] == I.NOT_RUN
+        assert status(report)["isolation.consumers"] == I.NOT_RUN           # applicable: absence of leakage evidence counts against
     if name in P.ADAPTER_NAMES:
         assert status(report)["authorization.policy"] == I.FAIL
 
@@ -301,7 +301,7 @@ def test_unknown_boundaries_scopes_and_arguments_produce_failed_conditions_not_c
         arguments.update(kwargs)
         report = I.evaluate_release_boundary(world.plan, world.ref, world.spec, **arguments)
         assert_closed(report)
-        assert failing(report) == ["input"] or "input" in failing(report), kwargs
+        assert "input" in failing(report), kwargs
         assert report["document_conditions_met"] is False
     for bad in (None, [], "x", {}):
         report = I.evaluate_release_boundary(bad, world.ref, world.spec, boundary="pre_launch", requested_scope=SCOPE, now=CLOCK)
@@ -775,3 +775,131 @@ def test_a_changed_execution_boundary_is_reported_as_a_failure(world, monkeypatc
     monkeypatch.undo()
     monkeypatch.setattr(G.e9, "guard_execution", lambda action: None)
     assert evaluate()["status"] == I.FAIL
+
+
+# ---- review findings E16-02, E16-03, E16-04, E16-08 and the two untested guards ------------------------------------------
+
+def forge(entries, index, **changes):
+    """Change an entry's content and re-chain everything after it, bypassing make_entry's checks (a hostile writer)."""
+    out, previous = [], L.GENESIS
+    for position, entry in enumerate(entries):
+        entry = copy.deepcopy(entry)
+        if position == index:
+            entry.update(changes)
+        entry["prev_sha256"] = previous
+        entry.pop("entry_sha256", None)
+        entry["entry_sha256"] = L._digest(entry)
+        previous = entry["entry_sha256"]
+        out.append(entry)
+    return out
+
+
+def test_a_mislabelled_incident_cannot_make_a_halting_incident_resumable(world):
+    entries = world.journal_entries("after_known")
+    identity = dict(entries[0]["data"])
+    corruption = {"incident": "shard_corruption", "action": "resume_only_under_identical_request",
+                  "details": {"role": "train", "ordinal": 1, "expected_sha256": "a" * 64, "observed_sha256": "b" * 64}}
+    tail = [{"kind": "incident", "stage": "known", "data": corruption}, {"kind": "resume", "stage": "known", "data": identity}]
+    previous = entries[-1]["entry_sha256"]
+    for index, item in enumerate(tail, start=len(entries)):
+        entry = {"schema": L.SCHEMA_ENTRY, "seq": index, "prev_sha256": previous, "at": f"2026-10-30T10:{index:02d}:00+00:00", **item}
+        entry["entry_sha256"] = L._digest(entry)
+        entries.append(entry)
+        previous = entry["entry_sha256"]
+    doc = world.journal_doc("after_known", entries)
+    report = world.run("after_known", journal_state=lambda: doc)
+    assert "journal.external" in failing(report)
+    assert "incident" in next(c["message"] for c in report["conditions"] if c["id"] == "journal.external")
+
+
+def test_a_forged_content_change_is_visible_even_if_the_chain_is_rebuilt(world):
+    entries = world.journal_entries("after_known")
+    forged = forge(entries, 2, data={"manifests": {"train": "0" * 64}})
+    doc = world.journal_doc("after_known", forged)
+    doc["anchor"] = {"seq": entries[-1]["seq"], "entry_sha256": entries[-1]["entry_sha256"]}      # the independently kept anchor differs
+    assert "journal.external" in failing(world.run("after_known", journal_state=lambda: doc))
+
+
+@pytest.mark.parametrize("field,value", [("observation_reads", False), ("observation_reads", 0.0), ("waveform_synthesis_calls", False),
+                                         ("waveform_synthesis_calls", 0.0), ("observation_reads", None)])
+def test_a_k17d_report_must_state_integer_zero_reads(world, field, value):
+    def k17d_metadata():
+        doc = copy.deepcopy(world.k17d)
+        doc[field] = value
+        return doc
+    assert "k17d.metadata" in failing(world.run("after_known", k17d_metadata=k17d_metadata))
+
+
+@pytest.mark.parametrize("field,value", [("elapsed_wall_s", 10 ** 400), ("first_shard", {"s_per_observation": 1e308, "observations": 32})])
+def test_overflowing_resource_readings_stop_and_still_yield_a_report(world, field, value):
+    def resource_state(stage):
+        doc = copy.deepcopy(world.resource)
+        doc[field] = value
+        return doc
+    report = world.run("after_known", resource_state=resource_state)
+    assert status(report)["runtime.stop_conditions"] == I.FAIL
+
+
+def test_unserializable_details_degrade_a_condition_to_a_failure_instead_of_raising(world, monkeypatch):
+    real = L.evaluate_stop_conditions
+
+    def hostile(*args, **kwargs):
+        result = real(*args, **kwargs)
+        result["projections"] = {"projected_wall_hours": float("inf")}
+        return result
+    monkeypatch.setattr(L, "evaluate_stop_conditions", hostile)
+    report = world.run("after_known")                              # must return a report, not raise ValueError
+    assert status(report)["runtime.stop_conditions"] == I.FAIL and report["document_conditions_met"] is False
+    monkeypatch.undo()
+    monkeypatch.setattr(I.C, "canonical", lambda value: (_ for _ in ()).throw(ValueError("not strict")) if isinstance(value, dict) and "conditions" in value else json.dumps(value, sort_keys=True))
+    report = I.evaluate_release_boundary(world.plan, world.ref, world.spec, boundary="pre_launch", requested_scope=SCOPE, now=CLOCK)
+    assert report["verdict"] == "NO-GO" and report["document_conditions_met"] is False and report["execution_permitted"] is False
+
+
+def test_held_out_roles_are_named_as_such_not_merely_as_a_wrong_mapping():
+    for consumer in I.ALLOWED_CONSUMERS:
+        for held_out in I.HELD_OUT:
+            declaration = copy.deepcopy(I.ALLOWED_CONSUMERS)
+            declaration[consumer] = declaration[consumer] + [list(held_out)]
+            assert any("held-out" in problem for problem in I.check_consumer_isolation(declaration)), (consumer, held_out)
+
+
+def rewrite_devices(value, devices):
+    return rewrite(value, [], devices)
+
+
+def test_a_consistently_shifted_device_record_still_must_equal_the_measured_host_inventory(world):
+    def backup_state(stage):
+        doc = world.backup_doc(stage)
+        for key in ("working", "observed_working"):          # both records agree with each other but not with the approved inventory
+            doc["devices"][key]["filesystem_type"] = "ext4"
+        return doc
+    report = world.run("after_known", backup_state=backup_state)
+    assert "backup.known" in failing(report)
+    assert "measured host inventory" in next(c["message"] for c in report["conditions"] if c["id"] == "backup.known")
+
+
+def test_the_working_directory_must_sit_on_the_working_device(world):
+    def shard_state(stage):
+        doc = world.stage_doc(stage, "after_known")
+        if stage == "known":
+            doc["roles"]["train"] = rewrite_devices(doc["roles"]["train"], {11: 99})      # self-consistent evidence on another device
+        return doc
+    report = world.run("after_known", shard_state=shard_state)
+    assert "durability.known" not in failing(report)
+    assert "backup.known" in failing(report)
+    assert "planned backup device" in next(c["message"] for c in report["conditions"] if c["id"] == "backup.known")
+
+
+def test_a_deferred_request_fingerprint_may_not_equal_the_known_one_even_when_the_stage_is_self_consistent(world):
+    def shard_state(stage):
+        doc = world.stage_doc(stage, "after_test")
+        if stage == "test":
+            doc["request_fingerprint"] = KNOWN_FP
+            for entry in doc["roles"].values():
+                for admission in entry["admissions"]:
+                    admission["request_fingerprint"] = KNOWN_FP
+        return doc
+    report = world.run("after_test", shard_state=shard_state)
+    assert "durability.test" in failing(report)
+    assert "request aliasing" in next(c["message"] for c in report["conditions"] if c["id"] == "durability.test")

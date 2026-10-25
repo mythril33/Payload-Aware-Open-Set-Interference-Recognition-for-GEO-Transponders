@@ -42,6 +42,7 @@ CORE_TO_WALL = pre.BUDGET["cpu_to_wall_ratio"]
 BYTES_PER_OBSERVATION = sup.ARTIFACT_BYTES_PER_OBSERVATION
 MAX_TOTAL_ATTEMPTS = sup.MAX_TOTAL_ATTEMPTS_PER_STAGE
 NO_AUTHORITY = {"authorizes_nothing": True, "execution_permitted": False}
+VOLATILE_PREFIXES = ("/dev", "/proc", "/sys", "/run", "/tmp", "/var/tmp", "/var/run")   # as in E13/E14; the filesystem type stays an operator fact
 
 # kind -> (mandatory action, required data fields). ``stop_and_quarantine`` never deletes or repairs evidence.
 INCIDENTS = {
@@ -68,6 +69,16 @@ class LedgerRefused(ValueError):
     pass
 
 
+def strict_json(raw):
+    """Strict JSON (duplicate keys, NaN) with every parser error, including the integer-digit limit, as a refusal."""
+    try:
+        return S._strict(raw)
+    except S.StorageRefused as error:
+        raise LedgerRefused(str(error)) from error
+    except (ValueError, RecursionError) as error:
+        raise LedgerRefused("not strict JSON: " + type(error).__name__) from error
+
+
 def canonical(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
 
@@ -88,10 +99,18 @@ def instant(value):
     return parsed.astimezone(timezone.utc)
 
 
+MAX_READING = 1e15          # far above any real reading; keeps every projection product finite
+
+
 def _finite(value, *, minimum=0.0, name="value"):
-    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < minimum:
-        raise LedgerRefused(f"{name} must be a finite number >= {minimum}")
-    return float(value)
+    try:
+        ok = not isinstance(value, bool) and isinstance(value, (int, float)) and math.isfinite(value) and minimum <= value <= MAX_READING
+        number = float(value) if ok else None
+    except (OverflowError, ValueError):                       # e.g. an integer too large for a float
+        ok = False
+    if not ok:
+        raise LedgerRefused(f"{name} must be a finite number in [{minimum}, {MAX_READING:g}]")
+    return number
 
 
 def _count(value, name):
@@ -123,9 +142,20 @@ def incident_data(kind, details):
 
 # ---- hash chain -------------------------------------------------------------------------------------------------
 
+def check_incident_entry(data):
+    """An incident entry must be exactly what ``incident_data`` produces: the action is derived from the kind, never trusted."""
+    if not isinstance(data, dict) or set(data) != {"incident", "action", "details"} or data["incident"] not in INCIDENTS:
+        raise LedgerRefused("incident entry fields differ from the incident specification")
+    action, fields = INCIDENTS[data["incident"]]
+    if data["action"] != action or not isinstance(data["details"], dict) or set(data["details"]) != set(fields):
+        raise LedgerRefused(f"incident {data['incident']} must carry the derived action {action} and exactly {sorted(fields)}")
+
+
 def make_entry(seq, prev_sha256, at, kind, stage, data):
     if kind not in KINDS:
         raise LedgerRefused("unknown ledger entry kind")
+    if kind == "incident":
+        check_incident_entry(data)
     if stage is not None and stage not in STAGES:
         raise LedgerRefused("unknown stage")
     if not isinstance(data, dict):
@@ -156,7 +186,7 @@ def verify_chain(raw, *, expected_head=None):
         try:
             if not line or len(line) > MAX_ENTRY_BYTES:
                 raise LedgerRefused("empty or oversized line")
-            entry = S._strict(line)
+            entry = strict_json(line)
             if not isinstance(entry, dict) or tuple(sorted(entry)) != tuple(sorted(ENTRY_KEYS)) or entry["schema"] != SCHEMA_ENTRY:
                 raise LedgerRefused("entry fields differ from the ledger contract")
             body = {k: v for k, v in entry.items() if k != "entry_sha256"}
@@ -168,12 +198,14 @@ def verify_chain(raw, *, expected_head=None):
                 raise LedgerRefused("entry content differs from its checksum")
             if entry["kind"] not in KINDS or (entry["stage"] is not None and entry["stage"] not in STAGES) or not isinstance(entry["data"], dict):
                 raise LedgerRefused("unknown kind, stage or data type")
+            if entry["kind"] == "incident":
+                check_incident_entry(entry["data"])
             moment = instant(entry["at"])
             if last_at is not None and moment < last_at:
                 raise LedgerRefused("timestamps run backwards")
             last_at, previous = moment, entry["entry_sha256"]
             entries.append(entry)
-        except (LedgerRefused, S.StorageRefused) as error:
+        except (LedgerRefused, S.StorageRefused, ValueError) as error:
             failures.append(f"entry {index}: {error}")
             break
     head = {"seq": entries[-1]["seq"], "entry_sha256": entries[-1]["entry_sha256"]} if entries else None
@@ -201,6 +233,8 @@ def check_independent_location(ledger_directory, working_root, backup_root):
              (("ledger", ledger_directory), ("working", working_root), ("backup", backup_root))}
     paths = {name: Path(info["path"]) for name, info in where.items()}
     failures = []
+    if any(paths["ledger"] == Path(prefix) or Path(prefix) in paths["ledger"].parents for prefix in VOLATILE_PREFIXES):
+        failures.append("ledger directory is under a volatile or system-managed prefix")
     for other in ("working", "backup"):
         if paths["ledger"] == paths[other] or paths[other] in paths["ledger"].parents or paths["ledger"] in paths[other].parents:
             failures.append(f"ledger directory is the same as, or nested with, the {other} root")
@@ -282,7 +316,7 @@ OBSERVATION_KEYS = ("schema", "collected_at", "elapsed_wall_s", "cpu_core_s", "p
                     "admitted_shards_this_attempt", "first_shard")
 FIRST_SHARD_KEYS = ("s_per_observation", "observations")
 CEILING_REQUIRED = ("wall_hours", "core_hours", "max_failed_attempts_per_stage", "max_interruptions_per_stage", "max_rss_gib",
-                    "min_free_disk_gib", "backup_disk_gb")
+                    "min_free_disk_gib")        # the backup floor is enforced by device validation; here only the free-space projection applies
 AUTH_REQUIRED = ("expires_at", "revoked", "revocation_id")
 
 
@@ -298,10 +332,12 @@ def _checked_observation(observation):
     if first is not None:
         if not isinstance(first, dict) or set(first) != set(FIRST_SHARD_KEYS):
             raise LedgerRefused("first_shard fields differ from the contract")
-        seen["first_s_per_observation"] = _finite(first["s_per_observation"], minimum=0.0, name="first_shard.s_per_observation")
+        seen["first_s_per_observation"] = _finite(first["s_per_observation"], minimum=1e-9, name="first_shard.s_per_observation")
         seen["first_observations"] = _count(first["observations"], "first_shard.observations")
         if seen["first_observations"] < 1:
             raise LedgerRefused("first_shard.observations must be positive")
+    if seen["observations_committed"] + seen["observations_remaining"] > pre.PLAN_TOTAL:
+        raise LedgerRefused("committed plus remaining observations exceed the frozen 21,350")
     return seen
 
 
@@ -379,6 +415,8 @@ def evaluate_stop_conditions(observation, ceilings, authorization, *, now, stage
     projected_wall_s = seen["elapsed_wall_s"] + remaining * rate
     projected_core_s = seen["cpu_core_s"] + remaining * rate * CORE_TO_WALL
     projected_bytes = remaining * BYTES_PER_OBSERVATION
+    if not all(math.isfinite(v) for v in (projected_wall_s, projected_core_s, projected_bytes)):
+        return _stop_result(reasons + ["projection.nonfinite"], {}, stage, now)
     projections.update(projected_wall_hours=projected_wall_s / 3600, projected_core_hours=projected_core_s / 3600,
                        projected_artifact_gib=projected_bytes / 2 ** 30, seconds_per_observation_used=rate,
                        rate_is_measured="first_s_per_observation" in seen)

@@ -514,3 +514,84 @@ def test_this_build_cannot_be_made_to_launch_by_any_valid_document(reference):
         G.e9.guard_execution("generation")
     with pytest.raises(P.C.ExecutionUnavailable):
         P.C.deny_execution(plan["authorization"], plan, ref)
+
+
+# ---- review findings E16-01 and E16-05 ------------------------------------------------------------------------------------
+
+@pytest.mark.parametrize("extra", [
+    {"gpu_training": {"module": "geoml.train", "options": {"device": "cuda", "epochs": 30}}},
+    {"known2": {"module": "geosim.b2_dataset", "options": {}}}, {"": None}, {"loko": {}},
+])
+def test_an_extra_stage_cannot_ride_along_in_the_standalone_api(reference, extra):
+    plan, ref = approved(reference)
+    assert run(plan, ref)["state"] == P.STATE_VALID
+    evil = copy.deepcopy(plan)
+    evil["stages"].update(copy.deepcopy(extra))
+    report = run(evil, ref)
+    assert report["state"] == P.STATE_DENIED and "input" in failed(report)
+    closed = G.make_template(reference)
+    closed["stages"].update(copy.deepcopy(extra))
+    assert run(closed, reference)["state"] == P.STATE_DENIED
+
+
+def test_missing_or_renamed_stages_are_denied(reference):
+    plan, ref = approved(reference)
+    for change in (lambda p: p["stages"].pop("matched"), lambda p: p["stages"].update(matched=p["stages"].pop("test")), lambda p: p.update(stages={})):
+        evil = copy.deepcopy(plan)
+        change(evil)
+        assert run(evil, ref)["state"] == P.STATE_DENIED
+
+
+def write_repo(tmp_path, gates, memo, protocol, raw=None):
+    root = tmp_path / "repo"
+    for path, value in ((pre.GATES_PATH, gates), (pre.MEMO_PATH, memo), (G.PROTOCOL_JSON, protocol)):
+        (root / path).parent.mkdir(parents=True, exist_ok=True)
+        (root / path).write_text(raw[path] if raw and path in raw else json.dumps(value))
+    return root
+
+
+def real_json():
+    return tuple(json.loads((ROOT / path).read_text()) for path in (pre.GATES_PATH, pre.MEMO_PATH, G.PROTOCOL_JSON))
+
+
+def test_ci_gate_reads_strictly_and_rejects_duplicate_keys(tmp_path, capsys):
+    gates, memo, protocol = real_json()
+    text = (ROOT / pre.GATES_PATH).read_text()
+    duplicated = text.replace('"full_generation": {', '"full_generation": {"status": "AUTHORIZED"}, "full_generation": {', 1)
+    assert duplicated != text and json.loads(duplicated) == gates          # a lenient reader would keep the last, closed, value
+    root = write_repo(tmp_path, gates, memo, protocol, raw={pre.GATES_PATH: duplicated})
+    assert P.main(["ci-gate", "--repo", str(root)]) == 2
+    assert P.main(["ci-gate", "--repo", str(write_repo(tmp_path / "ok", gates, memo, protocol))]) == 0
+    big = write_repo(tmp_path / "big", gates, memo, protocol, raw={pre.GATES_PATH: " " * (P.MAX_DOCUMENT_BYTES + 1)})
+    assert P.main(["ci-gate", "--repo", str(big)]) == 2
+    nan = write_repo(tmp_path / "nan", gates, memo, protocol, raw={pre.GATES_PATH: '{"benchmark_complete": NaN}'})
+    assert P.main(["ci-gate", "--repo", str(nan)]) == 2
+    linked = write_repo(tmp_path / "link", gates, memo, protocol)
+    (linked / pre.GATES_PATH).unlink()
+    (linked / pre.GATES_PATH).symlink_to(ROOT / pre.GATES_PATH)
+    assert P.main(["ci-gate", "--repo", str(linked)]) == 2
+
+
+@pytest.mark.parametrize("label,change", [
+    ("gpu_probe_decision_open", lambda g, m, p: g["decisions"].update(gpu_probe={"status": "AUTHORIZED", "approval": None})),
+    ("nine_cell_freeze_open", lambda g, m, p: g["decisions"].update(nine_cell_freeze={"status": "APPROVED", "approval": None})),
+    ("memo_extra_open_decision", lambda g, m, p: m["decisions"].update(held_out_final_evaluation={"status": "AUTHORIZED"})),
+    ("protocol_gpu_training_open", lambda g, m, p: p["unresolved_operational_decisions"].update(full_gpu_training="AUTHORIZED")),
+    ("protocol_loko_open", lambda g, m, p: p["unresolved_operational_decisions"].update(full_loko_sweep="AUTHORIZED")),
+    ("protocol_generation_open", lambda g, m, p: p["unresolved_operational_decisions"].update(full_generation="AUTHORIZED")),
+    ("protocol_probe_open", lambda g, m, p: p["unresolved_operational_decisions"].update(gpu_probe="AUTHORIZED")),
+    ("protocol_control_false", lambda g, m, p: p["controls"].update(no_gpu_use=False)),
+    ("protocol_controls_empty", lambda g, m, p: p.update(controls={})),
+    ("protocol_extra_field", lambda g, m, p: p.update(production_launch_enabled=True)),
+    ("memo_extra_field", lambda g, m, p: m.update(production_launch_enabled=True)),
+    ("gates_launch_field", lambda g, m, p: g.update(production_launch_enabled=True)),
+    ("gates_execute_field", lambda g, m, p: g.update(execute_now=True)),
+    ("decision_launcher_field", lambda g, m, p: g["decisions"]["full_generation"].update(launcher="run.sh")),
+    ("memo_decision_argv", lambda g, m, p: m["decisions"]["full_generation"].update(argv=["python"])),
+])
+def test_ci_gate_is_an_enumerated_check_and_rejects_every_enumerated_opening(tmp_path, label, change):
+    gates, memo, protocol = real_json()
+    change(gates, memo, protocol)
+    report = P.ci_gate_check(gates, memo, protocol)
+    assert report["state"] == P.STATE_DENIED and report["accepted_by_this_build"] is False, label
+    assert P.main(["ci-gate", "--repo", str(write_repo(tmp_path, gates, memo, protocol))]) == 2

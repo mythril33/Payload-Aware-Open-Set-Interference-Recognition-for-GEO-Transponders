@@ -155,7 +155,7 @@ def test_malformed_or_missing_resource_observations_always_stop(label, bad):
 
 @pytest.mark.parametrize("ceilings", [None, {}, {k: v for k, v in CEILINGS.items() if k != "wall_hours"}, dict(CEILINGS, wall_hours=0),
                                        dict(CEILINGS, wall_hours=True), dict(CEILINGS, wall_hours=math.nan), dict(CEILINGS, max_failed_attempts_per_stage=1.5),
-                                       dict(CEILINGS, max_rss_gib=-1), dict(CEILINGS, backup_disk_gb="9")])
+                                       dict(CEILINGS, max_rss_gib=-1), dict(CEILINGS, wall_hours=10 ** 400), dict(CEILINGS, core_hours=1e300)])
 def test_malformed_ceilings_stop(ceilings):
     report = L.evaluate_stop_conditions(observation(), ceilings, AUTH, now=NOW, stage="known")
     assert report["decision"] == "STOP" and report["reasons"][0].startswith("input.malformed")
@@ -280,7 +280,7 @@ def test_truncation_needs_an_independent_anchor_and_is_detected_with_one(tmp_pat
     assert not L.verify_chain(ledger.read(), expected_head=anchor)["ok"]
     rewrite(tmp_path, good[:1] + [good[1].replace(b"fingerprint", b"fingerprinT")])
     assert not L.verify_chain(ledger.read())["ok"]
-    forged = L.make_entry(2, entries[1]["entry_sha256"], "2026-11-01T10:02:00+00:00", "incident", None, {"forged": True})
+    forged = L.make_entry(2, entries[1]["entry_sha256"], "2026-11-01T10:02:00+00:00", "stop", None, {"forged": True})
     rewrite(tmp_path, good[:2] + [canonical_line(forged)])
     assert L.verify_chain(ledger.read())["ok"]
     assert not L.verify_chain(ledger.read(), expected_head=anchor)["ok"]       # rewritten history differs from the anchor
@@ -381,11 +381,15 @@ def test_independent_location_rules(tmp_path, monkeypatch):
     assert any("nested" in f for f in L.check_independent_location(ledger, working, ledger)["failures"])
     identities = {"j": 3, "w": 1, "b": 2}
     real = D.directory_identity
-    monkeypatch.setattr(D, "directory_identity", lambda path: dict(real(path), st_dev=identities[Path(path).name]))
+    monkeypatch.setattr(D, "directory_identity", lambda path: dict(real(path), st_dev=identities[Path(path).name], path="/srv/e16/" + Path(path).name))
     ok = L.check_independent_location(ledger, working, backup)
     assert ok["ok"] is True and ok["shares_device_with_backup"] is False
     identities["j"] = 2
     assert L.check_independent_location(ledger, working, backup)["shares_device_with_backup"] is True
+    monkeypatch.setattr(D, "directory_identity", lambda path: dict(real(path), st_dev=identities[Path(path).name], path="/dev/shm/" + Path(path).name))
+    volatile = L.check_independent_location(ledger, working, backup)
+    assert volatile["ok"] is False and any("volatile" in failure for failure in volatile["failures"])
+    monkeypatch.undo()
     with pytest.raises(OSError):
         L.check_independent_location(tmp_path / "missing", working, backup)
 
@@ -398,3 +402,79 @@ def test_module_reads_no_clock_environment_or_process_apis():
     attributes = {n.attr for n in ast.walk(tree) if isinstance(n, ast.Attribute)}
     assert not attributes & {"now", "utcnow", "today", "time", "environ", "getenv", "system", "popen", "Popen", "run", "execv", "fork",
                               "unlink", "remove", "rename", "rmtree", "truncate", "ftruncate"}
+
+
+# ---- review findings E16-02, E16-03, E16-07 -----------------------------------------------------------------------------
+
+def forged_incident_line(index, previous, data):
+    """An entry written without incident_data(): chained and checksummed correctly, content not following the specification."""
+    entry = {"schema": L.SCHEMA_ENTRY, "seq": index, "prev_sha256": previous, "at": f"2026-11-01T10:0{index}:00+00:00", "kind": "incident",
+             "stage": "known", "data": data}
+    entry["entry_sha256"] = L._digest(entry)
+    return entry
+
+
+@pytest.mark.parametrize("data", [
+    {"incident": "shard_corruption", "action": "resume_only_under_identical_request",
+     "details": {"role": "train", "ordinal": 1, "expected_sha256": "a" * 64, "observed_sha256": "b" * 64}},
+    {"incident": "shard_corruption", "action": "stop", "details": {"role": "train", "ordinal": 1, "expected_sha256": "a", "observed_sha256": "b"}},
+    {"incident": "made_up", "action": "stop", "details": {}},
+    {"incident": "shard_corruption", "action": "stop_and_quarantine", "details": {"role": "train"}},
+    {"incident": "shard_corruption", "action": "stop_and_quarantine", "details": {"role": "train", "ordinal": 1, "expected_sha256": "a", "observed_sha256": "b", "x": 1}},
+    {"incident": "shard_corruption", "action": "stop_and_quarantine", "details": []},
+    {"action": "stop", "details": {}},
+    {"note": "free text"},
+])
+def test_an_incident_entry_must_follow_the_specification_wherever_it_was_written(tmp_path, data):
+    first = L.make_entry(0, L.GENESIS, "2026-11-01T10:00:00+00:00", "run_opened", None, {})
+    forged = forged_incident_line(1, first["entry_sha256"], data)
+    raw = L.canonical(first).encode() + b"\n" + L.canonical(forged).encode() + b"\n"
+    report = L.verify_chain(raw)
+    assert report["ok"] is False and "incident" in " ".join(report["failures"])
+    with pytest.raises(L.LedgerRefused):
+        L.make_entry(1, first["entry_sha256"], "2026-11-01T10:01:00+00:00", "incident", "known", data)
+    ledger = L.Ledger(tmp_path)
+    ledger.append("run_opened", None, {}, "2026-11-01T10:00:00+00:00")
+    with pytest.raises(L.LedgerRefused):
+        ledger.append("incident", "known", data, "2026-11-01T10:01:00+00:00")
+    (tmp_path / L.LEDGER_NAME).write_bytes(raw)                       # an already-forged ledger is also refused for further appends
+    with pytest.raises(L.LedgerRefused):
+        ledger.append("stop", None, {}, "2026-11-01T11:00:00+00:00")
+
+
+def test_only_the_interruption_incident_is_resumable():
+    assert [kind for kind, (action, _) in L.INCIDENTS.items() if action == "resume_only_under_identical_request"] == ["interruption"]
+
+
+@pytest.mark.parametrize("field,value", [
+    ("elapsed_wall_s", 10 ** 400), ("cpu_core_s", -10 ** 400), ("peak_rss_gib", 1e308), ("working_free_gib", 1e16), ("backup_free_gb", 10 ** 30),
+    ("observations_remaining", 2 ** 41), ("observations_committed", 10 ** 400),
+])
+def test_huge_or_overflowing_readings_are_malformed_stop_reasons_and_never_raise(field, value):
+    report = evaluate(obs=observation(**{field: value}))
+    assert report["decision"] == "STOP" and report["reasons"][0].startswith("input.malformed")
+    json.dumps(report, allow_nan=False)
+
+
+def test_extreme_but_individually_valid_rates_cannot_make_projections_infinite():
+    for rate in (1e300, 1e308, 1e16):
+        report = evaluate(obs=observation(first_shard={"s_per_observation": rate, "observations": 32}))
+        assert report["decision"] == "STOP"
+        json.dumps(report, allow_nan=False)
+    huge = evaluate(obs=observation(first_shard={"s_per_observation": 1e15, "observations": 32}, observations_remaining=21350 - 128))
+    assert huge["decision"] == "STOP" and json.dumps(huge, allow_nan=False)
+
+
+def test_a_zero_measured_rate_or_an_overfull_plan_is_malformed():
+    assert evaluate(obs=observation(first_shard={"s_per_observation": 0.0, "observations": 32}))["reasons"][0].startswith("input.malformed")
+    assert evaluate(obs=observation(observations_committed=21000, observations_remaining=1000))["reasons"][0].startswith("input.malformed")
+    assert evaluate(obs=observation(observations_committed=0, observations_remaining=21350))["reasons"] == []
+
+
+def test_parser_limits_are_refusals_not_stray_exceptions(tmp_path):
+    big = b'{"seq": ' + b"9" * 5000 + b"}\n"
+    report = L.verify_chain(big)
+    assert report["ok"] is False
+    with pytest.raises(L.LedgerRefused):
+        L.strict_json(b"9" * 5000)
+    assert L.verify_chain(b'{"a": [' * 3000 + b"\n")["ok"] is False

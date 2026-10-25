@@ -52,6 +52,13 @@ BLOCK_CEILING_KEYS = ("wall_hours", "core_hours", "max_rss_gib", "min_free_disk_
 ADAPTER_NAMES = ("signature_verifier", "ancestry_checker", "revocation_checker")
 CODE_ROOTS = ("src", "scripts", "configs", "tests", ".github", "pyproject.toml")
 COMPUTE_GATES_STAYING_CLOSED = ("full_gpu_training", "full_loko_sweep")
+SCIENTIFIC_GATES = ("K18", "K17d", "OBS-CANCEL-2")
+MEMO_KEYS = frozenset({"schema", "benchmark_complete", "decisions"})
+PROTOCOL_KEYS = frozenset({"schema", "status", "scientific_approval", "activation", "production_authorized", "benchmark_complete", "approved_by", "approved_at",
+                           "source_main_sha", "approval_record", "source_candidate", "profile_id", "decisions", "parameter_records",
+                           "unresolved_operational_decisions", "controls"})
+GATES_TOP_FORBIDDEN = ("launch", "execut", "authorized", "enabled")     # substrings no top-level key of the living gates document may carry
+MAX_DOCUMENT_BYTES = 4 * 2 ** 20
 # The scientific half of the readiness CI step, restated: the existing validators compare twin *status* only.
 SCIENTIFIC_CHOICES = {"K18": "A", "K17d": "A+C", "OBS-CANCEL-2": "A"}
 HEX40, HEX64 = re.compile(r"[0-9a-f]{40}\Z"), re.compile(r"[0-9a-f]{64}\Z")
@@ -121,8 +128,23 @@ def classify_gates(gates, memo, protocol):
         if protocol.get("activation") is not False or protocol.get("production_authorized") is not False:
             problems.append("the scientific protocol record claims activation or production authorization")
         unresolved = protocol.get("unresolved_operational_decisions") if isinstance(protocol.get("unresolved_operational_decisions"), dict) else {}
-        if unresolved.get("gpu_probe") != "NOT_AUTHORIZED" or unresolved.get("production_launch") != "DISABLED":
-            problems.append("GPU probe is not NOT_AUTHORIZED or production launch is not DISABLED")
+        if (any(unresolved.get(k) != "NOT_AUTHORIZED" for k in ("full_generation", "gpu_probe", *COMPUTE_GATES_STAYING_CLOSED))
+                or unresolved.get("production_launch") != "DISABLED"):
+            problems.append("the immutable scientific record does not hold every compute stage NOT_AUTHORIZED and production launch DISABLED")
+        controls = protocol.get("controls")
+        if not isinstance(controls, dict) or not controls or any(v is not True for v in controls.values()):
+            problems.append("the scientific record's controls (no data generation, GPU, training, LOKO or test read) are not all true")
+        if set(protocol) != PROTOCOL_KEYS or set(memo) != MEMO_KEYS:
+            problems.append("the immutable memorandum or scientific record carries unexpected or missing top-level fields")
+        if any(isinstance(k, str) and any(s in k.lower() for s in GATES_TOP_FORBIDDEN) for k in gates):
+            problems.append("the readiness JSON carries a launch/execution/authorization/enabled top-level field")
+        for label, source in (("readiness JSON", gates), ("memorandum", memo)):
+            decisions = source.get("decisions") if isinstance(source.get("decisions"), dict) else {}
+            opened = sorted(k for k, v in decisions.items() if isinstance(v, dict) and v.get("status") in pre.APPROVED_STATUSES)
+            if set(opened) - set(SCIENTIFIC_GATES) - {"full_generation"}:
+                problems.append(f"an unexpected decision is open in the {label}: {sorted(set(opened) - set(SCIENTIFIC_GATES) - {'full_generation'})[:3]}")
+            if G._forbidden_keys(decisions):
+                problems.append(f"the {label} decisions carry execution, launcher or override fields")
         merge = _decision(gates, "merge_to_main")
         if merge.get("status") != "NOT_AUTHORIZED_BY_THIS_PLAN" or merge.get("approval") is not None:
             problems.append("merge_to_main is not closed")
@@ -174,7 +196,7 @@ def _blocks_of(text, schema):
         elif line == "```":
             try:
                 block = S._strict("\n".join(current).encode("utf-8"))
-            except (S.StorageRefused, RecursionError, UnicodeError):
+            except (S.StorageRefused, RecursionError, UnicodeError, ValueError):
                 block = None
             if isinstance(block, dict) and block.get("schema") == schema:
                 blocks.append(block)
@@ -218,9 +240,8 @@ def evaluate_operational_authorization(plan, reference, *, requested_scope, now,
         clock = S._instant(now)
         if type(max_reference_age_s) is not int or not 1 <= max_reference_age_s <= 86400:
             raise ValueError("freshness bound must be 1..86400 seconds")
-        p, ref = C._document(plan), C._document(reference)
-        if p.get("stages") and isinstance(p["stages"], dict):
-            p["stages"] = {name: p["stages"][name] for name in STAGES if name in p["stages"]}
+        p, ref = C._check_plan(plan), C._document(reference)     # exact keys, fingerprint, inventory, stages (no extra stage can ride along)
+        p["stages"] = {name: p["stages"][name] for name in STAGES}
         f.check("scope.request", _same(requested_scope, GRANTED_SCOPE),
                 "the request is exactly full_generation for known, test and matched; every other compute stage "
                 f"({', '.join(REFUSED_SCOPES)}) is refused")
@@ -403,6 +424,14 @@ def ci_gate_check(gates, memo, protocol):
     return report
 
 
+def _read_strict(path):
+    """Bounded, strict (no duplicate keys, no NaN) JSON read of one regular file."""
+    path = Path(path)
+    if path.is_symlink() or not path.is_file() or path.stat().st_size > MAX_DOCUMENT_BYTES:
+        raise ValueError("not a bounded regular file")
+    return S._strict(path.read_bytes())
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0], allow_abbrev=False)
     commands = parser.add_subparsers(dest="action", required=True)
@@ -411,7 +440,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         repo = Path(args.repo)
-        report = ci_gate_check(pre._read_json(repo / pre.GATES_PATH), pre._read_json(repo / pre.MEMO_PATH), pre._read_json(repo / G.PROTOCOL_JSON))
+        report = ci_gate_check(*(_read_strict(repo / name) for name in (pre.GATES_PATH, pre.MEMO_PATH, G.PROTOCOL_JSON)))
         print(canonical(report))
         return 0 if report["accepted_by_this_build"] else 3 if report["state"] == STATE_CANDIDATE else 2
     except Exception as error:

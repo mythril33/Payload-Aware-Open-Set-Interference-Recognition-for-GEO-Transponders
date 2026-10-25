@@ -56,6 +56,26 @@ Columns: **(1)** functionality that is real and verified today; **(2)** contract
 | 18 | CI release-policy conflict | Readiness CI hard-asserts closed gates | E15 sequence | — | A future approved gate would need the CI assertion disabled | Weakening CI would hide forged gates | approved-shaped vs forged/partial gate fixtures | yes (policy now, workflow change later) | `classify_gates`, `ci-gate`; E16 workflow; **readiness CI untouched** |
 | 19 | Generator identity binding | E10/E12 package digest and audit | E14 | — | No programmatic "did the generator change?" with required re-acceptance steps | Any `src/geosim` edit | edit, added module | yes | `source_identity_impact`; the branch leaves `src/` byte-identical |
 
+### 2.1 Before / after E16
+
+"Wired" means called by a production executor; none exists, so the last column is **No** for every row.
+
+| # | Control | Before E16 | After E16 | Wired |
+|---|---|---|---|---|
+| 1 | Inventory / stage sequencing | derived and sealed (E13/E14), never compared with a stage tree | compared with evidence at four boundaries; later-stage data before its predecessor fails | No |
+| 2 | Source/config/env identity | checked once per plan | re-reported at every boundary with evidence freshness | No |
+| 5 | Authorization record | E13 checks; no signer, revocation, reviewed-commit binding; CI cannot express it | E16 policy: scope, signer, ancestry, revocation, freshness, expiry, contradiction checks; `ci-gate` | No |
+| 6 | Release order / hash cycle | prose | `check_release_order` (7 ordered, cross-bound steps) | No |
+| 7 | Durable shard commit | generator without fsync; synthetic writer not wired | external admission barrier (verify → fsync → re-verify) | No |
+| 8 | Orphans / quarantine | supervisor move-style quarantine; synthetic note | read-only classification + evidence note outside the data tree | No |
+| 9–10 | Backup / restore | device validation; synthetic restore | per-role manifests, restore re-verification, copy-on-planned-device, inventory cross-check | No |
+| 11 | External journal | in-workdir journal | hash-chained, anchored, location-checked, incident spec enforced on verify and append | No |
+| 12–13 | Ceilings / expiry / revocation | supervisor live gate; one-time expiry | pure stop evaluator at each boundary incl. projection, restart allowance, expiry, revocation | No |
+| 14 | K17d production comparison | verifier with fabricated fixtures | mandatory boundary condition from `after_known`; synthetic reports rejected | No |
+| 15–16 | D-1 disclosure / role isolation | plan field; legacy-read refusal | mandatory in every report; aliasing and consumer-leakage checks | No |
+| 17 | Execution refusal | E9 / supervisor / E14 | plus a permanent BLOCKED boundary condition and E16 `deny_execution` | n/a |
+| 18 | CI conflict | unresolved | policy + scoped workflow; readiness CI untouched; reviewed future change specified | n/a |
+
 Rows 1–4 and 17 are reused; rows 5–6, 7–16, 18 and 19 gained the E16 modules. **No row is wired to a production
 executor** — none exists.
 
@@ -114,7 +134,12 @@ assertion" would also admit a forged gate.
 | `DENIED` | anything else (partial, one-sided, other gates opened, scientific approval altered, flags changed) | no |
 
 `python scripts/b2_e16_policy.py ci-gate` exits `0` only for `CLOSED_CANONICAL`, `3` for a candidate and `2`
-otherwise. **A gate edit without a full record therefore cannot pass.** The new workflow runs it against the real
+otherwise. It reads the three files strictly (bounded, no duplicate keys, no NaN, no symlink). It is an **enumerated**
+check, not a proof that nothing else in a document says otherwise: it covers the decisions, the compute gates in gate and
+twin, the scientific-approval equality, `merge_to_main`, the immutable record's operational decisions and controls, the
+exact top-level fields of the memorandum and the scientific record, and forbidden launch/execution/authorization fields
+in the living gates document. The byte-diff step of the E16 workflow and the readiness CI remain independent guards.
+**A gate edit without a full record therefore cannot pass.** The new workflow runs it against the real
 files (must be `CLOSED_CANONICAL`) and the tests run it against approved-shaped, forged, partial and contradictory
 fixtures. The existing `b2-readiness-ci.yml` is **not edited**; the exact future change is documented in
 [B2_E16_RELEASE_POLICY.md](../operations/B2_E16_RELEASE_POLICY.md) and must itself be reviewed and tested against
@@ -170,7 +195,7 @@ evict and re-verify identically. Required properties:
 
 | Property | Where |
 |---|---|
-| descriptor-last | generator order, checked by `descriptor_not_older_than_data`; E14 reference writer for new writers |
+| descriptor-last | generator order, checked as `check_order` (descriptor not older than the data it names) in `verify_shard`; E14 reference writer for new writers |
 | no-clobber commits | generator refuses an unverified partial shard; E14 `_publish` (link + unlink) for E16-written notes |
 | hash-verified payloads | `verify_shard`, `classify_directory(deep=True)`, `build_manifest`, `verify_restore` |
 | partial-write detection | `PARTIAL`, `CORRUPT`, `TEMPORARY_ORPHAN`, `UNPLANNED` states, unexpected entries |
@@ -195,10 +220,30 @@ snapshot cannot stop a later hostile writer, so the runtime must re-check at eve
   truncation is undetectable and the condition fails), stage entries bound to the working-tree manifests, any
   non-resumable incident halts the run, an interruption must be followed by a resume restating the identical plan and
   specification.
-* **Resources**: `evaluate_stop_conditions` checks wall/core/RSS/disk/backup ceilings, failed/interruption/total
+* **Resources**: `evaluate_stop_conditions` checks wall/core/RSS ceilings, a working-disk reserve after the projected artifacts, backup free space for the projected artifacts (the backup *capacity* floor is enforced by device validation), failed/interruption/total
   attempts, restart allowance, the first-shard timing gate, and a projection of the remaining budget (unmeasured rate
   uses the upper band edge), plus authorization expiry and revocation, at every stage boundary. Missing, malformed,
-  NaN, bool, negative or stale readings are themselves stop reasons. "No stop condition" is explicitly not permission.
+  NaN, infinite, bool, negative, overflowing, absurdly large, zero-rate or stale readings are themselves stop reasons
+  and projections that would overflow are a stop reason too. "No stop condition" is explicitly not permission.
+
+## 7.1 Known limits and follow-ups found by the independent review
+
+* **Deferred request fingerprints.** The `test` and `matched` request fingerprints depend on the verified known artifact
+  and on the accepted generator code. E16 does not recompute them (that needs the generator and a real known artifact).
+  It takes them from the shards' own evidence, requires them to be internally consistent, different from every other
+  stage's, and equal to the `stage_bound` entry the external journal recorded *before* the stage started. A future
+  executor must derive and journal that binding from the verified known artifact.
+* **E15 workflow.** `b2-e15-operational-ci.yml` is snapshot-bound to `9e176ad` and its first step diffs `scripts` and
+  `tests` against that commit. After E16 merges, its `workflow_dispatch` and any PR touching E15 documents will report the
+  added E16 files. Re-basing that guard is a reviewed follow-up (E17); E16 does not edit the workflow.
+* **E16 workflow allow-list.** It is relative to the pre-E16 base, so a later edit of an already-added `b2_e16_*` file
+  is still an addition to it. Those files are the reviewed E16 code; later edits are held by their own tests and by the
+  full readiness suite, not by this guard.
+* **Consumer declaration.** `isolation.consumers` is applicable at every boundary: an absent declaration is a missing
+  fact, not a pass.
+* **Journal location.** A volatile prefix is refused; the filesystem *type* of the journal volume remains an operator fact.
+* Evidence is as truthful as the adapter that returned it (see section 3); `geosim_package_digest` mirrors the accepted
+  K17d formula, adds a symlink refusal and is otherwise unbounded like that formula.
 
 ## 8. Controls implemented as engineering contracts vs. not wired to any executor
 

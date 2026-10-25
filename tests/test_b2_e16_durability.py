@@ -501,3 +501,46 @@ def test_module_cannot_launch_delete_rename_or_read_the_environment():
                               "rename", "renames", "rmtree", "truncate", "ftruncate", "environ", "getenv", "putenv", "chmod", "fchmod"}
     names = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name)}
     assert not names & {"eval", "exec", "compile", "__import__", "open"}
+
+
+# ---- review findings E16-07 and E16-12 -------------------------------------------------------------------------------------
+
+def test_parser_limits_are_refusals_and_a_hostile_descriptor_is_a_corrupt_shard_not_a_crash(tmp_path):
+    directory = tmp_path / "train"
+    exp = make_shard(directory, 0)
+    make_shard(directory, 1)
+    (directory / "shard-00001.json").write_text('{"n_samples": ' + "9" * 5000 + "}")
+    with pytest.raises(D.DurabilityRefused):
+        D.verify_shard(directory, 1, expected(1))
+    report = D.classify_directory(directory, plan(0, 1))
+    assert report["shards"]["1"]["state"] == "CORRUPT" and report["resume_state"] == "NEEDS_QUARANTINE"
+    with pytest.raises(D.DurabilityRefused):
+        D.admit_shard(directory, 1, expected(1))
+    assert D.verify_shard(directory, 0, exp)["role"] == "train"
+    with pytest.raises(D.DurabilityRefused):
+        D._strict_json(b"1" * 5000)
+
+
+@pytest.mark.parametrize("recorded_at", ["", "soon", "2026-11-01T00:00:00", None, {"x": "y" * 1000}, "x" * 2 * 10 ** 6, 5])
+def test_quarantine_note_requires_a_real_timestamp(tmp_path, recorded_at):
+    directory, evidence = tmp_path / "train", tmp_path / "evidence"
+    evidence.mkdir()
+    make_shard(directory, 0)
+    (directory / "part-00001.tmp.npz").write_bytes(b"partial")
+    report = D.classify_directory(directory, plan(0, 1))
+    refused(D.write_quarantine_note, evidence, directory, report, reason="orphan", recorded_at=recorded_at)
+    assert list(evidence.iterdir()) == []
+
+
+def test_a_symlinked_generator_module_is_never_part_of_an_accepted_identity(tmp_path):
+    shutil.copytree(ROOT / "src" / "geosim", tmp_path / "src" / "geosim", ignore=shutil.ignore_patterns("__pycache__", "data"))
+    module = tmp_path / "src" / "geosim" / "dataset.py"
+    original = module.read_bytes()
+    elsewhere = tmp_path / "elsewhere.py"
+    elsewhere.write_bytes(original)
+    module.unlink()
+    module.symlink_to(elsewhere)
+    with pytest.raises(D.DurabilityRefused):
+        D.geosim_package_digest(tmp_path)
+    impact = D.source_identity_impact(tmp_path)
+    assert impact["unchanged"] is False and impact["production_blocked"] is True and impact["observed_sha256"] is None

@@ -12,6 +12,7 @@ production executor (none exists). **X**: external fact that only an operator ca
 | ☐ | Condition (report id) | What it enforces | C | N | X |
 |---|---|---|---|---|---|
 | ☐ | `execution.boundary` | launch flag False; fixture cap 2; E9, E14, E16 refusals raise; supervisor builds no unbounded command (permanent BLOCKED) | ✔ | ✔ | |
+| ☐ | `isolation.roles`, `isolation.consumers` | distinct directories for every stage root and role; a consumer declaration that never reads a held-out role (absent declaration = missing fact) | ✔ | ✔ | ✔ real declaration from the executor |
 | ☐ | `inventory.frozen`, `spec.sealed`, `sequence.stages` | 21,350 observations / 739 shards / 2,450 groups; submitted specification equals the one sealed from the plan; known → test → matched | ✔ | | |
 | ☐ | `identity.source_config_environment` | clean tree, per-file source hashes, configs, generator provenance, parsed physics, tools, pinned environment, lock | ✔ | | |
 | ☐ | `plan.dr04`, `reporting.d1_d8` | E13 plan complete and consistent; D-1 (test not pristine, 498/148 rows) and D-8 (500/35/43/78/465) preserved | ✔ | | |

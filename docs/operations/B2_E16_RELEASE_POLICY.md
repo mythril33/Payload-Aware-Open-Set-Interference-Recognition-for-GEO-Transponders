@@ -17,11 +17,12 @@ plan and a valid-looking record are all evidence; none of them starts anything. 
 
 ## 2. States
 
-`python scripts/b2_e16_policy.py ci-gate` and `classify_gates` return one of:
+`python scripts/b2_e16_policy.py ci-gate` and `classify_gates` return one of (an enumerated check over the listed fields, read strictly; it does not prove that no other
+field anywhere in a document says otherwise):
 
 | State | Gate JSON + twin | `ci-gate` exit | Accepted by CI today |
 |---|---|---|---|
-| `CLOSED_CANONICAL` | the three compute gates exactly `NOT_AUTHORIZED` with no approval; scientific half intact | 0 | **yes** |
+| `CLOSED_CANONICAL` | the three compute gates exactly `NOT_AUTHORIZED` with no approval; scientific half intact; no other decision open; strict JSON | 0 | **yes** |
 | `OPEN_CANDIDATE_REQUIRES_RECORD` | only `full_generation` open, consistently, with structurally complete provenance | 3 | no |
 | `DENIED` | anything else: one-sided or partial opening, another compute gate opened, a scientific approval altered, `benchmark_complete` changed, GPU probe/production launch not closed, `merge_to_main` open | 2 | no |
 

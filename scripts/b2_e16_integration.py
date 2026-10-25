@@ -397,7 +397,8 @@ def _k17d_problems(doc, plan, now, max_age):
             problems.append("K17d counts or accepted identity differ (D-8)")
         if doc.get("request_fingerprint") != plan["source"]["known_request_fingerprint"] or doc.get("source_head") != plan["source"]["git_commit"]:
             problems.append("the comparison used a different request or source commit than the sealed plan")
-        if doc.get("observation_reads") != 0 or doc.get("waveform_synthesis_calls") != 0 or doc.get("execution_authorized") is not False or doc.get("verdict") != "NO-GO":
+        zero = lambda value: type(value) is int and value == 0               # noqa: E731  (False and 0.0 are not zero reads)
+        if not zero(doc.get("observation_reads")) or not zero(doc.get("waveform_synthesis_calls")) or doc.get("execution_authorized") is not False or doc.get("verdict") != "NO-GO":
             problems.append("the comparison read observations, synthesized waveforms or claims authority")
         obligations = doc.get("d1_obligations")
         if not (isinstance(obligations, dict) and obligations.get("existing_test_pristine") is False
@@ -435,6 +436,7 @@ def evaluate_release_boundary(plan, reference, specification, *, boundary, reque
     except (Exception, RecursionError) as error:            # hostile or malformed input becomes a failed condition, never an allow
         conditions.append(_condition("input", FAIL, "input could not be evaluated: " + type(error).__name__))
     conditions.append(_execution_boundary())
+    conditions = [_serializable(c) for c in conditions]
     document = [c for c in conditions if c["id"] != PERMANENT and c["applicable"]]
     report = {"schema": SCHEMA_REPORT, "boundary": boundary if boundary in BOUNDARIES else None, "conditions": conditions,
               "counts": {status: sum(1 for c in conditions if c["status"] == status) for status in (PASS, FAIL, BLOCKED, NOT_RUN)},
@@ -443,8 +445,20 @@ def evaluate_release_boundary(plan, reference, specification, *, boundary, reque
               "mandatory_reporting": {"d1_existing_test_pristine": False, "d1_exclusion_rows": {"test": 498, "test-matched": 148},
                                       "d8_k17d_counts": dict(K17D_COUNTS)},
               "note": "Structural validity is not execution authority. Evidence is as truthful as the adapter that supplied it.", **NO_AUTHORITY}
-    C.canonical(report)
+    try:
+        C.canonical(report)
+    except (ValueError, TypeError, OverflowError, RecursionError):
+        report = dict(report, conditions=[_condition("report", FAIL, "the report could not be serialized as strict JSON")],
+                      counts={PASS: 0, FAIL: 1, BLOCKED: 0, NOT_RUN: 0}, document_conditions_met=False)
     return report
+
+
+def _serializable(condition):
+    try:
+        C.canonical(condition)
+        return condition
+    except (ValueError, TypeError, OverflowError, RecursionError):
+        return _condition(condition.get("id", "unknown") if isinstance(condition, dict) else "unknown", FAIL, "condition details were not strict JSON")
 
 
 def _execution_boundary():
@@ -533,7 +547,7 @@ def _evidence_conditions(p, spec, boundary, now, adapters, max_age, policy_state
                                   if expectations[stage] == "COMPLETE" else "the stage has not started and holds no data (stage order)"))
     out.append(_from_problems("isolation.roles", _isolation_problems(stage_docs), "every stage root and role directory is a distinct directory"))
     declaration, status, message = _call(adapters, "consumer_declaration")
-    out.append(_condition("isolation.consumers", status, message, applicable=status != NOT_RUN) if status else
+    out.append(_condition("isolation.consumers", status, message) if status else
                _from_problems("isolation.consumers", check_consumer_isolation(declaration),
                               "train, val-select and val-calib read only their own known roles; no test or matched role reaches them"))
     for stage in done:

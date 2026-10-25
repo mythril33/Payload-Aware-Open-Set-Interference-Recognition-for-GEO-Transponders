@@ -117,6 +117,16 @@ def _read_regular(dir_fd, name, cap, *, keep=False):
         os.close(fd)
 
 
+def _strict_json(raw):
+    """Strict JSON in which every parser failure, including the integer-digit limit, is a refusal rather than a stray ValueError."""
+    try:
+        return S._strict(raw)
+    except S.StorageRefused as error:
+        raise DurabilityRefused(str(error)) from error
+    except (ValueError, RecursionError) as error:
+        raise DurabilityRefused("not strict JSON: " + type(error).__name__) from error
+
+
 def shard_names(ordinal):
     if type(ordinal) is not int or not 0 <= ordinal <= MAX_ORDINAL:
         raise DurabilityRefused("shard ordinal must be an integer in 0..99999")
@@ -155,10 +165,7 @@ def _verify_open(dir_fd, ordinal, expected, *, check_order):
     if not {part, meta, descriptor_name} <= present:
         raise DurabilityRefused("incomplete shard: payload, metadata and descriptor must all exist")
     d_hash, d_size, d_key, raw = _read_regular(dir_fd, descriptor_name, MAX_DESCRIPTOR_BYTES, keep=True)
-    try:
-        descriptor = S._strict(raw)
-    except S.StorageRefused as error:
-        raise DurabilityRefused("descriptor is not strict JSON") from error
+    descriptor = _strict_json(raw)
     if not isinstance(descriptor, dict) or set(descriptor) != DESCRIPTOR_KEYS:
         raise DurabilityRefused("descriptor fields differ from the generator contract")
     sha = descriptor["sha256"]
@@ -325,6 +332,10 @@ def write_quarantine_note(evidence_directory, directory, classification, *, reas
         raise DurabilityRefused("a classification report is required")
     if not isinstance(reason, str) or not reason or len(reason) > 200:
         raise DurabilityRefused("a short reason is required")
+    try:
+        S._instant(recorded_at)
+    except S.StorageRefused as error:
+        raise DurabilityRefused("recorded_at must be a timezone-aware ISO-8601 instant") from error
     shard_path, note_path = S._absolute(directory), S._absolute(evidence_directory)
     if note_path == shard_path or shard_path in note_path.parents or note_path in shard_path.parents:
         raise DurabilityRefused("quarantine evidence must live outside the data directory tree")
@@ -473,6 +484,8 @@ def geosim_package_digest(source_root):
     """The accepted K17d formula (scripts/b2_e10_k17d_identity.py::package_digest) on an arbitrary checkout."""
     root = Path(source_root)
     files = sorted((root / "src" / "geosim").glob("*.py"))
+    if any(path.is_symlink() for path in files):
+        raise DurabilityRefused("a symlinked generator module cannot be part of an accepted identity")
     digest = hashlib.sha256()
     for path in files:
         digest.update(path.relative_to(root).as_posix().encode("utf-8") + b"\0"
@@ -482,7 +495,10 @@ def geosim_package_digest(source_root):
 
 def source_identity_impact(source_root, *, accepted_sha256=ACCEPTED_GEOSIM_PACKAGE_SHA256, accepted_files=ACCEPTED_GEOSIM_FILE_COUNT):
     """Does this tree still carry the accepted generator? A change is never absorbed silently."""
-    observed, count = geosim_package_digest(source_root)
+    try:
+        observed, count = geosim_package_digest(source_root)
+    except DurabilityRefused:
+        observed, count = None, None
     unchanged = observed == accepted_sha256 and count == accepted_files
     result = {"unchanged": unchanged, "accepted_sha256": accepted_sha256, "observed_sha256": observed,
               "accepted_files": accepted_files, "observed_files": count, "production_blocked": not unchanged,
