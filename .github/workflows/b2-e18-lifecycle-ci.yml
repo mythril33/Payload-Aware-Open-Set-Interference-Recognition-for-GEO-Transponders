@@ -1,0 +1,88 @@
+# E18 engineering only: the synthetic executor lifecycle moves fabricated bytes in temporary directories. No RF, no real
+# dataset, no model, no GPU, no production child. Fabricated ssh keys exist only inside the test process.
+name: B2 E18 lifecycle CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/b2-e18-lifecycle-ci.yml"
+      - "scripts/b2_e18_*.py"
+      - "tests/test_b2_e18_*.py"
+      - "tests/e18_support.py"
+      - "docs/plan/B2_E18_*.md"
+      - "docs/operations/B2_E18_*.md"
+      - "docs/results/B2_E18_*.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: b2-e18-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lifecycle:
+    name: E18 synthetic lifecycle, recovery and CI-policy checks (no production)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      OMP_NUM_THREADS: "2"
+      OPENBLAS_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
+      PYTHONHASHSEED: "0"
+      MPLBACKEND: Agg
+      CUDA_VISIBLE_DEVICES: ""
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install CPU-only test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch==2.14.1+cpu --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e ".[dev,ml]"
+      - name: Scope and provenance guard against the PR merge base (not a frozen snapshot)
+        run: |
+          # The comparison tree is the current reviewed base of this pull request. A legitimate earlier-merged change is
+          # therefore never an "alteration"; a changed scientific record, canonical gate, historical dossier, reviewed
+          # contract module or any path outside the E18 scope fails. The judge is the policy as the reviewed base has it,
+          # so a pull request cannot rewrite its own judge; a base that predates the policy (the introducing change) falls
+          # back to the head copy and says so.
+          BASE="${{ github.event.pull_request.base.sha }}"
+          if [ -z "$BASE" ]; then BASE="origin/main"; fi
+          if git cat-file -e "$BASE:scripts/b2_e18_ci_policy.py" 2>/dev/null; then
+            git show "$BASE:scripts/b2_e18_ci_policy.py" > "$RUNNER_TEMP/b2_e18_ci_policy_base.py"
+            POLICY="$RUNNER_TEMP/b2_e18_ci_policy_base.py"
+          else
+            echo "the base has no E18 policy yet: using the head copy (introducing change)"
+            POLICY=scripts/b2_e18_ci_policy.py
+          fi
+          python "$POLICY" check-diff --base "$BASE" --profile e18
+          python "$POLICY" lint .github/workflows
+      - name: The closed canonical gates
+        run: |
+          python scripts/b2_e16_policy.py ci-gate
+          python scripts/b2_e18_ci_policy.py gate-decision
+      - name: Compile current code without execution
+        run: python -m compileall -q src scripts tests
+      - name: E18 suites and the E13-E17 contracts they build on (fabricated bytes only)
+        run: |
+          # No real-physics replay, real observations, model fitting or inference. The lifecycle writes fabricated
+          # synthetic bytes to temporary directories and signs fabricated evidence with ephemeral test keys.
+          python -m pytest -q -rs \
+            tests/test_b2_e18_ci_policy.py tests/test_b2_e18_lifecycle.py tests/test_b2_e18_trust_resources.py \
+            tests/test_b2_e17_ci_compatibility.py \
+            tests/test_b2_e18_recovery.py tests/test_b2_e18_acceptance.py \
+            tests/test_b2_e17_signatures.py tests/test_b2_e17_git.py tests/test_b2_e17_evidence.py \
+            tests/test_b2_e16_durability.py tests/test_b2_e16_ledger.py tests/test_b2_e16_policy.py \
+            tests/test_b2_e16_integration.py tests/test_b2_e16_safety.py \
+            tests/test_b2_e14_launch_contract.py tests/test_b2_e14_storage.py tests/test_b2_e14_metadata.py \
+            tests/test_b2_e13_generation_plan.py tests/test_b2_e9_contract.py tests/test_b2_e9_scientific_freeze.py \
+            tests/test_b2_e12_k17d_integrity.py tests/test_b2_e12_legacy_access.py
