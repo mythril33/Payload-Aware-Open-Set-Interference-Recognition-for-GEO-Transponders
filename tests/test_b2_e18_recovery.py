@@ -21,7 +21,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "tests"))
 import e18_support as T  # noqa: E402
 from test_b2_e17_evidence import custody, integrated  # noqa: E402,F401
-from e18_support import admitted, all_admitted, complete, known, make  # noqa: E402,F401
+from e18_support import admitted, all_admitted, complete, known, make, scratch  # noqa: E402,F401
 
 M, X, L, I, D, S, E, P, G, C = T.M, T.X, T.L, T.M.I, T.M.D, T.M.S, T.M.E, T.M.P, T.M.G, T.C
 

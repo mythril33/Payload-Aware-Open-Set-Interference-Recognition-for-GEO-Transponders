@@ -197,6 +197,30 @@ def tree_digest(path):
 
 # ---- fixtures shared by the E18 test modules (import them together with ``custody`` and ``integrated``) -----------------------
 
+def discard(path):
+    """Remove a scratch tree, including directories a test left read-only (symbolic links are unlinked, never followed)."""
+    pending = [Path(path)]
+    while pending:
+        current = pending.pop()
+        try:
+            if not current.is_symlink() and current.is_dir():
+                os.chmod(current, 0o755)
+                pending.extend(current.iterdir())
+        except OSError:
+            pass
+    shutil.rmtree(path, ignore_errors=True)
+
+
+@pytest.fixture(autouse=True)
+def scratch(tmp_path):
+    """Return each test's temporary tree (copied ~20 MB / ~5k-file worlds, journals, clones) as soon as the test is over.
+
+    Pytest keeps every passing test's ``tmp_path`` for the whole session; a few hundred world copies exhausted the CI runner's disk
+    quota and failed unrelated tests that run later in the same suite. The cached worlds live in ``tmp_path_factory`` and stay."""
+    yield tmp_path
+    discard(tmp_path)
+
+
 @pytest.fixture
 def make(tmp_path, custody, integrated):
     created = []
