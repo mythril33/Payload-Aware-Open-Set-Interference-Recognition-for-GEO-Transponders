@@ -1,0 +1,91 @@
+# E16 forbids waveform generation, training and any production run. This scoped workflow checks the synthetic,
+# metadata-only integration modules and proves the canonical compute gates are still exactly closed. It does not
+# replace the full readiness suite (b2-readiness-ci.yml), which also runs on this pull request and stays unedited.
+name: B2 E16 integration CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/b2-e16-integration-ci.yml"
+      - "scripts/b2_e16_*.py"
+      - "tests/test_b2_e16_*.py"
+      - "docs/plan/B2_E16_PRODUCTION_INTEGRATION.md"
+      - "docs/operations/B2_E16_RELEASE_POLICY.md"
+      - "docs/operations/B2_E16_RUNTIME_SAFETY_CHECKLIST.md"
+      - "docs/results/B2_E16_VERIFICATION.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: b2-e16-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    name: E16 synthetic integration and release-policy checks (no RF, no production)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      OMP_NUM_THREADS: "2"
+      OPENBLAS_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
+      PYTHONHASHSEED: "0"
+      MPLBACKEND: Agg
+      CUDA_VISIBLE_DEVICES: ""
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install CPU-only test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch==2.14.1+cpu --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e ".[dev,ml]"
+      - name: Preserve the reviewed implementation, workflows and scientific authority
+        run: |
+          # Snapshot-bound to the verified E16 base (origin/main after PR 39). E16 may only ADD its own files.
+          BASE=09dd104acdde119f5b38098775dc8ee7c9d2e42a
+          git diff --exit-code "$BASE" HEAD -- \
+            src configs pyproject.toml \
+            .github/workflows/b2-readiness-ci.yml .github/workflows/b2-e15-operational-ci.yml \
+            docs/plan/P18_b2_protocol.md \
+            docs/plan/b2_readiness_gates_2026-10-21.json docs/plan/b2_e5_decision_recommendations.json \
+            docs/plan/b2_e9_approved_scientific_protocol.json \
+            docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md \
+            docs/plan/B2_E12_D1_D8_SCIENTIFIC_APPROVAL_2026-10-24.md \
+            docs/plan/b2_e12_d1_d8_decisions_2026-10-24.json \
+            docs/results/b2_e10_k17d_identity.json docs/results/k17d_drift_audit.json
+          # Existing scripts and tests are untouched; only new b2_e16_* files may be added under scripts/ and tests/.
+          CHANGED=$(git diff --name-status "$BASE" HEAD -- scripts tests | grep -v -E '^A[[:space:]]+(scripts/b2_e16_[a-z_]+\.py|tests/test_b2_e16_[a-z_]+\.py)$' || true)
+          if [ -n "$CHANGED" ]; then echo "unexpected change under scripts/ or tests/:"; echo "$CHANGED"; exit 1; fi
+      - name: Canonical compute gates and scientific approvals are exactly the closed state
+        run: |
+          python scripts/b2_e16_policy.py ci-gate
+          python - <<'E16'
+          import json, subprocess, sys
+          out = subprocess.run([sys.executable, "scripts/b2_e16_policy.py", "ci-gate"], capture_output=True, text=True)
+          report = json.loads(out.stdout)
+          assert out.returncode == 0 and report["state"] == "CLOSED_CANONICAL", report
+          assert report["verdict"] == "NO-GO" and report["execution_permitted"] is False and report["benchmark_complete"] is False
+          print("canonical gates: CLOSED_CANONICAL; nothing authorized")
+          E16
+      - name: Compile unchanged code and the new modules
+        run: python -m compileall -q src scripts tests
+      - name: E16 suites and the E13/E14/E9/E12 contracts they build on (synthetic and metadata only)
+        run: |
+          # No real-physics replay, real observations, model fitting or inference. K17d scene re-derivation is
+          # metadata only with synthesis patched off. The integration suite writes fabricated bytes to temp dirs.
+          python -m pytest -q -rs \
+            tests/test_b2_e16_durability.py tests/test_b2_e16_ledger.py tests/test_b2_e16_policy.py \
+            tests/test_b2_e16_integration.py tests/test_b2_e16_safety.py \
+            tests/test_b2_e14_launch_contract.py tests/test_b2_e14_storage.py tests/test_b2_e14_metadata.py \
+            tests/test_b2_e13_generation_plan.py tests/test_b2_e9_contract.py tests/test_b2_e9_scientific_freeze.py \
+            tests/test_b2_e12_k17d_integrity.py tests/test_b2_e12_legacy_access.py
