@@ -244,16 +244,21 @@ def lose_metadata(directory):
     (directory / "meta-00003.jsonl").unlink()
 
 
-def substitute_shard(directory):
-    """A well-formed, self-consistent replacement: only the journaled admission digest can show that it is not what was admitted."""
-    descriptor = T.writable(directory / "shard-00002.json")
+def substitute_ordinal(directory, ordinal):
+    """A well-formed, self-consistent replacement: only the journaled/admitted digests can show that it is not what was produced."""
+    part, _, descriptor_name = D.shard_names(ordinal)
+    descriptor = T.writable(directory / descriptor_name)
     document = json.loads(descriptor.read_text())
     payload = M.SYNTHETIC_PREFIX + b"substituted bytes"
-    document["sha256"]["part-00002.npz"] = sha(payload)
-    T.writable(directory / "part-00002.npz").write_bytes(payload)
+    document["sha256"][part] = sha(payload)
+    T.writable(directory / part).write_bytes(payload)
     descriptor.write_bytes(S._canonical(document))
-    for name in ("part-00002.npz", "shard-00002.json"):
+    for name in (part, descriptor_name):
         os.chmod(directory / name, 0o444)                                                      # still read-only: a careful substitution
+
+
+def substitute_shard(directory):
+    substitute_ordinal(directory, 2)
 
 
 def delete_admitted_shard(directory):
@@ -948,3 +953,18 @@ def test_the_identity_check_rejects_a_ledger_that_no_longer_matches_its_anchor(m
     drop_last_entry(life)
     with pytest.raises(M.LifecycleRefused):
         life._check_identities()
+
+
+def test_a_shard_swapped_between_publication_and_admission_is_quarantined_by_the_controllers_own_hashes(make, monkeypatch):
+    life, profile, _ = make()
+    admitted(life)
+    real = D.admit_shard
+
+    def swapping(directory, ordinal, expected):                       # the files change after they were written and before the barrier reads them
+        substitute_ordinal(Path(directory), ordinal)
+        return real(directory, ordinal, expected)
+    monkeypatch.setattr(D, "admit_shard", swapping)
+    life.run_stage(shard_budget=3)
+    monkeypatch.setattr(D, "admit_shard", real)
+    assert life.state == "QUARANTINED" and life.summary()["admitted_shards"] == 0 and profile.producer.calls == 1
+    assert T.incidents(life) == ["shard_corruption"] and "differ from the bytes this controller published" in life.events[-1]["reason"]
