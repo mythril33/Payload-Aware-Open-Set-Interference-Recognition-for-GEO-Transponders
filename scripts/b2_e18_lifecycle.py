@@ -337,6 +337,9 @@ class SyntheticExecutorLifecycle:
             self._rebuild_disk()
             if self.state != "QUARANTINED":
                 self._record_restart()
+        except JournalUnavailable as error:
+            self.close()
+            raise LifecycleRefused("the journal cannot be extended at restart (" + str(error) + "): refusing to continue") from error
         except BaseException:
             self.close()
             raise
@@ -675,7 +678,8 @@ class SyntheticExecutorLifecycle:
         }
         report = I.evaluate_release_boundary(copy.deepcopy(self.profile.plan), self._trusted["reference"], copy.deepcopy(self.profile.specification),
                                              boundary=boundary, requested_scope=copy.deepcopy(P.GRANTED_SCOPE), now=moment, adapters=adapters)
-        self._reports.append({"boundary": boundary, "at": moment, "document_conditions_met": report["document_conditions_met"],
+        self._reports.append({"boundary": boundary, "at": moment, "synthetic": True, "evidence_scope": "SYNTHETIC_TEST_ROOT",
+                              "document_conditions_met": report["document_conditions_met"],
                               "conditions": {c["id"]: c["status"] for c in report["conditions"]}})
         return report
 
@@ -845,7 +849,8 @@ class SyntheticExecutorLifecycle:
         if self._first_shard is None:
             self._first_shard = {"s_per_observation": elapsed / shard["observations"], "observations": shard["observations"]}
         try:
-            self._journal("shard_admitted", {"role": role, "ordinal": shard["ordinal"], "descriptor_sha256": admission["descriptor_sha256"]})
+            floor = {} if self._last_machine is None else {"wall_s": self._last_machine["elapsed_wall_s"], "cpu_s": self._last_machine["cpu_core_s"]}
+            self._journal("shard_admitted", {"role": role, "ordinal": shard["ordinal"], "descriptor_sha256": admission["descriptor_sha256"], **floor})
         except JournalUnavailable:
             self._fail_journal()
             return False
@@ -979,6 +984,9 @@ class SyntheticExecutorLifecycle:
                     return self._quarantine("published files are not read-only", role_dir=(directory, expected))
             except (OSError, D.DurabilityRefused, S.StorageRefused) as error:
                 return self._quarantine("stage verification failed: " + type(error).__name__, role_dir=(directory, expected))
+            if stage in self.manifests and manifest["manifest_sha256"] != self.manifests[stage].get(role):
+                return self._quarantine("a verified role no longer equals its journaled manifest", role_dir=(directory, expected), incident=(
+                    "shard_corruption", {"role": role, "ordinal": 0, "expected_sha256": self.manifests[stage].get(role, "0" * 64), "observed_sha256": manifest["manifest_sha256"]}))
             manifests[role] = manifest["manifest_sha256"]
         try:
             self._journal_once(stage, "stage_completed", {"manifests": manifests})
@@ -1011,6 +1019,8 @@ class SyntheticExecutorLifecycle:
             source, target = self.paths["work"] / stage / role, self.paths["backup"] / stage / role
             expected = self._expected_role(stage, role)
             manifest = D.build_manifest(source, expected)
+            if stage in self.manifests and manifest["manifest_sha256"] != self.manifests[stage].get(role):
+                raise LifecycleRefused("the working role changed after it was verified and journaled")
             self._copy(source, target, sorted(expected))
             restores[role] = D.verify_restore(target, manifest, expected)
             copies[role] = D.directory_identity(target)
@@ -1022,7 +1032,10 @@ class SyntheticExecutorLifecycle:
         for role in I.STAGE_ROLES[stage]:
             source, target = self.paths["work"] / stage / role, self.paths["backup"] / stage / role
             expected = self._expected_role(stage, role)
-            restores[role] = D.verify_restore(target, D.build_manifest(source, expected), expected)
+            manifest = D.build_manifest(source, expected)
+            if stage in self.manifests and manifest["manifest_sha256"] != self.manifests[stage].get(role):
+                raise LifecycleRefused("the working role no longer equals its journaled manifest")
+            restores[role] = D.verify_restore(target, manifest, expected)
             copies[role] = D.directory_identity(target)
         return {"restores": restores, "copies": copies}
 
@@ -1127,7 +1140,7 @@ class SyntheticExecutorLifecycle:
         entries = verified["entries"]
         if not entries or entries[0]["kind"] != "run_opened" or entries[0]["data"] != self.identity:
             raise LifecycleRefused("the journal belongs to a different plan or specification")
-        completed, pending = [], False
+        completed, pending, floors = [], False, {}
         for entry in entries:
             kind, stage, data = entry["kind"], entry["stage"], entry["data"]
             if kind == "stop":
@@ -1150,6 +1163,11 @@ class SyntheticExecutorLifecycle:
                 self.stage_fingerprints[stage] = data["request_fingerprint"]
                 self._bound.add(stage)
                 self._journaled.add((stage, kind))
+            elif kind == "shard_admitted":
+                for key, name in (("wall_s", "elapsed_wall_s"), ("cpu_s", "cpu_core_s")):
+                    value = data.get(key)
+                    if type(value) in (int, float) and value >= 0:
+                        floors[name] = max(floors.get(name, 0.0), float(value))
             elif kind in ("stage_completed", "backup_verified"):
                 self._journaled.add((stage, kind))
                 if kind == "stage_completed":
@@ -1175,6 +1193,8 @@ class SyntheticExecutorLifecycle:
         self.completed, self.stage_index = completed, len(completed)
         self._journal_open = True
         self._pending_interruption = pending
+        if floors:                                   # the resource port must continue from the journaled counters, never restart from zero
+            self._last_machine = {"elapsed_wall_s": floors.get("elapsed_wall_s", 0.0), "cpu_core_s": floors.get("cpu_core_s", 0.0)}
 
     def _rebuild_disk(self):
         """Re-admit every committed shard (verify, fsync, verify) and compare with what the journal recorded."""

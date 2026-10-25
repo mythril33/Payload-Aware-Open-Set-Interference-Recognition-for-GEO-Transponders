@@ -602,3 +602,50 @@ def test_stopped_and_quarantined_runs_accept_no_further_operation(make, method):
     life.advance()
     life.run_all()
     assert life.state == "STOPPED" and profile.producer.calls == 2 and M.TRANSITIONS["STOPPED"] == set()
+
+
+# ---- counters, clocks and links across a restart ---------------------------------------------------------------------------------------
+
+def test_cumulative_resource_counters_cannot_restart_from_zero_after_a_recovery(make, custody, integrated):
+    life, profile, _ = partial(make, shards=5)
+    life.interrupt()
+    again, profile2, _ = recover(make, life, profile, custody, integrated, base_wall_s=0.0, start=T.last_journal_instant(profile.workspace))
+    assert again.state == "PREPARED"
+    admitted(again)
+    assert again.state == "STOPPED" and "restart refused" in again.events[-1]["reason"] and profile2.producer.calls == 0
+    assert "decreased" in again.events[-1]["reason"]
+
+
+def test_a_clock_that_runs_backwards_across_a_restart_is_refused_not_ignored(make, custody, integrated):
+    life, profile, _ = partial(make, shards=3)
+    life.close()
+    new_profile, _ = T.restart_profile(profile.workspace, custody, integrated, profile.plan, start="2026-10-30T12:05:00+00:00")
+    with pytest.raises(M.LifecycleRefused, match="journal cannot be extended"):
+        M.SyntheticExecutorLifecycle.recover(new_profile)
+    assert new_profile.producer.calls == 0
+
+
+def test_a_symlinked_stage_root_is_never_followed(make, tmp_path):
+    life, profile, _ = make()
+    life.verify_evidence()
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    os.symlink(elsewhere, life.paths["work"] / "known")
+    life.check_admission()
+    assert life.state == "BLOCKED" and profile.producer.calls == 0 and not list(elsewhere.iterdir())
+
+
+def test_a_role_changed_between_verification_and_backup_is_refused(known, tmp_path):
+    profile, _ = T.copy_world("known", known, tmp_path / "w")
+    life = M.SyntheticExecutorLifecycle.recover(profile)
+    try:
+        assert life.manifests["known"]
+        substitute_shard(Path(profile.workspace.work) / "known" / "train")
+        with pytest.raises(M.LifecycleRefused, match="changed after it was verified"):
+            life._copy_and_verify("known")
+    finally:
+        life.close()
+
+
+def test_boundary_reports_are_labelled_synthetic(known):
+    assert known["boundary_reports"] and all(r["synthetic"] is True and r["evidence_scope"] == "SYNTHETIC_TEST_ROOT" for r in known["boundary_reports"])
