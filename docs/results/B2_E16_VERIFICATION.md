@@ -16,7 +16,8 @@ No earlier E16 work, branch, stash or staged file existed at the start.
 | `8d4eef6` | checkpoint: four modules, five test suites, scoped workflow, plan / release-policy / safety-checklist documents |
 | `27a2f89` | fixes for the first independent review (two MATERIAL, ten MINOR findings) with regression tests |
 | `4230289` | fixes for the re-review's minor findings (allow-listed gate fields, journal volume, overflow, limits) |
-| later | `isolation.roles` is `NOT_RUN` without evidence; this report and the DURUM entry |
+| `8fd4e47` | `isolation.roles` is `NOT_RUN` without evidence; this report and the DURUM entry (the code head that CI evaluated) |
+| evidence-only follow-up | this report's CI section; documents only, no code |
 
 The final PR head and its own GitHub Actions outcome cannot be recorded inside the commit that carries this report: they are
 recorded in the PR body and the delivery report.
@@ -43,7 +44,7 @@ lock). GitHub Actions uses Python 3.12.
 |---|---|
 | E16 suites (durability, ledger, policy, integration, safety), final code | **712 passed, 0 failed, 0 skipped** (113.6 s; run concurrently with the full-suite job) |
 | Related E9 / E12 / E13 / E14 contract suites (checkpoint code) | 1328 passed (117 s), identical to the pre-E16 count: the new scripts changed no existing test |
-| Entire repository suite on code head `4230289` | started after that commit; the result is added to this report and to the PR body when the run ends (the GitHub exact-head runs are authoritative) |
+| Entire repository suite on code head `4230289` | **3951 passed, 0 failed, 0 skipped**, 46 Matplotlib colormap warnings, 1970.6 s wall (shared with other jobs). The later code change (`8fd4e47`: `isolation.roles` without evidence) touches only the integration module and its test; it was verified by the 712 E16 tests above and by GitHub's full suite below |
 | `python scripts/b2_e16_policy.py ci-gate` on the real files | exit 0, `CLOSED_CANONICAL`, NO-GO |
 
 ### Data-free checkout smoke (clean committed tree, head `4230289`)
@@ -112,9 +113,19 @@ identity `ccdf0a8f…c49c6d` and 500 / 35 / 43 / 78 / 465 counts.
 
 ## CI evidence
 
-Checkpoint head `8d4eef6`: **B2 readiness CI run 40178704238 succeeded** and **B2 E16 integration CI run 40178704235 succeeded**
-(both on the pull request). That is checkpoint evidence only. The exact-head runs for the final PR head, with job ids and counts
-read from the raw logs, are recorded in the PR body.
+Exact-head runs on code head **`8fd4e476d844a9001c45d1aabc6bf902c494d1f3`** (pull request #40), read from the raw job logs:
+
+| Workflow | Run / job | Result |
+|---|---|---|
+| B2 readiness CI (unchanged workflow) | [40182340185](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40182340185) / 121136038122 | success; the approvals-and-closed-gates step, compile and the E4 step passed; repository step **3837 passed, 7 skipped, 46 warnings (716.53 s)** |
+| B2 E16 integration CI (new, scoped) | [40182340188](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40182340188) / 121135825050 | success; protected-path `git diff --exit-code`, added-files allow-list, `ci-gate` (`CLOSED_CANONICAL`, exit 0), compile, **2040 passed (129.24 s)** |
+
+All seven skips are `tests/test_b2_train_diagnostics.py:392` (the runner's torch build does not reproduce the original golden
+capture with the verbatim original loop); they are skips, not passes, and are identical to the pre-E16 baseline. Earlier heads
+(`8d4eef6` checkpoint: readiness run 40178704238 and E16 run 40178704235, both success) are superseded by the run above. Superseded
+intermediate heads `27a2f89` / `4230289` had their readiness run cancelled by the concurrency group when the next commit was pushed;
+that is not a failure. This evidence commit changes documents only; the final PR head and its own E16-workflow outcome are recorded
+in the PR body.
 
 ## What this does not establish
 
