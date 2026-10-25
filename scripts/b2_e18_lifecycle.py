@@ -21,6 +21,7 @@ from dataclasses import dataclass
 import fcntl
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import secrets
@@ -62,6 +63,8 @@ MAX_SYNTHETIC_METADATA = 64 * 1024
 PRODUCER_KEYS = frozenset({"payload", "metadata"})
 MACHINE_KEYS = frozenset({"collected_at", "elapsed_wall_s", "cpu_core_s", "peak_rss_gib", "working_free_gib", "backup_free_gb"})
 REFRESH_EVERY_SHARDS = 64
+REFRESH_EVERY_SECONDS = 3600              # also by time: a revocation answer must never be older than this while shards are produced
+TRUST_MAX_AGE_S = 300                      # E17 freshness bound for a signed answer; a stage may not start on an older verification
 RESUMABLE_ACTION = "resume_only_under_identical_request"
 LOCK_NAME = "controller.lock"
 NO_AUTHORITY = {"verdict": "NO-GO", "execution_permitted": False, "authorizes_nothing": True, "production_launch_enabled": False,
@@ -100,6 +103,21 @@ def _sha(raw):
 
 def _digest(value):
     return _sha(canonical(value).encode())
+
+
+class _DirectoryLock:
+    """A directory opened without following symlinks, kept open for an advisory lock; creates and writes nothing."""
+
+    def __init__(self, path):
+        self._fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+
+    def fileno(self):
+        return self._fd
+
+    def close(self):
+        if self._fd is not None:
+            os.close(self._fd)
+            self._fd = None
 
 
 # ---- custody ports with durable reference implementations ------------------------------------------------------
@@ -220,6 +238,14 @@ class Workspace:
             raise LifecycleRefused("a synthetic root is missing, a symlink or unreadable: " + type(error).__name__) from error
         if len({(i["st_dev"], i["st_ino"]) for i in identities.values()}) != len(identities):
             raise LifecycleRefused("synthetic roots alias one another")
+        taken = {(i["st_dev"], i["st_ino"]) for i in identities.values()}
+        for root in declared:
+            try:
+                status = os.stat(root)
+            except OSError:
+                continue
+            if (status.st_dev, status.st_ino) in taken:
+                raise LifecycleRefused("a synthetic root is the same directory as a declared production root (alias or bind mount)")
         return identities
 
 
@@ -265,8 +291,12 @@ def production_gate(plan, reference, *, repo, evidence, now, challenge, revocati
                                                revocation_floor=revocation_floor, ci_floor=ci_floor)
     return {"schema": SCHEMA_PRODUCTION_GATE, "lifecycle_state": "BLOCKED", "reason": "PRODUCTION_EXECUTION_UNAVAILABLE",
             "trusted_evidence_status": trusted.get("status"), "trusted_evidence_scope": trusted.get("evidence_scope"),
-            "trusted_evidence_ok": bool(trusted.get("ok")), "trust_root_configured": E.PINNED_TRUST_ROOT is not None,
-            "production_launch_flag": G.sup.PRODUCTION_LAUNCH_ENABLED, "ports_called": 0, **NO_AUTHORITY}
+            "trusted_evidence_state": trusted.get("state"),
+            "trusted_evidence_ok": bool(trusted.get("ok")) and trusted.get("state") == P.STATE_VALID,      # a verified *closed* state is not an approval
+            "closed_state_verified": bool(trusted.get("ok")) and trusted.get("state") == P.STATE_CLOSED,
+            "trust_root_configured": E.PINNED_TRUST_ROOT is not None, "execution_boundary": I._execution_boundary()["status"],
+            "production_launch_flag": G.sup.PRODUCTION_LAUNCH_ENABLED, "ports_called": 0,
+            **{**NO_AUTHORITY, "production_launch_enabled": bool(G.sup.PRODUCTION_LAUNCH_ENABLED)}}
 
 
 # ---- the controller -------------------------------------------------------------------------------------------
@@ -277,7 +307,7 @@ class SyntheticExecutorLifecycle:
     def __init__(self, profile, *, _recovering=False):
         if not isinstance(profile, SyntheticProfile):
             raise LifecycleRefused("a SyntheticProfile is required; there is no other construction path")
-        self.profile = profile
+        self._profile = profile
         self.plan = C._check_plan(profile.plan)
         self.spec = C._document(profile.specification)
         if C.canonical(self.spec) != C.canonical(C.build_specification(self.plan)):
@@ -305,8 +335,10 @@ class SyntheticExecutorLifecycle:
         self._grant = None
         self._record = None
         self._blocked_from = None
-        self._resumable = False
         self._pending_interruption = False
+        self._anchor_seen = None                  # (seq, sha) of the newest head this process anchored: custody may never move away from it
+        self._run_opened_at = None
+        self._last_refresh_at = None
         self._journal_open = False
         self._journal_ok = True
         self._attempt = 1
@@ -346,23 +378,28 @@ class SyntheticExecutorLifecycle:
         return self
 
     def _acquire_lock(self):
-        fds = D._chain(self.paths["journal"])
+        """Exclusive locks on the journal directory (a lock file) and on the work and backup roots (their directory descriptors)."""
+        held = []
         try:
-            handle = os.fdopen(os.open(LOCK_NAME, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600, dir_fd=fds[-1]), "r+b")
-        finally:
-            D._close(fds)
-        try:
-            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fds = D._chain(self.paths["journal"])
+            try:
+                held.append(os.fdopen(os.open(LOCK_NAME, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600, dir_fd=fds[-1]), "r+b"))
+            finally:
+                D._close(fds)
+            for name in ("work", "backup"):
+                held.append(_DirectoryLock(self.paths[name]))
+            for handle in held:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError as error:
-            handle.close()
+            for handle in held:
+                handle.close()
             raise LifecycleRefused("another controller holds this workspace") from error
-        return handle
+        return held
 
     def close(self):
-        lock = getattr(self, "_lock", None)
-        if lock is not None:
-            lock.close()
-            self._lock = None
+        for handle in getattr(self, "_lock", None) or []:
+            handle.close()
+        self._lock = None
 
     def __enter__(self):
         return self
@@ -378,6 +415,10 @@ class SyntheticExecutorLifecycle:
             D._close(fds)
 
     # ---- bookkeeping ------------------------------------------------------------------------------------
+    @property
+    def profile(self):
+        return self._profile
+
     @property
     def stage(self):
         return STAGES[self.stage_index] if self.stage_index < len(STAGES) else None
@@ -412,8 +453,8 @@ class SyntheticExecutorLifecycle:
         return self
 
     def _stop(self, reason, *, resumable=False, incident=None, **detail):
-        self._resumable = bool(resumable) and self._journal_ok
-        self._move("STOPPED", "stop", reason=reason, resumable=self._resumable, **detail)
+        resumable = bool(resumable) and self._journal_ok
+        self._move("STOPPED", "stop", reason=reason, resumable=resumable, **detail)
         if incident is not None:
             self._journal_best_effort("incident", L.incident_data(*incident))
         if not resumable:
@@ -422,7 +463,6 @@ class SyntheticExecutorLifecycle:
 
     def _quarantine(self, reason, role_dir=None, incident=None, **detail):
         notes = self._write_notes([role_dir] if role_dir is not None else [], reason)
-        self._resumable = False
         self._move("QUARANTINED", "quarantine", reason=reason, quarantine_notes=notes, **detail)
         if incident is not None:
             self._journal_best_effort("incident", L.incident_data(*incident))
@@ -451,9 +491,17 @@ class SyntheticExecutorLifecycle:
         if not self._journal_ok:
             raise JournalUnavailable("the journal already failed")
         try:
-            entry = self.ledger.append(kind, self.stage if stage is CURRENT else stage, data, self.profile.clock.now(),
-                                       expected_head=self.anchors.latest())
-            self.anchors.record({"seq": entry["seq"], "entry_sha256": entry["entry_sha256"]})
+            seen = self._anchor_seen
+            if self.anchors.latest() != seen:        # deleted, rolled back, advanced or replaced custody is never "healed" by carrying on
+                raise LifecycleRefused("anchor custody changed while the run was in progress")
+            entry = self.ledger.append(kind, self.stage if stage is CURRENT else stage, data, self.profile.clock.now(), expected_head=seen)
+            if entry["seq"] != (0 if seen is None else seen["seq"] + 1) or (seen is not None and entry["prev_sha256"] != seen["entry_sha256"]):
+                raise LifecycleRefused("the ledger holds entries that were never anchored")
+            head = {"seq": entry["seq"], "entry_sha256": entry["entry_sha256"]}
+            self.anchors.record(head)
+            self._anchor_seen = head
+            if kind == "run_opened":
+                self._run_opened_at = entry["at"]
             return entry
         except Exception as error:               # unavailable, corrupt, forged, anchor mismatch: nothing may continue unjournaled
             self._journal_ok = False
@@ -477,7 +525,6 @@ class SyntheticExecutorLifecycle:
         """Journal storage is unavailable: stop in memory; no further step may rely on the ledger."""
         self._journal_ok = False                             # a journal that cannot be verified or written is never trusted again by this controller
         if self.state not in ("STOPPED", "QUARANTINED"):
-            self._resumable = False
             self._move("STOPPED", "stop", reason="journal unavailable", resumable=False)
         return self
 
@@ -496,7 +543,15 @@ class SyntheticExecutorLifecycle:
             raise LifecycleRefused("trusted evidence could not be evaluated: " + type(error).__name__) from error
         finally:
             self.replay.finish(challenge, floor)
+        self._last_refresh_at = self.profile.clock.monotonic()
         return {"report": report, "reference": reference, "now": now, "evidence": evidence, "challenge": challenge, "floor": floor}
+
+    def _trust_fresh(self):
+        """The verification a stage starts on is at most as old as the signed answers it relied on may be."""
+        if self._trusted is None:
+            return False
+        age = (S._instant(self.profile.clock.now()) - S._instant(self._trusted["now"])).total_seconds()
+        return 0 <= age <= TRUST_MAX_AGE_S
 
     @staticmethod
     def _trust_ok(report):
@@ -630,6 +685,10 @@ class SyntheticExecutorLifecycle:
         return dict(reading)
 
     def _check_machine_consistency(self, machine):
+        for key in ("elapsed_wall_s", "cpu_core_s", "peak_rss_gib", "working_free_gib", "backup_free_gb"):
+            value = machine[key]
+            if type(value) not in (int, float) or not math.isfinite(value) or value < 0:
+                raise LifecycleRefused(f"{key} is not a finite non-negative number")
         previous = self._last_machine
         if previous is not None:
             for key in ("elapsed_wall_s", "cpu_core_s"):
@@ -638,6 +697,10 @@ class SyntheticExecutorLifecycle:
         cpus = self.plan["host"]["inventory"]["inventory"]["cpu"]["schedulable_cpus"]
         if machine["cpu_core_s"] > machine["elapsed_wall_s"] * cpus * 1.05 + 1:
             raise LifecycleRefused("accumulated CPU time exceeds what the host's cores could deliver")
+        if self._run_opened_at is not None:
+            span = (S._instant(self.profile.clock.now()) - S._instant(self._run_opened_at)).total_seconds()
+            if machine["elapsed_wall_s"] + 10 < span:
+                raise LifecycleRefused("elapsed wall time is shorter than the span the journal itself records")
         self._last_machine = machine
 
     def _committed(self):
@@ -652,11 +715,21 @@ class SyntheticExecutorLifecycle:
                 "admitted_shards_this_attempt": self._shards_this_attempt,
                 "first_shard": None if self._first_shard is None else dict(self._first_shard)}
 
-    def _journal_doc(self, moment):
-        verified = L.verify_chain(self.ledger.read(), expected_head=self.anchors.latest())
+    def _verified_ledger(self):
+        """The ledger exactly as this process left it: anchored at the head it last recorded, with nothing added or removed."""
+        seen = self._anchor_seen
+        if seen is None or self.anchors.latest() != seen:
+            raise LifecycleRefused("anchor custody changed while the run was in progress")
+        verified = L.verify_chain(self.ledger.read(), expected_head=seen)
         if not verified["ok"]:
             raise LifecycleRefused("journal failed verification: " + "; ".join(verified["failures"][:2]))
-        return {"schema": I.SCHEMA_JOURNAL, "collected_at": moment, "entries": verified["entries"], "anchor": self.anchors.latest(),
+        if verified["count"] != seen["seq"] + 1:
+            raise LifecycleRefused("the ledger holds entries that were never anchored")
+        return verified
+
+    def _journal_doc(self, moment):
+        verified = self._verified_ledger()
+        return {"schema": I.SCHEMA_JOURNAL, "collected_at": moment, "entries": verified["entries"], "anchor": dict(self._anchor_seen),
                 "location": self.profile.attestor.journal_location(self.identities)}
 
     def _boundary(self, boundary):
@@ -669,7 +742,7 @@ class SyntheticExecutorLifecycle:
         declaration = self.profile.consumers() if self.profile.consumers is not None else copy.deepcopy(I.ALLOWED_CONSUMERS)
         adapters = {
             "shard_state": lambda stage: attestor.stage_doc(stage, self._raw_stage(stage), moment),
-            "backup_state": lambda stage: attestor.backup_doc(stage, self._raw_backup[stage], moment),
+            "backup_state": lambda stage: attestor.backup_doc(stage, self._verify_backup(stage), moment),
             "journal_state": lambda: self._journal_doc(moment),
             "k17d_metadata": lambda: dict(k17d, collected_at=moment),
             "resource_state": lambda stage: copy.deepcopy(resource),
@@ -679,12 +752,18 @@ class SyntheticExecutorLifecycle:
         report = I.evaluate_release_boundary(copy.deepcopy(self.profile.plan), self._trusted["reference"], copy.deepcopy(self.profile.specification),
                                              boundary=boundary, requested_scope=copy.deepcopy(P.GRANTED_SCOPE), now=moment, adapters=adapters)
         self._reports.append({"boundary": boundary, "at": moment, "synthetic": True, "evidence_scope": "SYNTHETIC_TEST_ROOT",
+                              "attestations": "FABRICATED_SYNTHETIC",
                               "document_conditions_met": report["document_conditions_met"],
                               "conditions": {c["id"]: c["status"] for c in report["conditions"]}})
         return report
 
     def _dispose(self, report):
         """Map unmet boundary conditions to a disposition: integrity -> QUARANTINED; tampering/stop -> STOPPED; missing facts -> BLOCKED."""
+        permanent = [c for c in report["conditions"] if c["id"] == I.PERMANENT]
+        if len(permanent) != 1 or permanent[0]["status"] != I.BLOCKED or (permanent[0].get("details") or {}).get("permanent") is not True:
+            return self._stop("the E16 execution boundary changed: it must stay permanently BLOCKED", incident=(
+                "identity_mismatch", {"what": "execution.boundary", "expected_sha256": _digest({"status": I.BLOCKED, "permanent": True}),
+                                      "observed_sha256": _digest(permanent)}))
         unmet = [c for c in report["conditions"] if c["applicable"] and c["id"] != I.PERMANENT and c["status"] != I.PASS]
         if not unmet:
             return None
@@ -728,9 +807,13 @@ class SyntheticExecutorLifecycle:
         """EVIDENCE_VERIFIED -> ADMISSION_CHECKED after the E16 boundary report for the coming stage is complete and consistent."""
         self._require("EVIDENCE_VERIFIED")
         stage = self.stage
+        if not self._trust_fresh():
+            return self._block("the trusted verification is older than its signed answers may be: verify again", stale_after_s=TRUST_MAX_AGE_S)
         try:
             if stage in self._admitted_marker:
                 return self._admit_resume()
+            if self._attempt > 1 and self._restart_exhausted():
+                return self._stop("restart refused: the restart allowance is exhausted", incident=self._incident_for("restart.allowance_exhausted", {}, {}))
             self._ensure_dirs(self.paths["work"], stage)
             self._derive_binding(stage)
             report = self._boundary(BEFORE_BOUNDARY[stage])
@@ -744,6 +827,11 @@ class SyntheticExecutorLifecycle:
         except (OSError, LifecycleRefused, D.DurabilityRefused, S.StorageRefused, ValueError, KeyError) as error:
             return self._block("admission evidence could not be assembled", error=type(error).__name__, detail=str(error)[:120])
         return self._move("ADMISSION_CHECKED", "check_admission", boundary=BEFORE_BOUNDARY[stage], conditions=len(report["conditions"]))
+
+    def _restart_exhausted(self):
+        stop = L.evaluate_stop_conditions(self._resource_state(), self.plan["ceilings"], self._authorization_state(), now=self.profile.clock.now(),
+                                          stage=self.stage, restarting=True, timing=self.plan["timing"])
+        return "restart.allowance_exhausted" in stop["reasons"]
 
     def _derive_binding(self, stage):
         """Later request identities are derived from the completed predecessor artifacts, never taken from a fixture."""
@@ -805,6 +893,8 @@ class SyntheticExecutorLifecycle:
         if shard_budget is not None and (type(shard_budget) is not int or shard_budget < 0):
             raise LifecycleRefused("shard_budget must be a non-negative integer")
         if self.state == "ADMISSION_CHECKED":
+            if not self._trust_fresh():
+                return self._block("the trusted verification went stale before the stage started: verify again", stale_after_s=TRUST_MAX_AGE_S)
             self._move("SYNTHETIC_STAGE_RUNNING", "start_stage", stage=self.stage)
         self._require("SYNTHETIC_STAGE_RUNNING")
         stage, done = self.stage, 0
@@ -824,9 +914,8 @@ class SyntheticExecutorLifecycle:
         return stage is not None and all(len(self._admissions.get((stage, r), {})) == len(self.layout[stage][r]) for r in I.STAGE_ROLES[stage])
 
     def _one_shard(self, stage, role, shard):
-        request = {"stage": stage, "role": role, "ordinal": shard["ordinal"], "groups": tuple(shard["groups"]),
-                   "observations": shard["observations"], "request_fingerprint": self.stage_fingerprints[stage],
-                   "max_payload_bytes": MAX_SYNTHETIC_PAYLOAD, "max_metadata_bytes": MAX_SYNTHETIC_METADATA}
+        request = {"stage": stage, "role": role, "ordinal": shard["ordinal"], "observations": shard["observations"],
+                   "max_payload_bytes": MAX_SYNTHETIC_PAYLOAD, "max_metadata_bytes": MAX_SYNTHETIC_METADATA}   # no scenario seeds, no request identity
         started = self.profile.clock.monotonic()
         try:
             payload, metadata = self._validate_produced(self.profile.producer(copy.deepcopy(request)), shard)
@@ -842,6 +931,13 @@ class SyntheticExecutorLifecycle:
         except (OSError, D.DurabilityRefused, S.StorageRefused) as error:
             self._quarantine("publication or admission failed: " + type(error).__name__, role_dir=(directory, self._expected_role(stage, role)),
                              incident=("partial_commit", {"role": role, "ordinal": shard["ordinal"]}))
+            return False
+        part, meta, _ = D.shard_names(shard["ordinal"])
+        if (admission["files"][part] != {"bytes": len(payload), "sha256": _sha(payload)}
+                or admission["files"][meta] != {"bytes": len(metadata), "sha256": _sha(metadata)}):
+            self._quarantine("the admitted bytes differ from the bytes this controller published", role_dir=(directory, self._expected_role(stage, role)),
+                             incident=("shard_corruption", {"role": role, "ordinal": shard["ordinal"], "expected_sha256": _sha(payload),
+                                                            "observed_sha256": admission["files"][part]["sha256"]}))
             return False
         self._admissions.setdefault((stage, role), {})[shard["ordinal"]] = admission
         self._shards_this_attempt += 1
@@ -860,7 +956,11 @@ class SyntheticExecutorLifecycle:
     def _validate_produced(produced, shard):
         if not (isinstance(produced, dict) and set(produced) == PRODUCER_KEYS and type(produced["payload"]) is bytes and type(produced["metadata"]) is bytes):
             raise LifecycleRefused("producer must return exactly payload and metadata bytes")
-        payload, metadata = produced["payload"], produced["metadata"]
+        return SyntheticExecutorLifecycle._check_synthetic(produced["payload"], produced["metadata"], shard)
+
+    @staticmethod
+    def _check_synthetic(payload, metadata, shard):
+        """The fabricated-bytes-only contract. Applied to produced shards and again to every shard adopted at recovery."""
         if not payload.startswith(SYNTHETIC_PREFIX):
             raise LifecycleRefused("payload lacks the synthetic marker")
         if len(payload) > MAX_SYNTHETIC_PAYLOAD or len(metadata) > MAX_SYNTHETIC_METADATA:
@@ -894,7 +994,9 @@ class SyntheticExecutorLifecycle:
     def _supervise(self):
         """After every admitted shard: recheck identity and revocation on schedule, read resources, evaluate the E16 stop logic."""
         try:
-            if self._shards_this_attempt - self._last_refresh >= REFRESH_EVERY_SHARDS and self._refresh() is not None:
+            due = (self._shards_this_attempt - self._last_refresh >= REFRESH_EVERY_SHARDS
+                   or (self._last_refresh_at is not None and self.profile.clock.monotonic() - self._last_refresh_at >= REFRESH_EVERY_SECONDS))
+            if due and self._refresh() is not None:
                 return False
             observation = self._resource_state()
         except JournalUnavailable:
@@ -952,16 +1054,22 @@ class SyntheticExecutorLifecycle:
             rev = E.verify_revocation(evidence["revocation"], evidence["revocation_signature"], policy=evidence["policy"], root=self.profile.trust_root,
                                       expected=self._grant, now=now, challenge=challenge, sequence_floor=floor)
         except Exception as error:
-            rev = {"ok": False, "failures": ["revocation evidence unavailable: " + type(error).__name__]}
+            rev = {"ok": False, "unavailable": True, "failures": ["revocation evidence unavailable: " + type(error).__name__]}
         finally:
             self.replay.finish(challenge, floor)
         self._last_refresh = self._shards_this_attempt
         if not rev["ok"]:
             revoked = any("revoked or unknown grant" in f for f in rev.get("failures", []))
+            if rev.get("unavailable"):               # an outage is an interruption to recover from under fresh evidence, not a verdict
+                self._interruptions += 1
+                self._stop("revocation source unavailable", resumable=True, incident=(
+                    "interruption", {"attempt": self._attempt, "signal": "REVOCATION_UNAVAILABLE"}))
+                return "revocation"
             self._stop("revocation refresh failed" + (": revoked" if revoked else ""), incident=(
                 ("authorization_revoked", {"revocation_id": self._grant["revocation_id"]}) if revoked
                 else ("resource_observation_missing", {"field": "revocation_evidence"})))
             return "revocation"
+        self._last_refresh_at = self.profile.clock.monotonic()
         self._journal("boundary_check", {"phase": "revocation_refresh", "revocation_sha256": rev["evidence_sha256"]})
         return None
 
@@ -984,6 +1092,10 @@ class SyntheticExecutorLifecycle:
                     return self._quarantine("published files are not read-only", role_dir=(directory, expected))
             except (OSError, D.DurabilityRefused, S.StorageRefused) as error:
                 return self._quarantine("stage verification failed: " + type(error).__name__, role_dir=(directory, expected))
+            admitted_files = {(n, i["bytes"], i["sha256"]) for a in self._admissions.get((stage, role), {}).values() for n, i in a["files"].items()}
+            if admitted_files != {(e["name"], e["bytes"], e["sha256"]) for e in manifest["entries"]}:
+                return self._quarantine("the role holds bytes other than the ones this controller admitted", role_dir=(directory, expected), incident=(
+                    "shard_corruption", {"role": role, "ordinal": 0, "expected_sha256": _digest(sorted(admitted_files)), "observed_sha256": manifest["manifest_sha256"]}))
             if stage in self.manifests and manifest["manifest_sha256"] != self.manifests[stage].get(role):
                 return self._quarantine("a verified role no longer equals its journaled manifest", role_dir=(directory, expected), incident=(
                     "shard_corruption", {"role": role, "ordinal": 0, "expected_sha256": self.manifests[stage].get(role, "0" * 64), "observed_sha256": manifest["manifest_sha256"]}))
@@ -1001,13 +1113,23 @@ class SyntheticExecutorLifecycle:
         stage = self.stage
         try:
             self._raw_backup[stage] = self._copy_and_verify(stage)
-        except (OSError, D.DurabilityRefused, S.StorageRefused, LifecycleRefused) as error:
+        except (D.DurabilityRefused, S.StorageRefused, LifecycleRefused) as error:
             return self._quarantine("backup copy or restore verification failed: " + type(error).__name__,
                                     incident=("backup_mismatch", {"role": "backup", "manifest_sha256": _digest(self.manifests[stage])}))
+        except OSError as error:
+            return self._stop("the backup device is unavailable: " + type(error).__name__, incident=(
+                "backup_unavailable", {"reason": f"{type(error).__name__} errno {error.errno}"}))
+        k17d = None
+        if stage == "known":
+            k17d = dict(self.profile.attestor.k17d_report(self.plan), collected_at=self.profile.clock.now())
+            self._last_k17d = k17d
         try:
             self._journal_once(stage, "backup_verified", {"manifests": self.manifests[stage]})
-            if stage == "known":
-                self._journal_once(None, "k17d_check", {"identity_sha256": self.plan["scientific"]["d8_k17d"]["identity_sha256"]})
+            if k17d is not None:
+                if I._k17d_problems(k17d, self.plan, self.profile.clock.now(), 3600):
+                    return self._stop("the K17d metadata comparison failed before it could be journaled", incident=("k17d_mismatch", {
+                        "expected_sha256": self.plan["scientific"]["d8_k17d"]["identity_sha256"], "observed_sha256": str(k17d.get("identity_sha256", "0" * 64))}))
+                self._journal_once(None, "k17d_check", {"identity_sha256": k17d["identity_sha256"]})
         except JournalUnavailable:
             return self._fail_journal()
         return self._move("SYNTHETIC_BACKUP_VERIFIED", "backup_stage", roles=sorted(self._raw_backup[stage]["restores"]))
@@ -1087,9 +1209,9 @@ class SyntheticExecutorLifecycle:
 
     # ---- driving the cycle ---------------------------------------------------------------------------------
     def retry(self):
-        """BLOCKED -> the state it was blocked from. Nothing is assumed: the blocked step simply runs again with fresh evidence."""
+        """BLOCKED -> PREPARED (evidence is verified again from scratch), or back to the backup-verified state when only the stage-end check blocked."""
         self._require("BLOCKED")
-        return self._move(self._blocked_from, "retry")
+        return self._move("SYNTHETIC_BACKUP_VERIFIED" if self._blocked_from == "SYNTHETIC_BACKUP_VERIFIED" else "PREPARED", "retry")
 
     def step(self):
         """Exactly one lifecycle method, chosen by the state. Halted states do nothing."""
@@ -1129,15 +1251,21 @@ class SyntheticExecutorLifecycle:
         source = self.plan["source"]
         if reference["head"] != source["git_commit"] or reference["files_sha256"] != source["files_sha256"] or reference["tools_sha256"] != source["tools_sha256"]:
             raise LifecycleRefused("source identity changed")
-        if not L.verify_chain(self.ledger.read(), expected_head=self.anchors.latest())["ok"]:
-            raise LifecycleRefused("journal fails verification against its anchor")
+        self._verified_ledger()
 
     def _load_journal(self):
         anchor = self.anchors.latest()
         verified = L.verify_chain(self.ledger.read(), expected_head=anchor)
         if anchor is None or not verified["ok"]:
             raise LifecycleRefused("the journal does not verify against an independently retained anchor")
+        if verified["count"] not in (anchor["seq"] + 1, anchor["seq"] + 2):     # a crash between append and anchor can leave exactly one entry ahead
+            raise LifecycleRefused("the ledger holds more than one entry that was never anchored")
         entries = verified["entries"]
+        head = {"seq": entries[-1]["seq"], "entry_sha256": entries[-1]["entry_sha256"]}
+        if head != anchor:
+            self.anchors.record(head)               # adopt the single trailing entry only after the whole chain verified
+        self._anchor_seen = head
+        self._run_opened_at = entries[0]["at"]
         if not entries or entries[0]["kind"] != "run_opened" or entries[0]["data"] != self.identity:
             raise LifecycleRefused("the journal belongs to a different plan or specification")
         completed, pending, floors = [], False, {}
@@ -1181,6 +1309,9 @@ class SyntheticExecutorLifecycle:
                     self._admitted_marker.add(stage)
         if completed != list(STAGES[:len(completed)]):
             raise LifecycleRefused("completed stages are not a prefix of known -> test -> matched")
+        for stage in completed:
+            if (stage, "stage_completed") not in self._journaled or (stage, "backup_verified") not in self._journaled or stage not in self.manifests:
+                raise LifecycleRefused("a stage is marked complete without its journaled verification and backup")
         for stage in STAGES[1:]:
             if stage in self._bound:
                 predecessors = {s: self.manifests.get(s) for s in STAGES[:STAGES.index(stage)]}
@@ -1203,8 +1334,8 @@ class SyntheticExecutorLifecycle:
             if entry["kind"] == "shard_admitted":
                 journaled[(entry["stage"], entry["data"]["role"], entry["data"]["ordinal"])] = entry["data"]["descriptor_sha256"]
         for stage in STAGES[:min(self.stage_index + 1, len(STAGES))]:
-            if stage not in self._bound:
-                continue
+            if stage not in self._bound or (stage not in self._admitted_marker and stage not in self.completed):
+                continue                             # never admitted: nothing was produced, the admission boundary will judge the directories
             for role in I.STAGE_ROLES[stage]:
                 directory, expected = self.paths["work"] / stage / role, self._expected_role(stage, role)
                 try:
@@ -1217,6 +1348,13 @@ class SyntheticExecutorLifecycle:
                 admitted = {}
                 for ordinal in sorted(int(o) for o, s in report["shards"].items() if s["state"] == "COMMITTED"):
                     admission = D.admit_shard(directory, ordinal, expected[ordinal])
+                    try:
+                        self._check_adopted(directory, ordinal, self.layout[stage][role][ordinal])
+                    except (LifecycleRefused, D.DurabilityRefused) as error:
+                        return self._quarantine("a committed shard breaks the fabricated-bytes-only contract: " + str(error)[:100], role_dir=(directory, expected),
+                                                incident=("shard_corruption", {"role": role, "ordinal": ordinal,
+                                                                               "expected_sha256": journaled.get((stage, role, ordinal), "0" * 64),
+                                                                               "observed_sha256": admission["descriptor_sha256"]}))
                     recorded = journaled.get((stage, role, ordinal))
                     if recorded is not None and recorded != admission["descriptor_sha256"]:
                         return self._quarantine("on-disk shard differs from its journaled admission", role_dir=(directory, expected), incident=(
@@ -1235,7 +1373,17 @@ class SyntheticExecutorLifecycle:
                 self._raw_backup[stage] = self._verify_backup(stage)
             except (OSError, D.DurabilityRefused, S.StorageRefused, LifecycleRefused) as error:
                 return self._quarantine("backup of a completed stage no longer verifies: " + type(error).__name__,
-                                        incident=("backup_mismatch", {"role": "backup", "manifest_sha256": _digest(self.manifests[stage])}))
+                                        incident=("backup_mismatch", {"role": "backup", "manifest_sha256": _digest(self.manifests.get(stage, {}))}))
+
+    def _check_adopted(self, directory, ordinal, shard):
+        part, meta, _ = D.shard_names(ordinal)
+        fds = D._chain(directory)
+        try:
+            payload = D._read_regular(fds[-1], part, MAX_SYNTHETIC_PAYLOAD, keep=True)[3]
+            metadata = D._read_regular(fds[-1], meta, MAX_SYNTHETIC_METADATA, keep=True)[3]
+        finally:
+            D._close(fds)
+        self._check_synthetic(payload, metadata, shard)
 
     def _record_restart(self):
         """Journal the restart: an unresolved interruption is closed by ``resume``; an unannounced exit is recorded as one first."""
@@ -1255,4 +1403,5 @@ class SyntheticExecutorLifecycle:
                 "attempt": self._attempt, "failed_attempts": self._failed_attempts, "interruptions": self._interruptions,
                 "admitted_shards": sum(len(a) for a in self._admissions.values()), "events": len(self._events),
                 "journal_ok": self._journal_ok, "synthetic": True, "evidence_scope": "SYNTHETIC_TEST_ROOT",
-                "k17d_production_cross_check": "NOT_RUN", "production_gate": "BLOCKED", **NO_AUTHORITY}
+                "k17d_production_cross_check": "NOT_RUN", "attestations": "FABRICATED_SYNTHETIC", "production_gate": "BLOCKED",
+                **{**NO_AUTHORITY, "production_launch_enabled": bool(G.sup.PRODUCTION_LAUNCH_ENABLED)}}

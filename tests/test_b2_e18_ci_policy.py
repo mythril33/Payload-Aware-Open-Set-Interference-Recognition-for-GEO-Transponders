@@ -111,8 +111,10 @@ def history(tmp_path):
     (repo / "scripts").mkdir(parents=True)
     (repo / "scripts/b2_e18_ci_policy.py").write_bytes((ROOT / "scripts/b2_e18_ci_policy.py").read_bytes())
     for relative in ("configs/b2_base.json", "docs/plan/b2_readiness_gates_2026-10-21.json", "docs/plan/B2_E16_PRODUCTION_INTEGRATION.md",
-                     "scripts/b2_e16_policy.py", "src/geoml/existing.py", "docs/plan/DURUM.md", ".github/workflows/b2-readiness-ci.yml"):
+                     "scripts/b2_e16_policy.py", "src/geoml/existing.py", "docs/plan/DURUM.md"):
         write(repo, relative, "# baseline\n")
+    for workflow in WORKFLOWS.glob("*.yml"):                                           # the real workflows: the guard also lints them
+        write(repo, f".github/workflows/{workflow.name}", workflow.read_text())
     git(repo, "init", "-q", "-b", "main")
     return repo, commit(repo, "baseline")
 
@@ -120,15 +122,20 @@ def history(tmp_path):
 def run_guard(repo, base):
     body = guard_body().replace("${{ github.event.pull_request.base.sha }}", base)
     assert "${{" not in body
-    return subprocess.run(["bash", "-e", "-c", body.replace("python scripts", f"{shlex.quote(sys.executable)} scripts")], cwd=repo,
-                          capture_output=True, text=True, timeout=60, env={**os.environ, "PATH": os.environ["PATH"]})
+    tools, scratch = repo.parent / "bin", repo.parent / "runner_temp"
+    tools.mkdir(exist_ok=True)
+    scratch.mkdir(exist_ok=True)
+    if not (tools / "python").exists():
+        (tools / "python").symlink_to(sys.executable)
+    env = {**os.environ, "PATH": f"{tools}:{os.environ['PATH']}", "RUNNER_TEMP": str(scratch)}
+    return subprocess.run(["bash", "-e", "-c", body], cwd=repo, capture_output=True, text=True, timeout=60, env=env)
 
 
 def test_reviewed_e18_additions_pass_the_guard(history):
     repo, base = history
-    for relative in ("scripts/b2_e18_lifecycle.py", "tests/test_b2_e18_lifecycle.py", "tests/e18_support.py", "docs/plan/B2_E18_EXECUTOR_LIFECYCLE.md",
-                     ".github/workflows/b2-e18-lifecycle-ci.yml"):
+    for relative in ("scripts/b2_e18_lifecycle.py", "tests/test_b2_e18_lifecycle.py", "tests/e18_support.py", "docs/plan/B2_E18_EXECUTOR_LIFECYCLE.md"):
         write(repo, relative)
+    write(repo, ".github/workflows/b2-e18-lifecycle-ci.yml", E18.read_text())                # a reviewed workflow change must itself pass the lint
     write(repo, "docs/plan/DURUM.md", "# E18 status\n")
     commit(repo)
     result = run_guard(repo, base)
@@ -186,7 +193,7 @@ def test_a_branch_that_diverged_from_a_moved_base_is_judged_from_its_merge_base(
 def test_guard_expression_is_the_only_templated_value_and_has_a_safe_fallback():
     body = guard_body()
     assert body.count("${{") == 1 and "github.event.pull_request.base.sha" in body and 'BASE="origin/main"' in body
-    assert "--profile e18" in body and "check-diff" in body
+    assert "--profile e18" in body and "check-diff" in body and 'git show "$BASE:scripts/b2_e18_ci_policy.py"' in body
 
 
 # ---- workflow hygiene ---------------------------------------------------------------------------------------------------------
@@ -335,3 +342,76 @@ def test_the_policy_script_declares_no_execution_surface():
     text = (ROOT / "scripts/b2_e18_ci_policy.py").read_text()
     for needle in ("os.environ", "getenv", "os.system", "shell=True", "git push", "git commit"):
         assert needle not in text.replace('"git push"', "").replace("r\"\\bgit\\s+push\\b\"", ""), needle
+
+
+# ---- review remediation: the judge is not the judged, glob segments, implicit code, stricter lint ---------------------------------------------
+
+def test_a_pull_request_cannot_weaken_the_policy_that_judges_it(history):
+    repo, base = history
+    write(repo, "scripts/b2_e18_ci_policy.py", "import sys\nprint('{}')\nsys.exit(0)\n")          # a permissive replacement of the judge, within the E18 scope
+    write(repo, "configs/b2_base.json", "# ALTERED SYNTHETIC RECORD\n")
+    commit(repo)
+    result = run_guard(repo, base)
+    assert result.returncode == 1 and "configs/b2_base.json" in result.stdout                # the base copy of the policy was the judge
+
+
+def test_the_introducing_change_falls_back_to_the_head_copy_and_says_so(history):
+    repo, base = history
+    git(repo, "rm", "-q", "scripts/b2_e18_ci_policy.py")
+    first = commit(repo, "base without the policy")
+    write(repo, "scripts/b2_e18_ci_policy.py", (ROOT / "scripts/b2_e18_ci_policy.py").read_text())
+    write(repo, "scripts/b2_e18_lifecycle.py")
+    commit(repo)
+    result = run_guard(repo, first)
+    assert result.returncode == 0 and "using the head copy" in result.stdout
+    write(repo, "src/geoml/existing.py", "# ALTERED\n")
+    commit(repo)
+    assert run_guard(repo, first).returncode == 1
+
+
+@pytest.mark.parametrize("path,kind", [
+    ("scripts/b2_e18_x/sitecustomize.py", "implicit_code"), ("tests/test_b2_e18_dir/conftest.py", "implicit_code"), ("tests/conftest.py", "implicit_code"),
+    ("scripts/conftest.py", "implicit_code"), ("tests/__init__.py", "implicit_code"), ("scripts/b2_e18_x.pth", "implicit_code"), ("scripts/b2_e18_x.so", "implicit_code"),
+    ("docs/plan/B2_E18_sub/NOTE.md", "outside_scope"), ("scripts/b2_e18_/../x.py", "unsafe_path"), ("SCRIPTS/b2_e18_x.py", "outside_scope"),
+    ("scripts/B2_E18_x.py", "outside_scope"), ("scripts/b2_e18_x.PY", "outside_scope"),
+])
+def test_glob_segments_and_implicit_code_files_cannot_smuggle_a_change_in(path, kind):
+    report = CI.check_diff([path])
+    assert not report["ok"] and report["violations"][0]["class"] == kind
+
+
+def test_single_segment_patterns_still_allow_the_real_e18_names():
+    assert CI.check_diff(["scripts/b2_e18_anything.py", "tests/test_b2_e18_anything.py", "docs/results/B2_E18_X.md"])["ok"]
+
+
+def with_triggers(block):
+    text = E18.read_text()
+    start, end = text.index("on:\n"), text.index("permissions:")
+    return text[:start] + block + "\n" + text[end:]
+
+
+@pytest.mark.parametrize("name,text", [
+    ("flow_list_target", with_triggers("on: [pull_request_target]\n")), ("flow_map_push", with_triggers("on: {push: {branches: [main]}}\n")),
+    ("block_push", with_triggers("on:\n  push:\n    branches: [main]\n")), ("schedule", with_triggers("on:\n  schedule:\n    - cron: '0 0 * * *'\n")),
+    ("dispatch_flow_map", with_triggers("on:\n  pull_request:\n    branches: [main]\n  workflow_dispatch: {inputs: {x: {}}}\n")),
+    ("extra_branches", with_triggers("on:\n  pull_request:\n    branches: [main, attacker]\n")),
+    ("missing_on", E18.read_text().replace("on:\n", "off:\n", 1)),
+])
+def test_only_the_reviewed_trigger_shape_is_accepted(name, text):
+    assert any("trigger" in problem or "'on:'" in problem for problem in CI.lint_workflow(text)), CI.lint_workflow(text)
+
+
+@pytest.mark.parametrize("old,new,expected", [
+    ("python -m compileall -q src scripts tests", "echo ${{ secrets['TOKEN'] }}", "secrets"),
+    ("python -m compileall -q src scripts tests", "echo ${{ toJSON(secrets) }}", "secrets"),
+    ("python -m compileall -q src scripts tests", "echo ${{ github.token }}", "token"),
+    ("    runs-on: ubuntu-latest\n", "    runs-on: ubuntu-latest\n    container: attacker/image\n", "container"),
+    ("    timeout-minutes: 40\n", "    timeout-minutes: 99999\n", "timeout"),
+    ("    timeout-minutes: 40\n", "    timeout-minutes: 40\n    continue-on-error: true\n", "continue-on-error"),
+    ("python -m compileall -q src scripts tests", "python -c \"import subprocess; subprocess.run(['id'])\"", "forbidden command"),
+    ("python -m compileall -q src scripts tests", "python -m b2_production_supervisor run", "forbidden command"),
+    ("python -m compileall -q src scripts tests", "python scripts/b2_production_supervisor.py status", "forbidden command"),
+])
+def test_lint_gaps_found_by_the_independent_review_are_closed(old, new, expected):
+    problems = CI.lint_workflow(mutate(old, new))
+    assert any(expected in p for p in problems), problems

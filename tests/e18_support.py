@@ -46,11 +46,12 @@ class Authority:
         self.ci_runs = None                      # replace the signed CI runs
         self.calls = 0
         self.after_calls = None                  # (n, status): from the n-th call on, answer with this status
+        self.unreachable_from = None             # from the n-th call on the issuer cannot be reached
         self.tamper = None                       # callable(evidence) -> evidence, applied last
 
     def __call__(self, challenge, floor, now):
         self.calls += 1
-        if not self.available:
+        if not self.available or (self.unreachable_from is not None and self.calls >= self.unreachable_from):
             raise OSError("fabricated issuer unreachable")
         issued = datetime.fromisoformat(now)
         expires = (issued + timedelta(seconds=VALIDITY_S)).isoformat()
@@ -117,15 +118,22 @@ _WORLDS = {}
 
 
 def world(name, tmp_path_factory, custody, bundle):
-    """A finished synthetic workspace (``known`` after stage 1, ``complete`` after all three), built once and copied per test."""
+    """A finished synthetic workspace, built once and copied per test: ``known`` (stage 1 complete), ``complete`` (all three stages) or
+    ``admitted`` (every known shard admitted, nothing verified, backed up or completed; the process then 'dies')."""
     if name not in _WORLDS:
         base = Path(tmp_path_factory.mktemp("e18-world-" + name))
         profile, authority = make_profile(base / "w", custody, bundle)
         life = M.SyntheticExecutorLifecycle(profile)
-        stages = {"known": 1, "complete": 3}[name]
-        for _ in range(stages):
-            life.advance()
-        assert life.state in ("PREPARED", "SYNTHETIC_STAGE_COMPLETE") and len(life.completed) == stages, life.events[-3:]
+        if name == "admitted":
+            life.verify_evidence()
+            life.check_admission()
+            life.run_stage()
+            assert life.state == "SYNTHETIC_STAGE_RUNNING" and life._stage_fully_admitted() and not life.completed
+        else:
+            stages = {"known": 1, "complete": 3}[name]
+            for _ in range(stages):
+                life.advance()
+            assert life.state in ("PREPARED", "SYNTHETIC_STAGE_COMPLETE") and len(life.completed) == stages, life.events[-3:]
         _WORLDS[name] = {"base": base / "w", "custody": custody, "bundle": bundle, "summary": life.summary(), "events": life.events,
                          "boundary_reports": life.boundary_reports, "plan": profile.plan}
         life.close()
@@ -142,10 +150,15 @@ def restart_profile(workspace, custody, bundle, plan, **kwargs):
     return make_profile(None, custody, bundle, workspace=workspace, plan=plan, **kwargs)
 
 
-def copy_world(name, source, destination, **kwargs):
-    """An independent copy of a cached world and a recovery profile whose clock continues after the journal's last instant."""
+def copy_world(name, source, destination, *, prepare=None, **kwargs):
+    """An independent copy of a cached world and a recovery profile whose clock continues after the journal's last instant.
+
+    ``prepare(workspace)`` runs on the copy before the profile (and so its clock) is derived, for out-of-band changes to the journal."""
     shutil.copytree(source["base"], destination, symlinks=True)
-    return restart_profile(workspace_at(destination), source["custody"], source["bundle"], source["plan"], **kwargs)
+    workspace = workspace_at(destination)
+    if prepare is not None:
+        prepare(workspace)
+    return restart_profile(workspace, source["custody"], source["bundle"], source["plan"], **kwargs)
 
 
 def assert_no_authority(value):
@@ -214,6 +227,11 @@ def known(tmp_path_factory, custody, integrated):
     return world("known", tmp_path_factory, custody, integrated)
 
 
+@pytest.fixture(scope="module")
+def all_admitted(tmp_path_factory, custody, integrated):
+    return world("admitted", tmp_path_factory, custody, integrated)
+
+
 def admitted(life):
     life.verify_evidence()
     life.check_admission()
@@ -232,3 +250,9 @@ def append_entry(workspace, kind, stage, data):
 def writable(path):
     os.chmod(path, 0o644)
     return Path(path)
+
+
+def append_unanchored(workspace, kind, stage, data):
+    """Append a well-formed ledger entry *without* recording its head (a crash between the append and the anchor, or a forger without anchor access)."""
+    at = (datetime.fromisoformat(last_journal_instant(workspace)) + timedelta(seconds=1)).isoformat()
+    return L.Ledger(workspace.journal).append(kind, stage, data, at, expected_head=M.AnchorStore(workspace.anchors).latest())

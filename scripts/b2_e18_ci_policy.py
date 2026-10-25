@@ -67,6 +67,15 @@ PROFILES = {
     },
 }
 SAFE_PATH = re.compile(r"[A-Za-z0-9._@+=,-]+(/[A-Za-z0-9._@+=,-]+)*\Z")
+# Files that change how Python or pytest behave for a whole directory tree: never allowed, whatever glob they would match.
+IMPLICIT_CODE = frozenset({"conftest.py", "sitecustomize.py", "usercustomize.py", "__init__.py", "setup.py", "pytest.ini", "tox.ini", "setup.cfg", "pyproject.toml"})
+IMPLICIT_SUFFIXES = (".pth", ".so", ".pyc")
+
+
+def allowed_by(path, patterns):
+    """Glob match in which ``*`` never crosses a directory separator (unlike fnmatch): ``scripts/b2_e18_*.py`` is one file name."""
+    parts = path.split("/")
+    return any(len(parts) == len(pattern.split("/")) and all(fnmatchcase(a, b) for a, b in zip(parts, pattern.split("/"))) for pattern in patterns)
 
 
 def classify(path):
@@ -91,7 +100,9 @@ def check_diff(changed, profile="e18"):
         classes[path] = name
         if name != "unclassified":
             violations.append({"path": path, "class": name, "reason": f"{name.replace('_', ' ')} may not change in this milestone"})
-        elif not any(fnmatchcase(path, pattern) for pattern in allow):
+        elif path.rsplit("/", 1)[-1] in IMPLICIT_CODE or path.endswith(IMPLICIT_SUFFIXES):
+            violations.append({"path": path, "class": "implicit_code", "reason": "a file that silently changes how Python or pytest run is never an allowed addition"})
+        elif not allowed_by(path, allow):
             violations.append({"path": path, "class": "outside_scope", "reason": "not an allowed path of the " + PROFILES[profile]["milestone"]})
     return {"schema": SCHEMA_DIFF, "profile": profile, "ok": not violations, "changed": len(changed), "violations": violations, "classes": classes,
             "base_is": "the PR merge base (current reviewed tree), not a frozen snapshot", **NO_AUTHORITY}
@@ -100,42 +111,61 @@ def check_diff(changed, profile="e18"):
 # ---- workflow hygiene ---------------------------------------------------------------------------------------------------
 
 ALLOWED_ACTIONS = ("actions/checkout@v4", "actions/setup-python@v5")
-FORBIDDEN_TRIGGERS = ("pull_request_target", "workflow_run", "schedule:", "repository_dispatch", "issue_comment", "push:")
 FORBIDDEN_COMMANDS = (
     r"geosim\.b2_dataset", r"geoml\.b2_experiment", r"geoml\.train\b", r"b2_production_supervisor\.py", r"--mode\s+production",
     r"b2_production_preflight\.py\s+(lock-create|drill|run)", r"\bnvidia-smi\b", r"\btorch\.cuda\b", r"\bcurl\b", r"\bwget\b", r"\bscp\b",
     r"\bsudo\b", r"\bdocker\s+(run|exec)\b", r"\bgh\s+(api|release|workflow)\b", r"\bgit\s+push\b",
+    r"\bpython3?\s+(-\w*c\b|-m\s+(b2_|geosim|geoml))", r"b2_production_supervisor", r"\bimportlib\b", r"\bos\.system\b", r"\bexec\(",
 )
 FIXED_SHA = re.compile(r"git diff --exit-code ([0-9a-f]{40})\b")
 PR_BASE = re.compile(r"github\.event\.pull_request\.base\.sha")
 
 
+ON_LINES = (re.compile(r"  pull_request:\Z"), re.compile(r"    branches: \[main\]\Z"), re.compile(r"    paths:\Z"),
+            re.compile(r'      - "[A-Za-z0-9_./*-]+"\Z'), re.compile(r"  workflow_dispatch:\Z"))
+MAX_TIMEOUT_MINUTES = 60
+
+
+def on_block(text):
+    match = re.search(r"^on:[ ]*\n((?:(?:[ ]+\S.*|[ ]*)\n)*)", text, re.M)
+    return None if match is None else match.group(1)
+
+
 def lint_workflow(text, name="workflow"):
     """Static, text-level problems; an empty list means the workflow stays inside the engineering-only boundary."""
     problems = []
+    code = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
     head = text.split("\njobs:", 1)[0]
     if not re.search(r"^permissions:\n  contents: read\n(?!  )", head, re.M):
         problems.append("top-level permissions must be exactly 'contents: read'")
-    if re.search(r":\s*write\b", text):
+    if re.search(r":\s*write\b", code):
         problems.append("a write permission is requested")
-    for trigger in FORBIDDEN_TRIGGERS:
-        if re.search(r"^\s{2}" + re.escape(trigger.rstrip(":")) + r"\s*:?\s*$", head, re.M) or ("on:\n  " + trigger) in head:
-            problems.append(f"forbidden trigger: {trigger}")
-    if "secrets." in text:
-        problems.append("secrets are referenced")
-    runners = re.findall(r"^\s*runs-on:\s*(\S+)", text, re.M)
+    triggers = on_block(text)
+    if triggers is None:
+        problems.append("no block-style 'on:' trigger section")
+    else:                                            # only the reviewed shape is accepted: a flow map or list can hide a trigger from a line scan
+        for line in triggers.splitlines():
+            if line.strip() and not line.lstrip().startswith("#") and not any(pattern.fullmatch(line) for pattern in ON_LINES):
+                problems.append(f"trigger line outside the reviewed shape: {line.strip()[:60]}")
+    for word in ("pull_request_target", "workflow_run", "repository_dispatch", "issue_comment", "schedule"):
+        if re.search(r"\b" + word + r"\b", code):
+            problems.append(f"forbidden trigger: {word}")
+    for pattern, label in ((r"\bsecrets\b", "secrets are referenced"), (r"github\.token", "the workflow token is referenced"),
+                           (r"^\s*container:", "a job container"), (r"^\s*services:", "service containers"), (r"continue-on-error", "continue-on-error hides failures")):
+        if re.search(pattern, code, re.M):
+            problems.append(label)
+    runners = re.findall(r"^\s*runs-on:\s*(\S+)", code, re.M)
     if not runners or any(r != "ubuntu-latest" for r in runners):
         problems.append("only the hosted ubuntu-latest runner is allowed")
-    for action in re.findall(r"^\s*-?\s*uses:\s*(\S+)", text, re.M):
+    for action in re.findall(r"^\s*-?\s*uses:\s*(\S+)", code, re.M):
         if action not in ALLOWED_ACTIONS:
             problems.append(f"action not on the allow list: {action}")
     for pattern in FORBIDDEN_COMMANDS:
-        if re.search(pattern, "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))):
+        if re.search(pattern, code):
             problems.append(f"forbidden command: {pattern}")
-    if not re.search(r"^\s*timeout-minutes:\s*\d+", text, re.M):
-        problems.append("a job timeout is required")
-    if "workflow_dispatch:" in head and re.search(r"^\s{4}inputs:", head, re.M):
-        problems.append("workflow_dispatch inputs could parameterize a run")
+    timeouts = [int(m) for m in re.findall(r"^\s*timeout-minutes:\s*(\d+)\s*$", code, re.M)]
+    if len(timeouts) != len(runners) or any(not 1 <= t <= MAX_TIMEOUT_MINUTES for t in timeouts):
+        problems.append(f"every job needs a timeout of at most {MAX_TIMEOUT_MINUTES} minutes")
     return problems
 
 

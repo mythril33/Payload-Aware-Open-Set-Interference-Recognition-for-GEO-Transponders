@@ -21,6 +21,7 @@ sys.path.insert(0, str(ROOT / "tests"))
 import e18_support as T  # noqa: E402
 from test_b2_e17_evidence import custody, integrated  # noqa: E402,F401
 from e18_support import admitted, complete, known, make  # noqa: E402,F401
+from test_b2_e13_generation_plan import decision_record, k17d_report, reference  # noqa: E402,F401
 
 M, X, L, I, D, S, E, P, G, C = T.M, T.X, T.L, T.M.I, T.M.D, T.M.S, T.M.E, T.M.P, T.M.G, T.C
 
@@ -198,7 +199,15 @@ def test_the_lifecycle_module_has_no_launch_surface():
     imported = {a.name.split(".")[0] for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}
     imported |= {(n.module or "").split(".")[0] for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)}
     assert not imported & {"subprocess", "multiprocessing", "threading", "socket", "ctypes", "numpy", "scipy", "torch", "geosim", "geoml", "b2_e18_synthetic",
-                           "b2_production_supervisor", "requests", "urllib", "http", "pty", "asyncio"}
+                           "b2_production_supervisor", "requests", "urllib", "http", "pty", "asyncio", "importlib", "runpy", "posix", "concurrent", "builtins",
+                           "code", "codeop", "sched", "signal", "pickle", "marshal", "shelve"}
+    # A regression tripwire, not a proof: the injected ports are caller code. It does catch the obvious reachings through other modules.
+    attributes = {n.attr for n in ast.walk(tree) if isinstance(n, ast.Attribute)}
+    assert not attributes & {"subprocess", "Popen", "system", "popen", "fork", "forkpty", "execv", "execve", "execvp", "spawnv", "posix_spawn", "import_module"}
+    for node in ast.walk(tree):                                   # of the supervisor / E9 / preflight modules the core may read exactly one constant each
+        if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Attribute) and isinstance(node.value.value, ast.Name) and node.value.value.id == "G":
+            allowed = {"sup": {"PRODUCTION_LAUNCH_ENABLED"}, "pre": {"PLAN_TOTAL"}}
+            assert node.value.attr in allowed and node.attr in allowed[node.value.attr], ast.unparse(node)
     source = ast.unparse(tree)
     for needle in ("os.environ", "getenv", "os.system", "os.exec", "os.spawn", "os.fork", "popen", "eval(", "exec(", "__import__", "PRODUCTION_LAUNCH_ENABLED ="):
         assert needle not in source, needle
@@ -295,25 +304,69 @@ def test_one_controller_per_workspace_and_an_existing_journal_demands_recover(ma
         M.SyntheticExecutorLifecycle(profile)
 
 
-@pytest.mark.parametrize("produced", [
-    None, "payload", {"payload": b"x"}, {"payload": b"x", "metadata": b"y", "extra": 1}, {"payload": "text", "metadata": b""},
-    {"payload": b"no marker", "metadata": b"{}\n"}, {"payload": M.SYNTHETIC_PREFIX + b"x" * (64 * 1024), "metadata": b"{}\n"},
-    {"payload": M.SYNTHETIC_PREFIX + b"x", "metadata": b'{"synthetic": true}\n' * 1},  # wrong line count for the planned shard
-    {"payload": M.SYNTHETIC_PREFIX + b"x", "metadata": b"not json\n"},
-])
-def test_a_producer_that_breaks_the_contract_is_stopped_resumably_before_anything_is_published(make, produced):
+def rows(request, count=None, **row):
+    return b"".join(json.dumps({"i": i, "synthetic": True, **row}).encode() + b"\n" for i in range(request["observations"] if count is None else count))
+
+
+GOOD_PAYLOAD = M.SYNTHETIC_PREFIX + b"fabricated"
+CONTRACT_BREAKERS = {
+    "nothing": lambda r: None, "text": lambda r: "payload", "metadata_missing": lambda r: {"payload": GOOD_PAYLOAD},
+    "extra_key": lambda r: {"payload": GOOD_PAYLOAD, "metadata": rows(r), "gpu": True}, "payload_not_bytes": lambda r: {"payload": "text", "metadata": rows(r)},
+    "no_synthetic_marker": lambda r: {"payload": b"\x93NUMPY real-looking archive", "metadata": rows(r)},
+    "payload_over_the_bound": lambda r: {"payload": GOOD_PAYLOAD + b"x" * M.MAX_SYNTHETIC_PAYLOAD, "metadata": rows(r)},
+    "metadata_over_the_bound": lambda r: {"payload": GOOD_PAYLOAD, "metadata": rows(r, pad="x" * 4000)},
+    "one_row_short": lambda r: {"payload": GOOD_PAYLOAD, "metadata": rows(r, count=r["observations"] - 1)},
+    "one_row_too_many": lambda r: {"payload": GOOD_PAYLOAD, "metadata": rows(r, count=r["observations"] + 1)},
+    "a_row_is_not_synthetic": lambda r: {"payload": GOOD_PAYLOAD, "metadata": rows(r).replace(b'"synthetic": true', b'"synthetic": false', 1)},
+    "a_row_is_not_json": lambda r: {"payload": GOOD_PAYLOAD, "metadata": b"not json\n" * r["observations"]},
+}
+
+
+@pytest.mark.parametrize("name", sorted(CONTRACT_BREAKERS))
+def test_a_producer_that_breaks_the_contract_is_stopped_resumably_before_anything_is_published(make, name):
+    life, profile, _ = make(producer_factory=lambda clock: CONTRACT_BREAKERS[name])
+    admitted(life)
+    life.run_stage(shard_budget=1)
+    assert life.state == "STOPPED" and life.events[-1]["resumable"] is True and life.summary()["failed_attempts"] == 1
+    assert life.summary()["admitted_shards"] == 0 and T.incidents(life) == ["interruption"]
+    assert not [p for p in life.paths["work"].rglob("*") if p.is_file()]
+
+
+def timed(clock, build):
+    """A producer that takes (fake) time like a real one; a shard measured at zero seconds is not a valid timing sample."""
+    def produce(request):
+        clock.advance(4.4 * request["observations"])
+        return build(request)
+    return produce
+
+
+def test_a_compliant_producer_is_accepted_by_the_same_checks(make):
+    life, profile, _ = make(producer_factory=lambda clock: timed(clock, lambda r: {"payload": GOOD_PAYLOAD, "metadata": rows(r)}))
+    admitted(life)
+    life.run_stage(shard_budget=1)
+    assert life.state == "SYNTHETIC_STAGE_RUNNING" and life.summary()["admitted_shards"] == 1
+
+
+def test_the_producer_is_given_no_scenario_seeds_no_request_identity_and_only_a_bounded_synthetic_task(make):
+    seen = []
+
+    def spy(request):
+        seen.append(request)
+        return {"payload": GOOD_PAYLOAD, "metadata": rows(request)}
+    life, profile, _ = make(producer_factory=lambda clock: timed(clock, spy))
+    admitted(life)
+    life.run_stage(shard_budget=2)
+    assert len(seen) == 2
+    for request in seen:
+        assert set(request) == {"stage", "role", "ordinal", "observations", "max_payload_bytes", "max_metadata_bytes"}
+        assert request["max_payload_bytes"] == M.MAX_SYNTHETIC_PAYLOAD <= 64 * 1024 and request["stage"] == "known"
+
+
+def test_the_profile_of_a_running_controller_cannot_be_replaced(make):
     life, profile, _ = make()
-    profile.producer.__class__  # the contract is enforced by the lifecycle, not by the producer
-    life2, profile2, _ = make("w2")
-    life2.verify_evidence()
-    life2.check_admission()
-    profile2 = dataclasses.replace(profile2, producer=lambda request: produced)
-    life2.profile = profile2
-    life2.run_stage(shard_budget=1)
-    assert life2.state == "STOPPED" and life2.summary()["failed_attempts"] == 1 and life2.summary()["admitted_shards"] == 0
-    assert T.incidents(life2) == ["interruption"]
-    work = life2.paths["work"]
-    assert not [p for p in work.rglob("*") if p.is_file()]
+    with pytest.raises(AttributeError):
+        life.profile = dataclasses.replace(profile, producer=lambda request: None)
+    assert life.profile is profile
 
 
 # ---- stage-order and role isolation ------------------------------------------------------------------------------------------
@@ -365,3 +418,108 @@ def test_the_default_consumers_are_exactly_the_three_known_training_roles(make):
     assert life.state == "ADMISSION_CHECKED"
     assert life.boundary_reports[0]["conditions"]["isolation.consumers"] == I.PASS and I.ALLOWED_CONSUMERS == {
         "train": [["known", "train"]], "val_select": [["known", "val-select"]], "val_calib": [["known", "val-calib"]]}
+
+
+# ---- review remediation: locks, canary, honesty, stale verification ---------------------------------------------------------------------
+
+def test_a_second_controller_with_fresh_journal_directories_still_cannot_share_the_work_or_backup_root(make, tmp_path, custody, integrated):
+    life, profile, _ = make()
+    other = T.make_workspace(tmp_path / "other")
+    clash = M.Workspace(work=profile.workspace.work, backup=other.backup, journal=other.journal, anchors=other.anchors, replay=other.replay, quarantine=other.quarantine)
+    with pytest.raises(M.LifecycleRefused, match="another controller"):
+        M.SyntheticExecutorLifecycle(T.make_profile(None, custody, integrated, workspace=clash)[0])
+    clash = M.Workspace(work=other.work, backup=profile.workspace.backup, journal=other.journal, anchors=other.anchors, replay=other.replay, quarantine=other.quarantine)
+    with pytest.raises(M.LifecycleRefused, match="another controller"):
+        M.SyntheticExecutorLifecycle(T.make_profile(None, custody, integrated, workspace=clash)[0])
+    life.close()
+    M.SyntheticExecutorLifecycle(T.make_profile(None, custody, integrated, workspace=other)[0]).close()           # nothing is left locked behind
+
+
+def test_the_permanent_execution_boundary_condition_is_a_canary_the_lifecycle_will_not_ignore(make, monkeypatch):
+    life, profile, _ = make()
+    life.verify_evidence()
+    monkeypatch.setattr(I, "deny_execution", lambda *a, **k: None)                   # the E16 refusal silently returns instead of refusing
+    life.check_admission()
+    assert life.state == "STOPPED" and profile.producer.calls == 0 and T.incidents(life) == ["identity_mismatch"]
+    assert "execution boundary changed" in life.events[-1]["reason"]
+
+
+def test_production_gate_reports_the_canary_and_never_claims_a_closed_state_as_an_approval(complete, monkeypatch):
+    bundle, authority = complete["bundle"], T.Authority(complete["custody"], complete["bundle"])
+    args = dict(repo=bundle["repo"], now=T.CLOCK, challenge="c" * 64, revocation_floor=9, ci_floor=9)
+    ok = M.production_gate(bundle["plan"], bundle["reference"], evidence=authority("c" * 64, 9, T.CLOCK), **args)
+    assert ok["execution_boundary"] == I.BLOCKED and ok["trusted_evidence_ok"] is False and ok["closed_state_verified"] is False
+    monkeypatch.setattr(I, "deny_execution", lambda *a, **k: None)
+    broken = M.production_gate(bundle["plan"], bundle["reference"], evidence=authority("c" * 64, 9, T.CLOCK), **args)
+    assert broken["execution_boundary"] == I.FAIL and broken["lifecycle_state"] == "BLOCKED"
+    T.assert_no_authority(broken)
+
+
+def test_a_verified_closed_state_is_reported_as_closed_not_as_trusted_evidence(tmp_path, reference):
+    """The real, closed canonical state verifies cleanly and must never be read as an approval."""
+    import subprocess
+    for name, document in ((P.pre.GATES_PATH, reference["gates"]), (P.pre.MEMO_PATH, reference["memo"]), (G.PROTOCOL_JSON, reference["scientific_protocol"])):
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(S._canonical(document).decode())
+    git = lambda *a: subprocess.run(["git", "-c", "user.name=E18fixture", "-c", "user.email=fixture@example.invalid", *a], cwd=tmp_path, check=True, capture_output=True, text=True).stdout.strip()   # noqa: E731
+    git("init", "-q")
+    git("add", ".")
+    git("commit", "-qm", "closed metadata fixture")
+    reference["head"] = git("rev-parse", "HEAD")
+    result = M.production_gate(G.make_template(reference), reference, repo=tmp_path, evidence=None, now=T.CLOCK, challenge="c" * 64, revocation_floor=1, ci_floor=1)
+    assert result["trusted_evidence_state"] == P.STATE_CLOSED and result["closed_state_verified"] is True
+    assert result["trusted_evidence_ok"] is False and result["lifecycle_state"] == "BLOCKED" and result["ports_called"] == 0
+    T.assert_no_authority(result)
+
+
+def test_the_summary_observes_the_launch_flag_instead_of_asserting_it(make, monkeypatch):
+    life, _, _ = make()
+    assert life.summary()["production_launch_enabled"] is False
+    monkeypatch.setattr(G.sup, "PRODUCTION_LAUNCH_ENABLED", True)
+    summary = life.summary()
+    assert summary["production_launch_enabled"] is True and summary["execution_permitted"] is False and summary["verdict"] == "NO-GO"
+    life.verify_evidence()
+    assert life.state in ("STOPPED", "BLOCKED") and life.summary()["admitted_shards"] == 0                      # the changed flag is caught, not tolerated
+
+
+def test_a_retry_always_verifies_the_evidence_again_so_a_withdrawn_grant_cannot_be_walked_past(make):
+    life, profile, authority = make()
+    authority.available = False
+    life.verify_evidence()
+    assert life.state == "BLOCKED"
+    authority.available, authority.status = True, "REVOKED"
+    profile.clock.advance(1500)
+    life.retry()
+    assert life.state == "PREPARED"
+    life.verify_evidence()
+    assert life.state == "STOPPED" and "revoked" in life.events[-1]["reason"] and profile.producer.calls == 0
+
+
+def test_admission_refuses_a_verification_older_than_the_signed_answers_may_be(make):
+    life, profile, authority = make()
+    life.verify_evidence()
+    profile.clock.advance(M.TRUST_MAX_AGE_S + 1)
+    life.check_admission()
+    assert life.state == "BLOCKED" and "older" in life.events[-1]["reason"] and profile.producer.calls == 0
+    life.retry()
+    life.verify_evidence()
+    life.check_admission()
+    assert life.state == "ADMISSION_CHECKED"
+
+
+def test_a_stage_may_not_start_on_a_verification_that_went_stale_after_admission(make):
+    life, profile, _ = make()
+    admitted(life)
+    profile.clock.advance(M.TRUST_MAX_AGE_S + 1)
+    life.run_stage()
+    assert life.state == "BLOCKED" and profile.producer.calls == 0 and "stale" in life.events[-1]["reason"]
+    life.retry()
+    assert life.state == "PREPARED"
+
+
+def test_interrupt_refuses_the_reserved_producer_failure_signal(make):
+    life, _, _ = make()
+    with pytest.raises(M.LifecycleRefused):
+        life.interrupt("PRODUCER_FAILURE")
+    assert life.state == "PREPARED"

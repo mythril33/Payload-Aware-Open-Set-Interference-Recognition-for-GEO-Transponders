@@ -149,7 +149,7 @@ def test_an_authorization_that_expires_mid_stage_stops_after_the_shard_that_cros
 
 
 def test_a_revocation_that_arrives_mid_stage_is_noticed_at_the_next_scheduled_refresh_and_stops_the_run(make):
-    life, profile, authority = make()
+    life, profile, authority = make(s_per_observation=0.05)                                 # fast shards: the 64-shard schedule is what fires
     admitted(life)
     authority.after_calls = (2, "REVOKED")                                                  # call 1 was the stage-start evidence
     life.run_stage(shard_budget=200)
@@ -160,7 +160,7 @@ def test_a_revocation_that_arrives_mid_stage_is_noticed_at_the_next_scheduled_re
 
 
 def test_an_active_refresh_is_journaled_and_costs_one_challenge(make):
-    life, profile, _ = make()
+    life, profile, _ = make(s_per_observation=0.05)
     admitted(life)
     life.run_stage(shard_budget=M.REFRESH_EVERY_SHARDS * 2 + 3)
     assert life.state == "SYNTHETIC_STAGE_RUNNING" and life.replay.consumed() == 3
@@ -184,7 +184,7 @@ def test_source_drift_between_boundaries_stops_the_run_at_the_next_scheduled_che
         if state["drift"]:
             reference["head"] = "0" * 40
         return reference
-    life, profile, _ = make(reference_hook=hook)
+    life, profile, _ = make(reference_hook=hook, s_per_observation=0.05)
     admitted(life)
     state["drift"] = True
     life.run_stage(shard_budget=200)
@@ -314,13 +314,22 @@ def test_counters_that_run_backwards_are_an_inconsistent_observer(make):
     assert life.state == "STOPPED" and life.summary()["admitted_shards"] == 2 and T.incidents(life) == ["resource_observation_missing"]
 
 
-@pytest.mark.parametrize("name,change", [(n, c) for n, c, _ in RESOURCE_FAULTS if n in ("rss_over_ceiling", "wall_over_ceiling", "working_disk_insufficient", "nan", "stale_by_twenty_minutes")])
+@pytest.mark.parametrize("name,change", [(n, c) for n, c, _ in RESOURCE_FAULTS if n in ("rss_over_ceiling", "wall_over_ceiling", "working_disk_insufficient", "stale_by_twenty_minutes")])
 def test_the_same_faults_refuse_admission_before_the_first_shard(make, name, change):
     life, profile, _ = make(mutate=from_call(1, change))
     life.verify_evidence()
     life.check_admission()
     assert life.state == "STOPPED" and profile.producer.calls == 0
     assert T.kinds(life)[-1] == "stop" and len(T.incidents(life)) == 1
+
+
+@pytest.mark.parametrize("name", ["nan", "infinity", "negative", "boolean_instead_of_number", "text_instead_of_number", "null"])
+def test_a_malformed_reading_at_admission_is_a_missing_fact_and_blocks_before_anything_runs(make, name):
+    change = dict((n, c) for n, c, _ in RESOURCE_FAULTS)[name]
+    life, profile, _ = make(mutate=from_call(1, change))
+    life.verify_evidence()
+    life.check_admission()
+    assert life.state == "BLOCKED" and profile.producer.calls == 0 and "could not be assembled" in life.events[-1]["reason"]
 
 
 def test_a_first_shard_that_is_too_slow_stops_the_run(make):
@@ -376,3 +385,44 @@ def test_resource_ports_are_read_only_and_no_reading_is_cached_across_decisions(
     before = profile.resources.calls
     life.run_stage(shard_budget=3)
     assert profile.resources.calls == before + 3
+
+
+# ---- review remediation: refresh by time, outage handling -----------------------------------------------------------------------------
+
+def test_a_revocation_is_rechecked_by_elapsed_time_even_when_few_shards_were_produced(make):
+    life, profile, authority = make()                                                       # nominal 4.4 s/observation: ~141 s per 32-observation shard
+    admitted(life)
+    authority.after_calls = (2, "REVOKED")
+    life.run_stage(shard_budget=200)
+    shard_seconds = 4.4 * 32
+    assert life.state == "STOPPED" and T.incidents(life) == ["authorization_revoked"]
+    assert profile.producer.calls * shard_seconds >= M.REFRESH_EVERY_SECONDS > (profile.producer.calls - 1) * shard_seconds
+    assert profile.producer.calls < M.REFRESH_EVERY_SHARDS
+
+
+def test_the_time_schedule_costs_one_challenge_per_interval_and_keeps_the_run_going_while_the_grant_is_active(make):
+    life, profile, _ = make()
+    admitted(life)
+    life.run_stage(shard_budget=60)
+    refreshes = [e for e in life.journal_entries() if e["kind"] == "boundary_check" and e["data"].get("phase") == "revocation_refresh"]
+    assert life.state == "SYNTHETIC_STAGE_RUNNING" and len(refreshes) == int(60 * 4.4 * 32 // M.REFRESH_EVERY_SECONDS)
+    assert life.replay.consumed() == 1 + len(refreshes)
+
+
+def test_an_unreachable_revocation_source_mid_run_is_a_resumable_interruption_not_a_verdict(make, custody, integrated):
+    life, profile, authority = make(s_per_observation=0.05)
+    admitted(life)
+    authority.unreachable_from = 2
+    life.run_stage(shard_budget=200)
+    assert life.state == "STOPPED" and life.events[-1]["resumable"] is True and profile.producer.calls == M.REFRESH_EVERY_SHARDS
+    incident = [e for e in life.journal_entries() if e["kind"] == "incident"][-1]["data"]
+    assert incident["incident"] == "interruption" and incident["details"]["signal"] == "REVOCATION_UNAVAILABLE"
+    assert life.summary()["interruptions"] == 1
+
+
+def test_a_bad_but_reachable_revocation_answer_is_a_hard_stop(make):
+    life, profile, authority = make(s_per_observation=0.05)
+    admitted(life)
+    authority.tamper = lambda ev: {**ev, "revocation_signature": b"forged"}
+    life.run_stage(shard_budget=200)
+    assert life.state == "STOPPED" and life.events[-1]["resumable"] is False and T.incidents(life) == ["resource_observation_missing"]

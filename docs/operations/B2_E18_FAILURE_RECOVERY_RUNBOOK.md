@@ -18,19 +18,27 @@ must decide. It is a design record for a future operator procedure, not an instr
 |---|---|---|---|
 | Evidence source unreachable, signature refused, replayed answer, CI not green, gates closed | `BLOCKED`; challenge burned; no shard; `retry()` reruns with fresh evidence | events; journal untouched if not yet opened | fix the source; retry |
 | Explicit revocation, unknown status, expired approval | `STOPPED` (final); incident `authorization_revoked`/`authorization_expired` | journal incident + `stop` | new authorization record; new run |
-| Mid-stage revocation (every 64 shards) | `STOPPED` after the shard in flight | as above | as above |
+| Mid-stage revocation (every 64 shards or 3600 s) | `STOPPED` after the shard in flight | as above | as above |
+| Revocation source unreachable at a mid-stage refresh | `STOPPED` **resumable** (`interruption`, signal `REVOCATION_UNAVAILABLE`) | complete shards | `recover` once the source is back (fresh evidence is verified again) |
+| Revocation answer present but invalid (forged, wrong grant, stale) | `STOPPED` (final), `resource_observation_missing` | journal | treat as an integrity incident |
 | Source/plan/specification/root identity changed | `STOPPED`, incident `identity_mismatch` | journal | investigate; new reviewed run |
 | Producer error or contract breach | `STOPPED` **resumable**; `failed_attempts+1` | nothing published for that shard | `recover` (twice at most per stage) |
 | `interrupt()` / process killed | `STOPPED` resumable / nothing recorded | complete shards, no temp files if controlled | `recover` |
 | Torn write, orphan temp, descriptor lost, bit flip, substituted shard, shard missing, role directory swapped | `QUARANTINED` (final) + note; incident `orphan_files` / `partial_commit` / `shard_corruption` | every byte as found; `quarantine/quarantine-*.json` | human inspects; a new run needs new evidence |
 | Disk full / fsync error during publication | `QUARANTINED`, incident `partial_commit` | the partial shard in place | free space; human decides |
-| Backup differs from manifest (flip, missing, extra file, role removed) | `QUARANTINED`, incident `backup_mismatch`; **never re-copied** | both trees as found | human restores from an independent copy |
+| Backup differs from manifest (flip, missing, extra file, role removed) — also when it happens *after* verification, because every boundary re-verifies the backup | `QUARANTINED`, incident `backup_mismatch`; **never re-copied** | both trees as found | human restores from an independent copy |
+| Backup device unreachable or full while copying | `STOPPED` (final), incident `backup_unavailable`; `backup_verified` is not journaled | the working tree | free or replace the device; new run under human decision |
+| An admitted shard was replaced by a self-consistent one between publication and verification | `QUARANTINED`, `shard_corruption`; `stage_completed` is **not** journaled | trees as found | human inspects |
+| A shard that was never journaled is found at recovery and is not fabricated-bytes-only | `QUARANTINED`, `shard_corruption` | trees as found | find out who wrote it |
 | Working role changed between verification and backup | `QUARANTINED` | trees as found | as above |
 | Data present for a later stage | `STOPPED`, incident `stage_order_violation`; data untouched | the planted files | investigate the producer of those files |
 | K17d identity/counts/disclosure differ | `STOPPED`, incident `k17d_mismatch` | journal | D-8 re-derivation and review; never relabel |
 | Held-out role in a training/selection/calibration declaration | `STOPPED`, incident `identity_mismatch` | journal | fix the consumer |
-| Ledger edited, truncated, rewritten, deleted, unwritable; anchor missing or unwritable | in-memory `STOPPED`, `journal_ok=false`; further steps refused; a new controller refuses to recover | the journal as found | treat as an integrity incident |
-| Cumulative counters decrease across a restart; clock runs backwards | restart refused (`STOPPED` / `LifecycleRefused`) | journal | fix the observer / clock |
+| Ledger edited, truncated, rewritten, deleted, unwritable; anchor missing, rolled back, advanced or unwritable — **including while the run is live** | in-memory `STOPPED`, `journal_ok=false`; further steps refused; a new controller refuses to recover | the journal as found | treat as an integrity incident |
+| More than one ledger entry beyond the newest anchor at recovery | recovery refused | the journal as found | integrity incident (one trailing entry is the legitimate crash window) |
+| Cumulative counters decrease across a restart; wall time shorter than the journal's own span; clock runs backwards | restart refused (`STOPPED` / `LifecycleRefused`) | journal | fix the observer / clock |
+| Verification older than 300 s at admission or stage start | `BLOCKED`; `retry()` re-verifies from scratch | — | retry |
+| E16 `execution.boundary` no longer BLOCKED | `STOPPED`, `identity_mismatch` | journal | a guard was changed: investigate before anything else |
 | Restart allowance exhausted (the plan's ceilings: 2 failed attempts and 20 interruptions per stage, and the supervisor backstop of 60 total attempts, as enforced by the E16 evaluator) | `STOPPED`, incident `ceiling_breach` | journal | a human decides whether a new run is justified |
 
 ## Recovery procedure (synthetic)

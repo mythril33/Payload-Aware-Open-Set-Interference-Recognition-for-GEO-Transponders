@@ -116,7 +116,7 @@ class SyntheticAttestor:
                 "production_cross_verification_performed": True, "request_fingerprint": plan["source"]["known_request_fingerprint"],
                 "source_head": plan["source"]["git_commit"], "counts": dict(I.K17D_COUNTS), "identity_sha256": plan["scientific"]["d8_k17d"]["identity_sha256"],
                 "observation_reads": 0, "waveform_synthesis_calls": 0, "execution_authorized": False, "production_authorized": False,
-                "benchmark_complete": False,
+                "benchmark_complete": False, "synthetic_attestation": True, "attestor": "b2_e18_synthetic",
                 "d1_obligations": {"existing_test_pristine": False, "exposed_test_ids": d1["exposed_test_ids"], "exposed_matched_ids": d1["exposed_matched_ids"],
                                    "exposure_excluded_groups": {"test": 498, "test-matched": 148}}}
 
@@ -133,9 +133,9 @@ class SyntheticShardProducer:
         self.requests.append((request["stage"], request["role"], request["ordinal"]))
         if self.clock is not None:
             self.clock.advance(self.s_per_observation * request["observations"])
-        tag = f"{request['stage']}/{request['role']}/{request['ordinal']}/{request['request_fingerprint']}".encode()
+        tag = f"{request['stage']}/{request['role']}/{request['ordinal']}".encode()           # the request carries no scenario seeds or request identity
         payload = SYNTHETIC_PREFIX + hashlib.sha256(tag).hexdigest().encode() * 4
-        rows = b"".join(json.dumps({"i": i, "synthetic": True, "stage": request["stage"], "role": request["role"], "groups": list(request["groups"])},
+        rows = b"".join(json.dumps({"i": i, "synthetic": True, "stage": request["stage"], "role": request["role"], "ordinal": request["ordinal"]},
                                    sort_keys=True).encode() + b"\n" for i in range(request["observations"]))
         return {"payload": payload, "metadata": rows}
 

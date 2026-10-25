@@ -52,13 +52,22 @@ jobs:
         run: |
           # The comparison tree is the current reviewed base of this pull request. A legitimate earlier-merged change is
           # therefore never an "alteration"; a changed scientific record, canonical gate, historical dossier, reviewed
-          # contract module or any path outside the E18 scope fails.
+          # contract module or any path outside the E18 scope fails. The judge is the policy as the reviewed base has it,
+          # so a pull request cannot rewrite its own judge; a base that predates the policy (the introducing change) falls
+          # back to the head copy and says so.
           BASE="${{ github.event.pull_request.base.sha }}"
           if [ -z "$BASE" ]; then BASE="origin/main"; fi
-          python scripts/b2_e18_ci_policy.py check-diff --base "$BASE" --profile e18
-      - name: Workflow hygiene and the closed canonical gates
+          if git cat-file -e "$BASE:scripts/b2_e18_ci_policy.py" 2>/dev/null; then
+            git show "$BASE:scripts/b2_e18_ci_policy.py" > "$RUNNER_TEMP/b2_e18_ci_policy_base.py"
+            POLICY="$RUNNER_TEMP/b2_e18_ci_policy_base.py"
+          else
+            echo "the base has no E18 policy yet: using the head copy (introducing change)"
+            POLICY=scripts/b2_e18_ci_policy.py
+          fi
+          python "$POLICY" check-diff --base "$BASE" --profile e18
+          python "$POLICY" lint .github/workflows
+      - name: The closed canonical gates
         run: |
-          python scripts/b2_e18_ci_policy.py lint .github/workflows
           python scripts/b2_e16_policy.py ci-gate
           python scripts/b2_e18_ci_policy.py gate-decision
       - name: Compile current code without execution
@@ -69,6 +78,7 @@ jobs:
           # synthetic bytes to temporary directories and signs fabricated evidence with ephemeral test keys.
           python -m pytest -q -rs \
             tests/test_b2_e18_ci_policy.py tests/test_b2_e18_lifecycle.py tests/test_b2_e18_trust_resources.py \
+            tests/test_b2_e17_ci_compatibility.py \
             tests/test_b2_e18_recovery.py tests/test_b2_e18_acceptance.py \
             tests/test_b2_e17_signatures.py tests/test_b2_e17_git.py tests/test_b2_e17_evidence.py \
             tests/test_b2_e16_durability.py tests/test_b2_e16_ledger.py tests/test_b2_e16_policy.py \
