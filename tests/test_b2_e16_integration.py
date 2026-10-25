@@ -263,6 +263,7 @@ def test_the_unapproved_template_is_blocked_everywhere_with_no_adapters(referenc
     found = status(report)
     assert found["authorization.policy"] == I.BLOCKED and found["plan.dr04"] == I.BLOCKED
     assert found["durability.known"] == I.NOT_RUN and found["journal.external"] == I.NOT_RUN and found["runtime.stop_conditions"] == I.BLOCKED
+    assert found["isolation.roles"] == I.NOT_RUN and found["isolation.consumers"] == I.NOT_RUN        # no vacuous PASS without evidence
     assert found["inventory.frozen"] == I.PASS and found["spec.sealed"] == I.PASS and found["sequence.stages"] == I.PASS
 
 

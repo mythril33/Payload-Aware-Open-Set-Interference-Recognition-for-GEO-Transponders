@@ -545,7 +545,10 @@ def _evidence_conditions(p, spec, boundary, now, adapters, max_age, policy_state
             problems.append("the deferred request fingerprint equals another stage's (request aliasing)")
         out.append(_from_problems(f"durability.{stage}", problems, "every shard is committed, hash-verified, durably admitted and read-only"
                                   if expectations[stage] == "COMPLETE" else "the stage has not started and holds no data (stage order)"))
-    out.append(_from_problems("isolation.roles", _isolation_problems(stage_docs), "every stage root and role directory is a distinct directory"))
+    if stage_docs:
+        out.append(_from_problems("isolation.roles", _isolation_problems(stage_docs), "every stage root and role directory is a distinct directory"))
+    else:
+        out.append(_condition("isolation.roles", NOT_RUN, "no stage evidence was supplied, so directory distinctness is unknown"))
     declaration, status, message = _call(adapters, "consumer_declaration")
     out.append(_condition("isolation.consumers", status, message) if status else
                _from_problems("isolation.consumers", check_consumer_isolation(declaration),
