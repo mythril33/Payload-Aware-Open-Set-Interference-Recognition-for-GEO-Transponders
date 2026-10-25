@@ -649,3 +649,40 @@ def test_a_role_changed_between_verification_and_backup_is_refused(known, tmp_pa
 
 def test_boundary_reports_are_labelled_synthetic(known):
     assert known["boundary_reports"] and all(r["synthetic"] is True and r["evidence_scope"] == "SYNTHETIC_TEST_ROOT" for r in known["boundary_reports"])
+
+
+# ---- guards found uncovered by mutation testing ---------------------------------------------------------------------------------------
+
+def test_verification_refuses_a_stage_whose_planned_shards_are_not_all_admitted(make):
+    life, profile, _ = partial(make, shards=3)
+    before = (life.state, life.summary()["admitted_shards"])
+    with pytest.raises(M.InvalidTransition, match="not admitted"):
+        life.verify_stage()
+    assert (life.state, life.summary()["admitted_shards"]) == before and "stage_completed" not in T.kinds(life)
+
+
+def test_a_retried_backup_copy_is_idempotent_but_never_overwrites_different_bytes(known, tmp_path):
+    profile, _ = T.copy_world("known", known, tmp_path / "w")
+    life = M.SyntheticExecutorLifecycle.recover(profile)
+    try:
+        role = "val-calib"
+        source, target = Path(profile.workspace.work) / "known" / role, Path(profile.workspace.backup) / "known" / role
+        ordinals = sorted(life.layout["known"][role])
+        before = T.tree_digest(target)
+        life._copy(source, target, ordinals)                                                    # identical bytes already there: a no-op, not an error
+        assert T.tree_digest(target) == before
+        assert life._copy_and_verify("known")["restores"][role]["ok"] is True
+        flip_payload_in(target, "part-00001.npz")
+        damaged = T.tree_digest(target)
+        with pytest.raises(M.LifecycleRefused, match="different bytes"):
+            life._copy(source, target, ordinals)
+        assert T.tree_digest(target) == damaged                                                 # nothing was overwritten
+    finally:
+        life.close()
+
+
+def flip_payload_in(directory, name):
+    path = T.writable(directory / name)
+    raw = bytearray(path.read_bytes())
+    raw[-1] ^= 0x01
+    path.write_bytes(bytes(raw))
