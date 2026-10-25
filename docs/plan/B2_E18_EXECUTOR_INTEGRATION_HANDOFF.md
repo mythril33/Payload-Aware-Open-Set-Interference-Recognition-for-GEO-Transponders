@@ -1,6 +1,10 @@
 # B2 E18 — executor integration handoff
 
 Prepared by E17, version 1, 2026-10-25. **HANDOFF ONLY — E18 NOT STARTED.**
+
+> **Status update (2026-10-25, E18):** the synthetic lifecycle this handoff asks for was delivered by E18 (PR #42, merged as `5efa287`; review
+> and CI follow-up in PR #43). It is fabricated-bytes only and authorizes nothing: see [the lifecycle design](B2_E18_EXECUTOR_LIFECYCLE.md) and
+> the [verification report](../results/B2_E18_VERIFICATION.md). The text below is the original E17 handoff, kept as written.
 **DR-04 NO-GO — NO COMPUTE AUTHORIZED.** This is not a production command,
 approval, release transition or instruction to bypass an existing guard.
 

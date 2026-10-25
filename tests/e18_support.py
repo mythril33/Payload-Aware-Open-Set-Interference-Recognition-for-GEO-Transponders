@@ -42,6 +42,7 @@ class Authority:
         self.ci_base = json.loads(base["ci"])
         self.authorization_signature = base["authorization_signature"]
         self.status = "ACTIVE"                   # anything but ACTIVE is an explicit revocation answer
+        self.validity_s = VALIDITY_S             # how long the signed answers state that they are valid (E17 accepts at most 300 s)
         self.available = True                    # False: the issuer cannot be reached
         self.ci_runs = None                      # replace the signed CI runs
         self.calls = 0
@@ -54,7 +55,7 @@ class Authority:
         if not self.available or (self.unreachable_from is not None and self.calls >= self.unreachable_from):
             raise OSError("fabricated issuer unreachable")
         issued = datetime.fromisoformat(now)
-        expires = (issued + timedelta(seconds=VALIDITY_S)).isoformat()
+        expires = (issued + timedelta(seconds=self.validity_s)).isoformat()
         status = self.status
         if self.after_calls is not None and self.calls >= self.after_calls[0]:
             status = self.after_calls[1]
@@ -212,13 +213,16 @@ def discard(path):
 
 
 @pytest.fixture(autouse=True)
-def scratch(tmp_path):
-    """Return each test's temporary tree (copied ~20 MB / ~5k-file worlds, journals, clones) as soon as the test is over.
+def scratch(tmp_path, request):
+    """Return each passing test's temporary tree (copied ~20 MB / ~5k-file worlds, journals, clones) as soon as the test is over.
 
     Pytest keeps every passing test's ``tmp_path`` for the whole session; a few hundred world copies exhausted the CI runner's disk
-    quota and failed unrelated tests that run later in the same suite. The cached worlds live in ``tmp_path_factory`` and stay."""
+    quota and failed unrelated tests that run later in the same suite. The cached worlds live in ``tmp_path_factory`` and stay.
+    A failing test's tree is kept for the post-mortem (the failure count is updated before teardown runs)."""
+    failed_before = request.session.testsfailed
     yield tmp_path
-    discard(tmp_path)
+    if request.session.testsfailed == failed_before:
+        discard(tmp_path)
 
 
 @pytest.fixture

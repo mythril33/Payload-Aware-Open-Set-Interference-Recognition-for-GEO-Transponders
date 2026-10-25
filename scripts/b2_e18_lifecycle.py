@@ -12,7 +12,9 @@ barrier, supervise resources with the E16 stop evaluator, verify the stage, copy
 and journal every step to an externally anchored hash-chained ledger. The journal is the durable state: a restarted process
 rebuilds from it and from the bytes on disk (``recover``), or refuses. Fabricated signing keys, relabelling of the synthetic
 workspace to the plan's declared identities and fabricated device/K17d attestations live in ``b2_e18_synthetic`` and in the
-tests, never here. Nothing in this module imports a generator, spawns a process or reads the environment.
+tests, never here. This module itself imports no generator, spawns no process and reads no environment (an AST tripwire keeps it
+that way; it is a regression check, not a proof). The contract modules underneath are not that clean: E13 imports the frozen
+scenario definitions and E17 runs read-only ``git`` and OpenSSH signature-verification children.
 """
 from __future__ import annotations
 
@@ -82,6 +84,10 @@ class InvalidTransition(RuntimeError):
 
 class LifecycleRefused(ValueError):
     pass
+
+
+class ObserverSkew(LifecycleRefused):
+    """The resource observer reports less wall time than the span the journal itself records (a clock step, a suspend, reset counters)."""
 
 
 class JournalUnavailable(RuntimeError):
@@ -349,6 +355,8 @@ class SyntheticExecutorLifecycle:
         self._last_machine = None
         self._last_refresh = 0
         self._last_k17d = None
+        self._adopted = []                       # committed-but-unjournaled shards found at recovery (at most the one that was in flight)
+        self._backup_unreachable = None          # set by the boundary's backup adapter when the device (not its bytes) failed
         self._reports = []
         exists = self._ledger_exists()
         if exists and not _recovering:
@@ -369,6 +377,7 @@ class SyntheticExecutorLifecycle:
             self._rebuild_disk()
             if self.state != "QUARANTINED":
                 self._record_restart()
+                self._journal_adopted()
         except JournalUnavailable as error:
             self.close()
             raise LifecycleRefused("the journal cannot be extended at restart (" + str(error) + "): refusing to continue") from error
@@ -453,7 +462,7 @@ class SyntheticExecutorLifecycle:
         return self
 
     def _stop(self, reason, *, resumable=False, incident=None, **detail):
-        resumable = bool(resumable) and self._journal_ok
+        resumable = bool(resumable) and self._journal_ok and self._journal_open     # without a journal there is nothing for recover() to continue
         self._move("STOPPED", "stop", reason=reason, resumable=resumable, **detail)
         if incident is not None:
             self._journal_best_effort("incident", L.incident_data(*incident))
@@ -547,11 +556,23 @@ class SyntheticExecutorLifecycle:
         return {"report": report, "reference": reference, "now": now, "evidence": evidence, "challenge": challenge, "floor": floor}
 
     def _trust_fresh(self):
-        """The verification a stage starts on is at most as old as the signed answers it relied on may be."""
+        """The verification a stage starts on is at most as old as the signed answers it relied on may be, and none of them has expired."""
         if self._trusted is None:
             return False
-        age = (S._instant(self.profile.clock.now()) - S._instant(self._trusted["now"])).total_seconds()
-        return 0 <= age <= TRUST_MAX_AGE_S
+        try:
+            now = S._instant(self.profile.clock.now())
+            age = (now - S._instant(self._trusted["now"])).total_seconds()
+        except (ValueError, TypeError, AttributeError):          # a clock that cannot be read is not a fresh verification
+            return False
+        return 0 <= age <= TRUST_MAX_AGE_S and now < self._trusted["valid_until"]
+
+    @staticmethod
+    def _valid_until(evidence):
+        """The earlier expiry of the two signed answers (E17 already proved them genuine and fresh; this only reads their stated end)."""
+        try:
+            return min(S._instant(json.loads(evidence[name])["expires_at"]) for name in ("revocation", "ci"))
+        except Exception as error:
+            raise LifecycleRefused("the signed answers carry no readable expiry") from error
 
     @staticmethod
     def _trust_ok(report):
@@ -591,6 +612,10 @@ class SyntheticExecutorLifecycle:
         report = trusted["report"]
         if not self._trust_ok(report):
             return self._trust_failure(trusted, "evidence")
+        try:
+            trusted["valid_until"] = self._valid_until(trusted["evidence"])
+        except LifecycleRefused as error:
+            return self._block("trusted evidence has no readable expiry", detail=str(error)[:120])
         try:
             self._trusted = trusted
             self._remember_grant()
@@ -700,7 +725,7 @@ class SyntheticExecutorLifecycle:
         if self._run_opened_at is not None:
             span = (S._instant(self.profile.clock.now()) - S._instant(self._run_opened_at)).total_seconds()
             if machine["elapsed_wall_s"] + 10 < span:
-                raise LifecycleRefused("elapsed wall time is shorter than the span the journal itself records")
+                raise ObserverSkew("elapsed wall time is shorter than the span the journal itself records")
         self._last_machine = machine
 
     def _committed(self):
@@ -737,12 +762,13 @@ class SyntheticExecutorLifecycle:
         resource = self._resource_state()
         moment = self.profile.clock.now()
         attestor = self.profile.attestor
+        self._backup_unreachable = None
         k17d = attestor.k17d_report(self.plan)
         self._last_k17d = k17d
         declaration = self.profile.consumers() if self.profile.consumers is not None else copy.deepcopy(I.ALLOWED_CONSUMERS)
         adapters = {
             "shard_state": lambda stage: attestor.stage_doc(stage, self._raw_stage(stage), moment),
-            "backup_state": lambda stage: attestor.backup_doc(stage, self._verify_backup(stage), moment),
+            "backup_state": lambda stage: self._backup_document(stage, moment),
             "journal_state": lambda: self._journal_doc(moment),
             "k17d_metadata": lambda: dict(k17d, collected_at=moment),
             "resource_state": lambda stage: copy.deepcopy(resource),
@@ -756,6 +782,19 @@ class SyntheticExecutorLifecycle:
                               "document_conditions_met": report["document_conditions_met"],
                               "conditions": {c["id"]: c["status"] for c in report["conditions"]}})
         return report
+
+    def _backup_document(self, stage, moment):
+        try:
+            return self.profile.attestor.backup_doc(stage, self._verify_backup(stage), moment)
+        except OSError as error:
+            if self._device_failed(error):
+                self._backup_unreachable = f"{type(error).__name__} errno {error.errno}"
+            raise
+
+    @staticmethod
+    def _device_failed(error):
+        """An I/O failure of the device is an outage; a backup that is simply not there (ENOENT and friends) is missing evidence."""
+        return isinstance(error, OSError) and not isinstance(error, (FileNotFoundError, NotADirectoryError, IsADirectoryError))
 
     def _dispose(self, report):
         """Map unmet boundary conditions to a disposition: integrity -> QUARANTINED; tampering/stop -> STOPPED; missing facts -> BLOCKED."""
@@ -774,6 +813,8 @@ class SyntheticExecutorLifecycle:
         if later:
             return self._stop("stage-order violation: data exists for a stage that has not been admitted", incident=(
                 "stage_order_violation", {"stage": later[0].split(".", 1)[1], "required_predecessor": STAGES[current]}), failing=ids)
+        if self._backup_unreachable is not None and any(i.startswith("backup.") for i in ids) and not any(i.startswith("durability.") for i in ids):
+            return self._stop("the backup device is unavailable: " + self._backup_unreachable, incident=("backup_unavailable", {"reason": self._backup_unreachable}))
         if any(i.startswith(("durability.", "backup.")) for i in ids):
             incident = ("backup_mismatch", {"role": "backup", "manifest_sha256": _digest(self.manifests.get(self.stage, {}))}) \
                 if any(i.startswith("backup.") for i in ids) else None
@@ -873,11 +914,15 @@ class SyntheticExecutorLifecycle:
         stage = self.stage
         try:
             self._check_identities()
+            if self._standing_checks():
+                return self
             self._derive_binding(stage)
             self._bind(stage)
             observation = self._resource_state()
         except JournalUnavailable:
             return self._fail_journal()
+        except ObserverSkew as error:                  # the observer cannot be reconciled with the journal: not a verdict, evidence is verified again
+            return self._block("the resource observer disagrees with the journal: " + str(error)[:100])
         except (OSError, LifecycleRefused, D.DurabilityRefused, S.StorageRefused, KeyError, ValueError) as error:
             return self._stop("restart refused: " + type(error).__name__ + ": " + str(error)[:100], incident=(
                 "identity_mismatch", {"what": "restart", "expected_sha256": self.plan["plan_fingerprint"], "observed_sha256": _digest(str(error))}))
@@ -886,6 +931,35 @@ class SyntheticExecutorLifecycle:
         if stop["decision"] == "STOP":
             return self._stop("restart refused: " + ", ".join(stop["reasons"][:3]), incident=self._incident_for(stop["reasons"][0], stop["projections"], observation))
         return self._move("ADMISSION_CHECKED", "check_admission", mode="resume")
+
+    def _standing_checks(self):
+        """The boundary conditions that hold at every moment of a stage, not only at its start. A resumed run is judged on them before
+        it produces another byte (the full E16 report is only meaningful at a stage start). Returns True when the run was halted."""
+        canary = I._execution_boundary()
+        if canary.get("status") != I.BLOCKED or (canary.get("details") or {}).get("permanent") is not True:
+            self._stop("the E16 execution boundary changed: it must stay permanently BLOCKED", incident=(
+                "identity_mismatch", {"what": "execution.boundary", "expected_sha256": _digest({"status": I.BLOCKED, "permanent": True}),
+                                      "observed_sha256": _digest(canary)}))
+            return True
+        for later in STAGES[self.stage_index + 1:]:
+            raw = self._raw_stage(later)
+            if raw["unexpected_root_entries"] or any(e["classification"] and e["classification"]["resume_state"] != "NOT_STARTED" for e in raw["roles"].values()):
+                self._stop("stage-order violation: data exists for a stage that has not been admitted", incident=(
+                    "stage_order_violation", {"stage": later, "required_predecessor": STAGES[self.stage_index]}))
+                return True
+        declaration = self.profile.consumers() if self.profile.consumers is not None else copy.deepcopy(I.ALLOWED_CONSUMERS)
+        if I.check_consumer_isolation(declaration):
+            self._stop("role-isolation violation", incident=("identity_mismatch", {
+                "what": "isolation.consumers", "expected_sha256": _digest(I.ALLOWED_CONSUMERS), "observed_sha256": _digest(declaration)}))
+            return True
+        if "known" in self.completed:
+            moment = self.profile.clock.now()
+            k17d = dict(self.profile.attestor.k17d_report(self.plan), collected_at=moment)
+            if I._k17d_problems(k17d, self.plan, moment, 3600):
+                self._stop("K17d identity mismatch", incident=("k17d_mismatch", {
+                    "expected_sha256": self.plan["scientific"]["d8_k17d"]["identity_sha256"], "observed_sha256": str(k17d.get("identity_sha256", "0" * 64))}))
+                return True
+        return False
 
     # ---- the stage run ----------------------------------------------------------------------------------
     def run_stage(self, shard_budget=None):
@@ -903,6 +977,8 @@ class SyntheticExecutorLifecycle:
                 if ordinal in self._admissions.get((stage, role), {}):
                     continue
                 if shard_budget is not None and done >= shard_budget:
+                    return self
+                if not self._refreshed():
                     return self
                 if not self._one_shard(stage, role, shards[ordinal]):
                     return self
@@ -991,16 +1067,31 @@ class SyntheticExecutorLifecycle:
             os.close(fd)
 
     # ---- resource supervision ---------------------------------------------------------------------------
+    def _refresh_due(self):
+        return (self._shards_this_attempt - self._last_refresh >= REFRESH_EVERY_SHARDS
+                or (self._last_refresh_at is not None and self.profile.clock.monotonic() - self._last_refresh_at >= REFRESH_EVERY_SECONDS))
+
+    def _refreshed(self):
+        """Scheduled revalidation before the next shard, so a run that sat idle cannot produce one more shard on a stale answer."""
+        try:
+            return not self._refresh_due() or self._refresh() is None
+        except JournalUnavailable:
+            self._fail_journal()
+            return False
+
     def _supervise(self):
         """After every admitted shard: recheck identity and revocation on schedule, read resources, evaluate the E16 stop logic."""
         try:
-            due = (self._shards_this_attempt - self._last_refresh >= REFRESH_EVERY_SHARDS
-                   or (self._last_refresh_at is not None and self.profile.clock.monotonic() - self._last_refresh_at >= REFRESH_EVERY_SECONDS))
-            if due and self._refresh() is not None:
+            if self._refresh_due() and self._refresh() is not None:
                 return False
             observation = self._resource_state()
         except JournalUnavailable:
             self._fail_journal()
+            return False
+        except ObserverSkew as error:                  # a clock step or a suspend is an interruption to recover from, not tampering
+            self._interruptions += 1
+            self._stop("resource observer disagrees with the journal's wall-clock span: " + str(error)[:80], resumable=True, incident=(
+                "interruption", {"attempt": self._attempt, "signal": "OBSERVER_CLOCK_SKEW"}))
             return False
         except Exception as error:
             self._stop("stop condition: resource observation missing or inconsistent", incident=(
@@ -1121,7 +1212,11 @@ class SyntheticExecutorLifecycle:
                 "backup_unavailable", {"reason": f"{type(error).__name__} errno {error.errno}"}))
         k17d = None
         if stage == "known":
-            k17d = dict(self.profile.attestor.k17d_report(self.plan), collected_at=self.profile.clock.now())
+            try:
+                k17d = dict(self.profile.attestor.k17d_report(self.plan), collected_at=self.profile.clock.now())
+            except Exception as error:
+                return self._stop("the K17d metadata comparison could not be produced: " + type(error).__name__, incident=("k17d_mismatch", {
+                    "expected_sha256": self.plan["scientific"]["d8_k17d"]["identity_sha256"], "observed_sha256": _digest(type(error).__name__)}))
             self._last_k17d = k17d
         try:
             self._journal_once(stage, "backup_verified", {"manifests": self.manifests[stage]})
@@ -1188,6 +1283,7 @@ class SyntheticExecutorLifecycle:
             trusted = self._trusted_check()
             if not self._trust_ok(trusted["report"]):
                 return self._trust_failure(trusted, "stage boundary")
+            trusted["valid_until"] = self._valid_until(trusted["evidence"])
             self._trusted = trusted
             self._remember_grant()
             self._journal("boundary_check", {"phase": "complete", "stage": stage, "revocation_sha256": trusted["report"]["revocation"]["evidence_sha256"]})
@@ -1336,6 +1432,7 @@ class SyntheticExecutorLifecycle:
         for stage in STAGES[:min(self.stage_index + 1, len(STAGES))]:
             if stage not in self._bound or (stage not in self._admitted_marker and stage not in self.completed):
                 continue                             # never admitted: nothing was produced, the admission boundary will judge the directories
+            unjournaled = []
             for role in I.STAGE_ROLES[stage]:
                 directory, expected = self.paths["work"] / stage / role, self._expected_role(stage, role)
                 try:
@@ -1356,6 +1453,8 @@ class SyntheticExecutorLifecycle:
                                                                                "expected_sha256": journaled.get((stage, role, ordinal), "0" * 64),
                                                                                "observed_sha256": admission["descriptor_sha256"]}))
                     recorded = journaled.get((stage, role, ordinal))
+                    if recorded is None:
+                        unjournaled.append((role, ordinal))
                     if recorded is not None and recorded != admission["descriptor_sha256"]:
                         return self._quarantine("on-disk shard differs from its journaled admission", role_dir=(directory, expected), incident=(
                             "shard_corruption", {"role": role, "ordinal": ordinal, "expected_sha256": recorded, "observed_sha256": admission["descriptor_sha256"]}))
@@ -1368,12 +1467,43 @@ class SyntheticExecutorLifecycle:
                 if stage in self.manifests and D.build_manifest(directory, expected)["manifest_sha256"] != self.manifests[stage].get(role):
                     return self._quarantine("a completed role no longer matches its journaled manifest", role_dir=(directory, expected), incident=(
                         "shard_corruption", {"role": role, "ordinal": 0, "expected_sha256": self.manifests[stage].get(role, "0" * 64), "observed_sha256": "0" * 64}))
+            problem = self._unjournaled_problem(stage, journaled, unjournaled)
+            if problem is not None:
+                return self._quarantine(problem, incident=("orphan_files", {"role": unjournaled[0][0],
+                                                                            "files": [D.shard_names(o)[0] for _, o in unjournaled[:8]]}))
+            self._adopted += [(stage, role, ordinal) for role, ordinal in unjournaled]
         for stage in self.completed:
             try:
                 self._raw_backup[stage] = self._verify_backup(stage)
-            except (OSError, D.DurabilityRefused, S.StorageRefused, LifecycleRefused) as error:
+            except (D.DurabilityRefused, S.StorageRefused, LifecycleRefused) as error:
                 return self._quarantine("backup of a completed stage no longer verifies: " + type(error).__name__,
                                         incident=("backup_mismatch", {"role": "backup", "manifest_sha256": _digest(self.manifests.get(stage, {}))}))
+            except OSError as error:
+                if self._device_failed(error):       # an outage proves nothing about the bytes: refuse to continue, write nothing, retry later
+                    raise LifecycleRefused("the backup device cannot be read at recovery (" + type(error).__name__ + f" errno {error.errno}"
+                                           "): nothing was written; recover again when it is reachable") from error
+                return self._quarantine("backup of a completed stage is missing: " + type(error).__name__,
+                                        incident=("backup_mismatch", {"role": "backup", "manifest_sha256": _digest(self.manifests.get(stage, {}))}))
+
+    def _unjournaled_problem(self, stage, journaled, unjournaled):
+        """A crash can leave exactly one committed shard whose ``shard_admitted`` entry was never written: the one in flight, which is the
+        next planned shard. Anything else on disk that the journal does not know was not produced by this controller."""
+        if not unjournaled:
+            return None
+        if len(unjournaled) > 1:
+            return "more than one committed shard was never admitted in the journal (only the one in flight at a crash can be)"
+        order = [(r, o) for r, shards in self.layout[stage].items() for o in sorted(shards)]
+        if order.index(unjournaled[0]) != sum(1 for key in order if (stage, *key) in journaled):
+            return "the unjournaled shard is not the next planned shard"
+        return None
+
+    def _journal_adopted(self):
+        """The one adopted shard is journaled now, so that the journal again covers every admitted shard."""
+        for stage, role, ordinal in self._adopted:
+            admission = self._admissions[(stage, role)][ordinal]
+            self._journal("shard_admitted", {"role": role, "ordinal": ordinal, "descriptor_sha256": admission["descriptor_sha256"],
+                                             "adopted_at_recovery": True}, stage=stage)
+        self._adopted = []
 
     def _check_adopted(self, directory, ordinal, shard):
         part, meta, _ = D.shard_names(ordinal)

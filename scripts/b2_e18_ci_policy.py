@@ -6,8 +6,11 @@ Pure functions plus a small CLI. Nothing here authorizes, launches or edits anyt
 * **Scope** (``check-diff``): which paths may a milestone branch touch? The comparison base is the PR's merge base (the *current
   reviewed* tree), never a frozen historical snapshot, so a legitimate earlier-merged change is not an "alteration" of history
   while a change to a frozen scientific record, a canonical gate, a historical dossier or a reviewed contract module still fails.
-* **Workflow hygiene** (``lint``): no workflow may widen permissions, use secrets, a self-hosted runner, third-party actions, or
-  call a generator, trainer, production supervisor or GPU.
+* **Workflow hygiene** (``lint``): a text-level tripwire against widening permissions, secrets, a self-hosted runner, third-party
+  actions, or calling a generator, trainer, production supervisor or GPU, and against dropping the E18 guard steps by accident.
+  It is not a proof (variables and here-documents can defeat a line scan), and it cannot protect the workflow that runs it: a pull
+  request that rewrites the workflow rewrites what executes on that pull request. That protection can only come from repository
+  settings (required reviews, rulesets or CODEOWNERS on ``.github/workflows``), which no script here can configure or verify.
 * **Gate state** (``gate-decision``): the real gates are CLOSED_CANONICAL and that is the only state this build accepts. The
   matrix for an eventual DR-04-approved state is written down and tested here, but an approved-shaped gate can never pass CI
   without trusted evidence under a *production* trust root, which does not exist today.
@@ -63,7 +66,7 @@ PROFILES = {
         "milestone": "E18 synthetic executor lifecycle",
         "allow": ("scripts/b2_e18_*.py", "tests/test_b2_e18_*.py", "tests/e18_support.py",
                   "docs/plan/B2_E18_*.md", "docs/operations/B2_E18_*.md", "docs/results/B2_E18_*.md",
-                  ".github/workflows/b2-e18-lifecycle-ci.yml", "docs/plan/DURUM.md"),
+                  "docs/plan/DURUM.md"),                 # not the workflow: a milestone PR that edits its own CI file also edits what judges it
     },
 }
 SAFE_PATH = re.compile(r"[A-Za-z0-9._@+=,-]+(/[A-Za-z0-9._@+=,-]+)*\Z")
@@ -116,7 +119,15 @@ FORBIDDEN_COMMANDS = (
     r"b2_production_preflight\.py\s+(lock-create|drill|run)", r"\bnvidia-smi\b", r"\btorch\.cuda\b", r"\bcurl\b", r"\bwget\b", r"\bscp\b",
     r"\bsudo\b", r"\bdocker\s+(run|exec)\b", r"\bgh\s+(api|release|workflow)\b", r"\bgit\s+push\b",
     r"\bpython3?\s+(-\w*c\b|-m\s+(b2_|geosim|geoml))", r"b2_production_supervisor", r"\bimportlib\b", r"\bos\.system\b", r"\bexec\(",
+    r"git\+(https?|ssh)", r"\b(from|import)[ \t]+(geosim|geoml)\b", r"\bpython3?[ \t]+-m[ \t]+\S*\$",
 )
+# Steps the E18 workflow must keep (a tripwire for accidental removal; a deliberate rewrite of the file defeats it, see the module docstring).
+GUARD_REQUIREMENTS = {
+    "b2-e18-lifecycle-ci.yml": (
+        r'git show "\$BASE:scripts/b2_e18_ci_policy\.py"', r'"\$POLICY" check-diff --base "\$BASE" --profile e18', r'"\$POLICY" lint \.github/workflows',
+        r"scripts/b2_e16_policy\.py ci-gate", r"scripts/b2_e18_ci_policy\.py gate-decision",
+    ),
+}
 FIXED_SHA = re.compile(r"git diff --exit-code ([0-9a-f]{40})\b")
 PR_BASE = re.compile(r"github\.event\.pull_request\.base\.sha")
 
@@ -132,7 +143,7 @@ def on_block(text):
 
 
 def lint_workflow(text, name="workflow"):
-    """Static, text-level problems; an empty list means the workflow stays inside the engineering-only boundary."""
+    """Static, text-level problems. An empty list means no known drift pattern matched, not that the workflow is safe."""
     problems = []
     code = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
     head = text.split("\njobs:", 1)[0]
@@ -166,6 +177,9 @@ def lint_workflow(text, name="workflow"):
     timeouts = [int(m) for m in re.findall(r"^\s*timeout-minutes:\s*(\d+)\s*$", code, re.M)]
     if len(timeouts) != len(runners) or any(not 1 <= t <= MAX_TIMEOUT_MINUTES for t in timeouts):
         problems.append(f"every job needs a timeout of at most {MAX_TIMEOUT_MINUTES} minutes")
+    for pattern in GUARD_REQUIREMENTS.get(name, ()):
+        if not re.search(pattern, code):
+            problems.append(f"a required guard step is missing: {pattern}")
     return problems
 
 

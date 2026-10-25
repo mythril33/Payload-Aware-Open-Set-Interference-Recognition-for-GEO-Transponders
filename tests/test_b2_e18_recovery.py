@@ -5,6 +5,7 @@ every case the evidence on disk must be preserved byte for byte, a damaged run m
 accepted only under identical plan, specification, source and journal identities.
 """
 import copy
+import errno
 from datetime import datetime, timedelta
 import dataclasses
 import hashlib
@@ -923,7 +924,8 @@ def test_a_run_cannot_claim_less_wall_time_than_the_journal_itself_spans_after_a
     new_profile, _ = T.restart_profile(profile.workspace, custody, integrated, profile.plan, start=resumed.isoformat(), base_wall_s=600.0)
     again = make.adopt(M.SyntheticExecutorLifecycle.recover(new_profile))
     admitted(again)
-    assert again.state == "STOPPED" and "shorter than the span" in again.events[-1]["reason"] and new_profile.producer.calls == 0
+    assert again.state == "BLOCKED" and "shorter than the span" in again.events[-1]["reason"] and new_profile.producer.calls == 0
+    assert again.state != "STOPPED" and not any(e["kind"] == "stop" for e in again.journal_entries())               # a blocked restart is not a verdict
 
 
 def test_a_crash_right_after_evidence_verification_is_not_a_corrupt_run(make, custody, integrated):
@@ -968,3 +970,180 @@ def test_a_shard_swapped_between_publication_and_admission_is_quarantined_by_the
     monkeypatch.setattr(D, "admit_shard", real)
     assert life.state == "QUARANTINED" and life.summary()["admitted_shards"] == 0 and profile.producer.calls == 1
     assert T.incidents(life) == ["shard_corruption"] and "differ from the bytes this controller published" in life.events[-1]["reason"]
+
+
+# ---- round-2 review: adoption is limited to the one shard that was in flight -----------------------------------------------------------
+
+def test_recovery_refuses_several_unjournaled_shards_even_when_each_one_meets_the_contract(make, custody, integrated):
+    life, profile, _ = partial(make, shards=3)
+    life.interrupt()
+    for ordinal in range(3, 8):
+        plant(life, ordinal, M.SYNTHETIC_PREFIX + b"planted", synthetic_rows(life, ordinal))
+    before = T.tree_digest(life.paths["work"])
+    again, _, _ = recover(make, life, profile, custody, integrated)
+    quarantined_with_evidence_intact(again, before)
+    assert "more than one committed shard" in again.events[-1]["reason"] and T.incidents(again)[-1] == "orphan_files"
+
+
+def test_recovery_refuses_a_single_unjournaled_shard_that_is_not_the_next_planned_one(make, custody, integrated):
+    life, profile, _ = partial(make, shards=3)
+    life.interrupt()
+    plant(life, 9, M.SYNTHETIC_PREFIX + b"planted far ahead", synthetic_rows(life, 9))
+    before = T.tree_digest(life.paths["work"])
+    again, _, _ = recover(make, life, profile, custody, integrated)
+    quarantined_with_evidence_intact(again, before)
+
+
+def test_the_one_adopted_shard_is_journaled_so_the_journal_covers_every_admitted_shard(make, custody, integrated):
+    life, profile, _ = partial(make, shards=3)
+    life.interrupt()
+    plant(life, 3, M.SYNTHETIC_PREFIX + b"the shard that was in flight", synthetic_rows(life, 3))
+    again, profile2, _ = recover(make, life, profile, custody, integrated)
+    admissions = [e["data"] for e in again.journal_entries() if e["kind"] == "shard_admitted"]
+    assert again.state == "PREPARED" and [a["ordinal"] for a in admissions] == [0, 1, 2, 3] and admissions[-1]["adopted_at_recovery"] is True
+    second, _, _ = recover(make, again, profile2, custody, integrated)                              # nothing is adopted twice
+    assert second.state == "PREPARED" and second.summary()["admitted_shards"] == 4
+    assert [e["data"]["ordinal"] for e in second.journal_entries() if e["kind"] == "shard_admitted"] == [0, 1, 2, 3]
+
+
+# ---- round-2 review: observer disagreement, backup outage, standing checks on resume ---------------------------------------------------
+
+def test_a_clock_step_the_observer_does_not_share_is_a_resumable_interruption_not_a_verdict(make, custody, integrated):
+    life, profile, _ = make(mutate=lambda reading, call: dict(reading, elapsed_wall_s=1.0, cpu_core_s=1.0))
+    admitted(life)
+    life.run_stage(shard_budget=3)
+    assert life.state == "STOPPED" and life.events[-1]["resumable"] is True and profile.producer.calls == 1
+    assert T.incidents(life) == ["interruption"] and life.journal_entries()[-1]["data"]["details"]["signal"] == "OBSERVER_CLOCK_SKEW"
+    again, profile2, _ = recover(make, life, profile, custody, integrated)                          # a consistent observer: the run continues
+    assert again.state == "PREPARED" and again.summary()["interruptions"] == 1 and again.summary()["admitted_shards"] == 1
+    admitted(again)
+    again.run_stage(shard_budget=2)
+    assert again.state == "SYNTHETIC_STAGE_RUNNING" and again.summary()["admitted_shards"] == 3
+
+
+def test_a_backup_device_that_fails_at_recovery_is_refused_without_a_stop_and_recovers_once_reachable(known, tmp_path, monkeypatch):
+    profile, _ = T.copy_world("known", known, tmp_path / "w")
+    before = T.tree_digest(profile.workspace.journal)
+    real = D.verify_restore
+
+    def unreachable(*args, **kwargs):
+        raise OSError(errno.EIO, "Input/output error")
+    monkeypatch.setattr(D, "verify_restore", unreachable)
+    with pytest.raises(M.LifecycleRefused, match="backup device cannot be read"):
+        M.SyntheticExecutorLifecycle.recover(profile)
+    monkeypatch.setattr(D, "verify_restore", real)
+    assert T.tree_digest(profile.workspace.journal) == before                                       # nothing was journaled: an outage is not evidence
+    again = M.SyntheticExecutorLifecycle.recover(profile)
+    try:
+        assert again.state == "PREPARED" and again.completed == ["known"]
+    finally:
+        again.close()
+
+
+def test_a_backup_that_is_missing_at_recovery_is_still_a_mismatch_quarantine(known, tmp_path):
+    profile, _ = T.copy_world("known", known, tmp_path / "w")
+    shutil.rmtree(Path(profile.workspace.backup) / "known" / "train")
+    life = M.SyntheticExecutorLifecycle.recover(profile)
+    try:
+        assert life.state == "QUARANTINED" and T.incidents(life)[-1] == "backup_mismatch"
+    finally:
+        life.close()
+
+
+def test_a_backup_device_that_fails_at_a_stage_boundary_is_a_backup_unavailable_stop_not_a_mismatch(known, tmp_path, monkeypatch):
+    profile, _ = T.copy_world("known", known, tmp_path / "w")
+    life = M.SyntheticExecutorLifecycle.recover(profile)
+    try:
+        monkeypatch.setattr(D, "verify_restore", lambda *a, **k: (_ for _ in ()).throw(OSError(errno.EIO, "Input/output error")))
+        admitted(life)
+        assert life.state == "STOPPED" and T.incidents(life)[-1] == "backup_unavailable" and profile.producer.calls == 0
+        assert "unavailable" in life.events[-1]["reason"]
+    finally:
+        life.close()
+
+
+@pytest.mark.parametrize("later", ["test", "matched"])
+def test_a_resumed_run_notices_data_in_a_later_stage_before_it_produces_another_shard(make, custody, integrated, later):
+    life, profile, _ = partial(make, shards=3)
+    life.interrupt()
+    planted = life.paths["work"] / later / I.STAGE_ROLES[later][0]
+    planted.mkdir(parents=True)
+    (planted / "part-00000.npz").write_bytes(b"premature later-stage data")
+    snapshot = T.tree_digest(planted)
+    again, profile2, _ = recover(make, life, profile, custody, integrated)
+    admitted(again)
+    assert again.state == "STOPPED" and profile2.producer.calls == 0
+    assert T.incidents(again)[-1] == "stage_order_violation" and T.tree_digest(planted) == snapshot
+
+
+def test_a_resumed_run_notices_a_changed_execution_boundary_canary(make, custody, integrated, monkeypatch):
+    life, profile, _ = partial(make, shards=3)
+    life.interrupt()
+    again, profile2, _ = recover(make, life, profile, custody, integrated)
+    monkeypatch.setattr(I, "deny_execution", lambda *a, **k: None)
+    admitted(again)
+    assert again.state == "STOPPED" and profile2.producer.calls == 0 and T.incidents(again)[-1] == "identity_mismatch"
+    assert "execution boundary changed" in again.events[-1]["reason"]
+
+
+def test_a_resumed_run_notices_a_changed_consumer_declaration(make, custody, integrated):
+    life, profile, _ = partial(make, shards=3)
+    life.interrupt()
+    leaking = {"train": [["known", "train"], ["known", "test"]], "val_select": [["known", "val-select"]], "val_calib": [["known", "val-calib"]]}
+    again, profile2, _ = recover(make, life, profile, custody, integrated, consumers=lambda: copy.deepcopy(leaking))
+    admitted(again)
+    assert again.state == "STOPPED" and profile2.producer.calls == 0 and T.incidents(again)[-1] == "identity_mismatch"
+
+
+def test_a_resumed_test_stage_notices_a_k17d_deviation_before_it_produces_another_shard(known, tmp_path, custody, integrated):
+    profile, _ = T.copy_world("known", known, tmp_path / "w")
+    life = M.SyntheticExecutorLifecycle.recover(profile)
+    admitted(life)
+    life.run_stage(shard_budget=2)
+    assert life.state == "SYNTHETIC_STAGE_RUNNING" and life.stage == "test"
+    life.interrupt()
+    life.close()
+    new_profile, _ = T.restart_profile(profile.workspace, custody, integrated, profile.plan)
+    new_profile.attestor.k17d_override = k17d(new_profile.plan, identity_sha256="0" * 64)
+    again = M.SyntheticExecutorLifecycle.recover(new_profile)
+    try:
+        admitted(again)
+        assert again.state == "STOPPED" and T.incidents(again)[-1] == "k17d_mismatch" and new_profile.producer.calls == 0
+    finally:
+        again.close()
+
+
+def test_a_k17d_comparison_that_cannot_be_produced_stops_the_run_before_the_backup_is_journaled(all_admitted, tmp_path):
+    life, profile = recovered_at_the_end_of_the_admitted_stage(all_admitted, tmp_path)
+    try:
+        life.verify_stage()
+        assert life.state == "SYNTHETIC_STAGE_VERIFIED"
+        profile.attestor.k17d_report = lambda plan: (_ for _ in ()).throw(RuntimeError("metadata source down"))
+        life.backup_stage()
+        assert life.state == "STOPPED" and T.incidents(life)[-1] == "k17d_mismatch" and "backup_verified" not in T.kinds(life)[-3:]
+    finally:
+        life.close()
+
+
+# ---- round-2 review: coverage of the anchor window and the production-root alias -----------------------------------------------------
+
+def test_recovery_refuses_two_unanchored_trailing_entries_while_one_is_adopted(make, custody, integrated):
+    life, profile, _ = partial(make, shards=4)
+    life.interrupt()
+    life.close()
+    new_profile, _ = T.restart_profile(profile.workspace, custody, integrated, profile.plan)
+    for _ in range(2):
+        forge_unanchored_entry(profile.workspace)
+    with pytest.raises(M.LifecycleRefused, match="never anchored"):
+        M.SyntheticExecutorLifecycle.recover(new_profile)
+
+
+def test_a_synthetic_root_that_is_the_same_directory_as_a_declared_production_root_is_refused(tmp_path):
+    workspace = T.make_workspace(tmp_path / "ws")
+    link = tmp_path / "declared-production-root"
+    link.symlink_to(workspace.work, target_is_directory=True)
+    aliased = {"working": {"root": str(link)}, "backup": {"root": str(tmp_path / "declared-backup")}}
+    with pytest.raises(M.LifecycleRefused, match="same directory as a declared production root"):
+        workspace.validate(aliased)
+    separate = {"working": {"root": str(tmp_path / "declared-work")}, "backup": {"root": str(tmp_path / "declared-backup")}}
+    assert set(workspace.validate(separate)) == set(M.Workspace.ROLES)

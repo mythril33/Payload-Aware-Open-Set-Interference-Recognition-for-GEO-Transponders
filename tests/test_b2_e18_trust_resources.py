@@ -426,3 +426,76 @@ def test_a_bad_but_reachable_revocation_answer_is_a_hard_stop(make):
     authority.tamper = lambda ev: {**ev, "revocation_signature": b"forged"}
     life.run_stage(shard_budget=200)
     assert life.state == "STOPPED" and life.events[-1]["resumable"] is False and T.incidents(life) == ["resource_observation_missing"]
+
+
+# ---- round-2 review: the signed answers' own expiry, revocation before the next shard ------------------------------------------------------
+
+def test_a_verification_does_not_outlive_the_expiry_the_signed_answers_state(make):
+    life, profile, authority = make()
+    authority.validity_s = 60
+    admitted(life)
+    profile.clock.advance(61)                                    # inside the 300 s freshness bound, past the answers' own expiry
+    life.run_stage(shard_budget=1)
+    assert life.state == "BLOCKED" and profile.producer.calls == 0 and "went stale" in life.events[-1]["reason"]
+    life.retry()
+    authority.validity_s = 240
+    admitted(life)
+    life.run_stage(shard_budget=1)
+    assert profile.producer.calls == 1 and life.state == "SYNTHETIC_STAGE_RUNNING"
+
+
+def test_admission_is_refused_on_answers_that_expired_even_if_the_age_bound_would_allow_it(make):
+    life, profile, authority = make()
+    authority.validity_s = 30
+    life.verify_evidence()
+    profile.clock.advance(31)
+    life.check_admission()
+    assert life.state == "BLOCKED" and profile.producer.calls == 0 and not any(e["kind"] == "shard_admitted" for e in life.journal_entries())
+
+
+def test_the_expiry_read_from_the_signed_answers_is_the_earlier_of_the_two():
+    revocation, ci = b'{"expires_at": "2026-10-30T12:09:00+00:00"}', b'{"expires_at": "2026-10-30T12:07:00+00:00"}'
+    assert M.SyntheticExecutorLifecycle._valid_until({"revocation": revocation, "ci": ci}) == datetime.fromisoformat("2026-10-30T12:07:00+00:00")
+
+
+@pytest.mark.parametrize("evidence", [{}, {"revocation": b"not json", "ci": b"{}"}, {"revocation": b'{"expires_at": "soon"}', "ci": b'{"expires_at": "2026-10-30T12:07:00+00:00"}'},
+                                      {"revocation": b'{"expires_at": "2026-10-30T12:07:00+00:00"}', "ci": b'["expires_at"]'}])
+def test_an_unreadable_expiry_is_refused(evidence):
+    with pytest.raises(M.LifecycleRefused, match="no readable expiry"):
+        M.SyntheticExecutorLifecycle._valid_until(evidence)
+
+
+def test_a_clock_that_cannot_be_read_is_never_a_fresh_verification(make):
+    life, profile, _ = make()
+    life.verify_evidence()
+    assert life._trust_fresh() is True
+    profile.clock.now = lambda: "not a time"
+    assert life._trust_fresh() is False
+
+
+def test_an_idle_run_rechecks_revocation_before_it_produces_another_shard(make):
+    life, profile, authority = make()
+    admitted(life)
+    life.run_stage(shard_budget=2)
+    assert profile.producer.calls == 2 and life.state == "SYNTHETIC_STAGE_RUNNING"
+    authority.status = "REVOKED"
+    profile.clock.advance(M.REFRESH_EVERY_SECONDS + 1)           # the run sat idle between two budgeted calls
+    life.run_stage(shard_budget=1)
+    assert life.state == "STOPPED" and profile.producer.calls == 2 and "revoked" in life.events[-1]["reason"]
+    assert T.incidents(life)[-1] == "authorization_revoked"
+
+
+def test_an_idle_run_with_an_unreachable_issuer_stops_resumably_before_the_next_shard(make):
+    life, profile, authority = make()
+    admitted(life)
+    life.run_stage(shard_budget=2)
+    authority.available = False
+    profile.clock.advance(M.REFRESH_EVERY_SECONDS + 1)
+    life.run_stage(shard_budget=1)
+    assert life.state == "STOPPED" and life.events[-1]["resumable"] is True and profile.producer.calls == 2
+
+
+def test_an_interruption_before_any_journal_exists_is_not_claimed_to_be_resumable(make):
+    life, _, _ = make()
+    life.interrupt()
+    assert life.state == "STOPPED" and life.events[-1]["resumable"] is False and not life._ledger_exists()
