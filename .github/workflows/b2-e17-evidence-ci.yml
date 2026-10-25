@@ -1,0 +1,78 @@
+# E17 engineering only: synthetic cryptographic keys and Git histories live in
+# temporary test directories. No researcher key, authorization or production child.
+name: B2 E17 trusted evidence CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/b2-e17-evidence-ci.yml"
+      - ".github/workflows/b2-e15-operational-ci.yml"
+      - ".github/workflows/b2-e16-integration-ci.yml"
+      - "scripts/b2_e17_*.py"
+      - "tests/test_b2_e17_*.py"
+      - "docs/plan/B2_E17_*.md"
+      - "docs/operations/B2_E17_*.md"
+      - "docs/results/B2_E17_*.md"
+      - "docs/plan/B2_E18_EXECUTOR_INTEGRATION_HANDOFF.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: b2-e17-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evidence:
+    name: E17 cryptographic and metadata evidence checks (no production)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      OMP_NUM_THREADS: "2"
+      OPENBLAS_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
+      PYTHONHASHSEED: "0"
+      MPLBACKEND: Agg
+      CUDA_VISIBLE_DEVICES: ""
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install CPU-only test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch==2.14.1+cpu --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e ".[dev,ml]"
+      - name: Preserve scientific identity and real closed authority
+        run: |
+          git diff --exit-code d82873967d6eb3a3f8f75a3f0ec9f89637e5873e HEAD -- \
+            src configs pyproject.toml .github/workflows/b2-readiness-ci.yml \
+            docs/plan/P18_b2_protocol.md docs/plan/P19_b2_base_observations.md \
+            docs/plan/P20_b2_cancellation_residual.md docs/plan/P21_b2_test_families.md \
+            docs/plan/P21_b2_observed_receiver.md docs/plan/P22_b2_matched_asi.md \
+            docs/plan/P31_b2_e7b_isolated_execution.md \
+            docs/plan/b2_readiness_gates_2026-10-21.json docs/plan/b2_e5_decision_recommendations.json \
+            docs/plan/b2_e9_approved_scientific_protocol.json \
+            docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md \
+            docs/plan/B2_E12_D1_D8_SCIENTIFIC_APPROVAL_2026-10-24.md \
+            docs/plan/b2_e12_d1_d8_decisions_2026-10-24.json \
+            docs/results/b2_e10_k17d_identity.json docs/results/k17d_drift_audit.json
+          python scripts/b2_e16_policy.py ci-gate
+      - name: Compile code and verify evidence with synthetic tests only
+        run: |
+          python -m compileall -q src scripts tests
+          python -m pytest -q -rs \
+            tests/test_b2_e17_signatures.py tests/test_b2_e17_git.py \
+            tests/test_b2_e17_evidence.py tests/test_b2_e17_ci_compatibility.py \
+            tests/test_b2_e16_durability.py tests/test_b2_e16_ledger.py tests/test_b2_e16_policy.py \
+            tests/test_b2_e16_integration.py tests/test_b2_e16_safety.py \
+            tests/test_b2_e14_launch_contract.py tests/test_b2_e14_storage.py tests/test_b2_e14_metadata.py \
+            tests/test_b2_e13_generation_plan.py tests/test_b2_e9_contract.py tests/test_b2_e9_scientific_freeze.py \
+            tests/test_b2_e12_k17d_integrity.py tests/test_b2_e12_legacy_access.py

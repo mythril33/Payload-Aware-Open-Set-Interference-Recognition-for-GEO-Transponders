@@ -49,32 +49,26 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install torch==2.14.1+cpu --index-url https://download.pytorch.org/whl/cpu
           python -m pip install -e ".[dev,ml]"
-      - name: Preserve the reviewed implementation, workflows and scientific authority
+      - name: Preserve historical evidence and frozen scientific authority
         run: |
-          # Snapshot-bound to the verified E16 base (origin/main after PR 39). E16 may only ADD its own files.
-          BASE=09dd104acdde119f5b38098775dc8ee7c9d2e42a
-          git diff --exit-code "$BASE" HEAD -- \
-            src configs pyproject.toml \
-            .github/workflows/b2-readiness-ci.yml .github/workflows/b2-e15-operational-ci.yml \
-            docs/plan/P18_b2_protocol.md docs/plan/P19_b2_base_observations.md docs/plan/P20_b2_cancellation_residual.md \
-            docs/plan/P21_b2_test_families.md docs/plan/P21_b2_observed_receiver.md docs/plan/P22_b2_matched_asi.md \
+          # Historical E15/E16 evidence is immutable. Living code, tests and workflows may evolve
+          # through reviewed commits: a historical baseline must not reject every later addition.
+          git diff --exit-code d82873967d6eb3a3f8f75a3f0ec9f89637e5873e HEAD -- \
+            configs/b2_base.json configs/cancellation.json configs/b2_feat.json \
+            docs/plan/P18_b2_protocol.md docs/plan/P19_b2_base_observations.md \
+            docs/plan/P20_b2_cancellation_residual.md docs/plan/P21_b2_test_families.md \
+            docs/plan/P21_b2_observed_receiver.md docs/plan/P22_b2_matched_asi.md \
             docs/plan/P31_b2_e7b_isolated_execution.md \
             'docs/plan/B2_E8_*' 'docs/plan/B2_E13_*' 'docs/plan/B2_E14_*' 'docs/plan/B2_E15_*' \
             'docs/operations/B2_E13_*' 'docs/operations/B2_E14_*' 'docs/operations/B2_E15_*' \
             'docs/results/B2_E13_*' 'docs/results/B2_E14_*' 'docs/results/B2_E15_*' \
-            docs/plan/b2_readiness_gates_2026-10-21.json docs/plan/b2_e5_decision_recommendations.json \
+            docs/plan/B2_E16_PRODUCTION_INTEGRATION.md docs/operations/B2_E16_RELEASE_POLICY.md \
+            docs/operations/B2_E16_RUNTIME_SAFETY_CHECKLIST.md docs/results/B2_E16_VERIFICATION.md \
             docs/plan/b2_e9_approved_scientific_protocol.json \
             docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md \
             docs/plan/B2_E12_D1_D8_SCIENTIFIC_APPROVAL_2026-10-24.md \
             docs/plan/b2_e12_d1_d8_decisions_2026-10-24.json \
             docs/results/b2_e10_k17d_identity.json docs/results/k17d_drift_audit.json
-          # Existing scripts and tests are untouched; only new b2_e16_* files may be added under scripts/ and tests/.
-          # (This list is relative to the pre-E16 BASE, so a later edit of an already-added b2_e16_* file is still an "A".
-          # That is deliberate: those files are the reviewed E16 code, and every later edit of them is held by their own
-          # tests and by the full readiness suite. The E15 workflow's snapshot guard against 9e176ad will report these
-          # added files after merge; re-basing that guard is a reviewed follow-up, not something this workflow edits.)
-          CHANGED=$(git diff --name-status "$BASE" HEAD -- scripts tests | grep -v -E '^A[[:space:]]+(scripts/b2_e16_[a-z_]+\.py|tests/test_b2_e16_[a-z_]+\.py)$' || true)
-          if [ -n "$CHANGED" ]; then echo "unexpected change under scripts/ or tests/:"; echo "$CHANGED"; exit 1; fi
       - name: Canonical compute gates and scientific approvals are exactly the closed state
         run: |
           python scripts/b2_e16_policy.py ci-gate
@@ -86,7 +80,7 @@ jobs:
           assert report["verdict"] == "NO-GO" and report["execution_permitted"] is False and report["benchmark_complete"] is False
           print("canonical gates: CLOSED_CANONICAL; nothing authorized")
           E16
-      - name: Compile unchanged code and the new modules
+      - name: Compile current code without execution
         run: python -m compileall -q src scripts tests
       - name: E16 suites and the E13/E14/E9/E12 contracts they build on (synthetic and metadata only)
         run: |

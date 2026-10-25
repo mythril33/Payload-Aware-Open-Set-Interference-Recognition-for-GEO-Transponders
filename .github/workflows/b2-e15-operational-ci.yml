@@ -47,12 +47,20 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install torch==2.14.1+cpu --index-url https://download.pytorch.org/whl/cpu
           python -m pip install -e ".[dev,ml]"
-      - name: Preserve the reviewed implementation and scientific authority
+      - name: Preserve the historical E15 dossier and frozen scientific records
         run: |
-          git diff --exit-code 9e176ad20aa1f355adac06e5a22c77b38a616099 HEAD -- \
-            src scripts tests configs pyproject.toml .github/workflows/b2-readiness-ci.yml \
-            docs/plan/P18_b2_protocol.md \
-            docs/plan/b2_readiness_gates_2026-10-21.json docs/plan/b2_e5_decision_recommendations.json \
+          # E15 is an immutable historical dossier, not a ban on later reviewed source changes.
+          # Current source/tool provenance is checked by current E13/E17 contracts and exact-head tests.
+          git diff --exit-code 290f9d5b17afffeffd9f55f460a3cbbad167118b HEAD -- \
+            docs/operations/B2_E15_HOST_QUALIFICATION.md \
+            docs/operations/B2_E15_RESOURCE_AND_BACKUP_ASSESSMENT.md \
+            docs/plan/B2_E15_DR04_DECISION_DOSSIER.md docs/plan/B2_E15_RELEASE_SEQUENCE.md \
+            docs/results/B2_E15_VERIFICATION.md \
+            configs/b2_base.json configs/cancellation.json configs/b2_feat.json \
+            docs/plan/P18_b2_protocol.md docs/plan/P19_b2_base_observations.md \
+            docs/plan/P20_b2_cancellation_residual.md docs/plan/P21_b2_test_families.md \
+            docs/plan/P21_b2_observed_receiver.md docs/plan/P22_b2_matched_asi.md \
+            docs/plan/P31_b2_e7b_isolated_execution.md \
             docs/plan/b2_e9_approved_scientific_protocol.json \
             docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md \
             docs/plan/B2_E12_D1_D8_SCIENTIFIC_APPROVAL_2026-10-24.md \
@@ -61,7 +69,7 @@ jobs:
       - name: Validate blank qualification fields, documents and closed gates
         run: |
           python - <<'E15'
-          import json, math, re
+          import json, math, re, sys
           from pathlib import Path
 
           def pairs(items):
@@ -85,6 +93,8 @@ jobs:
               return value
 
           root = Path.cwd()
+          sys.path.insert(0, str(root / "scripts"))
+          import b2_e16_policy as policy
           paths = [
               "docs/operations/B2_E15_HOST_QUALIFICATION.md",
               "docs/operations/B2_E15_RESOURCE_AND_BACKUP_ASSESSMENT.md",
@@ -132,9 +142,12 @@ jobs:
           assert protocol["activation"] is protocol["production_authorized"] is False
           assert protocol["unresolved_operational_decisions"]["gpu_probe"] == "NOT_AUTHORIZED"
           assert protocol["unresolved_operational_decisions"]["production_launch"] == "DISABLED"
-          print("E15 dossier fields and authority checks passed; no measurements or approvals created.")
+          current = policy.ci_gate_check(gates, memo, protocol)
+          assert current["accepted_by_this_build"] is True and current["state"] == "CLOSED_CANONICAL", current
+          assert current["execution_permitted"] is False and current["verdict"] == "NO-GO"
+          print("Historical E15 fields preserved; current E16 gates CLOSED_CANONICAL; nothing authorized.")
           E15
-      - name: Compile unchanged code
+      - name: Compile current code without execution
         run: python -m compileall -q src scripts tests
       - name: Existing synthetic and metadata safety tests only
         run: |
