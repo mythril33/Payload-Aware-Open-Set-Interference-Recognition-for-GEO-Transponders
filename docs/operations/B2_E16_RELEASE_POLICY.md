@@ -17,8 +17,9 @@ plan and a valid-looking record are all evidence; none of them starts anything. 
 
 ## 2. States
 
-`python scripts/b2_e16_policy.py ci-gate` and `classify_gates` return one of (an enumerated check over the listed fields, read strictly; it does not prove that no other
-field anywhere in a document says otherwise):
+`python scripts/b2_e16_policy.py ci-gate` and `classify_gates` return one of (an enumerated check: the decisions and their fields, the memorandum and scientific record fields and controls are allow-listed;
+the living gates document's top-level keys are deny-listed; read strictly; it does not prove that no other field anywhere in a
+document says otherwise):
 
 | State | Gate JSON + twin | `ci-gate` exit | Accepted by CI today |
 |---|---|---|---|

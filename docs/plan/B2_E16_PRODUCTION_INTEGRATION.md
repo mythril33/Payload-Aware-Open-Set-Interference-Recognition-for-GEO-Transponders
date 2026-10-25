@@ -241,7 +241,12 @@ snapshot cannot stop a later hostile writer, so the runtime must re-check at eve
   full readiness suite, not by this guard.
 * **Consumer declaration.** `isolation.consumers` is applicable at every boundary: an absent declaration is a missing
   fact, not a pass.
-* **Journal location.** A volatile prefix is refused; the filesystem *type* of the journal volume remains an operator fact.
+* **Journal location.** A volatile prefix is refused and the journal volume's filesystem type (Linux mountinfo) must be in
+  the reviewed durable list; an `st_dev` different from the working tree is still not physical independence.
+* **`ci-gate` is an enumeration.** The decisions and fields of the gates JSON and its twin, the immutable record's
+  top-level fields and controls are allow-listed; the *top-level* keys of the living gates document are only
+  deny-listed (launch / execution / authorization / enabled), because that document legitimately grows. A hostile key
+  with another name is still caught by the byte-diff step of the E16 workflow and by the readiness CI.
 * Evidence is as truthful as the adapter that returned it (see section 3); `geosim_package_digest` mirrors the accepted
   K17d formula, adds a symlink refusal and is otherwise unbounded like that formula.
 

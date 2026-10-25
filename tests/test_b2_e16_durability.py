@@ -544,3 +544,16 @@ def test_a_symlinked_generator_module_is_never_part_of_an_accepted_identity(tmp_
         D.geosim_package_digest(tmp_path)
     impact = D.source_identity_impact(tmp_path)
     assert impact["unchanged"] is False and impact["production_blocked"] is True and impact["observed_sha256"] is None
+
+
+@pytest.mark.parametrize("state", ["x" * 10 ** 6, {"a": 1}, None, "", "PARTIAL", 5])
+def test_quarantine_note_requires_a_known_resume_state(tmp_path, state):
+    directory, evidence = tmp_path / "train", tmp_path / "evidence"
+    evidence.mkdir()
+    make_shard(directory, 0)
+    (directory / "part-00001.tmp.npz").write_bytes(b"partial")
+    report = D.classify_directory(directory, plan(0, 1))
+    forged = json.loads(json.dumps(report))
+    forged["resume_state"] = state
+    refused(D.write_quarantine_note, evidence, directory, forged, reason="orphan", recorded_at="2026-11-01T00:00:00Z")
+    assert list(evidence.iterdir()) == []

@@ -562,7 +562,7 @@ def test_ci_gate_reads_strictly_and_rejects_duplicate_keys(tmp_path, capsys):
     root = write_repo(tmp_path, gates, memo, protocol, raw={pre.GATES_PATH: duplicated})
     assert P.main(["ci-gate", "--repo", str(root)]) == 2
     assert P.main(["ci-gate", "--repo", str(write_repo(tmp_path / "ok", gates, memo, protocol))]) == 0
-    big = write_repo(tmp_path / "big", gates, memo, protocol, raw={pre.GATES_PATH: " " * (P.MAX_DOCUMENT_BYTES + 1)})
+    big = write_repo(tmp_path / "big", gates, memo, protocol, raw={pre.GATES_PATH: '{"x": "' + "a" * P.MAX_DOCUMENT_BYTES + '"}'})
     assert P.main(["ci-gate", "--repo", str(big)]) == 2
     nan = write_repo(tmp_path / "nan", gates, memo, protocol, raw={pre.GATES_PATH: '{"benchmark_complete": NaN}'})
     assert P.main(["ci-gate", "--repo", str(nan)]) == 2
@@ -595,3 +595,31 @@ def test_ci_gate_is_an_enumerated_check_and_rejects_every_enumerated_opening(tmp
     report = P.ci_gate_check(gates, memo, protocol)
     assert report["state"] == P.STATE_DENIED and report["accepted_by_this_build"] is False, label
     assert P.main(["ci-gate", "--repo", str(write_repo(tmp_path, gates, memo, protocol))]) == 2
+
+
+@pytest.mark.parametrize("label,change", [
+    ("gpu_probe_status_open", lambda g, m, p: g["decisions"].update(gpu_probe={"status": "OPEN", "approval": None})),
+    ("gpu_probe_granted", lambda g, m, p: g["decisions"].update(gpu_probe={"status": "GRANTED", "approval": None})),
+    ("gpu_probe_true", lambda g, m, p: g["decisions"].update(gpu_probe={"status": True})),
+    ("decision_without_status", lambda g, m, p: g["decisions"].update(gpu_probe={})),
+    ("memo_extra_decision", lambda g, m, p: m["decisions"].update(gpu_probe={"status": "APPROVED"})),
+    ("generation_extra_key", lambda g, m, p: g["decisions"]["full_generation"].update(go=True)),
+    ("compute_gate_extra_key", lambda g, m, p: g["decisions"]["full_loko_sweep"].update(note="ok")),
+    ("memo_decision_extra_key", lambda g, m, p: m["decisions"]["full_generation"].update(go=True)),
+    ("memo_decision_missing_key", lambda g, m, p: m["decisions"]["full_generation"].pop("authority")),
+    ("missing_decision", lambda g, m, p: g["decisions"].pop("merge_to_main")),
+    ("controls_key_missing", lambda g, m, p: p["controls"].pop("no_training")),
+    ("controls_key_extra", lambda g, m, p: p["controls"].update(extra=True)),
+])
+def test_decision_and_control_sets_are_allow_listed_not_deny_listed(label, change):
+    gates, memo, protocol = real_json()
+    change(gates, memo, protocol)
+    report = P.ci_gate_check(gates, memo, protocol)
+    assert report["state"] == P.STATE_DENIED and report["accepted_by_this_build"] is False, label
+
+
+def test_the_allow_lists_equal_the_real_documents_today():
+    gates, memo, protocol = real_json()
+    assert {k: set(v) for k, v in gates["decisions"].items()} == P.GATE_DECISION_KEYS
+    assert {k: set(v) for k, v in memo["decisions"].items()} == P.MEMO_DECISION_KEYS
+    assert set(protocol["controls"]) == P.CONTROL_KEYS and set(protocol) == P.PROTOCOL_KEYS and set(memo) == P.MEMO_KEYS

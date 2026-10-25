@@ -57,6 +57,12 @@ MEMO_KEYS = frozenset({"schema", "benchmark_complete", "decisions"})
 PROTOCOL_KEYS = frozenset({"schema", "status", "scientific_approval", "activation", "production_authorized", "benchmark_complete", "approved_by", "approved_at",
                            "source_main_sha", "approval_record", "source_candidate", "profile_id", "decisions", "parameter_records",
                            "unresolved_operational_decisions", "controls"})
+GATE_DECISION_KEYS = {"K18": {"approval", "observed", "proposal", "status"}, "K17d": {"approval", "observed", "proposal", "status"},
+                      "OBS-CANCEL-2": {"approval", "observed", "proposal", "status"}, "full_generation": {"approval", "estimate", "status"},
+                      "full_gpu_training": {"approval", "status"}, "full_loko_sweep": {"approval", "status"}, "merge_to_main": {"approval", "status"}}
+MEMO_DECISION_KEYS = {name: {"approved_at", "approved_by", "authority", "record", "status"} for name in
+                      ("K18", "K17d", "OBS-CANCEL-2", "full_generation", "full_gpu_training", "full_loko_sweep")}
+CONTROL_KEYS = frozenset({"no_data_generation", "no_gpu_use", "no_loko", "no_runner_consumes_this_file", "no_test_read", "no_training", "not_under_configs"})
 GATES_TOP_FORBIDDEN = ("launch", "execut", "authorized", "enabled")     # substrings no top-level key of the living gates document may carry
 MAX_DOCUMENT_BYTES = 4 * 2 ** 20
 # The scientific half of the readiness CI step, restated: the existing validators compare twin *status* only.
@@ -132,14 +138,16 @@ def classify_gates(gates, memo, protocol):
                 or unresolved.get("production_launch") != "DISABLED"):
             problems.append("the immutable scientific record does not hold every compute stage NOT_AUTHORIZED and production launch DISABLED")
         controls = protocol.get("controls")
-        if not isinstance(controls, dict) or not controls or any(v is not True for v in controls.values()):
+        if not isinstance(controls, dict) or set(controls) != CONTROL_KEYS or any(v is not True for v in controls.values()):
             problems.append("the scientific record's controls (no data generation, GPU, training, LOKO or test read) are not all true")
         if set(protocol) != PROTOCOL_KEYS or set(memo) != MEMO_KEYS:
             problems.append("the immutable memorandum or scientific record carries unexpected or missing top-level fields")
         if any(isinstance(k, str) and any(s in k.lower() for s in GATES_TOP_FORBIDDEN) for k in gates):
             problems.append("the readiness JSON carries a launch/execution/authorization/enabled top-level field")
-        for label, source in (("readiness JSON", gates), ("memorandum", memo)):
+        for label, source, allowed in (("readiness JSON", gates, GATE_DECISION_KEYS), ("memorandum", memo, MEMO_DECISION_KEYS)):
             decisions = source.get("decisions") if isinstance(source.get("decisions"), dict) else {}
+            if set(decisions) != set(allowed) or any(not isinstance(decisions[k], dict) or set(decisions[k]) != allowed[k] for k in decisions if k in allowed):
+                problems.append(f"the {label} decisions are not exactly the reviewed set of decisions and fields")
             opened = sorted(k for k, v in decisions.items() if isinstance(v, dict) and v.get("status") in pre.APPROVED_STATUSES)
             if set(opened) - set(SCIENTIFIC_GATES) - {"full_generation"}:
                 problems.append(f"an unexpected decision is open in the {label}: {sorted(set(opened) - set(SCIENTIFIC_GATES) - {'full_generation'})[:3]}")

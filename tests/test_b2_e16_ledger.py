@@ -382,6 +382,7 @@ def test_independent_location_rules(tmp_path, monkeypatch):
     identities = {"j": 3, "w": 1, "b": 2}
     real = D.directory_identity
     monkeypatch.setattr(D, "directory_identity", lambda path: dict(real(path), st_dev=identities[Path(path).name], path="/srv/e16/" + Path(path).name))
+    monkeypatch.setattr(L, "_mount_type", lambda path: "ext4")
     ok = L.check_independent_location(ledger, working, backup)
     assert ok["ok"] is True and ok["shares_device_with_backup"] is False
     identities["j"] = 2
@@ -478,3 +479,70 @@ def test_parser_limits_are_refusals_not_stray_exceptions(tmp_path):
     with pytest.raises(L.LedgerRefused):
         L.strict_json(b"9" * 5000)
     assert L.verify_chain(b'{"a": [' * 3000 + b"\n")["ok"] is False
+
+
+# ---- re-review findings N-02, N-03, N-05, N-07 ------------------------------------------------------------------------------
+
+@pytest.mark.parametrize("kind,refused_text", [("tmpfs", "durable"), ("overlay", "durable"), ("", "unknown"), ("vfat", "durable")])
+def test_the_journal_volume_must_be_a_reviewed_durable_filesystem(tmp_path, monkeypatch, kind, refused_text):
+    for name in ("w", "b", "j"):
+        (tmp_path / name).mkdir()
+    real = D.directory_identity
+    ids = {"j": 3, "w": 1, "b": 2}
+    monkeypatch.setattr(D, "directory_identity", lambda path: dict(real(path), st_dev=ids[Path(path).name], path="/srv/e16/" + Path(path).name))
+    monkeypatch.setattr(L, "_mount_type", lambda path: kind)
+    report = L.check_independent_location(tmp_path / "j", tmp_path / "w", tmp_path / "b")
+    assert report["ok"] is False and any(refused_text in failure for failure in report["failures"])
+    monkeypatch.setattr(L, "_mount_type", lambda path: "xfs")
+    assert L.check_independent_location(tmp_path / "j", tmp_path / "w", tmp_path / "b")["ok"] is True
+
+
+def test_the_real_mount_lookup_returns_a_type_or_empty():
+    assert isinstance(L._mount_type(Path("/")), str)
+    assert L._mount_type(Path("/nonexistent/e16/path")) in ("",) or isinstance(L._mount_type(Path("/nonexistent/e16/path")), str)
+
+
+@pytest.mark.parametrize("value", ["9999-12-31T23:59:59-01:00", "0001-01-01T00:00:00+01:00", "9999-12-31T23:59:59.999999-23:59", "0001-01-01T00:00:00+23:59"])
+def test_timestamps_at_the_datetime_limits_are_refusals_not_overflows(value):
+    with pytest.raises(L.LedgerRefused):
+        L.instant(value)
+    with pytest.raises(L.LedgerRefused):
+        L.make_entry(0, L.GENESIS, value, "run_opened", None, {})
+    entry = {"schema": L.SCHEMA_ENTRY, "seq": 0, "prev_sha256": L.GENESIS, "at": value, "kind": "run_opened", "stage": None, "data": {}}
+    entry["entry_sha256"] = L._digest(entry)
+    assert L.verify_chain(L.canonical(entry).encode() + b"\n")["ok"] is False
+    for kwargs in ({"now": value}, {"auth": dict(AUTH, expires_at=value)}, {"obs": observation(collected_at=value)}):
+        report = evaluate(**kwargs)
+        assert report["decision"] == "STOP" and report["reasons"][0].startswith("input.malformed")
+
+
+@pytest.mark.parametrize("timing", [
+    {"band_s_per_observation": [10 ** 400, 10 ** 401], "tolerance": 0.25, "gate_shards": 1},
+    {"band_s_per_observation": [3.8, 5.0], "tolerance": 10 ** 400, "gate_shards": 1},
+    {"band_s_per_observation": [3.8, 5.0], "tolerance": 0.25, "gate_shards": 10 ** 400},
+])
+def test_overflowing_timing_policy_is_malformed(timing):
+    report = evaluate(timing=timing)
+    assert report["decision"] == "STOP" and report["reasons"][0].startswith("input.malformed")
+
+
+@pytest.mark.parametrize("name", [[], {}, ["x"], 5, None, True, "not_an_incident"])
+def test_an_unhashable_or_foreign_incident_name_is_a_refusal(name):
+    data = {"incident": name, "action": "stop", "details": {}}
+    with pytest.raises(L.LedgerRefused):
+        L.check_incident_entry(data)
+    with pytest.raises(L.LedgerRefused):
+        L.make_entry(0, L.GENESIS, "2026-11-01T10:00:00+00:00", "incident", "known", data)
+    entry = {"schema": L.SCHEMA_ENTRY, "seq": 0, "prev_sha256": L.GENESIS, "at": "2026-11-01T10:00:00+00:00", "kind": "incident", "stage": "known", "data": data}
+    entry["entry_sha256"] = L._digest(entry)
+    assert L.verify_chain(L.canonical(entry).encode() + b"\n")["ok"] is False
+
+
+@pytest.mark.parametrize("kind", [k for k in L.KINDS if k != "incident"])
+def test_incident_fields_are_reserved_for_incident_entries(kind):
+    for data in ({"incident": "shard_corruption", "action": "resume_only_under_identical_request"}, {"action": "stop"}, {"incident": "x"}):
+        with pytest.raises(L.LedgerRefused):
+            L.make_entry(0, L.GENESIS, "2026-11-01T10:00:00+00:00", kind, None, data)
+        entry = {"schema": L.SCHEMA_ENTRY, "seq": 0, "prev_sha256": L.GENESIS, "at": "2026-11-01T10:00:00+00:00", "kind": kind, "stage": None, "data": data}
+        entry["entry_sha256"] = L._digest(entry)
+        assert L.verify_chain(L.canonical(entry).encode() + b"\n")["ok"] is False

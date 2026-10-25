@@ -15,6 +15,7 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import stat
 import sys
 from datetime import datetime, timezone
@@ -92,11 +93,11 @@ def instant(value):
         raise LedgerRefused("timestamp must be an ISO-8601 string with a timezone")
     try:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError as error:
+        if parsed.tzinfo is None or parsed.utcoffset() is None:
+            raise LedgerRefused("timestamp must include a timezone")
+        return parsed.astimezone(timezone.utc)
+    except (ValueError, OverflowError) as error:                # OverflowError: an offset pushes the instant past datetime's range
         raise LedgerRefused("invalid timestamp") from error
-    if parsed.tzinfo is None or parsed.utcoffset() is None:
-        raise LedgerRefused("timestamp must include a timezone")
-    return parsed.astimezone(timezone.utc)
 
 
 MAX_READING = 1e15          # far above any real reading; keeps every projection product finite
@@ -142,9 +143,17 @@ def incident_data(kind, details):
 
 # ---- hash chain -------------------------------------------------------------------------------------------------
 
+def check_entry_data(kind, data):
+    if kind == "incident":
+        check_incident_entry(data)
+    elif isinstance(data, dict) and ("incident" in data or "action" in data):
+        raise LedgerRefused("incident fields are reserved for incident entries")
+
+
 def check_incident_entry(data):
     """An incident entry must be exactly what ``incident_data`` produces: the action is derived from the kind, never trusted."""
-    if not isinstance(data, dict) or set(data) != {"incident", "action", "details"} or data["incident"] not in INCIDENTS:
+    if (not isinstance(data, dict) or set(data) != {"incident", "action", "details"} or not isinstance(data["incident"], str)
+            or data["incident"] not in INCIDENTS):
         raise LedgerRefused("incident entry fields differ from the incident specification")
     action, fields = INCIDENTS[data["incident"]]
     if data["action"] != action or not isinstance(data["details"], dict) or set(data["details"]) != set(fields):
@@ -154,8 +163,7 @@ def check_incident_entry(data):
 def make_entry(seq, prev_sha256, at, kind, stage, data):
     if kind not in KINDS:
         raise LedgerRefused("unknown ledger entry kind")
-    if kind == "incident":
-        check_incident_entry(data)
+    check_entry_data(kind, data)
     if stage is not None and stage not in STAGES:
         raise LedgerRefused("unknown stage")
     if not isinstance(data, dict):
@@ -198,8 +206,8 @@ def verify_chain(raw, *, expected_head=None):
                 raise LedgerRefused("entry content differs from its checksum")
             if entry["kind"] not in KINDS or (entry["stage"] is not None and entry["stage"] not in STAGES) or not isinstance(entry["data"], dict):
                 raise LedgerRefused("unknown kind, stage or data type")
-            if entry["kind"] == "incident":
-                check_incident_entry(entry["data"])
+            if entry["kind"] in KINDS:
+                check_entry_data(entry["kind"], entry["data"])
             moment = instant(entry["at"])
             if last_at is not None and moment < last_at:
                 raise LedgerRefused("timestamps run backwards")
@@ -227,6 +235,25 @@ def _report(ok, count, head, failures, entries=None):
             "entries": entries if ok and entries is not None else [], **NO_AUTHORITY}
 
 
+def _mount_type(path):
+    """Filesystem type of the longest mount point that contains ``path`` (Linux mountinfo, read-only; '' when unknown)."""
+    best = None
+    try:
+        with open("/proc/self/mountinfo", encoding="utf-8", errors="replace") as stream:
+            lines = stream.read().splitlines()
+    except OSError:
+        return ""
+    for line in lines:
+        left, separator, right = line.partition(" - ")
+        fields, tail = left.split(), right.split()
+        if not separator or len(fields) < 5 or not tail:
+            continue
+        mount = Path(re.sub(r"\\([0-7]{3})", lambda m: chr(int(m.group(1), 8)), fields[4]))
+        if (mount == path or mount in path.parents) and (best is None or len(str(mount)) > len(str(best[0]))):
+            best = mount, tail[0]
+    return best[1] if best else ""
+
+
 def check_independent_location(ledger_directory, working_root, backup_root):
     """The journal must outlive the working tree: separate filesystem from the work, no nesting with either root."""
     where = {name: D.directory_identity(path) for name, path in
@@ -235,6 +262,9 @@ def check_independent_location(ledger_directory, working_root, backup_root):
     failures = []
     if any(paths["ledger"] == Path(prefix) or Path(prefix) in paths["ledger"].parents for prefix in VOLATILE_PREFIXES):
         failures.append("ledger directory is under a volatile or system-managed prefix")
+    kind = _mount_type(paths["ledger"])
+    if kind.lower() not in S.DURABLE_FILESYSTEMS:
+        failures.append(f"ledger volume filesystem {kind or 'unknown'!r} is not in the reviewed durable list")
     for other in ("working", "backup"):
         if paths["ledger"] == paths[other] or paths[other] in paths["ledger"].parents or paths["ledger"] in paths[other].parents:
             failures.append(f"ledger directory is the same as, or nested with, the {other} root")
@@ -351,13 +381,16 @@ def _checked_ceilings(ceilings):
 
 
 def _checked_timing(timing):
-    band = timing.get("band_s_per_observation") if isinstance(timing, dict) else None
-    if (not isinstance(band, list) or len(band) != 2 or not all(isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) for v in band)
-            or not 0 < band[0] <= band[1] or not isinstance(timing.get("tolerance"), (int, float)) or isinstance(timing["tolerance"], bool)
-            or not math.isfinite(timing["tolerance"]) or not 0 <= timing["tolerance"] <= 2
-            or type(timing.get("gate_shards")) is not int or not 1 <= timing["gate_shards"] <= 100):
-        raise LedgerRefused("timing policy is malformed")
-    return float(band[0]), float(band[1]), 1 + float(timing["tolerance"]), timing["gate_shards"]
+    try:
+        band = timing.get("band_s_per_observation") if isinstance(timing, dict) else None
+        if (not isinstance(band, list) or len(band) != 2 or not all(isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) for v in band)
+                or not 0 < band[0] <= band[1] or not isinstance(timing.get("tolerance"), (int, float)) or isinstance(timing["tolerance"], bool)
+                or not math.isfinite(timing["tolerance"]) or not 0 <= timing["tolerance"] <= 2
+                or type(timing.get("gate_shards")) is not int or not 1 <= timing["gate_shards"] <= 100):
+            raise LedgerRefused("timing policy is malformed")
+        return float(band[0]), float(band[1]), 1 + float(timing["tolerance"]), timing["gate_shards"]
+    except OverflowError as error:                              # an integer too large for a float
+        raise LedgerRefused("timing policy is malformed") from error
 
 
 def _checked_authorization(authorization):

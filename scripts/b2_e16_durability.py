@@ -336,6 +336,8 @@ def write_quarantine_note(evidence_directory, directory, classification, *, reas
         S._instant(recorded_at)
     except S.StorageRefused as error:
         raise DurabilityRefused("recorded_at must be a timezone-aware ISO-8601 instant") from error
+    if classification.get("resume_state") not in ("NOT_STARTED", "RESUMABLE", "COMPLETE", "NEEDS_QUARANTINE"):
+        raise DurabilityRefused("classification resume_state is not a known state")
     shard_path, note_path = S._absolute(directory), S._absolute(evidence_directory)
     if note_path == shard_path or shard_path in note_path.parents or note_path in shard_path.parents:
         raise DurabilityRefused("quarantine evidence must live outside the data directory tree")
