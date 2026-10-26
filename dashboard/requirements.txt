@@ -1,0 +1,4 @@
+# Local research dashboard only. The scientific packages come from the repository's own extras:
+#   python -m pip install -e ".[dev,ml]"
+# Streamlit 1.65.0 was released 2026-10-02; this pin is at least two weeks old, as the repository requires.
+streamlit==1.65.0
