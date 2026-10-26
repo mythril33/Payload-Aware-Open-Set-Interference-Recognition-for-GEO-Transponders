@@ -1,5 +1,11 @@
 # Proje durumu ve eksik kaydı
 
+## Gerçek yürütme engelleri — 2026-10-26
+
+- PR47 birleşmiş, taban `b9728526008044bc23fab0d7458c030af65c34d0`; exact-head readiness40316846687 başarısız:107 E4 geçti;7 başarısız/4629 geçti/7 ortam atlaması. Neden C2 aritmetiği değil, belge workflow'larıyla E18 linter uyumsuzluğu. Dar parser/izinli belge-bağımlılığı düzeltmesi136 testle ve bağımsız salt-okunur incelemeyle doğrulandı; son CI sonucu PR'da.
+- [Gerçek kod/host/maliyet/onay listesi](../operations/B2_E18_STAGE_BOUNDARY_CHECKLIST.md#actual-execution-blockers-and-release-decisions--2026-10-26). Zorunlu kapsam15fit, opsiyonel co6 ertelendi. Mahalanobis yalnız öneri; karar bekleniyor. Üretim yürütücüsü hâlâ uygulanmamış; yalnız izin kaydı mevcut komutları çalışır yapmaz. Bu çalışma tam üretim entegrasyonu teslimi olarak sunulmaz.
+- Bağlı workspace2CPU/8GiB/16,24GiBboş, bağımsız yedek ve kalıcılık doğrulanamadı; ayrı Claude host'u incelenmedi. Satın alma/üretim/eğitim/GPU/held-out yok. `PRODUCTION_LAUNCH_ENABLED=False`, compute kapıları kapalı ve `benchmark_complete=false`.
+
 ## C2 karşılaştırmalı deney hazırlığı — 2026-10-26
 
 - Taban `main` `47795c4` (PR #46). Yeni E-numarası yok; tek odaklı belge: [B2_C2_COMPARATIVE_EXPERIMENTS.md](B2_C2_COMPARATIVE_EXPERIMENTS.md). H1 (çapraz kutup), H2 (gözlenen iptal artığı; operatör planına bağlı olduğu için plan rejiminde kalır) ve H3 (operatör planına erişim) **ayrı sorular** olarak ayrıldı; plan bozma (A5) testi H3 kanıtı sayılmaz.

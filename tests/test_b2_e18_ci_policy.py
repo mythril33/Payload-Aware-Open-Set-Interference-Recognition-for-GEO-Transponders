@@ -204,7 +204,32 @@ def test_every_existing_workflow_passes_the_hygiene_lint():
     report = CI.lint_directory(WORKFLOWS)
     assert report["ok"], {k: v["problems"] for k, v in report["workflows"].items() if v["problems"]}
     assert sorted(report["workflows"]) == ["b2-e15-operational-ci.yml", "b2-e16-integration-ci.yml", "b2-e17-evidence-ci.yml",
-                                          "b2-e18-lifecycle-ci.yml", "b2-readiness-ci.yml"]
+                                           "b2-e18-lifecycle-ci.yml", "b2-readiness-ci.yml", "manuscript-ci.yml", "public-data-ci.yml"]
+
+
+def test_read_only_permissions_at_the_end_of_the_header_do_not_need_a_blank_line():
+    text = (WORKFLOWS / "public-data-ci.yml").read_text().replace("contents: read\n\njobs:", "contents: read\njobs:")
+    assert CI.lint_workflow(text, "public-data-ci.yml") == []
+    assert CI.lint_workflow(text.replace("contents: read", "contents: read\n  actions: read"), "public-data-ci.yml")
+    assert CI.lint_workflow(text.replace("contents: read", "contents: write"), "public-data-ci.yml")
+
+
+def test_only_the_reviewed_document_packages_in_the_manuscript_workflow_are_allowed():
+    text = (WORKFLOWS / "manuscript-ci.yml").read_text()
+    assert CI.lint_workflow(text, "manuscript-ci.yml") == []
+    assert CI.lint_workflow(text, "another-workflow.yml")
+    for command in (
+        "sudo apt-get install -y python3",
+        CI.DOCUMENT_PACKAGE_COMMANDS[1] + " git",
+        CI.DOCUMENT_PACKAGE_COMMANDS[0] + "; id",
+        "sudo ${INSTALL_COMMAND}",
+        "sudo sh paper/build.sh",
+    ):
+        changed = text.replace(CI.DOCUMENT_PACKAGE_COMMANDS[0], command)
+        assert any("forbidden command" in problem for problem in CI.lint_workflow(changed, "manuscript-ci.yml")), command
+    # The document dependency allowance cannot hide a scientific command.
+    changed = text.replace("run: sh paper/build.sh", "run: python -m geosim.b2_dataset")
+    assert CI.lint_workflow(changed, "manuscript-ci.yml")
 
 
 def test_historical_snapshot_guards_are_fixed_commits_and_e18_is_pr_relative():
