@@ -162,3 +162,66 @@ not fabricated in advance. All canonical compute gates remain closed,
 training, GPU workload/probe, paid resource or protected observation was used.
 
 CI bootstrap limitation: the E18 workflow reads its lint policy from the PR base. Until this reviewed parser repair is present on main, that step can still reject the already-merged document workflows even though the candidate policy passes all136focused tests. Do not bypass the base-policy guard or claim that candidate lint is exact-head full CI success. Final run outcomes belong in the repair PR.
+
+## Real execution adapter handoff — 2026-10-26
+
+The preceding missing-code inventory describes PR48, not this adapter. No new milestone or approval is created. `scripts/b2_real_generation.py` connects the existing stage commands to E16 admission/journal/backup and E17 authorization; `geoml.b2_production_training` uses the existing streaming kernels with separate production markers and R6 device identity. The old fixture launchers/caps remain unchanged. The external production host, pinned signer/revocation/CI authority and independent storage/journal custody are still required; injectable evidence is not proof of those facts. Production evaluation inference is not implemented by this change; the campaign module binds the fifteen fits, primary-scorer designation and once-only order for a future separately authorized reader.
+
+The real-code development command is (activate the environment first):
+
+```sh
+export OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 MKL_NUM_THREADS=2 PYTHONHASHSEED=0 CUDA_VISIBLE_DEVICES=''
+PYTHONPATH=src python scripts/b2_real_execution.py --out /data/geo-development-exercise --groups 1
+```
+
+Use a fresh output outside the repository. This command creates only train/val-select/val-calib (24 observations), fits a width-2 model for two CPU epochs, selects on val-select, calibrates all three scorers on eight known val-calib observations, freezes and byte-verifies local copies. It does not qualify an independent backup, train a production model or authorize protected evaluation. Artifacts remain outside Git. A source change invalidates the old source-bound artifacts.
+
+### Operator setup (DR-04, GPU training, final held-out remain CLOSED)
+
+Hardware to approve before any purchase:
+- CPU: existing persistent Linux machine with 4 usable CPU cores, >=16 GiB RAM, >=80 GB durable working disk and >=25 GiB working reserve after planned data. Small suitable named cloud choice: Hetzner CCX23 (4 dedicated vCPU,16 GB,160 GB NVMe); CX43 is cheaper shared-CPU alternative with uncertain timing. These are proposed classes, not measured performance minima.
+- Backup: >=20 GiB independently identified persistent block device on the CPU host, ext4/xfs/btrfs/zfs, separate st_dev AND physical storage identity; separate custodian for journal/anchors/replay and a successful restore drill. A second directory, overlay, temporary disk, S3 bucket, or unverified volume name is insufficient. Ask provider/operator to identify independent storage failure domains; retain an off-host copy too. The current local E14 contract cannot directly attest S3/NFS as its backup device.
+- GPU later: one RTX4090/24 GB host (RunPod Secure-class is a suitable example), >=16 GiB system RAM, >=80 GB persistent artifacts/working volume. GPU qualification needs a separate authorization before probing CUDA; DR-05 training is another authorization. No GPU was exercised here.
+- Obtain a written maximum spend, region, retention/deletion policy and named host/storage/journal custodians. Existing published estimates in B2_E18_STAGE_BOUNDARY_CHECKLIST.md are illustrative, not purchase quotes. Do not provision anything from this handoff until paid resources are explicitly approved.
+
+For an operator unfamiliar with Linux:
+1. Have the approved host owner create an Ubuntu24.04 or comparable supported Linux host, a private SSH key login, and the backup device already formatted and mounted. Do not run mkfs on an unfamiliar disk. Have them give you CPU_HOST, your login, /data/geo-work and /mnt/geo-backup and identify which device backs each path. Keep private keys outside this repository.
+2. Open Terminal (macOS/Linux) or PowerShell (Windows). Connect using the provider's displayed command, for example:
+   ssh YOUR_LOGIN@CPU_HOST
+   Each later command runs in that remote terminal, not on your laptop. Do not paste YOUR_LOGIN or CPU_HOST literally.
+3. After host/spend approval, install basic tools on that host:
+   sudo apt-get update
+   sudo apt-get install -y git python3-venv python3-pip tmux rsync
+   These commands install software; they do not generate research data.
+4. Ask the host owner to create the approved empty roots, owned by your login. Then check mounts:
+   findmnt -T /data/geo-work
+   findmnt -T /mnt/geo-backup
+   df -h /data/geo-work /mnt/geo-backup
+   lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINTS,SERIAL
+   Stop if either root is missing/overlay/tmpfs or both use the same device. Save provider storage IDs separately; SERIAL output alone does not prove independent physical custody.
+5. Fetch reviewed code (replace REVIEWED_COMMIT with the exact independently reviewed commit from the PR, after researcher acceptance):
+   mkdir -p ~/research
+   cd ~/research
+   git clone https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders.git geo
+   cd geo
+   git checkout --detach REVIEWED_COMMIT
+   python3 -m venv ~/geo-venv
+   . ~/geo-venv/bin/activate
+   python -m pip install -e '.[dev,ml]'
+   python -m pip freeze > /data/geo-work/python-packages.txt
+   git rev-parse HEAD > /data/geo-work/source-commit.txt
+   Package resolution is not an approved environment pin. The final plan must lock this exact resolved environment and source identity before any authorized production launch.
+6. Set CPU/thread environment for this terminal (repeat after each reconnect):
+   export OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 MKL_NUM_THREADS=2 PYTHONHASHSEED=0 CUDA_VISIBLE_DEVICES=''
+   Read-only closed-gate diagnostics:
+   python scripts/b2_e16_policy.py ci-gate
+   python scripts/b2_e18_ci_policy.py gate-decision
+   python scripts/b2_e13_generation_plan.py template --out /data/geo-work/generation-plan-template.json
+   Expected NO-GO/closed gates are correct. The template is incomplete, not an approval.
+7. Obtain real source-bound signed DR-04 authorization, trusted signer, independent fresh revocation/CI authority, designated host/storage evidence and immutable external journal/anchor/replay custody. The researcher/operator must fill and review the plan against actual host evidence; do not manufacture signatures, change canonical gate JSON or use fabricated fixture custody. Validate the approved plan with the reviewed adapter's prescribed evidence; generation remains closed until it passes every existing contract.
+8. The first data-producing action after host qualification and separate DR-04 launch approval is the supervised existing known-data generation stage. Use only the reviewed production adapter command delivered by the PR. Do not directly invoke an unbounded geosim CLI. Keep known -> test-only -> matched ordering, byte/durability admission, ceilings and backups. No training approval is implied.
+9. After authorized generation/metadata integrity, separately approve GPU qualification and DR-05 for 15 fits: canonical nine plus matched dual no-plan six; train/val-select only, known val-calib, freeze. Before held-out access, the researcher must select the primary scorer and bind evaluation order (canonical then H3-dual then offline contrasts). Mahalanobis is a recommendation only. Final held-out requires another explicit authorization; never use the protected set for setup.
+
+Use tmux only after the actual launch has been separately authorized: tmux new -s geo, run the approved command; detach Ctrl-b then d; reconnect with tmux attach -t geo. The supervisor's durable journal/recovery contract, not tmux, determines whether work can resume.
+
+Actual bounded evidence: two development groups per role (48 RF observations), generator153.007s wall/153.434CPU-s/570472KiB observed peak RSS; two CPU epochs, val-select selected epoch1; three rejection calibrators used16 known calibration observations and clean alarm used2 clean observations. Validation macro-F1 was0.0227 then0.0278: this is an execution check, not useful recognition evidence. Data and model copies, freeze checksum and anchored journal were reverified; current scientific source-file hashes match the exercise. No test directory existed. No independent-device, media-survival, GPU or full-production claim. Tests/independent-review/remote-CI results are recorded in the single delivery PR, not inferred from this exercise.

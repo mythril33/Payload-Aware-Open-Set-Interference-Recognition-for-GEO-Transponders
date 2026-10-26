@@ -604,6 +604,16 @@ class Outcome(dict):
 
 def run_child(argv, *, cwd, env, log_path, timeout_s, cpu_budget_s, rss_limit_kib, grace_s, interrupted, on_poll=None,
               on_start=None, on_heartbeat=None, heartbeat_s=None, poll_s=POLL_S, sleep=time.sleep):
+    """Fixture entry point. Its bound is unconditional, including for custom launchers."""
+    assert_bounded(argv)
+    return _run_owned_child(argv, cwd=cwd, env=env, log_path=log_path, timeout_s=timeout_s,
+                            cpu_budget_s=cpu_budget_s, rss_limit_kib=rss_limit_kib, grace_s=grace_s,
+                            interrupted=interrupted, on_poll=on_poll, on_start=on_start,
+                            on_heartbeat=on_heartbeat, heartbeat_s=heartbeat_s, poll_s=poll_s, sleep=sleep)
+
+
+def _run_owned_child(argv, *, cwd, env, log_path, timeout_s, cpu_budget_s, rss_limit_kib, grace_s, interrupted, on_poll=None,
+                     on_start=None, on_heartbeat=None, heartbeat_s=None, poll_s=POLL_S, sleep=time.sleep):
     """Spawn ``argv`` in its own process group and supervise it; exit status and resources come from ``wait4``.
 
     Elapsed time and deadlines use the monotonic clock. A signal that arrived before the spawn raises (no log, no child).
@@ -611,7 +621,6 @@ def run_child(argv, *, cwd, env, log_path, timeout_s, cpu_budget_s, rss_limit_ki
     ``VmHWM`` (reset by exec) gives ``peak_rss_polled_kib``, a lower bound, and enforcement uses the polled value live and
     ``ru_maxrss`` afterwards only when it exceeds what the supervisor itself held at the spawn.
     """
-    assert_bounded(argv)
     if interrupted():
         raise SupervisorError("interrupted before the child was started; nothing was spawned", EXIT_INTERRUPTED)
     supervisor_hwm = proc_vmhwm_kib(os.getpid()) or 0

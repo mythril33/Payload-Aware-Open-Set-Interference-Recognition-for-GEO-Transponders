@@ -488,7 +488,11 @@ def collect_reference(repo=ROOT, *, rederive=True, git=pre.run_git, evaluated_at
         if relative is not None and relative.parts[0] == "docs" and _committed(git, repo, path):
             reference["record_files"][path] = pre._file_hash(repo / relative)
             with open(repo / relative, "rb") as stream:
-                reference["record_texts"][path] = stream.read(MAX_RECORD_BYTES).decode("utf-8", errors="replace")
+                text = stream.read(MAX_RECORD_BYTES).decode("utf-8", errors="replace")
+                # Replacement characters may expand a truncated/invalid UTF-8
+                # sequence. Keep the decoded preview within the same byte cap;
+                # record_files above still hashes the complete original bytes.
+                reference["record_texts"][path] = text.encode("utf-8")[:MAX_RECORD_BYTES].decode("utf-8", errors="ignore")
     if lock_path is not None:
         lock = pre._read_json(lock_path)
         reference["lock"] = lock
