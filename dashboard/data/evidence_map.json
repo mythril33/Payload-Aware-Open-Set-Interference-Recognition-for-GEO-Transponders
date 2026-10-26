@@ -1,0 +1,849 @@
+{
+  "schema": "geo-dashboard-evidence-map/1",
+  "classes": {
+    "VERIFIED_HISTORICAL": "produced by a committed reproducible command or frozen protocol, with committed verification evidence",
+    "DEVELOPMENT_PILOT": "pilot, smoke or development-configuration result; not a benchmark result",
+    "UNEXECUTED": "proposal, specification or matrix that has not been executed",
+    "GATE_OR_APPROVAL": "gate, approval, decision or readiness record",
+    "DERIVED_DOCUMENTATION": "write-up or table derived from other files",
+    "VERIFICATION_LOG": "execution journal or log; not inspected by the dashboard",
+    "RESTRICTED_HELDOUT_OBSERVATION": "observation-level held-out content; the dashboard only reports its existence",
+    "PROTECTED_PRODUCTION": "reserved for protected production evaluations; no such record exists in this repository",
+    "UNCLASSIFIED": "not in this map; treated as unverified until curated"
+  },
+  "note": "Curated from the 104-file inventory of docs/results and docs/plan. Raw match counts are indicative and were not a leakage audit. Values are never displayed for RESTRICTED entries.",
+  "entries": {
+    "docs/plan/b2_c2_experiment_matrix.json": {
+      "class": "UNEXECUTED",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "status UNAPPROVED_NOT_EXECUTABLE; experiment matrix, nothing executed"
+    },
+    "docs/plan/b2_e12_d1_d8_decisions_2026-10-24.json": {
+      "class": "GATE_OR_APPROVAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 5,
+        "3300000-3300149": 4
+      },
+      "rationale": "gate, approval, decision or readiness record"
+    },
+    "docs/plan/b2_e5_decision_recommendations.json": {
+      "class": "GATE_OR_APPROVAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "gate, approval, decision or readiness record"
+    },
+    "docs/plan/b2_e6_audit_findings.json": {
+      "class": "GATE_OR_APPROVAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "gate, approval, decision or readiness record"
+    },
+    "docs/plan/b2_e7_training_proposal.json": {
+      "class": "UNEXECUTED",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "status PROPOSAL_NOT_FROZEN; proposal only"
+    },
+    "docs/plan/b2_e8_candidate_production_config.json": {
+      "class": "GATE_OR_APPROVAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "gate, approval, decision or readiness record"
+    },
+    "docs/plan/b2_e8_gpu_probe_spec.json": {
+      "class": "UNEXECUTED",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "status SPECIFICATION_ONLY; no probe has been run"
+    },
+    "docs/plan/b2_e9_approved_scientific_protocol.json": {
+      "class": "UNEXECUTED",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "status SCIENTIFIC_PROTOCOL_APPROVED_NOT_EXECUTABLE; approved record, no executor"
+    },
+    "docs/plan/b2_readiness_gates_2026-10-21.json": {
+      "class": "GATE_OR_APPROVAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "gate, approval, decision or readiness record"
+    },
+    "docs/results/B2_E10_VERIFICATION_REPORT.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # B2 E10 — verification report"
+    },
+    "docs/results/B2_E12_D1_D8_VERIFICATION.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 2,
+        "3300000-3300149": 2
+      },
+      "rationale": "title: # E12 — D1–D8 ratification and safe legacy access verification"
+    },
+    "docs/results/B2_E13_VERIFICATION.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # B2 E13 — verification report (DR-04 generation readiness engineering)"
+    },
+    "docs/results/B2_E14_VERIFICATION.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # B2 E14 — verification and independent review"
+    },
+    "docs/results/B2_E15_VERIFICATION.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # B2 E15 — operational dossier verification"
+    },
+    "docs/results/B2_E16_VERIFICATION.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # B2 E16 — verification and independent review"
+    },
+    "docs/results/B2_E17_VERIFICATION.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # B2 E17 — trusted evidence verification"
+    },
+    "docs/results/B2_E18_VERIFICATION.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # B2 E18 — synthetic executor lifecycle verification"
+    },
+    "docs/results/B2_E9_PREFLIGHT_CI_RECOVERY.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # E9-Preflight — post-approval CI recovery and safety audit"
+    },
+    "docs/results/B2_E9_PREFLIGHT_INTEGRATION_RECOVERY.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # E9-Preflight — concurrent-merge integration recovery"
+    },
+    "docs/results/B2_SCIENTIFIC_RESULTS_ATLAS.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 1,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # B2 scientific results atlas — E5"
+    },
+    "docs/results/asi_visibility.json": {
+      "class": "VERIFIED_HISTORICAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "produced by a committed reproducible command or frozen protocol, with committed verification evidence"
+    },
+    "docs/results/asi_visibility.md": {
+      "class": "VERIFIED_HISTORICAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # Uplink komşu uydu girişimi (ASI): geometriden C/I ve spektrumda görünürlük"
+    },
+    "docs/results/b2_a5_dual_pol_pilot.json": {
+      "class": "RESTRICTED_HELDOUT_OBSERVATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 76,
+        "3300000-3300149": 24
+      },
+      "rationale": "per-scene logits and alarms on held-out scenes; values are not displayed"
+    },
+    "docs/results/b2_a5_dual_pol_pilot.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 2,
+        "3300000-3300149": 2
+      },
+      "rationale": "title: # B2 E4 dual-pol A5 plan corruption — bounded pilot (2026-10-23)"
+    },
+    "docs/results/b2_a5_dual_pol_pilot_tables.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: ### Receiver-level and baseline-input displacement (model independent; RC = RECEIVER_CONSI"
+    },
+    "docs/results/b2_a5_postmerge_partial_pilot.json": {
+      "class": "RESTRICTED_HELDOUT_OBSERVATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 56,
+        "3300000-3300149": 16
+      },
+      "rationale": "per-scene logits and alarms on held-out scenes; values are not displayed"
+    },
+    "docs/results/b2_a5_postmerge_partial_pilot.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # E4 post-merge bounded A5 evidence — 2026-10-23"
+    },
+    "docs/results/b2_a5_postmerge_partial_pilot_table.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: ### Receiver-level and baseline-input displacement (model independent; RC = RECEIVER_CONSI"
+    },
+    "docs/results/b2_base_pilot.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/b2_base_pilot.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # B2-base/1 physical-observation pilot"
+    },
+    "docs/results/b2_c2_bounded_verification.json": {
+      "class": "VERIFIED_HISTORICAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "produced by a committed reproducible command or frozen protocol, with committed verification evidence"
+    },
+    "docs/results/b2_c2_comparison_table_template.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # C2 comparison table — B2-C2-ablation/1"
+    },
+    "docs/results/b2_e10_k17d_identity.json": {
+      "class": "GATE_OR_APPROVAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 1045,
+        "3300000-3300149": 0
+      },
+      "rationale": "gate, approval, decision or readiness record"
+    },
+    "docs/results/b2_e12_d1_d8_verification.json": {
+      "class": "GATE_OR_APPROVAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "gate, approval, decision or readiness record"
+    },
+    "docs/results/b2_e5_validation.json": {
+      "class": "GATE_OR_APPROVAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "gate, approval, decision or readiness record"
+    },
+    "docs/results/b2_e6_decision_evidence.json": {
+      "class": "GATE_OR_APPROVAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "gate, approval, decision or readiness record"
+    },
+    "docs/results/b2_e7a_supervisor_journal.head": {
+      "class": "VERIFICATION_LOG",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "JSONL/head log; only held-out raw counts taken"
+    },
+    "docs/results/b2_e7a_supervisor_journal.jsonl": {
+      "class": "VERIFICATION_LOG",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "JSONL/head log; only held-out raw counts taken"
+    },
+    "docs/results/b2_e7a_supervisor_verification.json": {
+      "class": "VERIFIED_HISTORICAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "produced by a committed reproducible command or frozen protocol, with committed verification evidence"
+    },
+    "docs/results/b2_e7a_supervisor_verification.md": {
+      "class": "VERIFIED_HISTORICAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # E7a supervisor - capped real-physics verification"
+    },
+    "docs/results/b2_e7b_execution.json": {
+      "class": "VERIFIED_HISTORICAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "produced by a committed reproducible command or frozen protocol, with committed verification evidence"
+    },
+    "docs/results/b2_e7b_execution.md": {
+      "class": "VERIFIED_HISTORICAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # E7b — isolated execution and bounded LOKO verification"
+    },
+    "docs/results/b2_e8_host_inventory_sandbox_generation.json": {
+      "class": "GATE_OR_APPROVAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "gate, approval, decision or readiness record"
+    },
+    "docs/results/b2_e8_host_inventory_sandbox_training.json": {
+      "class": "GATE_OR_APPROVAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "gate, approval, decision or readiness record"
+    },
+    "docs/results/b2_e8_resource_budget.json": {
+      "class": "GATE_OR_APPROVAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "gate, approval, decision or readiness record"
+    },
+    "docs/results/b2_e9_preflight_ci_recovery.json": {
+      "class": "GATE_OR_APPROVAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "gate, approval, decision or readiness record"
+    },
+    "docs/results/b2_e9_preflight_integration_recovery.json": {
+      "class": "GATE_OR_APPROVAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "gate, approval, decision or readiness record"
+    },
+    "docs/results/b2_edsc_baseline.json": {
+      "class": "VERIFIED_HISTORICAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "produced by a committed reproducible command or frozen protocol, with committed verification evidence"
+    },
+    "docs/results/b2_edsc_baseline.md": {
+      "class": "VERIFIED_HISTORICAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # B2 E3a EDSC baseline — bounded engineering verification"
+    },
+    "docs/results/b2_feat_cancellation_check.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 4,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/b2_feat_pilot.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 2,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/b2_feat_pilot.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 2,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # B2-feat/1 pilot: observation-based cancellation residual and five-channel learning slice"
+    },
+    "docs/results/b2_figure_manifest.json": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 2,
+        "3300000-3300149": 0
+      },
+      "rationale": "write-up or table derived from other files"
+    },
+    "docs/results/b2_figure_sources.json": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "write-up or table derived from other files"
+    },
+    "docs/results/b2_full_pilot.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 4,
+        "3300000-3300149": 20
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/b2_loko_harness.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # B2 LOKO harness verification — 2026-10-22"
+    },
+    "docs/results/b2_matched_check.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 6
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/b2_matched_pilot.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 7
+      },
+      "rationale": "title: # B2-match/1 pilot: K17c level-matched ASI versus unauthorized (execution and physics evid"
+    },
+    "docs/results/b2_observed_pilot.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 1,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/b2_observed_pilot.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # B2 observed-receiver development pilot — 2026-10-21"
+    },
+    "docs/results/b2_observed_predictions.json": {
+      "class": "RESTRICTED_HELDOUT_OBSERVATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 16,
+        "3300000-3300149": 0
+      },
+      "rationale": "per-observation held-out predictions and probabilities; values are not displayed"
+    },
+    "docs/results/b2_physical_figure_data.json": {
+      "class": "RESTRICTED_HELDOUT_OBSERVATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 2,
+        "3300000-3300149": 0
+      },
+      "rationale": "observation-level spectrogram arrays of a held-out scene; the dashboard never displays its values"
+    },
+    "docs/results/b2_production_budget.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # B2/1 production budget — measured pilot costs and estimates"
+    },
+    "docs/results/b2_profile_matched_20_cancel.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/b2_profile_matched_20_nocancel.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/b2_profile_matched_20_resume.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/b2_streaming_memory.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # E1 streaming data path — measured memory, throughput and parity (bounded fixtures)"
+    },
+    "docs/results/b2_streaming_memory_pilot.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/b2_streaming_memory_synthetic_48.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/b2_test_family_check.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 10,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/b2_test_pilot.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 4,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/b2_test_pilot.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # B2-test/1 pilot: test-only families, K17b augmentation and the first open-set run"
+    },
+    "docs/results/b2_xgb_baseline.json": {
+      "class": "VERIFIED_HISTORICAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 2,
+        "3300000-3300149": 0
+      },
+      "rationale": "produced by a committed reproducible command or frozen protocol, with committed verification evidence"
+    },
+    "docs/results/b2_xgb_baseline.md": {
+      "class": "VERIFIED_HISTORICAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # B2 E3b expert-feature/XGBoost baseline — bounded verification"
+    },
+    "docs/results/cuc_visibility.json": {
+      "class": "VERIFIED_HISTORICAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "produced by a committed reproducible command or frozen protocol, with committed verification evidence"
+    },
+    "docs/results/cuc_visibility.md": {
+      "class": "VERIFIED_HISTORICAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # Taşıyıcı altı taşıyıcının (CuC) spektrumdaki görünürlüğü"
+    },
+    "docs/results/dual_calibration_check.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/dual_development.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/dual_development.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # Dual-polarization leakage development run"
+    },
+    "docs/results/dual_predictions.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/events_development.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/events_development.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # Phase-noise and interference development run"
+    },
+    "docs/results/events_physics_check.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/events_predictions.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/k17d_drift_audit.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 78,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/k18_init_scale.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/k18_scale_audit.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/npr_check.json": {
+      "class": "VERIFIED_HISTORICAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "produced by a committed reproducible command or frozen protocol, with committed verification evidence"
+    },
+    "docs/results/npr_check.md": {
+      "class": "VERIFIED_HISTORICAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # NPR kontrolü — yükselteç aileleri (P16 İP-2, B11)"
+    },
+    "docs/results/opendpd_probe.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # OpenDPD ölçülmüş PA verisi — ön inceleme (sonda)"
+    },
+    "docs/results/openset_development.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/openset_development.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # Open-set development experiment"
+    },
+    "docs/results/openset_extended.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/openset_extended.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # Open-set development experiment"
+    },
+    "docs/results/openset_extended_predictions.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/pilot_A.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # Küçük ölçekli deneme koşusu (pilot) — Kademe A"
+    },
+    "docs/results/plan_shortcut_pilot.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/plan_shortcut_pilot.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # Plan maskesi kısa yolu testi (A5) — pilot"
+    },
+    "docs/results/public_data_baselines.json": {
+      "class": "VERIFIED_HISTORICAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "produced by a committed reproducible command or frozen protocol, with committed verification evidence"
+    },
+    "docs/results/public_data_baselines.md": {
+      "class": "VERIFIED_HISTORICAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # Public research data: actual access and bounded detection results"
+    },
+    "docs/results/r1_pilot.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/r1_pilot.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # R1-eval/1 pilotu — yükselteç ve geri çekilme kayması"
+    },
+    "docs/results/r1_smoke.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "pilot, smoke or development-configuration result; not a benchmark result"
+    },
+    "docs/results/r1_smoke.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # R1-eval/1 — küçük fiziksel koşu (çalışma kanıtı)"
+    }
+  }
+}
