@@ -1095,7 +1095,7 @@ def test_a_resumed_run_notices_a_changed_consumer_declaration(make, custody, int
     assert again.state == "STOPPED" and profile2.producer.calls == 0 and T.incidents(again)[-1] == "identity_mismatch"
 
 
-def test_a_resumed_test_stage_notices_a_k17d_deviation_before_it_produces_another_shard(known, tmp_path, custody, integrated):
+def test_a_resumed_test_stage_notices_a_k17d_deviation_before_it_produces_another_shard(known, tmp_path):
     profile, _ = T.copy_world("known", known, tmp_path / "w")
     life = M.SyntheticExecutorLifecycle.recover(profile)
     admitted(life)
@@ -1103,7 +1103,7 @@ def test_a_resumed_test_stage_notices_a_k17d_deviation_before_it_produces_anothe
     assert life.state == "SYNTHETIC_STAGE_RUNNING" and life.stage == "test"
     life.interrupt()
     life.close()
-    new_profile, _ = T.restart_profile(profile.workspace, custody, integrated, profile.plan)
+    new_profile, _ = T.restart_profile(profile.workspace, known["custody"], known["bundle"], profile.plan)   # the world's own authority, not this module's
     new_profile.attestor.k17d_override = k17d(new_profile.plan, identity_sha256="0" * 64)
     again = M.SyntheticExecutorLifecycle.recover(new_profile)
     try:
