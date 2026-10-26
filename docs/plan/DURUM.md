@@ -1,5 +1,12 @@
 # Proje durumu ve eksik kaydı
 
+## Tam makale taslağı V1 — 2026-10-26
+
+- Doğrulanan uzak main `7f58150bbcb674cb9985bcfa4ed56391f3b91c8a`: PR44 ve PR45 birleşmiş. [Makale paketi](../../paper/README.md), tam İngilizce Markdown, türetilmiş LaTeX/PDF, T1–T4/S1 tabloları, dört mevcut şekil,14 doğrulanmış birincil atıf ve iddia–kanıt manifesti içeriyor. Yeni E-numarası/mimari yok.
+- Kapsam: ölçülmüş GNSS, ölçülmüş katı-hal PA ve simüle GEO ayrı; üç sabit skor birlikte, olumsuz/kararsız sonuçlar ve LC kapsama kaybı korunuyor. Katkı bir yeniden üretilebilirlik/karşılaştırmalı yöntem çalışmasıdır; C2 üstünlüğü, doğrulanmış C3 payload gap, GEO saha veya kaynaktan-kaynağa aktarım iddiası yok.
+- Bağımsız model-ajan incelemesindeki yöntem/arşiv/donanım kaynak-bağı bulgusu giderildi; birincil yayın ile metadata/full-text erişim ayrımları [kaynak denetiminde](../../paper/literature_audit.md). Son denetim/derleme ve PR-head CI kanıtı teslim PR'ında; insan yazarlık/yayın onayı değildir.
+- Yayın öncesi: Fraunhofer lisans çelişkisi, yazar/kurum ve uygun yayın türü kararı; SmartSpace erişimi opsiyonel/engelli. Sonuç/protokol/onay nesneleri ve bilimsel kod değişmedi; yeni RF/veri/eğitim/GPU/LOKO/held-out çalışması yapılmadı, `benchmark_complete=false`.
+
 ## İnceleme ve makale kapsamı — 2026-10-26
 
 - [PR #44](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/44) araştırmacı tarafından `c6b53ba7396e14e654ccf369efa80eb0eaf9fb80` olarak birleşmiş; E18 fixture-sırası düzeltmesi artık main'de, yeniden uygulanmadı. Ham günlük: readiness107 +4539 geçti /7 makine-torch atlaması /46 mevcut uyarı; E18 seçimi2742 geçti. Aşağıdaki eski “main kırmızı” ifadesi `4ea511b` anına aittir.

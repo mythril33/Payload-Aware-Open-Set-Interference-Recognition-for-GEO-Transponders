@@ -1,0 +1,27 @@
+name: Manuscript evidence and rendering
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "paper/**"
+      - ".github/workflows/manuscript-ci.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  manuscript:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify committed aggregate evidence without scientific execution
+        run: python paper/audit_evidence.py
+      - name: Install document rendering tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends pandoc texlive-latex-extra texlive-fonts-recommended lmodern poppler-utils
+      - name: Compile manuscript (no shell escape, no raw data)
+        run: sh paper/build.sh

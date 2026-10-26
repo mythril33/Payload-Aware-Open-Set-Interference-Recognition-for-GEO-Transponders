@@ -1,0 +1,3007 @@
+{
+  "schema": "manuscript-evidence/1",
+  "baseline_commit": "7f58150bbcb674cb9985bcfa4ed56391f3b91c8a",
+  "purpose": "Committed summary audit only; no raw data, model fitting, simulation or protected observations. Hashes establish source equality, not external authenticity.",
+  "benchmark_complete": false,
+  "sources": {
+    "docs/results/public_data_baselines.json": "97b47afbf288fa8039edd62de1a32e8ae1e97e35a5a93fa8460f22d588034a2a",
+    "src/geosim/data/opendpd_mp.json": "4ff38b21739fa93d4c232603dbf469e439f6dc4c2dd67ff78ceee23fe11c7dce",
+    "docs/results/npr_check.json": "9c8402cd68664d8c3085a36843c46f42f657c129555c57552767277976bd2fdc",
+    "docs/results/asi_visibility.json": "b4a60b756a76700aa3e65be4e40f06fba4781c5799e0f1d119ce7008b2049a1a",
+    "docs/results/cuc_visibility.json": "05b5ff7457283aec21c87b9256cde05cac1569814910c654c11389e6d87ee218",
+    "docs/results/b2_feat_cancellation_check.json": "79233bfb0452741db1f2edf544bd541741974b14166611a0e404222244d33f5e",
+    "docs/results/b2_feat_pilot.json": "493bef4dca94bdaaf3a0e88a9e7a94f35281127e1e482d2a5979a82aa35a8a91",
+    "docs/results/r1_pilot.json": "08f3418ff47870ad9d24b9cd7746206e50a34b24cb1df80bd7d23f5350a817e0",
+    "docs/results/plan_shortcut_pilot.json": "1a6ffc468bbb8bce93746ac8200f1a03cd87ecbaf75a348b44186de76d8690ce",
+    "docs/results/pilot_A.md": "16771ba35431359da74f6efc8f741d95d598c3368fbe4388ed1775e2c333743e",
+    "docs/results/b2_figure_manifest.json": "74ad2f7619890254cf841df04826564234f1f30c9bdc2a919dcd0399521c0cd7",
+    "docs/results/b2_figure_sources.json": "9fe18c5a2509ca14ae6ed8c22d0af964715c8851e8ffc7ece8c11631b9885c68",
+    "research/public_data/baseline.py": "bd5c963a6b5889920543a56b9150289f7ee244a5d578d153977b50ad8ce558cd",
+    "research/public_data/fraunhofer.py": "619c5803072956ab0b5626e2f24a047b6fe9ab035e4f7091b08d1faad1920f07",
+    "docs/results/public_data_baselines.md": "1f7cc2fa163d3212731c1be7662d00ec6275a0c009d8cd0c0c11354b492086e7",
+    "docs/plan/P17_r1_robustness_eval.md": "a23d0494cc6c61984b8b99fb78d89103b94f46f34bd142024b42bae78699a836",
+    "docs/plan/P18_b2_protocol.md": "a25a73e1675aff5fcce9a4fca0ea4a25ccdd6b81e2cb03013f788f199dd65d8a",
+    "research/public_data/protocol.json": "01a31bdac05438c0e2a81819275030f4d51e6f56f7b58870b3fdb96a30b2ac22",
+    "docs/plan/b2_e12_d1_d8_decisions_2026-10-24.json": "ce900de1ae1b324d5de73997a8b303f2158fddf33fd544337347bb3df91689b1",
+    "scripts/derive_opendpd_mp.py": "4f914fbcf343615b38ee3978f268e6ec817133d1981c09b178db9d412ada13f7"
+  },
+  "claims": [
+    {
+      "id": "T1.lc_counts",
+      "table": "T1",
+      "source": "docs/results/public_data_baselines.json",
+      "population": "Fraunhofer lc; publisher parent-recording IDs; source-specific partitions",
+      "unit": "counts, native labels, representations",
+      "values": {
+        "published_partition": {
+          "pointer": "/datasets/lc/audit/publisher_partition_audit",
+          "value": {
+            "split_unit": "publisher_recording_id",
+            "train": {
+              "samples": 577,
+              "recordings": 577,
+              "class_counts": {
+                "0": 249,
+                "1": 61,
+                "2": 43,
+                "3": 51,
+                "4": 52,
+                "5": 54,
+                "6": 62,
+                "8": 5
+              }
+            },
+            "test": {
+              "samples": 159,
+              "recordings": 159,
+              "class_counts": {
+                "0": 59,
+                "1": 16,
+                "2": 14,
+                "3": 17,
+                "4": 15,
+                "5": 15,
+                "6": 21,
+                "8": 2
+              }
+            },
+            "recording_overlap": 0,
+            "session_independence": "UNKNOWN_NOT_PROVIDED"
+          }
+        },
+        "selected": {
+          "pointer": "/datasets/lc/audit/selected_published",
+          "value": {
+            "train": 577,
+            "test": 159
+          }
+        },
+        "empty_abstentions": {
+          "pointer": "/datasets/lc/audit/empty_abstentions_by_class",
+          "value": {
+            "train": {
+              "0": 60,
+              "1": 20,
+              "2": 10,
+              "3": 22,
+              "4": 14,
+              "5": 13,
+              "6": 6
+            },
+            "test": {
+              "0": 15,
+              "1": 4,
+              "2": 3,
+              "3": 6,
+              "4": 3,
+              "5": 5,
+              "6": 3
+            }
+          }
+        },
+        "hash_overlap": {
+          "pointer": "/datasets/lc/audit/nonempty_train_test_hash_overlap",
+          "value": 0
+        },
+        "native_labels": {
+          "pointer": "/datasets/lc/native_class_map",
+          "value": {
+            "0": "None",
+            "1": "Noise",
+            "2": "Chirp",
+            "3": "FreqHopper",
+            "4": "Modulated",
+            "5": "Multitone",
+            "6": "Pulsed",
+            "7": "Cw",
+            "8": "Tone"
+          }
+        },
+        "fit_groups": {
+          "pointer": "/datasets/lc/experiment/fitting_groups",
+          "value": 339
+        },
+        "calibration_groups": {
+          "pointer": "/datasets/lc/experiment/calibration_groups",
+          "value": 93
+        },
+        "calibration_clean": {
+          "pointer": "/datasets/lc/experiment/clean_calibration",
+          "value": 38
+        },
+        "test_groups": {
+          "pointer": "/datasets/lc/experiment/evaluation_groups",
+          "value": 120
+        },
+        "fitting_clean": {
+          "pointer": "/datasets/lc/experiment/model/n_fit_clean",
+          "value": 151
+        },
+        "fitting_positive": {
+          "pointer": "/datasets/lc/experiment/model/n_fit_positive",
+          "value": 188
+        },
+        "raw_manifest_identity": {
+          "pointer": "/datasets/lc/audit/raw_manifest_sha256",
+          "value": {
+            "train": "fbc9d75b5c312b3b7384f0cc16ae37e2caf038415b3e9a530e390c74590cbdcc",
+            "test": "2f8c24328ac9f282ee7028414f0e3c8094c3a425fff1b8856712e40e75b6b459"
+          }
+        },
+        "train_split_identity": {
+          "pointer": "/datasets/lc/audit/train_split_sha256",
+          "value": "5a9d5968ad7c9b5e45f70742d6d46f6ac817c79ab9796116fbf7b7180a7a41c2"
+        },
+        "test_split_identity": {
+          "pointer": "/datasets/lc/audit/test_split_sha256",
+          "value": "9de16858abb77d092b10b3faa62d62aa7974c0b311ece820d7c4a0e1ffdb2855"
+        }
+      }
+    },
+    {
+      "id": "T2.lc.native_level",
+      "table": "T2",
+      "source": "docs/results/public_data_baselines.json",
+      "population": "lc usable publisher test; positive=native label!=0; negative=label0",
+      "unit": "ranking and thresholded rates; exact event counts",
+      "values": {
+        "auroc": {
+          "pointer": "/datasets/lc/experiment/results/native_level/auroc",
+          "value": 0.9841507177033493
+        },
+        "average_precision": {
+          "pointer": "/datasets/lc/experiment/results/native_level/average_precision",
+          "value": 0.9903489458815742
+        },
+        "fpr_at_95_tpr": {
+          "pointer": "/datasets/lc/experiment/results/native_level/fpr_at_95_tpr",
+          "value": 0.09090909090909091
+        },
+        "detection": {
+          "pointer": "/datasets/lc/experiment/results/native_level/detection",
+          "value": {
+            "count": 55,
+            "denominator": 76,
+            "rate": 0.7236842105263158,
+            "reason": null
+          }
+        },
+        "false_alarm": {
+          "pointer": "/datasets/lc/experiment/results/native_level/false_alarm",
+          "value": {
+            "count": 0,
+            "denominator": 44,
+            "rate": 0.0,
+            "reason": null
+          }
+        },
+        "interference_prevalence": {
+          "pointer": "/datasets/lc/experiment/results/native_level/interference_prevalence",
+          "value": 0.6333333333333333
+        },
+        "per_native_class": {
+          "pointer": "/datasets/lc/experiment/results/native_level/per_native_class",
+          "value": {
+            "0": {
+              "name": "None",
+              "count": 0,
+              "denominator": 44,
+              "rate": 0.0,
+              "reason": null
+            },
+            "1": {
+              "name": "Noise",
+              "count": 9,
+              "denominator": 12,
+              "rate": 0.75,
+              "reason": null
+            },
+            "2": {
+              "name": "Chirp",
+              "count": 11,
+              "denominator": 11,
+              "rate": 1.0,
+              "reason": null
+            },
+            "3": {
+              "name": "FreqHopper",
+              "count": 6,
+              "denominator": 11,
+              "rate": 0.5454545454545454,
+              "reason": null
+            },
+            "4": {
+              "name": "Modulated",
+              "count": 12,
+              "denominator": 12,
+              "rate": 1.0,
+              "reason": null
+            },
+            "5": {
+              "name": "Multitone",
+              "count": 8,
+              "denominator": 10,
+              "rate": 0.8,
+              "reason": null
+            },
+            "6": {
+              "name": "Pulsed",
+              "count": 7,
+              "denominator": 18,
+              "rate": 0.3888888888888889,
+              "reason": null
+            },
+            "7": {
+              "name": "Cw",
+              "count": 0,
+              "denominator": 0,
+              "rate": null,
+              "reason": "no usable observations in this population"
+            },
+            "8": {
+              "name": "Tone",
+              "count": 2,
+              "denominator": 2,
+              "rate": 1.0,
+              "reason": null
+            }
+          }
+        },
+        "threshold": {
+          "pointer": "/datasets/lc/experiment/results/native_level/threshold",
+          "value": -35.58369098712446
+        },
+        "bootstrap": {
+          "pointer": "/datasets/lc/experiment/results/native_level/bootstrap",
+          "value": {
+            "unit": "publisher parent-recording ID; all retained crops together",
+            "seed": 20261025,
+            "requested": 500,
+            "groups": 120,
+            "session_independence": "UNKNOWN",
+            "ci95": {
+              "auroc": [
+                0.959884548611111,
+                0.9977844893292683
+              ],
+              "average_precision": [
+                0.9749658957219937,
+                0.9988192854370375
+              ],
+              "detection": [
+                0.6073973042362003,
+                0.818844696969697
+              ],
+              "false_alarm": [
+                0.0,
+                0.0
+              ]
+            },
+            "valid_draws": {
+              "auroc": 500,
+              "average_precision": 500,
+              "detection": 500,
+              "false_alarm": 500
+            },
+            "reason": null
+          }
+        },
+        "coverage": {
+          "pointer": "/datasets/lc/experiment/results/native_level/coverage",
+          "value": {
+            "evaluated_nonempty": 120,
+            "published_selected": 159,
+            "abstentions": 39,
+            "fraction": 0.7547169811320755,
+            "detected_positive_over_all_published_positive": {
+              "count": 55,
+              "denominator": 100,
+              "rate": 0.55,
+              "convention": "empty recordings counted as undetected, lower-bound sensitivity"
+            }
+          }
+        },
+        "calibration": {
+          "pointer": "/datasets/lc/experiment/results/native_level/calibration",
+          "value": {
+            "nominal_pfa": 0.05,
+            "count": 1,
+            "denominator": 38,
+            "quantile_method": "higher",
+            "alarm_rule": "score > threshold"
+          }
+        },
+        "oscr": {
+          "pointer": "/datasets/lc/experiment/results/native_level/oscr",
+          "value": null
+        },
+        "oscr_reason": {
+          "pointer": "/datasets/lc/experiment/results/native_level/oscr_reason",
+          "value": "binary detector; no known/unknown classifier task defined"
+        }
+      },
+      "limits": "Bootstrap conditions on fitted models and thresholds; session independence unknown. No primary score selected."
+    },
+    {
+      "id": "T2.lc.clean_diagonal_distance",
+      "table": "T2",
+      "source": "docs/results/public_data_baselines.json",
+      "population": "lc usable publisher test; positive=native label!=0; negative=label0",
+      "unit": "ranking and thresholded rates; exact event counts",
+      "values": {
+        "auroc": {
+          "pointer": "/datasets/lc/experiment/results/clean_diagonal_distance/auroc",
+          "value": 0.9677033492822966
+        },
+        "average_precision": {
+          "pointer": "/datasets/lc/experiment/results/clean_diagonal_distance/average_precision",
+          "value": 0.9811589942798101
+        },
+        "fpr_at_95_tpr": {
+          "pointer": "/datasets/lc/experiment/results/clean_diagonal_distance/fpr_at_95_tpr",
+          "value": 0.22727272727272727
+        },
+        "detection": {
+          "pointer": "/datasets/lc/experiment/results/clean_diagonal_distance/detection",
+          "value": {
+            "count": 29,
+            "denominator": 76,
+            "rate": 0.3815789473684211,
+            "reason": null
+          }
+        },
+        "false_alarm": {
+          "pointer": "/datasets/lc/experiment/results/clean_diagonal_distance/false_alarm",
+          "value": {
+            "count": 0,
+            "denominator": 44,
+            "rate": 0.0,
+            "reason": null
+          }
+        },
+        "interference_prevalence": {
+          "pointer": "/datasets/lc/experiment/results/clean_diagonal_distance/interference_prevalence",
+          "value": 0.6333333333333333
+        },
+        "per_native_class": {
+          "pointer": "/datasets/lc/experiment/results/clean_diagonal_distance/per_native_class",
+          "value": {
+            "0": {
+              "name": "None",
+              "count": 0,
+              "denominator": 44,
+              "rate": 0.0,
+              "reason": null
+            },
+            "1": {
+              "name": "Noise",
+              "count": 0,
+              "denominator": 12,
+              "rate": 0.0,
+              "reason": null
+            },
+            "2": {
+              "name": "Chirp",
+              "count": 10,
+              "denominator": 11,
+              "rate": 0.9090909090909091,
+              "reason": null
+            },
+            "3": {
+              "name": "FreqHopper",
+              "count": 1,
+              "denominator": 11,
+              "rate": 0.09090909090909091,
+              "reason": null
+            },
+            "4": {
+              "name": "Modulated",
+              "count": 6,
+              "denominator": 12,
+              "rate": 0.5,
+              "reason": null
+            },
+            "5": {
+              "name": "Multitone",
+              "count": 1,
+              "denominator": 10,
+              "rate": 0.1,
+              "reason": null
+            },
+            "6": {
+              "name": "Pulsed",
+              "count": 11,
+              "denominator": 18,
+              "rate": 0.6111111111111112,
+              "reason": null
+            },
+            "7": {
+              "name": "Cw",
+              "count": 0,
+              "denominator": 0,
+              "rate": null,
+              "reason": "no usable observations in this population"
+            },
+            "8": {
+              "name": "Tone",
+              "count": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "reason": null
+            }
+          }
+        },
+        "threshold": {
+          "pointer": "/datasets/lc/experiment/results/clean_diagonal_distance/threshold",
+          "value": 21.949992393537013
+        },
+        "bootstrap": {
+          "pointer": "/datasets/lc/experiment/results/clean_diagonal_distance/bootstrap",
+          "value": {
+            "unit": "publisher parent-recording ID; all retained crops together",
+            "seed": 20261025,
+            "requested": 500,
+            "groups": 120,
+            "session_independence": "UNKNOWN",
+            "ci95": {
+              "auroc": [
+                0.9356805600781505,
+                0.9898834818134616
+              ],
+              "average_precision": [
+                0.9594709471330555,
+                0.9948491603519369
+              ],
+              "detection": [
+                0.273241341991342,
+                0.4864864864864865
+              ],
+              "false_alarm": [
+                0.0,
+                0.0
+              ]
+            },
+            "valid_draws": {
+              "auroc": 500,
+              "average_precision": 500,
+              "detection": 500,
+              "false_alarm": 500
+            },
+            "reason": null
+          }
+        },
+        "coverage": {
+          "pointer": "/datasets/lc/experiment/results/clean_diagonal_distance/coverage",
+          "value": {
+            "evaluated_nonempty": 120,
+            "published_selected": 159,
+            "abstentions": 39,
+            "fraction": 0.7547169811320755,
+            "detected_positive_over_all_published_positive": {
+              "count": 29,
+              "denominator": 100,
+              "rate": 0.29,
+              "convention": "empty recordings counted as undetected, lower-bound sensitivity"
+            }
+          }
+        },
+        "calibration": {
+          "pointer": "/datasets/lc/experiment/results/clean_diagonal_distance/calibration",
+          "value": {
+            "nominal_pfa": 0.05,
+            "count": 1,
+            "denominator": 38,
+            "quantile_method": "higher",
+            "alarm_rule": "score > threshold"
+          }
+        },
+        "oscr": {
+          "pointer": "/datasets/lc/experiment/results/clean_diagonal_distance/oscr",
+          "value": null
+        },
+        "oscr_reason": {
+          "pointer": "/datasets/lc/experiment/results/clean_diagonal_distance/oscr_reason",
+          "value": "binary detector; no known/unknown classifier task defined"
+        }
+      },
+      "limits": "Bootstrap conditions on fitted models and thresholds; session independence unknown. No primary score selected."
+    },
+    {
+      "id": "T2.lc.binary_centroid_margin",
+      "table": "T2",
+      "source": "docs/results/public_data_baselines.json",
+      "population": "lc usable publisher test; positive=native label!=0; negative=label0",
+      "unit": "ranking and thresholded rates; exact event counts",
+      "values": {
+        "auroc": {
+          "pointer": "/datasets/lc/experiment/results/binary_centroid_margin/auroc",
+          "value": 0.9141746411483254
+        },
+        "average_precision": {
+          "pointer": "/datasets/lc/experiment/results/binary_centroid_margin/average_precision",
+          "value": 0.9609829092019883
+        },
+        "fpr_at_95_tpr": {
+          "pointer": "/datasets/lc/experiment/results/binary_centroid_margin/fpr_at_95_tpr",
+          "value": 0.7727272727272727
+        },
+        "detection": {
+          "pointer": "/datasets/lc/experiment/results/binary_centroid_margin/detection",
+          "value": {
+            "count": 26,
+            "denominator": 76,
+            "rate": 0.34210526315789475,
+            "reason": null
+          }
+        },
+        "false_alarm": {
+          "pointer": "/datasets/lc/experiment/results/binary_centroid_margin/false_alarm",
+          "value": {
+            "count": 0,
+            "denominator": 44,
+            "rate": 0.0,
+            "reason": null
+          }
+        },
+        "interference_prevalence": {
+          "pointer": "/datasets/lc/experiment/results/binary_centroid_margin/interference_prevalence",
+          "value": 0.6333333333333333
+        },
+        "per_native_class": {
+          "pointer": "/datasets/lc/experiment/results/binary_centroid_margin/per_native_class",
+          "value": {
+            "0": {
+              "name": "None",
+              "count": 0,
+              "denominator": 44,
+              "rate": 0.0,
+              "reason": null
+            },
+            "1": {
+              "name": "Noise",
+              "count": 0,
+              "denominator": 12,
+              "rate": 0.0,
+              "reason": null
+            },
+            "2": {
+              "name": "Chirp",
+              "count": 10,
+              "denominator": 11,
+              "rate": 0.9090909090909091,
+              "reason": null
+            },
+            "3": {
+              "name": "FreqHopper",
+              "count": 1,
+              "denominator": 11,
+              "rate": 0.09090909090909091,
+              "reason": null
+            },
+            "4": {
+              "name": "Modulated",
+              "count": 6,
+              "denominator": 12,
+              "rate": 0.5,
+              "reason": null
+            },
+            "5": {
+              "name": "Multitone",
+              "count": 0,
+              "denominator": 10,
+              "rate": 0.0,
+              "reason": null
+            },
+            "6": {
+              "name": "Pulsed",
+              "count": 9,
+              "denominator": 18,
+              "rate": 0.5,
+              "reason": null
+            },
+            "7": {
+              "name": "Cw",
+              "count": 0,
+              "denominator": 0,
+              "rate": null,
+              "reason": "no usable observations in this population"
+            },
+            "8": {
+              "name": "Tone",
+              "count": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "reason": null
+            }
+          }
+        },
+        "threshold": {
+          "pointer": "/datasets/lc/experiment/results/binary_centroid_margin/threshold",
+          "value": 13.709591139215688
+        },
+        "bootstrap": {
+          "pointer": "/datasets/lc/experiment/results/binary_centroid_margin/bootstrap",
+          "value": {
+            "unit": "publisher parent-recording ID; all retained crops together",
+            "seed": 20261025,
+            "requested": 500,
+            "groups": 120,
+            "session_independence": "UNKNOWN",
+            "ci95": {
+              "auroc": [
+                0.8541515404906826,
+                0.9615625677743135
+              ],
+              "average_precision": [
+                0.9315077126360708,
+                0.9828390873149652
+              ],
+              "detection": [
+                0.24024050632911392,
+                0.44594594594594594
+              ],
+              "false_alarm": [
+                0.0,
+                0.0
+              ]
+            },
+            "valid_draws": {
+              "auroc": 500,
+              "average_precision": 500,
+              "detection": 500,
+              "false_alarm": 500
+            },
+            "reason": null
+          }
+        },
+        "coverage": {
+          "pointer": "/datasets/lc/experiment/results/binary_centroid_margin/coverage",
+          "value": {
+            "evaluated_nonempty": 120,
+            "published_selected": 159,
+            "abstentions": 39,
+            "fraction": 0.7547169811320755,
+            "detected_positive_over_all_published_positive": {
+              "count": 26,
+              "denominator": 100,
+              "rate": 0.26,
+              "convention": "empty recordings counted as undetected, lower-bound sensitivity"
+            }
+          }
+        },
+        "calibration": {
+          "pointer": "/datasets/lc/experiment/results/binary_centroid_margin/calibration",
+          "value": {
+            "nominal_pfa": 0.05,
+            "count": 1,
+            "denominator": 38,
+            "quantile_method": "higher",
+            "alarm_rule": "score > threshold"
+          }
+        },
+        "oscr": {
+          "pointer": "/datasets/lc/experiment/results/binary_centroid_margin/oscr",
+          "value": null
+        },
+        "oscr_reason": {
+          "pointer": "/datasets/lc/experiment/results/binary_centroid_margin/oscr_reason",
+          "value": "binary detector; no known/unknown classifier task defined"
+        }
+      },
+      "limits": "Bootstrap conditions on fitted models and thresholds; session independence unknown. No primary score selected."
+    },
+    {
+      "id": "T1.fiot_counts",
+      "table": "T1",
+      "source": "docs/results/public_data_baselines.json",
+      "population": "Fraunhofer fiot; publisher parent-recording IDs; source-specific partitions",
+      "unit": "counts, native labels, representations",
+      "values": {
+        "published_partition": {
+          "pointer": "/datasets/fiot/audit/publisher_partition_audit",
+          "value": {
+            "split_unit": "publisher_recording_id",
+            "train": {
+              "samples": 5268,
+              "recordings": 878,
+              "class_counts": {
+                "0": 1938,
+                "1": 810,
+                "2": 288,
+                "3": 306,
+                "4": 312,
+                "5": 324,
+                "6": 804,
+                "7": 456,
+                "8": 30
+              }
+            },
+            "test": {
+              "samples": 1458,
+              "recordings": 243,
+              "class_counts": {
+                "0": 486,
+                "1": 228,
+                "2": 96,
+                "3": 102,
+                "4": 90,
+                "5": 90,
+                "6": 234,
+                "7": 120,
+                "8": 12
+              }
+            },
+            "recording_overlap": 0,
+            "session_independence": "UNKNOWN_NOT_PROVIDED"
+          }
+        },
+        "selected": {
+          "pointer": "/datasets/fiot/audit/selected_published",
+          "value": {
+            "train": 878,
+            "test": 243
+          }
+        },
+        "empty_abstentions": {
+          "pointer": "/datasets/fiot/audit/empty_abstentions_by_class",
+          "value": {
+            "train": {},
+            "test": {}
+          }
+        },
+        "hash_overlap": {
+          "pointer": "/datasets/fiot/audit/nonempty_train_test_hash_overlap",
+          "value": 0
+        },
+        "native_labels": {
+          "pointer": "/datasets/fiot/native_class_map",
+          "value": {
+            "0": "None",
+            "1": "Noise",
+            "2": "Chirp",
+            "3": "FreqHopper",
+            "4": "Modulated",
+            "5": "Multitone",
+            "6": "Pulsed",
+            "7": "Cw",
+            "8": "Tone"
+          }
+        },
+        "fit_groups": {
+          "pointer": "/datasets/fiot/experiment/fitting_groups",
+          "value": 676
+        },
+        "calibration_groups": {
+          "pointer": "/datasets/fiot/experiment/calibration_groups",
+          "value": 202
+        },
+        "calibration_clean": {
+          "pointer": "/datasets/fiot/experiment/clean_calibration",
+          "value": 69
+        },
+        "test_groups": {
+          "pointer": "/datasets/fiot/experiment/evaluation_groups",
+          "value": 243
+        },
+        "fitting_clean": {
+          "pointer": "/datasets/fiot/experiment/model/n_fit_clean",
+          "value": 254
+        },
+        "fitting_positive": {
+          "pointer": "/datasets/fiot/experiment/model/n_fit_positive",
+          "value": 422
+        },
+        "raw_manifest_identity": {
+          "pointer": "/datasets/fiot/audit/raw_manifest_sha256",
+          "value": {
+            "train": "55ccdfa95a5cb49cf0688275859ef752ef329a9ed39b11295221a74a5b1051f1",
+            "test": "5b6b5e0c73a2ba9d467c38de633e8f9bce0c1b8c57312ca4e5eaac55c2f6fe45"
+          }
+        },
+        "train_split_identity": {
+          "pointer": "/datasets/fiot/audit/train_split_sha256",
+          "value": "d295bababaa6938626be0fd43bc190479b6aec6d730ea4bb7cf3ec94cbb663b5"
+        },
+        "test_split_identity": {
+          "pointer": "/datasets/fiot/audit/test_split_sha256",
+          "value": "7fa00209df88ec5bcf42c08f22e5f26dfe02f727be75375f7121360a65a51155"
+        }
+      }
+    },
+    {
+      "id": "T2.fiot.native_level",
+      "table": "T2",
+      "source": "docs/results/public_data_baselines.json",
+      "population": "fiot usable publisher test; positive=native label!=0; negative=label0",
+      "unit": "ranking and thresholded rates; exact event counts",
+      "values": {
+        "auroc": {
+          "pointer": "/datasets/fiot/experiment/results/native_level/auroc",
+          "value": 0.2590306355738455
+        },
+        "average_precision": {
+          "pointer": "/datasets/fiot/experiment/results/native_level/average_precision",
+          "value": 0.542459863488471
+        },
+        "fpr_at_95_tpr": {
+          "pointer": "/datasets/fiot/experiment/results/native_level/fpr_at_95_tpr",
+          "value": 1.0
+        },
+        "detection": {
+          "pointer": "/datasets/fiot/experiment/results/native_level/detection",
+          "value": {
+            "count": 1,
+            "denominator": 162,
+            "rate": 0.006172839506172839,
+            "reason": null
+          }
+        },
+        "false_alarm": {
+          "pointer": "/datasets/fiot/experiment/results/native_level/false_alarm",
+          "value": {
+            "count": 6,
+            "denominator": 81,
+            "rate": 0.07407407407407407,
+            "reason": null
+          }
+        },
+        "interference_prevalence": {
+          "pointer": "/datasets/fiot/experiment/results/native_level/interference_prevalence",
+          "value": 0.6666666666666666
+        },
+        "per_native_class": {
+          "pointer": "/datasets/fiot/experiment/results/native_level/per_native_class",
+          "value": {
+            "0": {
+              "name": "None",
+              "count": 6,
+              "denominator": 81,
+              "rate": 0.07407407407407407,
+              "reason": null
+            },
+            "1": {
+              "name": "Noise",
+              "count": 0,
+              "denominator": 38,
+              "rate": 0.0,
+              "reason": null
+            },
+            "2": {
+              "name": "Chirp",
+              "count": 0,
+              "denominator": 16,
+              "rate": 0.0,
+              "reason": null
+            },
+            "3": {
+              "name": "FreqHopper",
+              "count": 0,
+              "denominator": 17,
+              "rate": 0.0,
+              "reason": null
+            },
+            "4": {
+              "name": "Modulated",
+              "count": 0,
+              "denominator": 15,
+              "rate": 0.0,
+              "reason": null
+            },
+            "5": {
+              "name": "Multitone",
+              "count": 0,
+              "denominator": 15,
+              "rate": 0.0,
+              "reason": null
+            },
+            "6": {
+              "name": "Pulsed",
+              "count": 0,
+              "denominator": 39,
+              "rate": 0.0,
+              "reason": null
+            },
+            "7": {
+              "name": "Cw",
+              "count": 1,
+              "denominator": 20,
+              "rate": 0.05,
+              "reason": null
+            },
+            "8": {
+              "name": "Tone",
+              "count": 0,
+              "denominator": 2,
+              "rate": 0.0,
+              "reason": null
+            }
+          }
+        },
+        "threshold": {
+          "pointer": "/datasets/fiot/experiment/results/native_level/threshold",
+          "value": 141.26478373628257
+        },
+        "bootstrap": {
+          "pointer": "/datasets/fiot/experiment/results/native_level/bootstrap",
+          "value": {
+            "unit": "publisher parent-recording ID; all retained crops together",
+            "seed": 20261025,
+            "requested": 500,
+            "groups": 243,
+            "session_independence": "UNKNOWN",
+            "ci95": {
+              "auroc": [
+                0.1974200685827022,
+                0.3228921794024201
+              ],
+              "average_precision": [
+                0.4773555787326112,
+                0.6163514370994047
+              ],
+              "detection": [
+                0.0,
+                0.01981372549019607
+              ],
+              "false_alarm": [
+                0.022209862810530223,
+                0.12806350626118068
+              ]
+            },
+            "valid_draws": {
+              "auroc": 500,
+              "average_precision": 500,
+              "detection": 500,
+              "false_alarm": 500
+            },
+            "reason": null
+          }
+        },
+        "coverage": {
+          "pointer": "/datasets/fiot/experiment/results/native_level/coverage",
+          "value": {
+            "evaluated_nonempty": 243,
+            "published_selected": 243,
+            "abstentions": 0,
+            "fraction": 1.0,
+            "detected_positive_over_all_published_positive": {
+              "count": 1,
+              "denominator": 162,
+              "rate": 0.006172839506172839,
+              "convention": "empty recordings counted as undetected, lower-bound sensitivity"
+            }
+          }
+        },
+        "calibration": {
+          "pointer": "/datasets/fiot/experiment/results/native_level/calibration",
+          "value": {
+            "nominal_pfa": 0.05,
+            "count": 3,
+            "denominator": 69,
+            "quantile_method": "higher",
+            "alarm_rule": "score > threshold"
+          }
+        },
+        "oscr": {
+          "pointer": "/datasets/fiot/experiment/results/native_level/oscr",
+          "value": null
+        },
+        "oscr_reason": {
+          "pointer": "/datasets/fiot/experiment/results/native_level/oscr_reason",
+          "value": "binary detector; no known/unknown classifier task defined"
+        }
+      },
+      "limits": "Bootstrap conditions on fitted models and thresholds; session independence unknown. No primary score selected."
+    },
+    {
+      "id": "T2.fiot.clean_diagonal_distance",
+      "table": "T2",
+      "source": "docs/results/public_data_baselines.json",
+      "population": "fiot usable publisher test; positive=native label!=0; negative=label0",
+      "unit": "ranking and thresholded rates; exact event counts",
+      "values": {
+        "auroc": {
+          "pointer": "/datasets/fiot/experiment/results/clean_diagonal_distance/auroc",
+          "value": 0.857796067672611
+        },
+        "average_precision": {
+          "pointer": "/datasets/fiot/experiment/results/clean_diagonal_distance/average_precision",
+          "value": 0.9366931225230644
+        },
+        "fpr_at_95_tpr": {
+          "pointer": "/datasets/fiot/experiment/results/clean_diagonal_distance/fpr_at_95_tpr",
+          "value": 0.6666666666666666
+        },
+        "detection": {
+          "pointer": "/datasets/fiot/experiment/results/clean_diagonal_distance/detection",
+          "value": {
+            "count": 105,
+            "denominator": 162,
+            "rate": 0.6481481481481481,
+            "reason": null
+          }
+        },
+        "false_alarm": {
+          "pointer": "/datasets/fiot/experiment/results/clean_diagonal_distance/false_alarm",
+          "value": {
+            "count": 3,
+            "denominator": 81,
+            "rate": 0.037037037037037035,
+            "reason": null
+          }
+        },
+        "interference_prevalence": {
+          "pointer": "/datasets/fiot/experiment/results/clean_diagonal_distance/interference_prevalence",
+          "value": 0.6666666666666666
+        },
+        "per_native_class": {
+          "pointer": "/datasets/fiot/experiment/results/clean_diagonal_distance/per_native_class",
+          "value": {
+            "0": {
+              "name": "None",
+              "count": 3,
+              "denominator": 81,
+              "rate": 0.037037037037037035,
+              "reason": null
+            },
+            "1": {
+              "name": "Noise",
+              "count": 24,
+              "denominator": 38,
+              "rate": 0.631578947368421,
+              "reason": null
+            },
+            "2": {
+              "name": "Chirp",
+              "count": 16,
+              "denominator": 16,
+              "rate": 1.0,
+              "reason": null
+            },
+            "3": {
+              "name": "FreqHopper",
+              "count": 7,
+              "denominator": 17,
+              "rate": 0.4117647058823529,
+              "reason": null
+            },
+            "4": {
+              "name": "Modulated",
+              "count": 9,
+              "denominator": 15,
+              "rate": 0.6,
+              "reason": null
+            },
+            "5": {
+              "name": "Multitone",
+              "count": 15,
+              "denominator": 15,
+              "rate": 1.0,
+              "reason": null
+            },
+            "6": {
+              "name": "Pulsed",
+              "count": 12,
+              "denominator": 39,
+              "rate": 0.3076923076923077,
+              "reason": null
+            },
+            "7": {
+              "name": "Cw",
+              "count": 20,
+              "denominator": 20,
+              "rate": 1.0,
+              "reason": null
+            },
+            "8": {
+              "name": "Tone",
+              "count": 2,
+              "denominator": 2,
+              "rate": 1.0,
+              "reason": null
+            }
+          }
+        },
+        "threshold": {
+          "pointer": "/datasets/fiot/experiment/results/clean_diagonal_distance/threshold",
+          "value": 3.1109226710046975
+        },
+        "bootstrap": {
+          "pointer": "/datasets/fiot/experiment/results/clean_diagonal_distance/bootstrap",
+          "value": {
+            "unit": "publisher parent-recording ID; all retained crops together",
+            "seed": 20261025,
+            "requested": 500,
+            "groups": 243,
+            "session_independence": "UNKNOWN",
+            "ci95": {
+              "auroc": [
+                0.8148997135761841,
+                0.8989405095009171
+              ],
+              "average_precision": [
+                0.9109318248458868,
+                0.9595574809541563
+              ],
+              "detection": [
+                0.5722929936305732,
+                0.7188269073010664
+              ],
+              "false_alarm": [
+                0.0,
+                0.08279109589041093
+              ]
+            },
+            "valid_draws": {
+              "auroc": 500,
+              "average_precision": 500,
+              "detection": 500,
+              "false_alarm": 500
+            },
+            "reason": null
+          }
+        },
+        "coverage": {
+          "pointer": "/datasets/fiot/experiment/results/clean_diagonal_distance/coverage",
+          "value": {
+            "evaluated_nonempty": 243,
+            "published_selected": 243,
+            "abstentions": 0,
+            "fraction": 1.0,
+            "detected_positive_over_all_published_positive": {
+              "count": 105,
+              "denominator": 162,
+              "rate": 0.6481481481481481,
+              "convention": "empty recordings counted as undetected, lower-bound sensitivity"
+            }
+          }
+        },
+        "calibration": {
+          "pointer": "/datasets/fiot/experiment/results/clean_diagonal_distance/calibration",
+          "value": {
+            "nominal_pfa": 0.05,
+            "count": 3,
+            "denominator": 69,
+            "quantile_method": "higher",
+            "alarm_rule": "score > threshold"
+          }
+        },
+        "oscr": {
+          "pointer": "/datasets/fiot/experiment/results/clean_diagonal_distance/oscr",
+          "value": null
+        },
+        "oscr_reason": {
+          "pointer": "/datasets/fiot/experiment/results/clean_diagonal_distance/oscr_reason",
+          "value": "binary detector; no known/unknown classifier task defined"
+        }
+      },
+      "limits": "Bootstrap conditions on fitted models and thresholds; session independence unknown. No primary score selected."
+    },
+    {
+      "id": "T2.fiot.binary_centroid_margin",
+      "table": "T2",
+      "source": "docs/results/public_data_baselines.json",
+      "population": "fiot usable publisher test; positive=native label!=0; negative=label0",
+      "unit": "ranking and thresholded rates; exact event counts",
+      "values": {
+        "auroc": {
+          "pointer": "/datasets/fiot/experiment/results/binary_centroid_margin/auroc",
+          "value": 0.5945739978661789
+        },
+        "average_precision": {
+          "pointer": "/datasets/fiot/experiment/results/binary_centroid_margin/average_precision",
+          "value": 0.8156405518181379
+        },
+        "fpr_at_95_tpr": {
+          "pointer": "/datasets/fiot/experiment/results/binary_centroid_margin/fpr_at_95_tpr",
+          "value": 0.9876543209876543
+        },
+        "detection": {
+          "pointer": "/datasets/fiot/experiment/results/binary_centroid_margin/detection",
+          "value": {
+            "count": 65,
+            "denominator": 162,
+            "rate": 0.4012345679012346,
+            "reason": null
+          }
+        },
+        "false_alarm": {
+          "pointer": "/datasets/fiot/experiment/results/binary_centroid_margin/false_alarm",
+          "value": {
+            "count": 7,
+            "denominator": 81,
+            "rate": 0.08641975308641975,
+            "reason": null
+          }
+        },
+        "interference_prevalence": {
+          "pointer": "/datasets/fiot/experiment/results/binary_centroid_margin/interference_prevalence",
+          "value": 0.6666666666666666
+        },
+        "per_native_class": {
+          "pointer": "/datasets/fiot/experiment/results/binary_centroid_margin/per_native_class",
+          "value": {
+            "0": {
+              "name": "None",
+              "count": 7,
+              "denominator": 81,
+              "rate": 0.08641975308641975,
+              "reason": null
+            },
+            "1": {
+              "name": "Noise",
+              "count": 7,
+              "denominator": 38,
+              "rate": 0.18421052631578946,
+              "reason": null
+            },
+            "2": {
+              "name": "Chirp",
+              "count": 10,
+              "denominator": 16,
+              "rate": 0.625,
+              "reason": null
+            },
+            "3": {
+              "name": "FreqHopper",
+              "count": 0,
+              "denominator": 17,
+              "rate": 0.0,
+              "reason": null
+            },
+            "4": {
+              "name": "Modulated",
+              "count": 5,
+              "denominator": 15,
+              "rate": 0.3333333333333333,
+              "reason": null
+            },
+            "5": {
+              "name": "Multitone",
+              "count": 15,
+              "denominator": 15,
+              "rate": 1.0,
+              "reason": null
+            },
+            "6": {
+              "name": "Pulsed",
+              "count": 6,
+              "denominator": 39,
+              "rate": 0.15384615384615385,
+              "reason": null
+            },
+            "7": {
+              "name": "Cw",
+              "count": 20,
+              "denominator": 20,
+              "rate": 1.0,
+              "reason": null
+            },
+            "8": {
+              "name": "Tone",
+              "count": 2,
+              "denominator": 2,
+              "rate": 1.0,
+              "reason": null
+            }
+          }
+        },
+        "threshold": {
+          "pointer": "/datasets/fiot/experiment/results/binary_centroid_margin/threshold",
+          "value": 0.16614503960911597
+        },
+        "bootstrap": {
+          "pointer": "/datasets/fiot/experiment/results/binary_centroid_margin/bootstrap",
+          "value": {
+            "unit": "publisher parent-recording ID; all retained crops together",
+            "seed": 20261025,
+            "requested": 500,
+            "groups": 243,
+            "session_independence": "UNKNOWN",
+            "ci95": {
+              "auroc": [
+                0.5206111225273964,
+                0.6681340595986822
+              ],
+              "average_precision": [
+                0.7639477044445327,
+                0.860161978558638
+              ],
+              "detection": [
+                0.326129044479806,
+                0.4685719373219373
+              ],
+              "false_alarm": [
+                0.02547062641999351,
+                0.14728997289972895
+              ]
+            },
+            "valid_draws": {
+              "auroc": 500,
+              "average_precision": 500,
+              "detection": 500,
+              "false_alarm": 500
+            },
+            "reason": null
+          }
+        },
+        "coverage": {
+          "pointer": "/datasets/fiot/experiment/results/binary_centroid_margin/coverage",
+          "value": {
+            "evaluated_nonempty": 243,
+            "published_selected": 243,
+            "abstentions": 0,
+            "fraction": 1.0,
+            "detected_positive_over_all_published_positive": {
+              "count": 65,
+              "denominator": 162,
+              "rate": 0.4012345679012346,
+              "convention": "empty recordings counted as undetected, lower-bound sensitivity"
+            }
+          }
+        },
+        "calibration": {
+          "pointer": "/datasets/fiot/experiment/results/binary_centroid_margin/calibration",
+          "value": {
+            "nominal_pfa": 0.05,
+            "count": 3,
+            "denominator": 69,
+            "quantile_method": "higher",
+            "alarm_rule": "score > threshold"
+          }
+        },
+        "oscr": {
+          "pointer": "/datasets/fiot/experiment/results/binary_centroid_margin/oscr",
+          "value": null
+        },
+        "oscr_reason": {
+          "pointer": "/datasets/fiot/experiment/results/binary_centroid_margin/oscr_reason",
+          "value": "binary detector; no known/unknown classifier task defined"
+        }
+      },
+      "limits": "Bootstrap conditions on fitted models and thresholds; session independence unknown. No primary score selected."
+    },
+    {
+      "id": "T1.smartspace",
+      "table": "T1",
+      "source": "docs/results/public_data_baselines.json",
+      "population": "Official SmartSpace access; no raw examples",
+      "unit": "null performance; access reasons",
+      "values": {
+        "onboard": {
+          "pointer": "/smartspace/onboard",
+          "value": {
+            "raw_files_obtained": 0,
+            "metrics": null,
+            "reason": "Official download redirects to Microsoft login; anonymous request401/403; MAT variables/raw container unverified"
+          }
+        },
+        "ngso": {
+          "pointer": "/smartspace/ngso",
+          "value": {
+            "raw_files_obtained": 0,
+            "metrics": null,
+            "reason": "Official download redirects to Microsoft login; anonymous request401/403; positive native test-label convention unverified"
+          }
+        }
+      }
+    },
+    {
+      "id": "T2.protocol",
+      "table": "T2",
+      "source": "docs/results/public_data_baselines.json",
+      "population": "Frozen public-interference pilot/1",
+      "unit": "protocol, SHA256 and score-source identity",
+      "values": {
+        "source_commit": {
+          "pointer": "/source_commit",
+          "value": "13f79f9ffc824029d91c74299cbfe83131ea4cc6"
+        },
+        "protocol": {
+          "pointer": "/datasets/lc/protocol",
+          "value": {
+            "protocol": "public-interference-pilot/1",
+            "seed": 20261025,
+            "calibration_fraction": 0.25,
+            "calibration_assignment": "first eight hex digits of sha256('public-calib-v1:' + parent_recording_id), divided by 2**32, less than 0.25; publisher training population only",
+            "pfa_target": 0.05,
+            "threshold": "clean calibration 0.95 empirical quantile, method=higher; alarm strictly score > threshold",
+            "bootstrap_draws": 500,
+            "bootstrap_unit": "publisher parent-recording ID, all retained rows of an ID together; acquisition-session independence unknown",
+            "fiot_selection": "ALL publisher parent-recording IDs, crop 0 only (878 train / 243 test); expansion capped at 2 GiB and 300 seconds on two CPU cores; fixed before detector metrics",
+            "lc_selection": "all publisher train/test records, at most 1024 per partition; empty recordings are abstentions with explicit counts",
+            "lc_features": [
+              "mean_positive_ss",
+              "std_positive_ss",
+              "positive_ss_fraction",
+              "std_timestep_mean_positive_ss",
+              "mean_sdr",
+              "mean_kur"
+            ],
+            "lc_columns_zero_based": {
+              "ss": [
+                57,
+                98
+              ],
+              "sdr": [
+                180,
+                244
+              ],
+              "kur": [
+                244,
+                308
+              ]
+            },
+            "fiot_features": [
+              "mean_R",
+              "mean_G",
+              "mean_B",
+              "std_R",
+              "std_G",
+              "std_B",
+              "mean_abs_axis0_gradient",
+              "mean_abs_axis1_gradient"
+            ],
+            "fiot_units": "stored RGB image levels, not calibrated PSD, IQ or linear RF power",
+            "scores": [
+              "native_level",
+              "clean_diagonal_distance",
+              "binary_centroid_margin"
+            ],
+            "directions": {
+              "lc_native_level": "negative mean positive receiver ss",
+              "fiot_native_level": "mean stored RGB level",
+              "distances": "higher means more interference-like; never flip from test results"
+            },
+            "fitting": "clean center/standard deviation and constant-column mask from fitting-train clean records only; positive centroid from fitting-train native labels != 0 only",
+            "selection": "no hyperparameter/checkpoint search; publisher test never fits statistics or thresholds",
+            "limits": {
+              "max_records_per_partition": 1024,
+              "max_bootstrap_draws": 2000,
+              "cpu_threads": 2,
+              "gpu": false
+            },
+            "b2_protocol_modified": false,
+            "benchmark_complete": false,
+            "capacity_decision": "Initial 256-parent access pilot had only 7 clean calibration / 16 clean test records; expanded to all published parent crop-0 IDs before first score computation, without changing scoring or split rules"
+          }
+        },
+        "protocol_sha256": {
+          "pointer": "/datasets/lc/protocol_sha256",
+          "value": "01a31bdac05438c0e2a81819275030f4d51e6f56f7b58870b3fdb96a30b2ac22"
+        },
+        "score_source_sha256": {
+          "pointer": "/datasets/lc/source_sha256",
+          "value": {
+            "baseline.py": "bd5c963a6b5889920543a56b9150289f7ee244a5d578d153977b50ad8ce558cd",
+            "fraunhofer.py": "619c5803072956ab0b5626e2f24a047b6fe9ab035e4f7091b08d1faad1920f07",
+            "__init__.py": "b0b8e86b15f555ad6267751687e39fc0d9f0cae589124462a0eb8afee3558f1d",
+            "smartspace.py": "d040be0f713b1fb36d78551de5432417d59809381051bcdf8e9dd6ef0ecbcef2"
+          }
+        }
+      }
+    },
+    {
+      "id": "T2.resources",
+      "table": "T2",
+      "source": "docs/results/public_data_baselines.json",
+      "population": "Measured CPU processes; LC/FIOT entire retained scope",
+      "unit": "seconds CPU/wall and KiB peak RSS",
+      "values": {
+        "lc": {
+          "pointer": "/measurements/lc",
+          "value": {
+            "command": [
+              "/workspace/.venvs/geosim/bin/python",
+              "-m",
+              "research.public_data.baseline",
+              "--kind",
+              "lc",
+              "--data",
+              "/workspace/public-data-audit/fraunhofer/LC-raw/data_lc",
+              "--train",
+              "/workspace/public-data-audit/fraunhofer/train_LC.txt",
+              "--test",
+              "/workspace/public-data-audit/fraunhofer/test_LC.txt",
+              "--out",
+              "/workspace/public-data-audit/results/lc.json"
+            ],
+            "source_commit": "13f79f9ffc824029d91c74299cbfe83131ea4cc6",
+            "returncode": 0,
+            "wall_seconds": 0.7395337750203907,
+            "cpu_seconds": 0.851868,
+            "peak_rss_kib": 26804,
+            "python": "3.12.14",
+            "numpy": "2.5.4",
+            "scipy": "1.18.1",
+            "threads": {
+              "OMP_NUM_THREADS": "2",
+              "OPENBLAS_NUM_THREADS": "2",
+              "MKL_NUM_THREADS": "2",
+              "PYTHONHASHSEED": "0"
+            }
+          }
+        },
+        "fiot": {
+          "pointer": "/measurements/fiot",
+          "value": {
+            "command": [
+              "/workspace/.venvs/geosim/bin/python",
+              "-m",
+              "research.public_data.baseline",
+              "--kind",
+              "fiot",
+              "--data",
+              "/workspace/public-data-audit/fraunhofer/FIOT-all-crop0/data",
+              "--train",
+              "/workspace/public-data-audit/fraunhofer/train_FIOT.txt",
+              "--test",
+              "/workspace/public-data-audit/fraunhofer/test_FIOT.txt",
+              "--out",
+              "/workspace/public-data-audit/results/fiot.json"
+            ],
+            "source_commit": "13f79f9ffc824029d91c74299cbfe83131ea4cc6",
+            "returncode": 0,
+            "wall_seconds": 23.117336490977323,
+            "cpu_seconds": 23.214239,
+            "peak_rss_kib": 39184,
+            "python": "3.12.14",
+            "numpy": "2.5.4",
+            "scipy": "1.18.1",
+            "threads": {
+              "OMP_NUM_THREADS": "2",
+              "OPENBLAS_NUM_THREADS": "2",
+              "MKL_NUM_THREADS": "2",
+              "PYTHONHASHSEED": "0"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "T3.apa",
+      "table": "T3",
+      "source": "src/geosim/data/opendpd_mp.json",
+      "population": "OpenDPD opendpd_apa train fit/validation-selected model; post-selection test at measurement rate",
+      "unit": "NMSE dB, sample counts, Hz, memory/order indices",
+      "values": {
+        "order": {
+          "pointer": "/models/opendpd_apa/order",
+          "value": 5
+        },
+        "memory": {
+          "pointer": "/models/opendpd_apa/memory",
+          "value": 3
+        },
+        "val_nmse_db": {
+          "pointer": "/models/opendpd_apa/val_nmse_db",
+          "value": -31.042293763987033
+        },
+        "test_nmse_db": {
+          "pointer": "/models/opendpd_apa/test_nmse_db",
+          "value": -30.644118026301722
+        },
+        "n_samples": {
+          "pointer": "/models/opendpd_apa/n_samples",
+          "value": {
+            "train": 58980,
+            "val": 19662,
+            "test": 19662
+          }
+        },
+        "dataset": {
+          "pointer": "/models/opendpd_apa/dataset",
+          "value": "APA_200MHz"
+        },
+        "device": {
+          "pointer": "/models/opendpd_apa/device",
+          "value": "Ampleon GaN Doherty PA, 3.5 GHz, 41.5 dBm average output (OpenDPD docs/whats-new.md); 5 x 20 MHz LTE TM3.1a"
+        },
+        "fs_hz": {
+          "pointer": "/models/opendpd_apa/fs_hz",
+          "value": 983040000.0
+        },
+        "occupied_bandwidth_hz": {
+          "pointer": "/models/opendpd_apa/occupied_bandwidth_hz",
+          "value": 200000000.0
+        },
+        "clip_amplitude": {
+          "pointer": "/models/opendpd_apa/clip_amplitude",
+          "value": 3.1553256031167187
+        },
+        "files_sha256": {
+          "pointer": "/models/opendpd_apa/files_sha256",
+          "value": {
+            "train_input.csv": "2ca703c9e7eb39839db1fb01f91081a86e18535e53751c587cc71d2d71e9c625",
+            "train_output.csv": "e760adf3908ed1be1e610c46f056e88bad6107a81cc8b01d91306727316b5930",
+            "val_input.csv": "39bb15c9bd92549d1653498c140caff5cb2f20edffd433eafa46b4a81c491981",
+            "val_output.csv": "02f67574444c7a8ba321cde1ea919c07fef1c99fb9d25678befc019c6b6645e2",
+            "test_input.csv": "5027d3d69391ed22ad79c410831bdfed47b25045088dda0756801cf591c947bf",
+            "test_output.csv": "991c1f97f38e57c7f3614dd3f23c411791e03d5eb5eae67492455cf9e94820f6"
+          }
+        }
+      },
+      "limits": "Solid-state Doherty measurement, not TWTA. Nominal IBO and rescaled delay assumptions do not calibrate satellite hardware."
+    },
+    {
+      "id": "T3.dpa",
+      "table": "T3",
+      "source": "src/geosim/data/opendpd_mp.json",
+      "population": "OpenDPD opendpd_dpa train fit/validation-selected model; post-selection test at measurement rate",
+      "unit": "NMSE dB, sample counts, Hz, memory/order indices",
+      "values": {
+        "order": {
+          "pointer": "/models/opendpd_dpa/order",
+          "value": 5
+        },
+        "memory": {
+          "pointer": "/models/opendpd_dpa/memory",
+          "value": 16
+        },
+        "val_nmse_db": {
+          "pointer": "/models/opendpd_dpa/val_nmse_db",
+          "value": -33.780142059090345
+        },
+        "test_nmse_db": {
+          "pointer": "/models/opendpd_dpa/test_nmse_db",
+          "value": -33.89193173791028
+        },
+        "n_samples": {
+          "pointer": "/models/opendpd_dpa/n_samples",
+          "value": {
+            "train": 23040,
+            "val": 7680,
+            "test": 7680
+          }
+        },
+        "dataset": {
+          "pointer": "/models/opendpd_dpa/dataset",
+          "value": "DPA_200MHz"
+        },
+        "device": {
+          "pointer": "/models/opendpd_dpa/device",
+          "value": "40 nm CMOS digital Doherty transmitter, 2.4 GHz (OpenDPD docs/whats-new.md); 10 x 20 MHz, 64QAM"
+        },
+        "fs_hz": {
+          "pointer": "/models/opendpd_dpa/fs_hz",
+          "value": 800000000.0
+        },
+        "occupied_bandwidth_hz": {
+          "pointer": "/models/opendpd_dpa/occupied_bandwidth_hz",
+          "value": 200000000.0
+        },
+        "clip_amplitude": {
+          "pointer": "/models/opendpd_dpa/clip_amplitude",
+          "value": 2.8876898657625794
+        },
+        "files_sha256": {
+          "pointer": "/models/opendpd_dpa/files_sha256",
+          "value": {
+            "train_input.csv": "05da7e48c14d1eadb003a43363d6b9f658a164b564b660f5edee21b9e9d4d0f3",
+            "train_output.csv": "f3d9b3173e78a4c292028b304271ee16c52c2262dd122f593ca7b8b65097dff3",
+            "val_input.csv": "aa7b345c57eef8476ca6b5b5eb73fd0dce0f8d72f5e716ed36cfb0b91af8b8a3",
+            "val_output.csv": "5c012ab8218062cd870eed700fc273dd7e72820462c480df8380f08cf4f1092a",
+            "test_input.csv": "262e1fe4365992735ef9d6f67c4ff557e8e4d8a4f4885b7bc5c7011d07f1b4c0",
+            "test_output.csv": "57d13dc65abf2b8cf77a05d0f1cf90ca0b3520f2da6bb85eb7ba31048d46d9a8"
+          }
+        }
+      },
+      "limits": "Solid-state Doherty measurement, not TWTA. Nominal IBO and rescaled delay assumptions do not calibrate satellite hardware."
+    },
+    {
+      "id": "T4.npr",
+      "table": "T4",
+      "source": "docs/results/npr_check.json",
+      "population": "Standalone notched Gaussian noise, one waveform seed; amplifier only",
+      "unit": "NPR dB, IBO dB, slope dB/dB, Hz",
+      "values": {
+        "n_samples": {
+          "pointer": "/n_samples",
+          "value": 524288
+        },
+        "seed": {
+          "pointer": "/seed",
+          "value": 0
+        },
+        "bandwidth": {
+          "pointer": "/bandwidth_hz",
+          "value": 32000000.0
+        },
+        "notch": {
+          "pointer": "/notch_hz",
+          "value": [
+            2000000.0,
+            3000000.0
+          ]
+        },
+        "input_floor": {
+          "pointer": "/input_npr_db",
+          "value": 53.63452530742975
+        },
+        "twta10": {
+          "pointer": "/amplifiers/dvbs2_nl/rows/10",
+          "value": {
+            "ibo_db": 10.0,
+            "npr_db": 15.723183357269763,
+            "linear_npr_db": 53.63452530742975,
+            "input_beyond_measured": null
+          }
+        },
+        "twta14": {
+          "pointer": "/amplifiers/dvbs2_nl/rows/14",
+          "value": {
+            "ibo_db": 14.0,
+            "npr_db": 20.714972100992664,
+            "linear_npr_db": 53.63452530742975,
+            "input_beyond_measured": null
+          }
+        },
+        "slope": {
+          "pointer": "/amplifiers/dvbs2_nl/slope_db_per_db_ibo_10_14",
+          "value": 1.2476695468542658
+        },
+        "reference_lin_rows": {
+          "pointer": "/amplifiers/dvbs2_lin/rows",
+          "value": [
+            {
+              "ibo_db": 0.0,
+              "npr_db": 8.7917488008707,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 1.0,
+              "npr_db": 9.610111850944483,
+              "linear_npr_db": 53.63452530742974,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 2.0,
+              "npr_db": 10.488241187681675,
+              "linear_npr_db": 53.63452530742974,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 3.0,
+              "npr_db": 11.42540675616572,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 4.0,
+              "npr_db": 12.431432686941175,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 5.0,
+              "npr_db": 13.547457089954486,
+              "linear_npr_db": 53.634525307429755,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 6.0,
+              "npr_db": 14.820514196163181,
+              "linear_npr_db": 53.63452530742974,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 7.0,
+              "npr_db": 16.318546272175535,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 8.0,
+              "npr_db": 18.084345733242234,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 9.0,
+              "npr_db": 20.116909645766377,
+              "linear_npr_db": 53.634525307429755,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 10.0,
+              "npr_db": 22.203948663254746,
+              "linear_npr_db": 53.63452530742974,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 11.0,
+              "npr_db": 23.674342290662263,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 12.0,
+              "npr_db": 23.752229526933974,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 13.0,
+              "npr_db": 22.816645246910806,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 14.0,
+              "npr_db": 21.79188199096423,
+              "linear_npr_db": 53.634525307429755,
+              "input_beyond_measured": null
+            }
+          ]
+        },
+        "rapp_rows": {
+          "pointer": "/amplifiers/rapp_p2/rows",
+          "value": [
+            {
+              "ibo_db": 0.0,
+              "npr_db": 14.48034660697777,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 1.0,
+              "npr_db": 15.637217529651927,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 2.0,
+              "npr_db": 16.979644110625358,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 3.0,
+              "npr_db": 18.525037848908852,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 4.0,
+              "npr_db": 20.289586717292863,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 5.0,
+              "npr_db": 22.28731170926902,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 6.0,
+              "npr_db": 24.528440478360643,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 7.0,
+              "npr_db": 27.017048929061104,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 8.0,
+              "npr_db": 29.748275782778446,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 9.0,
+              "npr_db": 32.70548825874603,
+              "linear_npr_db": 53.634525307429755,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 10.0,
+              "npr_db": 35.85699677201291,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 11.0,
+              "npr_db": 39.14969105191286,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 12.0,
+              "npr_db": 42.493674700095134,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 13.0,
+              "npr_db": 45.73214529738655,
+              "linear_npr_db": 53.63452530742975,
+              "input_beyond_measured": null
+            },
+            {
+              "ibo_db": 14.0,
+              "npr_db": 48.6122876591849,
+              "linear_npr_db": 53.634525307429755,
+              "input_beyond_measured": null
+            }
+          ]
+        }
+      },
+      "limits": "Not full-chain data or measured TWTA validation; digitized linearized-curve artifact retained."
+    },
+    {
+      "id": "T4.asi",
+      "table": "T4",
+      "source": "docs/results/asi_visibility.json",
+      "population": "120 single-polarization, fixed-link controlled simulation groups; oracle paired no-event twin",
+      "unit": "dB and count; C/I referenced to plan PSD",
+      "values": {
+        "ibo_db": {
+          "pointer": "/ibo_db",
+          "value": 11.0
+        },
+        "cn_up_db": {
+          "pointer": "/cn_up_db",
+          "value": 25.0
+        },
+        "cn_dn_db": {
+          "pointer": "/cn_dn_db",
+          "value": 25.0
+        },
+        "bandwidth": {
+          "pointer": "/bandwidth",
+          "value": 36000000.0
+        },
+        "geometry": {
+          "pointer": "/geometry_summary",
+          "value": {
+            "c_over_i_psd_db": {
+              "n": 120,
+              "median": 20.32449363006822,
+              "p10": 14.444051255752097,
+              "p90": 26.59147438562892
+            },
+            "c_over_i_psd_min_db": 7.033853320886866,
+            "c_over_i_psd_max_db": 31.783629211542138,
+            "by_diameter_m": {
+              "0.75": {
+                "n": 18,
+                "median": 15.109170325593038,
+                "p10": 10.838039223201516,
+                "p90": 18.9032881369162
+              },
+              "0.96": {
+                "n": 30,
+                "median": 17.580852575832854,
+                "p10": 13.306755556771082,
+                "p90": 20.66056282941929
+              },
+              "1.2": {
+                "n": 23,
+                "median": 19.626202320662205,
+                "p10": 16.085563665609524,
+                "p90": 23.4874366847184
+              },
+              "1.8": {
+                "n": 20,
+                "median": 22.45380975289688,
+                "p10": 20.20845488185183,
+                "p90": 27.196575607749764
+              },
+              "2.4": {
+                "n": 29,
+                "median": 25.2648662442684,
+                "p10": 22.25093835615303,
+                "p90": 29.546866283110226
+              }
+            },
+            "pattern_region_counts": {
+              "first_sidelobe": 4,
+              "main_lobe": 14,
+              "s465_envelope": 50,
+              "sidelobe": 52
+            }
+          }
+        },
+        "summary": {
+          "pointer": "/summary",
+          "value": [
+            {
+              "c_over_i_psd_db": [
+                null,
+                10.0
+              ],
+              "n": 1,
+              "in_plan": {
+                "n_with_bins": 1,
+                "median": 1.0104829574446481,
+                "p10": 1.0104829574446481,
+                "p90": 1.0104829574446481,
+                "fraction_visible_3sigma": 1.0,
+                "fraction_above_0p5_db": 1.0,
+                "fraction_above_1_db": 1.0
+              },
+              "out_of_plan": {
+                "n_with_bins": 1,
+                "median": 4.717598272692133,
+                "p10": 4.717598272692133,
+                "p90": 4.717598272692133,
+                "fraction_visible_3sigma": 1.0,
+                "fraction_above_0p5_db": 1.0,
+                "fraction_above_1_db": 1.0
+              }
+            },
+            {
+              "c_over_i_psd_db": [
+                10.0,
+                15.0
+              ],
+              "n": 15,
+              "in_plan": {
+                "n_with_bins": 15,
+                "median": 0.1788771337371123,
+                "p10": 0.1258905217344519,
+                "p90": 0.426066325906522,
+                "fraction_visible_3sigma": 0.9333333333333333,
+                "fraction_above_0p5_db": 0.06666666666666667,
+                "fraction_above_1_db": 0.0
+              },
+              "out_of_plan": {
+                "n_with_bins": 15,
+                "median": 5.530469279938169,
+                "p10": 3.8484583696596233,
+                "p90": 9.663478775165279,
+                "fraction_visible_3sigma": 1.0,
+                "fraction_above_0p5_db": 1.0,
+                "fraction_above_1_db": 1.0
+              }
+            },
+            {
+              "c_over_i_psd_db": [
+                15.0,
+                20.0
+              ],
+              "n": 41,
+              "in_plan": {
+                "n_with_bins": 41,
+                "median": 0.0656403446970575,
+                "p10": 0.03436908758405652,
+                "p90": 0.1615608968379289,
+                "fraction_visible_3sigma": 0.6097560975609756,
+                "fraction_above_0p5_db": 0.024390243902439025,
+                "fraction_above_1_db": 0.0
+              },
+              "out_of_plan": {
+                "n_with_bins": 41,
+                "median": 2.591600743046074,
+                "p10": 1.9150307417179648,
+                "p90": 4.0818059899828265,
+                "fraction_visible_3sigma": 1.0,
+                "fraction_above_0p5_db": 1.0,
+                "fraction_above_1_db": 1.0
+              }
+            },
+            {
+              "c_over_i_psd_db": [
+                20.0,
+                25.0
+              ],
+              "n": 43,
+              "in_plan": {
+                "n_with_bins": 43,
+                "median": 0.026617030407373735,
+                "p10": 0.01165127374625434,
+                "p90": 0.07696975209009711,
+                "fraction_visible_3sigma": 0.16279069767441862,
+                "fraction_above_0p5_db": 0.0,
+                "fraction_above_1_db": 0.0
+              },
+              "out_of_plan": {
+                "n_with_bins": 43,
+                "median": 1.4146932375155952,
+                "p10": 0.7578074685309176,
+                "p90": 2.407515923214667,
+                "fraction_visible_3sigma": 1.0,
+                "fraction_above_0p5_db": 0.9767441860465116,
+                "fraction_above_1_db": 0.6744186046511628
+              }
+            },
+            {
+              "c_over_i_psd_db": [
+                25.0,
+                null
+              ],
+              "n": 20,
+              "in_plan": {
+                "n_with_bins": 20,
+                "median": 0.005030405235098793,
+                "p10": 0.00297598769112104,
+                "p90": 0.011998319144713858,
+                "fraction_visible_3sigma": 0.0,
+                "fraction_above_0p5_db": 0.0,
+                "fraction_above_1_db": 0.0
+              },
+              "out_of_plan": {
+                "n_with_bins": 20,
+                "median": 0.40423329391262164,
+                "p10": 0.18392657569730533,
+                "p90": 0.8787710175677941,
+                "fraction_visible_3sigma": 0.95,
+                "fraction_above_0p5_db": 0.35,
+                "fraction_above_1_db": 0.1
+              }
+            }
+          ]
+        }
+      },
+      "limits": "Offline truth-selected bands and paired twins; not detector operating rates. Single link point, no phase noise."
+    },
+    {
+      "id": "T4.cuc",
+      "table": "T4",
+      "source": "docs/results/cuc_visibility.json",
+      "population": "24 simulation groups each at six total-plan C/I levels; paired oracle no-event twin",
+      "unit": "delta PSD dB; C/I referenced to total plan",
+      "values": {
+        "ibo_db": {
+          "pointer": "/ibo_db",
+          "value": 11.0
+        },
+        "cn_up_db": {
+          "pointer": "/cn_up_db",
+          "value": 25.0
+        },
+        "cn_dn_db": {
+          "pointer": "/cn_dn_db",
+          "value": 25.0
+        },
+        "summary": {
+          "pointer": "/summary",
+          "value": [
+            {
+              "c_over_i_db": 5.0,
+              "n": 24,
+              "median_victim_c_over_i_db": -2.537594935587172,
+              "median_delta_db": 5.636318004578049,
+              "median_3sigma_db": 0.05292763121754039,
+              "fraction_visible_3sigma": 1.0
+            },
+            {
+              "c_over_i_db": 10.0,
+              "n": 24,
+              "median_victim_c_over_i_db": 2.462405064412828,
+              "median_delta_db": 2.7436692591901704,
+              "median_3sigma_db": 0.05292763121754039,
+              "fraction_visible_3sigma": 1.0
+            },
+            {
+              "c_over_i_db": 15.0,
+              "n": 24,
+              "median_victim_c_over_i_db": 7.4624050644128275,
+              "median_delta_db": 1.0805646023324469,
+              "median_3sigma_db": 0.05292763121754039,
+              "fraction_visible_3sigma": 1.0
+            },
+            {
+              "c_over_i_db": 20.0,
+              "n": 24,
+              "median_victim_c_over_i_db": 12.462405064412827,
+              "median_delta_db": 0.37271309041677214,
+              "median_3sigma_db": 0.05292763121754039,
+              "fraction_visible_3sigma": 1.0
+            },
+            {
+              "c_over_i_db": 25.0,
+              "n": 24,
+              "median_victim_c_over_i_db": 17.462405064412827,
+              "median_delta_db": 0.1211793178005898,
+              "median_3sigma_db": 0.05292763121754039,
+              "fraction_visible_3sigma": 0.875
+            },
+            {
+              "c_over_i_db": 30.0,
+              "n": 24,
+              "median_victim_c_over_i_db": 22.462405064412827,
+              "median_delta_db": 0.0413588567712157,
+              "median_3sigma_db": 0.05292763121754039,
+              "fraction_visible_3sigma": 0.16666666666666666
+            }
+          ]
+        }
+      },
+      "limits": "Levels reuse groups;144 rows are not144 independent groups. No phase noise; not operating Pd."
+    },
+    {
+      "id": "T4.cancellation",
+      "table": "T4",
+      "source": "docs/results/b2_feat_cancellation_check.json",
+      "population": "64 simulated observations/8 scenario groups across4roles; physical diagnostic, no fitting",
+      "unit": "active-carrier-core depth dB and victim-band delta PSD dB",
+      "values": {
+        "identity": {
+          "pointer": "/data_fingerprint",
+          "value": "325317b75dfaea64bd4872d09afd7511ffaf441dfd9e219153217081a9027831"
+        },
+        "version": {
+          "pointer": "/cancellation/version",
+          "value": "obs-cancel/1"
+        },
+        "n": {
+          "pointer": "/n_observations",
+          "value": 64
+        },
+        "roles": {
+          "pointer": "/roles",
+          "value": {
+            "train": {
+              "n_samples": 16,
+              "n_scenarios": 2
+            },
+            "val-select": {
+              "n_samples": 16,
+              "n_scenarios": 2
+            },
+            "val-calib": {
+              "n_samples": 16,
+              "n_scenarios": 2
+            },
+            "test": {
+              "n_samples": 16,
+              "n_scenarios": 2
+            }
+          }
+        },
+        "per_label": {
+          "pointer": "/per_label",
+          "value": {
+            "clean": {
+              "n": 8,
+              "n_active_carriers": 37,
+              "mean_depth_db": 16.466462125859636,
+              "min_depth_db": 14.197426688304304,
+              "mean_gap_floor_shift_db": -0.09081332454106672,
+              "median_decision_snr_db": 16.44869965591065
+            },
+            "cw": {
+              "n": 8,
+              "n_active_carriers": 37,
+              "mean_depth_db": 15.525060034995784,
+              "min_depth_db": 4.508050329129745,
+              "mean_gap_floor_shift_db": -0.05106674974344827,
+              "median_decision_snr_db": 15.802110895231678
+            },
+            "swept_cw": {
+              "n": 8,
+              "n_active_carriers": 37,
+              "mean_depth_db": 15.649529404702637,
+              "min_depth_db": 11.697185063369261,
+              "mean_gap_floor_shift_db": -0.059069887794183984,
+              "median_decision_snr_db": 16.189479127340423
+            },
+            "unauthorized": {
+              "n": 8,
+              "n_active_carriers": 37,
+              "mean_depth_db": 16.289206552877154,
+              "min_depth_db": 14.167375542755408,
+              "mean_gap_floor_shift_db": -0.039377156315115514,
+              "median_decision_snr_db": 16.090220802791222
+            },
+            "overdrive": {
+              "n": 8,
+              "n_active_carriers": 37,
+              "mean_depth_db": 13.325301647915666,
+              "min_depth_db": 11.151370986061266,
+              "mean_gap_floor_shift_db": -0.032837518797469656,
+              "median_decision_snr_db": 12.823013707987691
+            },
+            "cross_pol": {
+              "n": 8,
+              "n_active_carriers": 37,
+              "mean_depth_db": 12.778685414571573,
+              "min_depth_db": 8.96797341150436,
+              "mean_gap_floor_shift_db": -0.0236870165338523,
+              "median_decision_snr_db": 12.000877083207286
+            },
+            "adjacent_satellite": {
+              "n": 8,
+              "n_active_carriers": 37,
+              "mean_depth_db": 15.325490065770955,
+              "min_depth_db": 6.823076530456362,
+              "mean_gap_floor_shift_db": -0.0808228544362457,
+              "median_decision_snr_db": 15.231186831886191
+            },
+            "carrier_under_carrier": {
+              "n": 8,
+              "n_active_carriers": 37,
+              "mean_depth_db": 15.189315583106884,
+              "min_depth_db": 6.205347742328641,
+              "mean_gap_floor_shift_db": -0.08676204898171136,
+              "median_decision_snr_db": 16.02219940219759
+            }
+          }
+        },
+        "paired": {
+          "pointer": "/paired_cuc_summary",
+          "value": {
+            "n_pairs": 8,
+            "median_delta_before_db": 0.9861261336341585,
+            "median_delta_after_db": 6.4614173150175915,
+            "n_pairs_after_exceeds_before": 8
+          }
+        }
+      },
+      "limits": "Truth supplies diagnostic victim-band only; cancellation/model use observation-derived inputs. Core depth is not full-band energy ratio."
+    },
+    {
+      "id": "S1.b2_chance",
+      "table": "S1",
+      "source": "docs/results/b2_feat_pilot.json",
+      "population": "Canonical P20 B2-feat/1 tiny known-class pilot, 3 epochs, one training seed",
+      "unit": "counts and accuracy fractions",
+      "values": {
+        "epochs": {
+          "pointer": "/config/training/epochs",
+          "value": 3
+        },
+        "train": {
+          "pointer": "/partitions/train/n_samples",
+          "value": 16
+        },
+        "test": {
+          "pointer": "/partitions/test/n_samples",
+          "value": 16
+        },
+        "co_accuracy": {
+          "pointer": "/methods/co/accuracy",
+          "value": {
+            "mean": 0.125,
+            "ci95": [
+              0.125,
+              0.125
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          }
+        },
+        "dual_accuracy": {
+          "pointer": "/methods/dual/accuracy",
+          "value": {
+            "mean": 0.125,
+            "ci95": [
+              0.125,
+              0.125
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          }
+        },
+        "dual_residual_accuracy": {
+          "pointer": "/methods/dual_residual/accuracy",
+          "value": {
+            "mean": 0.125,
+            "ci95": [
+              0.125,
+              0.125
+            ],
+            "n_samples": 16,
+            "n_scenarios": 2
+          }
+        },
+        "identity": {
+          "pointer": "/data_fingerprint",
+          "value": "325317b75dfaea64bd4872d09afd7511ffaf441dfd9e219153217081a9027831"
+        }
+      },
+      "limits": "Execution stand-ins, not recognition superiority; two scenario groups/test."
+    },
+    {
+      "id": "S1.r1",
+      "table": "S1",
+      "source": "docs/results/r1_pilot.json",
+      "population": "Historical R1/A1 pilot; one training seed; IBO four-common-class test239 observations/60groups",
+      "unit": "counts/rates and accuracy fractions",
+      "values": {
+        "training_seeds": {
+          "pointer": "/train_seeds",
+          "value": [
+            0
+          ]
+        },
+        "n_scenarios": {
+          "pointer": "/splits/r1_ibo_sweep/n_scenarios",
+          "value": 60
+        },
+        "lin_accuracy": {
+          "pointer": "/splits/r1_ibo_sweep/four_class/M-lin/accuracy",
+          "value": {
+            "mean": 0.7907949790794979,
+            "ci95": [
+              0.7425922995780591,
+              0.8333333333333334
+            ],
+            "n_samples": 239,
+            "n_scenarios": 60
+          }
+        },
+        "nl4_accuracy": {
+          "pointer": "/splits/r1_ibo_sweep/four_class/M-nl4/accuracy",
+          "value": {
+            "mean": 0.8368200836820083,
+            "ci95": [
+              0.7899159663865546,
+              0.8792213983050844
+            ],
+            "n_samples": 239,
+            "n_scenarios": 60
+          }
+        },
+        "lin_FA": {
+          "pointer": "/splits/r1_ibo_sweep/four_class/M-lin/false_alarm_on_clean",
+          "value": {
+            "mean": 0.23333333333333334,
+            "ci95": [
+              0.13333333333333333,
+              0.3337499999999977
+            ],
+            "n_samples": 60,
+            "n_scenarios": 60
+          }
+        },
+        "nl4_FA": {
+          "pointer": "/splits/r1_ibo_sweep/four_class/M-nl4/false_alarm_on_clean",
+          "value": {
+            "mean": 0.016666666666666666,
+            "ci95": [
+              0.0,
+              0.05
+            ],
+            "n_samples": 60,
+            "n_scenarios": 60
+          }
+        },
+        "ibo_fiveclass_FA": {
+          "pointer": "/splits/r1_ibo_sweep/detection/pfa",
+          "value": {
+            "mean": 0.26666666666666666,
+            "ci95": [
+              0.16666666666666666,
+              0.38333333333333336
+            ],
+            "n_samples": 60,
+            "n_scenarios": 60
+          }
+        },
+        "rapp_fiveclass_FA": {
+          "pointer": "/splits/r1_amp_rapp/detection/pfa",
+          "value": {
+            "mean": 0.25,
+            "ci95": [
+              0.15,
+              0.36666666666666664
+            ],
+            "n_samples": 60,
+            "n_scenarios": 60
+          }
+        },
+        "apa_fiveclass_FA": {
+          "pointer": "/splits/r1_amp_opendpd_apa/detection/pfa",
+          "value": {
+            "mean": 0.18333333333333332,
+            "ci95": [
+              0.1,
+              0.2833333333333333
+            ],
+            "n_samples": 60,
+            "n_scenarios": 60
+          }
+        },
+        "dpa_fiveclass_FA": {
+          "pointer": "/splits/r1_amp_opendpd_dpa/detection/pfa",
+          "value": {
+            "mean": 0.21666666666666667,
+            "ci95": [
+              0.11666666666666667,
+              0.31666666666666665
+            ],
+            "n_samples": 60,
+            "n_scenarios": 60
+          }
+        },
+        "rapp_confusion": {
+          "pointer": "/splits/r1_amp_rapp/five_class/confusion",
+          "value": [
+            [
+              45,
+              15,
+              0,
+              0,
+              0
+            ],
+            [
+              11,
+              49,
+              0,
+              0,
+              0
+            ],
+            [
+              12,
+              3,
+              45,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              58,
+              0
+            ],
+            [
+              59,
+              1,
+              0,
+              0,
+              0
+            ]
+          ]
+        }
+      },
+      "limits": "No trained-model seed uncertainty; confirms neither C3 effect size nor unseen loading. Four-vs-five label sets not interchangeable."
+    },
+    {
+      "id": "S1.plan",
+      "table": "S1",
+      "source": "docs/results/plan_shortcut_pilot.json",
+      "population": "A1 single-polarization149-observation/30-scenario pilot, one training seed, fixed spectrum",
+      "unit": "Hz, false-alarm fraction with counts",
+      "values": {
+        "shift_hz": {
+          "pointer": "/shift_hz",
+          "value": 500000.0
+        },
+        "training_seeds": {
+          "pointer": "/train_seeds",
+          "value": [
+            0
+          ]
+        },
+        "baseline_FA": {
+          "pointer": "/perturbations/none/clean_false_alarm",
+          "value": {
+            "mean": 0.03333333333333333,
+            "ci95": [
+              0.0,
+              0.1
+            ],
+            "n_samples": 30,
+            "n_scenarios": 30
+          }
+        },
+        "shift_plus_FA": {
+          "pointer": "/perturbations/shift_plus/clean_false_alarm",
+          "value": {
+            "mean": 0.9333333333333333,
+            "ci95": [
+              0.8333333333333334,
+              1.0
+            ],
+            "n_samples": 30,
+            "n_scenarios": 30
+          }
+        },
+        "shift_minus_FA": {
+          "pointer": "/perturbations/shift_minus/clean_false_alarm",
+          "value": {
+            "mean": 0.9333333333333333,
+            "ci95": [
+              0.8333333333333334,
+              1.0
+            ],
+            "n_samples": 30,
+            "n_scenarios": 30
+          }
+        }
+      },
+      "limits": "Perturbation response does not establish learned plan advantage or conventional counterfactual accuracy."
+    },
+    {
+      "id": "S1.pilot_A",
+      "table": "S1",
+      "source": "docs/results/pilot_A.md",
+      "population": "A1 approximately6% data,2training seeds; four common classes",
+      "unit": "percentage, intervals",
+      "text_contains": [
+        "M-lin on test_id_lin | %78.7",
+        "M-lin on test_id_nl | %76.8",
+        "aral\u0131klar \u00f6rt\u00fc\u015f\u00fcyor"
+      ],
+      "limits": "Original accuracy-gap hypothesis was not supported; historical Markdown is the numeric source, not a new calculation."
+    },
+    {
+      "id": "M.features",
+      "table": "Methods",
+      "source": "research/public_data/baseline.py",
+      "population": "Existing frozen LC/FIOT feature extractor and clean-only fitted score implementation",
+      "unit": "implementation constants and textual provenance",
+      "text_contains": [
+        "ss = x[:, 57:98].astype(float)",
+        "x[:, 180:244].mean(), x[:, 244:308].mean()",
+        "positive.std() if len(positive) else 0",
+        "row[row > 0].mean() if np.any(row > 0) else 0",
+        "if x.shape != (512, 243, 3)",
+        "x.mean(axis=(0, 1)), x.std(axis=(0, 1))",
+        "np.abs(np.diff(x, axis=0)).mean(), np.abs(np.diff(x, axis=1)).mean()",
+        "center, std = clean.mean(axis=0), clean.std(axis=0)",
+        "active = std > 1e-12",
+        "distance = (z*z).mean(axis=1)",
+        "int(hashlib.sha256((\"public-calib-v1:\" + str(recording_id)).encode()).hexdigest()[:8], 16) / 2**32 < .25",
+        "bootstrap=500, seed=20261025",
+        "np.quantile(v, [.025, .975])"
+      ],
+      "limits": "Source is read as text only. NumPy std defaults to population ddof=0. These constants are method definitions, not new experimental results."
+    },
+    {
+      "id": "M.loader",
+      "table": "Methods",
+      "source": "research/public_data/fraunhofer.py",
+      "population": "Actual Fraunhofer representation and source-group loader contract",
+      "unit": "implementation constants and textual provenance",
+      "text_contains": [
+        "LC_COLUMNS = 308",
+        "FIOT_SHAPE = (512, 243, 3)",
+        "pattern = re.compile(r\"([0-9]{5})\\.npy\" if kind == \"lc\" else r\"([0-9]{5})_([0-5])\\.npy\")",
+        "The five-digit recording ID, without the FIOT crop suffix, is the split unit.",
+        "values = np.load(io.BytesIO(raw), allow_pickle=False)",
+        "values.dtype != np.dtype(\"int32\")",
+        "values.min() < 0 or values.max() > 255"
+      ],
+      "limits": "Loader code defines accepted schema; actual array/access claims additionally trace to the committed measured-data report. No raw file is reopened."
+    },
+    {
+      "id": "M.acquisition_report",
+      "table": "Methods",
+      "source": "docs/results/public_data_baselines.md",
+      "population": "Prior committed acquisition and bounded experiment audit",
+      "unit": "implementation constants and textual provenance",
+      "text_contains": [
+        "744 receiver-feature NPY files; 736 publisher labels, eight unlabelled excluded",
+        "LC is9/10\u00d7308 receiver telemetry",
+        "FIOT is512\u00d7243\u00d73 int32 rendered RGB",
+        "An initial256-parent access probe had just7 clean calibration and16 clean test",
+        "Before computing any detector scores, it was replaced with all1121",
+        "The public page supplies12000 train/3000 validation",
+        "11500 clean train/1302 clean validation/4470 mixed test, each800 magnitudes;"
+      ],
+      "limits": "Counts are preserved historical audit reports, not independently remeasured acquisitions during manuscript preparation."
+    },
+    {
+      "id": "M.P17_assumptions",
+      "table": "Methods",
+      "source": "docs/plan/P17_r1_robustness_eval.md",
+      "population": "Measured PA artifact fit/selection and modeled rescaling assumptions",
+      "unit": "implementation constants and textual provenance",
+      "text_contains": [
+        "3,5 GHz",
+        "2,4 GHz",
+        "en iyi val NMSE'nin 0,1 dB i\u00e7indeki en k\u00fc\u00e7\u00fck model",
+        "\u00f6l\u00e7\u00fclen giri\u015f RMS'i IBO 11 dB'ye",
+        "APA 3,16 \u00d7",
+        "RMS, DPA 2,89 \u00d7 RMS",
+        "transponder ve 288 MHz sim\u00fclasyon h\u0131z\u0131na e\u015flendi",
+        "APA\n   gecikmeleri (0, 2, 3, 5), DPA (0, 2, \u2026, 32)",
+        "M = 16 \u0131zgaran\u0131n en b\u00fcy\u00fck de\u011feri"
+      ],
+      "limits": "Frequency/device attribution is historical source-audit provenance. Nominal IBO and bandwidth-based delay scaling are assumptions, not satellite measurements."
+    },
+    {
+      "id": "M.P18_boundary",
+      "table": "Methods",
+      "source": "docs/plan/P18_b2_protocol.md",
+      "population": "Frozen B2/1 protocol, not completed by this external-data paper",
+      "unit": "implementation constants and textual provenance",
+      "text_contains": [
+        "Durum: **DONDURULDU \u2014 2026-10-20",
+        "Sim\u00fclat\u00f6r ger\u00e7e\u011fi (XPD, IBO, C/I, linewidth)",
+        "hi\u00e7bir zaman girdi olmaz.",
+        "Bu belge **dondurulmu\u015ftur**."
+      ],
+      "limits": "The paper reads only committed summaries. It does not modify protocol semantics, authorize generation, or evaluate protected observations."
+    },
+    {
+      "id": "M.protocol_file",
+      "table": "Methods",
+      "source": "research/public_data/protocol.json",
+      "population": "Fixed public-interference-pilot/1 method commitment",
+      "unit": "protocol constants",
+      "values": {
+        "protocol": {
+          "pointer": "/protocol",
+          "value": "public-interference-pilot/1"
+        },
+        "seed": {
+          "pointer": "/seed",
+          "value": 20261025
+        },
+        "calibration_fraction": {
+          "pointer": "/calibration_fraction",
+          "value": 0.25
+        },
+        "calibration_assignment": {
+          "pointer": "/calibration_assignment",
+          "value": "first eight hex digits of sha256('public-calib-v1:' + parent_recording_id), divided by 2**32, less than 0.25; publisher training population only"
+        },
+        "pfa_target": {
+          "pointer": "/pfa_target",
+          "value": 0.05
+        },
+        "threshold": {
+          "pointer": "/threshold",
+          "value": "clean calibration 0.95 empirical quantile, method=higher; alarm strictly score > threshold"
+        },
+        "bootstrap_draws": {
+          "pointer": "/bootstrap_draws",
+          "value": 500
+        },
+        "bootstrap_unit": {
+          "pointer": "/bootstrap_unit",
+          "value": "publisher parent-recording ID, all retained rows of an ID together; acquisition-session independence unknown"
+        },
+        "lc_features": {
+          "pointer": "/lc_features",
+          "value": [
+            "mean_positive_ss",
+            "std_positive_ss",
+            "positive_ss_fraction",
+            "std_timestep_mean_positive_ss",
+            "mean_sdr",
+            "mean_kur"
+          ]
+        },
+        "lc_columns_zero_based": {
+          "pointer": "/lc_columns_zero_based",
+          "value": {
+            "ss": [
+              57,
+              98
+            ],
+            "sdr": [
+              180,
+              244
+            ],
+            "kur": [
+              244,
+              308
+            ]
+          }
+        },
+        "fiot_features": {
+          "pointer": "/fiot_features",
+          "value": [
+            "mean_R",
+            "mean_G",
+            "mean_B",
+            "std_R",
+            "std_G",
+            "std_B",
+            "mean_abs_axis0_gradient",
+            "mean_abs_axis1_gradient"
+          ]
+        },
+        "fitting": {
+          "pointer": "/fitting",
+          "value": "clean center/standard deviation and constant-column mask from fitting-train clean records only; positive centroid from fitting-train native labels != 0 only"
+        },
+        "selection": {
+          "pointer": "/selection",
+          "value": "no hyperparameter/checkpoint search; publisher test never fits statistics or thresholds"
+        },
+        "limits": {
+          "pointer": "/limits",
+          "value": {
+            "max_records_per_partition": 1024,
+            "max_bootstrap_draws": 2000,
+            "cpu_threads": 2,
+            "gpu": false
+          }
+        },
+        "benchmark_complete": {
+          "pointer": "/benchmark_complete",
+          "value": false
+        }
+      },
+      "limits": "Method specification, not independent third-party preregistration."
+    },
+    {
+      "id": "M.scientific_boundary",
+      "table": "Threats to validity",
+      "source": "docs/plan/b2_e12_d1_d8_decisions_2026-10-24.json",
+      "population": "Historical B2 scientific decisions and prior-exposure disclosure, not external GNSS partitions",
+      "unit": "statuses, IDs and counts",
+      "values": {
+        "scientific_decisions_ratified": {
+          "pointer": "/scientific_decisions_ratified",
+          "value": true
+        },
+        "verdict": {
+          "pointer": "/verdict",
+          "value": "SCIENTIFIC DECISIONS RATIFIED \u2014 EXECUTION NO-GO"
+        },
+        "existing_test_pristine": {
+          "pointer": "/decisions/D-1/existing_test_pristine",
+          "value": false
+        },
+        "exposed_test_ids": {
+          "pointer": "/decisions/D-1/exposed_test_ids",
+          "value": [
+            3200000,
+            3200001
+          ]
+        },
+        "exposed_matched_ids": {
+          "pointer": "/decisions/D-1/exposed_matched_ids",
+          "value": [
+            3300000,
+            3300001
+          ]
+        },
+        "mandatory_exposure_excluded_groups": {
+          "pointer": "/decisions/D-1/mandatory_exposure_excluded_groups",
+          "value": {
+            "test": 498,
+            "test-matched": 148
+          }
+        }
+      },
+      "limits": "Scientific ratification is not compute authorization; these records do not make exposed B2 populations pristine."
+    },
+    {
+      "id": "methods.pa_normalization",
+      "table": "T3",
+      "source": "scripts/derive_opendpd_mp.py",
+      "population": "Existing OpenDPD train-derived normalization; manuscript introduces no fitting",
+      "unit": "complex input/output and dB NMSE",
+      "text_contains": [
+        "gain = complex(np.vdot(x_tr, y_tr) / np.vdot(x_tr, x_tr))",
+        "norm = {s: (x / rms, y / (gain * rms))",
+        "np.sum(np.abs(y - y_hat) ** 2) / np.sum(np.abs(y) ** 2)"
+      ]
+    }
+  ],
+  "figures": [
+    {
+      "id": "public_data_roc",
+      "path": "docs/results/figures/public_data_roc.pdf",
+      "sha256": "2affefc11abe3071aa985f680385842bd84df19a0f524759c7125572dcb43097",
+      "source": "docs/results/public_data_baselines.json",
+      "source_sha256": "97b47afbf288fa8039edd62de1a32e8ae1e97e35a5a93fa8460f22d588034a2a",
+      "limits": "Measured GNSS; source-specific fitted models; fixed thresholds; absent classes not zero-performance estimates.",
+      "manuscript_copy": "paper/figures/public_data_roc.pdf"
+    },
+    {
+      "id": "public_data_roc",
+      "path": "docs/results/figures/public_data_roc.png",
+      "sha256": "352c28af9f89bc664d5016d0940c3298c5d12e7f1a4ac78f5fbfdd13688b504d",
+      "source": "docs/results/public_data_baselines.json",
+      "source_sha256": "97b47afbf288fa8039edd62de1a32e8ae1e97e35a5a93fa8460f22d588034a2a",
+      "limits": "Measured GNSS; source-specific fitted models; fixed thresholds; absent classes not zero-performance estimates.",
+      "manuscript_copy": "paper/figures/public_data_roc.png"
+    },
+    {
+      "id": "public_data_per_class",
+      "path": "docs/results/figures/public_data_per_class.pdf",
+      "sha256": "b2af5f47264452d9da46023ed5c6e0014c64cf497c9e3ccbb40e68893961b40b",
+      "source": "docs/results/public_data_baselines.json",
+      "source_sha256": "97b47afbf288fa8039edd62de1a32e8ae1e97e35a5a93fa8460f22d588034a2a",
+      "limits": "Measured GNSS; source-specific fitted models; fixed thresholds; absent classes not zero-performance estimates.",
+      "manuscript_copy": "paper/figures/public_data_per_class.pdf"
+    },
+    {
+      "id": "public_data_per_class",
+      "path": "docs/results/figures/public_data_per_class.png",
+      "sha256": "174173a994b2075cb095f024678d77024cf9134497ca0265232d18922b02b0d0",
+      "source": "docs/results/public_data_baselines.json",
+      "source_sha256": "97b47afbf288fa8039edd62de1a32e8ae1e97e35a5a93fa8460f22d588034a2a",
+      "limits": "Measured GNSS; source-specific fitted models; fixed thresholds; absent classes not zero-performance estimates.",
+      "manuscript_copy": "paper/figures/public_data_per_class.png"
+    },
+    {
+      "id": "A4_npr_amplifiers",
+      "path": "docs/figures/b2/A4_npr_amplifiers.png",
+      "sha256": "45165e899dfec286a3f00b2c8c4a2aa812949b9e3dffaee5ef5d626dcb275f8d",
+      "manifest": "docs/results/b2_figure_manifest.json",
+      "source_lock": "docs/results/b2_figure_sources.json",
+      "sources": [
+        {
+          "path": "docs/results/npr_check.json",
+          "sha256": "9c8402cd68664d8c3085a36843c46f42f657c129555c57552767277976bd2fdc"
+        }
+      ],
+      "limits": "Measured simulation points only. Hollow squares: inputs exceed OpenDPD measured support; no interpolation or CI.",
+      "manuscript_copy": "paper/figures/npr_amplifiers.png"
+    },
+    {
+      "id": "A4_npr_amplifiers",
+      "path": "docs/figures/b2/A4_npr_amplifiers.pdf",
+      "sha256": "6682f018edb02834ecbd55ad3a7e90ad1f70a011a6c5ce87e6aaca3a4d0032b9",
+      "manifest": "docs/results/b2_figure_manifest.json",
+      "source_lock": "docs/results/b2_figure_sources.json",
+      "sources": [
+        {
+          "path": "docs/results/npr_check.json",
+          "sha256": "9c8402cd68664d8c3085a36843c46f42f657c129555c57552767277976bd2fdc"
+        }
+      ],
+      "limits": "Measured simulation points only. Hollow squares: inputs exceed OpenDPD measured support; no interpolation or CI.",
+      "manuscript_copy": "paper/figures/npr_amplifiers.pdf"
+    },
+    {
+      "id": "A5_asi_cuc_observability",
+      "path": "docs/figures/b2/A5_asi_cuc_observability.png",
+      "sha256": "23fc84191c1fae368e7eae0549b2ef260849c917e41fba9e94c168c66e6ca753",
+      "manifest": "docs/results/b2_figure_manifest.json",
+      "source_lock": "docs/results/b2_figure_sources.json",
+      "sources": [
+        {
+          "path": "docs/results/asi_visibility.json",
+          "sha256": "b4a60b756a76700aa3e65be4e40f06fba4781c5799e0f1d119ce7008b2049a1a"
+        },
+        {
+          "path": "docs/results/cuc_visibility.json",
+          "sha256": "05b5ff7457283aec21c87b9256cde05cac1569814910c654c11389e6d87ee218"
+        }
+      ],
+      "limits": "Truth defines diagnostic C/I and event band only; these are not detector scores or model inputs. No pooled population.",
+      "manuscript_copy": "paper/figures/asi_cuc_observability.png"
+    },
+    {
+      "id": "A5_asi_cuc_observability",
+      "path": "docs/figures/b2/A5_asi_cuc_observability.pdf",
+      "sha256": "125165aaa9936fc46cf139f37e7e1d9c689a8ad4bde09c9e45570251f3e8e8c2",
+      "manifest": "docs/results/b2_figure_manifest.json",
+      "source_lock": "docs/results/b2_figure_sources.json",
+      "sources": [
+        {
+          "path": "docs/results/asi_visibility.json",
+          "sha256": "b4a60b756a76700aa3e65be4e40f06fba4781c5799e0f1d119ce7008b2049a1a"
+        },
+        {
+          "path": "docs/results/cuc_visibility.json",
+          "sha256": "05b5ff7457283aec21c87b9256cde05cac1569814910c654c11389e6d87ee218"
+        }
+      ],
+      "limits": "Truth defines diagnostic C/I and event band only; these are not detector scores or model inputs. No pooled population.",
+      "manuscript_copy": "paper/figures/asi_cuc_observability.pdf"
+    }
+  ],
+  "audit_limits": [
+    "No calibration score array is committed; exact threshold order statistics cannot be recalculated from summaries alone. Rule/count/population are verified.",
+    "Bootstrap replicate scores are not committed; reported CI endpoints are traced, not recomputed.",
+    "ROC endpoints permit independent AUROC/AP/FPR95 integration without raw observations.",
+    "Parent or byte overlap claims are traced to the committed audit; source data are not reopened."
+  ]
+}
