@@ -1628,6 +1628,14 @@ def test_record_reading_is_bounded_by_the_cap(monkeypatch):
     assert len(snapshot["record_texts"]["docs/plan/DURUM.md"].encode()) <= 500 and (ROOT / "docs/plan/DURUM.md").stat().st_size > 500
 
 
+@pytest.mark.parametrize("cap", [1, 2, 3, 4, 31, 32, 33, 499, 500, 501])
+def test_record_preview_cannot_expand_past_cap_at_utf8_boundaries(monkeypatch, cap):
+    monkeypatch.setattr(G, "MAX_RECORD_BYTES", cap)
+    snapshot = G.collect_reference(rederive=False, git=fake_git(), evaluated_at=NOW, record_paths=["docs/plan/DURUM.md"])
+    assert len(snapshot["record_texts"]["docs/plan/DURUM.md"].encode()) <= cap
+    assert snapshot["record_files"]["docs/plan/DURUM.md"] == pre._file_hash(ROOT / "docs/plan/DURUM.md")
+
+
 def test_decision_register_edits_are_each_caught_on_a_fresh_copy(reference):
     for edit, expected in ((lambda d: d.__setitem__("execution_authorized", True), "scientific.ratified_no_execution"),
                            (lambda d: d["compute_gates"]["full_generation"].__setitem__("approval", {"approved_by": "x"}), "scientific.ratified_no_execution"),

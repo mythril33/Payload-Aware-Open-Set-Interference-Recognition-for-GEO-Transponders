@@ -234,13 +234,13 @@ def test_execution_caps_and_device_refusal_cited_by_the_documents_still_hold():
     assert b2_experiment.LEGACY_MAX_GROUPS == 12
 
 
-def test_no_source_pins_tf32_or_deterministic_algorithms_yet():
-    """The R6 numerics pin belongs to the executor milestone; if it lands, update the documents and this test with it."""
+def test_r6_pinning_is_confined_to_the_separate_production_adapter():
+    """The historical fixture numerics remain unchanged; the reviewed adapter enforces R6."""
     pattern = re.compile(r"allow_tf32|use_deterministic_algorithms|cudnn\.deterministic")
     own = {"b2_host_inventory.py", "b2_training_footprint.py"}                     # mention the flags in prose/reporting only
     hits = [str(path.relative_to(ROOT)) for path in [*(ROOT / "src").rglob("*.py"), *(ROOT / "scripts").glob("*.py")]
             if path.name not in own and pattern.search(path.read_text())]
-    assert hits == []
+    assert hits == ["src/geoml/b2_production_training.py"]
 
 
 def test_records_carry_the_pr24_ci_and_leave_every_gate_unchanged():

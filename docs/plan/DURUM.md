@@ -1,5 +1,12 @@
 # Proje durumu ve eksik kaydı
 
+## Gerçek yürütme adaptörü — 2026-10-26
+
+- Taban main `2870501` (PR48 birleşmiş). Mevcut üreticiler ve streaming eğitim çekirdekleri yeni adaptörlerle bağlandı; eski fixture CAPS/CPU retleri, bilimsel kayıtlar, geosim kimliği ve kapalı compute kapıları değişmedi. Üretim API’si ayrı E17/E16 yetki ve gerçek host/kanıt/custody portları ister; bu portlar bu workspace’te kurulmuş veya kalifiye değildir.
+- Gerçek RF doğrulaması: yalnız train/val-select/val-calib için 2 grup/rol, toplam48 gözlem; width2, iki CPU epoch; validation seçimi → üç scorer için16 bilinen val-calib gözlemiyle kalibrasyon → freeze → veri/model checksum kopyası ve çapalı E16 günlüğü geçti. Test dizini/gözlemi yok; GPU/üretim çalışmadı. Bu bir performans sonucu değildir; bağımsız yedek/DR yeterliliği iddia edilmez.
+- Gelecek15fit (kanonik9+eşleşmiş dual6), birincil scorer kararı ve kanonik→eşleşmiş değerlendirme sırası `geoml.b2_campaign` ile testten önce bağlanır. Mahalanobis öneridir; araştırmacı seçimi kaydedilmedi. Üretim held-out çıkarımı bu değişiklikte çalıştırılmadı ve ayrı yetki gerektirir.
+- [Mevcut kontrol listesinde somut komut ve Linux operatör teslimi](../operations/B2_E18_STAGE_BOUNDARY_CHECKLIST.md#real-execution-adapter-handoff--2026-10-26). Kalıcı CPU/bağımsız backup/journal, imzalayan ve taze revocation/CI kaynağı; sonra ayrı DR04, GPU qualification/DR05 ve final held-out onayı eksik. Satın alma veya otomatik merge yok; `benchmark_complete=false`.
+
 ## Gerçek yürütme engelleri — 2026-10-26
 
 - PR47 birleşmiş, taban `b9728526008044bc23fab0d7458c030af65c34d0`; exact-head readiness40316846687 başarısız:107 E4 geçti;7 başarısız/4629 geçti/7 ortam atlaması. Neden C2 aritmetiği değil, belge workflow'larıyla E18 linter uyumsuzluğu. Dar parser/izinli belge-bağımlılığı düzeltmesi136 testle ve bağımsız salt-okunur incelemeyle doğrulandı; son CI sonucu PR'da.
