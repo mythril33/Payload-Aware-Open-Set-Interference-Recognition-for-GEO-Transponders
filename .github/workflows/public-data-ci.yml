@@ -32,4 +32,4 @@ jobs:
       - name: Compile external-data research code
         run: python -m compileall -q research/public_data
       - name: Test published schemas, recording isolation and detection arithmetic
-        run: python -m pytest -q -rs research/public_data/tests
+        run: python -m pytest -q -rs research/public_data/tests tests/test_openset_metrics.py

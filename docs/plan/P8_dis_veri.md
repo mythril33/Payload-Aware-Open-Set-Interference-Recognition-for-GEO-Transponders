@@ -1,6 +1,52 @@
 # P8 — Dış veri ve ölçüm kaynağı denetimi
 
-Durum: **BELGELENEN KAYNAK SAYFALARI DENETLENDİ / VERİ DOSYALARI İNDİRİLİP ÇALIŞTIRILMADI** · 2026-10-20.
+## Güncel araştırma önceliği ve gerçek erişim — 2026-10-25
+
+**Öncelik: mevcut kamusal araştırma verisini edinmek ve değerlendirmek; tam B2
+üretimi bundan önce gelmiyor.** Yeni E-numaralı iş paketi yok. B2/1, bilimsel
+onaylar ve compute yetkileri değiştirilmedi; korumalı B2 test gözlemi açılmadı.
+Özgün önerinin dış veri stratejisi yeniden uygulamaya alındı.
+
+| Kaynak | Resmî kaynak / lisans | Gerçekte erişilen dosya ve temsil | Ayrım / görev / engel |
+|---|---|---|---|
+| SmartSpace on-board | [Veri sayfası](https://fnr-smartspace-project.uni.lu/satellite-on-board-interference-detection/), [research-only koşulu](https://fnr-smartspace-project.uni.lu/datasets/); ticari kullanım yasak | Açıklama HTTP200; SharePoint indirmesi giriş HTML'i, anonim API401, sonraki doğrudan istek403. **0 ham dosya**; ham dosya hash'i yok | 12.000 train/3.000 validation; ayrı test tarif edilmemiş. Beş sıfır temiz, beş one-hot vektör alt bant1–5. Altı **konum** sınıfı; sekiz girişim türü değil. 1000/100-bin FFT genlik/kompleks. MAT anahtarları ve kaynak-kayıt kimlikleri doğrulanamadı |
+| SmartSpace NGSO→GSO | [Veri sayfası](https://fnr-smartspace-project.uni.lu/ngso-to-gsos-users-interference/); aynı research-only koşulu | Açıklama HTTP200; indirme aynı Microsoft kimlik doğrulama engeli. **0 ham dosya**, performans sonucu null | 11.500 temiz train/1.302 temiz validation; 4.470 karışık test, 800 genlik değeri. Test etiketinin sayısal pozitif yönü açıklanmamış. 801/802 sütunlu karşılaştırma tablolarındaki etiket/INR/açı özellik olamaz |
+| Fraunhofer LC laboratory | [Zenodo21333335](https://zenodo.org/records/21333335), [sabit yazar deposu](https://github.com/FelixOtt94/FIOT_LC_laboratory/tree/2ae2c4d092db5a86de3ecdc058d8c3f2cbf97c26) | Gerçek LFS arşivi **2.216.728 B**, 744 NPY; 736 etiketli, sekiz etiketsize etiket atanmadı. 9/10×308 alıcı özelliği; IQ değil | Yayımlanan577/159 train/test; 145/39 boş dizi. Kullanılabilir432/120. Yer/PRN/azimut/açı, jammer-ID ve güç girdiden çıkarıldı. Kayıt-ID ve boş olmayan dosya-hash kesişimi0. Sınıf7(CW) yok |
+| Fraunhofer FIOT laboratory | Aynı sabit depo ve Zenodo kaydı | Gerçek LFS arşivi **364.187.305 B**. Yalnız tüm1.121 ana kaydın crop0'ı çıkarıldı: **1.673.787.520 B**, 512×243×3 int32 RGB spektrogram görüntüsü. IQ/kalibre PSD değil; üç kanal renk, polarizasyon değil | Yerel train878/test243; bütün altı crop aynı ana kayıtta. Test81 temiz/162 girişimli. Kayıt-ID/hash kesişimi0; edinim günü/oturum bağımsızlığı bilinmiyor. Tam10,04-GB açılım yapılmadı |
+| Fraunhofer Highway2 | [Zenodo21336653](https://zenodo.org/records/21336653) | Metadata HTTP200; **15.352.279.851 B arşiv indirilmedi**. GitLab bu denetimde503 | Yönetilebilir laboratuvar verisi seçildi. Bu kaynağın ham dosyası edinilmiş gibi sunulmuyor |
+| OpenDPD | [Resmî depo](https://github.com/lab-emi/OpenDPD), Apache-2.0 kod; ayrı veri lisansı incelenen kartlarda belirtilmemiş | APA/DPA200MHz iki train-input CSV gerçekten indirildi: toplam2.780.743 B; I,Q sütunları. Hash'ler mevcut modele eşit; ilgili12 train/val/test input/output Git blob'u değişmemiş | **Mevcut val-seçilmiş model tekrar kullanılır**, yeni PA deneyi/fit yok. GaN/CMOS Doherty, uzay TWTA ölçümü değil |
+| Chalmers RF WebLab | [Erişim](https://dpdcompetition.com/rfweblab/access-details/), [düzenek](https://dpdcompetition.com/rfweblab/about/), HTTP200 | Sayfa kayıt gerektirmeyen çalışan **canlı ölçüm hizmeti** diyor; hazır indirilebilir veri kümesi değil. Ölçüm endpoint'i çağrılmadı | Çıktı hakları ayrıca açıklanmamış; mevcut OpenDPD kanıtı varken yeni donanım ölçümü acil bağımlılık değil |
+
+**Lisans tutarsızlığı:** LC/FIOT ve Highway2 Zenodo API alanı `CC BY-SA 4.0`,
+kaynak README/açıklaması `CC BY-NC-SA 4.0` diyor. Bu çelişki çözülmüş sayılmadı.
+Yerel ticari olmayan araştırma daha kısıtlı koşula uygundur; ham arşiv/NPY/liste
+dosyaları Git'e konmadı. Küçük Zenodo LC ZIP'i (221.844 B) yalnız repository/LFS
+pointer içeriyor; onu indirmek gerçek örnekleri edinmek değildir.
+
+SmartSpace'in iki kümesi de mevcut P1 birincil-makale denetiminde **simülasyon**
+verisi olarak tanımlanır: on-board uplink ve NGSO downlink karşılaştırmasıdır.
+Kamusal olmaları ölçülmüş GEO RF, payload doğrusal olmayanlığı, operatör planı veya
+çift polarizasyon sağladıkları anlamına gelmez. NGSO downlink girişimi transponder
+TWTA'sından geçmek zorunda değildir.
+
+Gerçek sayısal sonuçlar, kaynak/arşiv hash'leri, komutlar ve kısıtlar
+[sonuç raporunda](../results/public_data_baselines.md); bağımsız yükleyiciler ve
+sabit deney tarifi [research/public_data](../../research/public_data/README.md)
+altında. SmartSpace yükleyicileri beyan edilen şemaya ait fixture testleridir;
+ham MATLAB konteyneri görülmeden gerçek-veri uyumluluğu iddia edilmez.
+
+SmartSpace için somut kalan adım: veri sahibinden çalışan anonim araştırma
+paylaşımı veya kullanıcının yetkili yerel kopyası; ayrıca gerçek değişken adları,
+NGSO pozitif etiket yönü ve varsa ana kayıt/senaryo kimlikleri. Validation'ı hem
+eşik seçimi hem bağımsız test olarak kullanmayacağız.
+
+## 2026-10-20 tarihsel kaynak envanteri
+
+Aşağıdaki eski erişim/lisans durumlarının güncel karşılığı üst tablodadır.
+Özellikle eski "SmartSpace host engelli" ve "veri indirilmedi" ifadeleri artık
+tüm kaynaklar için geçerli değildir.
+
+Tarihsel durum: **KAYNAK SAYFALARI DENETLENDİ / VERİ DOSYALARI İNDİRİLİP ÇALIŞTIRILMADI** · 2026-10-20.
 
 **Karar ilkesi:** “Kamusal olarak görüntülenebilir”, “ücretsiz araştırma amaçlı kullanım” ve “GitHub'da yeniden dağıtılabilir” birbirinden farklıdır. Depo kamuya açıktır; lisansı netleştirilmemiş büyük üçüncü taraf veri/PDF dosyalarını buraya kopyalamıyoruz. Ham veriler `data/external/` altında yerel saklanmalı (gitignore sayesinde takip edilmez).
 
