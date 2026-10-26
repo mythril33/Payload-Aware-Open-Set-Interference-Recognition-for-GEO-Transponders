@@ -59,3 +59,11 @@ def test_every_production_scale_entry_is_refused_by_the_bounded_executor_and_eve
                 execution._caps(B2ExperimentConfig(**raw))
         for raw in scales["smoke"]:
             execution._caps(B2ExperimentConfig(**raw))
+
+
+def test_the_committed_table_template_is_the_generated_one_and_claims_no_result():
+    text = (ROOT / "docs" / "results" / "b2_c2_comparison_table_template.md").read_text()
+    assert text == b2_c2.comparison_table()
+    rows = [line for line in text.splitlines() if line.startswith("| `")]
+    assert len(rows) == len(b2_c2.CONTRASTS) * len(b2_c2.SCORERS) and all(row.endswith("**NOT RUN** |") for row in rows)
+    assert "NO EXPERIMENT RUN" in text and "NOT DESIGNATED" in text

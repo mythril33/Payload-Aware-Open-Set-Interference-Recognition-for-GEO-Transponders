@@ -1,0 +1,223 @@
+{
+ "analytic_parameter_counts": {
+  "co/w16": {
+   "input_channels": 2,
+   "parameters": 310505
+  },
+  "co/w8": {
+   "input_channels": 2,
+   "parameters": 78777
+  },
+  "co_noplan/w16": {
+   "input_channels": 1,
+   "parameters": 309848
+  },
+  "co_noplan/w8": {
+   "input_channels": 1,
+   "parameters": 78448
+  },
+  "co_planmask/w16": {
+   "input_channels": 2,
+   "parameters": 310248
+  },
+  "co_planmask/w8": {
+   "input_channels": 2,
+   "parameters": 78648
+  },
+  "dual/w16": {
+   "input_channels": 4,
+   "parameters": 311305
+  },
+  "dual/w8": {
+   "input_channels": 4,
+   "parameters": 79177
+  },
+  "dual_noplan/w16": {
+   "input_channels": 2,
+   "parameters": 310248
+  },
+  "dual_noplan/w8": {
+   "input_channels": 2,
+   "parameters": 78648
+  },
+  "dual_planmask/w16": {
+   "input_channels": 4,
+   "parameters": 311048
+  },
+  "dual_planmask/w8": {
+   "input_channels": 4,
+   "parameters": 79048
+  },
+  "dual_residual/w16": {
+   "input_channels": 5,
+   "parameters": 311705
+  },
+  "dual_residual/w8": {
+   "input_channels": 5,
+   "parameters": 79377
+  }
+ },
+ "base_main": "47795c41dde586420e1732b2f64b22a09e63d639",
+ "benchmark_complete": false,
+ "date": "2026-10-26",
+ "fixture": {
+  "groups_per_role": 2,
+  "note": "two-group real-physics pilot generated earlier for development; the test role of this fixture was NOT opened by any step here",
+  "observations_per_role": 16,
+  "path": "data/b2-feat-pilot (local, untracked)",
+  "protocol": "B2-feat/1",
+  "roles_opened": [
+   "train",
+   "val-select",
+   "val-calib"
+  ],
+  "test_role_opened": false
+ },
+ "interpretation": "functional and arithmetic correctness only; 16 training observations, 2 epochs, chance-level validation macro-F1 (0.028-0.11); no recognition-quality statement",
+ "inventories": {
+  "c2-h3-co": {
+   "artifact_id": "0d473c5c3ee09f6068d0f4d766ad3ff1d3ca6060b7470b852427c30fd9e39ce5",
+   "cells": [
+    [
+     0,
+     "co_noplan"
+    ],
+    [
+     0,
+     "co_planmask"
+    ],
+    [
+     1,
+     "co_noplan"
+    ],
+    [
+     1,
+     "co_planmask"
+    ],
+    [
+     2,
+     "co_noplan"
+    ],
+    [
+     2,
+     "co_planmask"
+    ]
+   ],
+   "full_protocol_admission": false,
+   "n_cells": 6,
+   "production_authorized": false
+  },
+  "c2-h3-dual": {
+   "artifact_id": "c490724b34b3437c1d311caa27c04f1b949b0c2c0635115bd222d099bd58d263",
+   "cells": [
+    [
+     0,
+     "dual_noplan"
+    ],
+    [
+     0,
+     "dual_planmask"
+    ],
+    [
+     1,
+     "dual_noplan"
+    ],
+    [
+     1,
+     "dual_planmask"
+    ],
+    [
+     2,
+     "dual_noplan"
+    ],
+    [
+     2,
+     "dual_planmask"
+    ]
+   ],
+   "full_protocol_admission": false,
+   "n_cells": 6,
+   "production_authorized": false
+  }
+ },
+ "production_authorized": false,
+ "schema": "B2-C2-bounded-verification/1",
+ "scope": "BOUNDED_FIXTURE",
+ "steps": {
+  "co_matched/calibrate": {
+   "peak_rss_mib_min_max": [
+    693.4,
+    696.7
+   ],
+   "runs": 3,
+   "user_cpu_s_min_max": [
+    3.81,
+    4.15
+   ],
+   "wall_s_min_max": [
+    3.61,
+    4.03
+   ]
+  },
+  "co_matched/train-only": {
+   "peak_rss_mib_min_max": [
+    964.0,
+    974.8
+   ],
+   "runs": 3,
+   "user_cpu_s_min_max": [
+    8.79,
+    9.16
+   ],
+   "wall_s_min_max": [
+    7.66,
+    8.39
+   ]
+  },
+  "dual_matched/calibrate": {
+   "peak_rss_mib_min_max": [
+    699.8,
+    701.7
+   ],
+   "runs": 3,
+   "user_cpu_s_min_max": [
+    3.99,
+    4.4
+   ],
+   "wall_s_min_max": [
+    3.91,
+    4.3
+   ]
+  },
+  "dual_matched/train-only": {
+   "peak_rss_mib_min_max": [
+    968.3,
+    988.2
+   ],
+   "runs": 3,
+   "user_cpu_s_min_max": [
+    9.3,
+    10.09
+   ],
+   "wall_s_min_max": [
+    8.66,
+    10.4
+   ]
+  }
+ },
+ "training": {
+  "batch": 32,
+  "center_loss_weight": 0.005,
+  "epochs": 2,
+  "level": "absolute",
+  "plan_consistency": false,
+  "plan_shift_fraction": 0.0,
+  "selected_epochs": {
+   "dual_noplan": 0,
+   "dual_planmask": 0
+  },
+  "source_revision": "47795c41dde586420e1732b2f64b22a09e63d639",
+  "time_pool": 2,
+  "width": 8
+ }
+}
