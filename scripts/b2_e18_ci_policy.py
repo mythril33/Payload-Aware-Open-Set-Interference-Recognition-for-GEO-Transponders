@@ -135,6 +135,12 @@ PR_BASE = re.compile(r"github\.event\.pull_request\.base\.sha")
 ON_LINES = (re.compile(r"  pull_request:\Z"), re.compile(r"    branches: \[main\]\Z"), re.compile(r"    paths:\Z"),
             re.compile(r'      - "[A-Za-z0-9_./*-]+"\Z'), re.compile(r"  workflow_dispatch:\Z"))
 MAX_TIMEOUT_MINUTES = 60
+# Reviewed document-rendering dependencies only. This exception neither permits
+# scientific execution nor applies to any other workflow or command variant.
+DOCUMENT_PACKAGE_COMMANDS = (
+    "sudo apt-get update -qq",
+    "sudo apt-get install -y --no-install-recommends pandoc texlive-latex-extra texlive-fonts-recommended lmodern poppler-utils",
+)
 
 
 def on_block(text):
@@ -147,7 +153,7 @@ def lint_workflow(text, name="workflow"):
     problems = []
     code = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
     head = text.split("\njobs:", 1)[0]
-    if not re.search(r"^permissions:\n  contents: read\n(?!  )", head, re.M):
+    if not re.search(r"^permissions:\n  contents: read(?:\n(?!  )|\Z)", head, re.M):
         problems.append("top-level permissions must be exactly 'contents: read'")
     if re.search(r":\s*write\b", code):
         problems.append("a write permission is requested")
@@ -172,7 +178,11 @@ def lint_workflow(text, name="workflow"):
         if action not in ALLOWED_ACTIONS:
             problems.append(f"action not on the allow list: {action}")
     for pattern in FORBIDDEN_COMMANDS:
-        if re.search(pattern, code):
+        inspected = code
+        if name == "manuscript-ci.yml" and pattern == r"\bsudo\b":
+            inspected = "\n".join(line for line in code.splitlines()
+                                  if line.strip() not in DOCUMENT_PACKAGE_COMMANDS)
+        if re.search(pattern, inspected):
             problems.append(f"forbidden command: {pattern}")
     timeouts = [int(m) for m in re.findall(r"^\s*timeout-minutes:\s*(\d+)\s*$", code, re.M)]
     if len(timeouts) != len(runners) or any(not 1 <= t <= MAX_TIMEOUT_MINUTES for t in timeouts):
