@@ -1,5 +1,10 @@
 # Proje durumu ve eksik kaydı
 
+## Dashboard CI dependency repair — 2026-10-26
+
+- Base `3ba1d25` (PR50 merged): readiness run 40377329063 passed 107 E4 checks, then failed collection because Streamlit was absent. Readiness now installs `dashboard/requirements.txt` and triggers on `dashboard/**`; existing scientific/gate checks are unchanged.
+- Python 3.12.14: all 162 dashboard tests passed (6 Streamlit/pandas deprecation warnings); 263 existing execution/calibration/scientific-freeze/held-out-access/CI-policy checks passed. Existing local launch command returned HTTP 200 for the app and health endpoint. No production experiment, GPU probe or protected observation access. Exact-head remote CI evidence belongs in the focused follow-up PR; no automatic merge.
+
 ## Gerçek yürütme adaptörü — 2026-10-26
 
 - Taban main `2870501` (PR48 birleşmiş). Mevcut üreticiler ve streaming eğitim çekirdekleri yeni adaptörlerle bağlandı; eski fixture CAPS/CPU retleri, bilimsel kayıtlar, geosim kimliği ve kapalı compute kapıları değişmedi. Üretim API’si ayrı E17/E16 yetki ve gerçek host/kanıt/custody portları ister; bu portlar bu workspace’te kurulmuş veya kalifiye değildir.
