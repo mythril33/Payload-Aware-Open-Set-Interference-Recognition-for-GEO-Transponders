@@ -40,6 +40,60 @@ paylaşımı veya kullanıcının yetkili yerel kopyası; ayrıca gerçek deği�
 NGSO pozitif etiket yönü ve varsa ana kayıt/senaryo kimlikleri. Validation'ı hem
 eşik seçimi hem bağımsız test olarak kullanmayacağız.
 
+## SmartSpace erişim kararı ve hazır talep — 2026-10-26
+
+İki resmî veri sayfası, kullanım koşulları ve
+[proje iletişim sayfası](https://fnr-smartspace-project.uni.lu/contact/) yeniden
+HTTP200 döndü. Her iki sayfanın kendi SharePoint indirme bağlantısı da
+`login.microsoftonline.com` adresine yöneldi; son HTTP200 yanıtı
+`text/html`, başlığı **Sign in to your account**. Bu bir başarılı veri indirmesi
+değildir. Önceki 401/403 gözlemleriyle tutarlı biçimde **0 ham dosya**, metrik yok.
+
+**Gereken izin:** veri sahibinin iki klasör için araştırmacıya okuma/indirme
+erişimi vermesi veya çalışan bir anonim araştırma bağlantısı sağlaması.
+Kimlik doğrulamalı yol, sahibin yetkilendirdiği Microsoft/Entra hesabı ya da
+kurumsal e-posta adresine dış-konuk daveti gerektirebilir. Herhangi bir Microsoft
+hesabının veya Uni.lu hesabının tek başına yeterli olduğu doğrulanmadı. Hangi
+tenant/konuk politikası, MFA ve süre sınırının uygulandığı yalnız sahibinden
+öğrenilebilir; giriş sayfasından bunlar kesinleştirilemez. Bu ortamda SmartSpace
+kimliği/izni yapılandırılmamış. Oturum açılmadı, parola/token istenmedi,
+kimlik doğrulama aşılmadı.
+
+Resmî iletişim formu ad, e-posta, kurum, mesaj ve kişisel veri işleme rızası
+istiyor. Aynı sayfada yayımlanan proje irtibatı `eva.lagunas@uni.lu`; bağlantılar
+da bu kişinin SharePoint alanında. İletişim formu veya bu irtibat üzerinden
+doğru veri sorumlusuna yönlendirme istenebilir. Aşağıdaki taslak **gönderilmedi**;
+kullanıcı kimliği/kurumu uydurulmadı.
+
+> **Subject: Research access to SmartSpace on-board and NGSO-to-GSO datasets**
+>
+> Dear SmartSpace dataset team,
+>
+> We would like to reproduce the native interference-detection tasks in your
+> Satellite On-board Interference Detection and NGSO-to-GSO Users Interference
+> datasets for noncommercial research. On 26 October 2026, both official download
+> links redirected to Microsoft sign-in rather than downloadable data.
+>
+> Could you provide working research download links, or invite the institutional
+> email below with read/download access to both folders? Please confirm whether
+> an external Microsoft/Entra guest account is supported and any access expiry.
+> Could you also supply file/checksum lists, MAT variable names/axes, the NGSO
+> numeric clean/interference label convention, and available scenario/group IDs
+> and pairing across representations/splits? Please confirm permission for cloud
+> CPU research processing and publication of derived aggregate tables/figures;
+> we will not redistribute raw data. We will cite the original dataset papers
+> and retain the published labels and research-only restrictions.
+>
+> Thank you, [researcher name, affiliation, institutional email]
+
+**Sonlu karar:** araştırmacı gönderirse tek talep ve beş iş günü sonra tek
+hatırlatma; onuncu iş gününde erişim hâlâ yoksa mevcut makalenin SmartSpace
+sayısal karşılaştırması çıkarılır ve erişim kısıtı açık yazılır. Bu bir bekleme
+veya gönderim otomasyonu değildir. Yanıt gelirse gerçek şema/etiket/kayıt ayrımı
+denetlenip native-task analiz tarifi test skorlarından önce sabitlenir. NGSO'nun
+yalnız temiz train'iyle pozitif sınıf centroid'i fit edilemez. Yeni deney bütçesi
+ayrı kararlaştırılır; erişim yazımı veya bu görev hiçbir deney başlatmaz.
+
 ## 2026-10-20 tarihsel kaynak envanteri
 
 Aşağıdaki eski erişim/lisans durumlarının güncel karşılığı üst tablodadır.

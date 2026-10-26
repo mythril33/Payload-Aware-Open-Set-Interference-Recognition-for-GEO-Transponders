@@ -1,5 +1,12 @@
 # Proje durumu ve eksik kaydı
 
+## İnceleme ve makale kapsamı — 2026-10-26
+
+- [PR #44](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/44) araştırmacı tarafından `c6b53ba7396e14e654ccf369efa80eb0eaf9fb80` olarak birleşmiş; E18 fixture-sırası düzeltmesi artık main'de, yeniden uygulanmadı. Ham günlük: readiness107 +4539 geçti /7 makine-torch atlaması /46 mevcut uyarı; E18 seçimi2742 geçti. Aşağıdaki eski “main kırmızı” ifadesi `4ea511b` anına aittir.
+- [PR #45](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/pull/45) bu main ile birleştirildi; yalnız DURUM çakışması iki girdiyi de koruyarak çözüldü. Yeni deney yok. İki ilgili sentetik fixture-sırası testi +93 sayısal test **95 geçti /75,03s**, hata/atlama yok. Son head CI kanıtı PR'da kaydedilir; otomatik merge yapılmaz.
+- [Sonlu C1–C3 matrisi ve makale tablo envanteri](../results/public_data_baselines.md#finite-research-completion-decision--2026-10-26): ölçülmüş GNSS, ölçülmüş PA ve simüle GEO ayrı. En küçük öneri, mevcut verilerle gözlenebilirlik/temsil ve kalibrasyon sınırları makalesi; C2 üstünlüğü ve doğrulanmış C3 payload-gap iddiası henüz yok. Üç skor birlikte raporlanır; held-out'tan ana skor seçilmez. Tam B2 makalesi ayrı ve yetkisiz genişletmedir.
+- SmartSpace tekrar giriş HTML'i döndü; [gönderilmemiş erişim talebi ve kesin izin belirsizlikleri](P8_dis_veri.md#smartspace-erişim-kararı-ve-hazır-talep--2026-10-26) hazır. İletişim/ham veri erişimi engelli kalırsa makale yazımı bekletilmez. Compute kapıları ve `benchmark_complete=false` değişmedi.
+
 ## Güncel araştırma önceliği — 2026-10-25: önce kamusal/ölçülmüş veri
 
 - Kullanıcı yönlendirmesiyle **mevcut araştırma verisini edinme ve değerlendirme, tam sentetik B2 üretiminin önüne geçti**. Yeni E-numaralı kilometre taşı veya güvenlik çerçevesi eklenmedi. Gerçek uzak taban `5efa287d0fcfd00438497931cce5cdc54f3c3e8d` (PR #42 dışarıdan birleşmiş); eski yerel tamamlanmamış E18 alternatifi `d772857…` stash'inde korundu, yeni veri çalışmasına karıştırılmadı.

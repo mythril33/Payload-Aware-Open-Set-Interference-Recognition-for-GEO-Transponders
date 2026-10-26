@@ -207,3 +207,122 @@ original GEO recognition paper. SmartSpace access and the narrowly defined GEO
 mechanism evidence remain the shortest missing dependencies. Full21350-observation
 B2 generation is not the immediate prerequisite. Canonical compute gates stay
 closed, scientific approvals intact and `benchmark_complete=false`.
+
+## Finite research-completion decision — 2026-10-26
+
+This section narrows the paper; it does not add a milestone, architecture or
+experiment. No held-out score selects a primary method: **all three frozen
+scores remain co-reported in each measured-data table**. There is no pooled
+GNSS/PA/GEO accuracy, shared class taxonomy or common operating threshold.
+
+### Branch and evidence reconciliation
+
+PR #44 was already merged by the researcher on26 October at05:50:13 UTC as
+`c6b53ba7396e14e654ccf369efa80eb0eaf9fb80`. Its fixture-order repair is present
+in current main; no second repair or cherry-pick is needed. Raw exact-head logs
+on `50bec80fdb4c769c7aac7289d5a7b71c309d7611` were inspected:
+
+| Historical exact-head check | Actual result |
+|---|---|
+| [Readiness40232365989/job121286612735](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40232365989/job/121286612735) | E4 step107 passed/83.01s; remainder4539 passed,7 skipped,46 existing Matplotlib warnings/1296.51s; total4646 passed. Skips: `test_b2_train_diagnostics.py:392`, machine/torch golden-capture mismatch; separate bit-identity test still applies |
+| [E18 40232365954/job121286612660](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40232365954/job/121286612660) | 2742 passed/984.29s; no skips |
+
+PR #45 incorporates that main. The sole conflict was DURUM's two status
+insertions; both were retained. B2 source/configs/approvals and external-data
+scorers/protocol were not edited. At reconciliation commit
+`17bbbdc2712e8908236fc5141ec254d374d7ab87`, the exact command below yielded
+**95 passed in75.03s,0 failed/skipped/pytest warnings**. Acceptance creates the
+fabricated world before recovery, exercising the formerly failing fixture order.
+
+```bash
+OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 MKL_NUM_THREADS=2 PYTHONHASHSEED=0 CUDA_VISIBLE_DEVICES='' \
+  /workspace/.venvs/geosim/bin/python -m pytest -q -rs \
+  tests/test_b2_e18_acceptance.py::test_02_test_only_admission_uses_isolated_fabricated_evidence \
+  tests/test_b2_e18_recovery.py::test_a_resumed_test_stage_notices_a_k17d_deviation_before_it_produces_another_shard \
+  research/public_data/tests tests/test_openset_metrics.py
+```
+
+These are synthetic bytes and numerical tests, not B2 observations. The full
+historical CI above was **not rerun locally**. Final PR-head public-data CI is
+recorded in the PR; earlier green heads are not substituted for it. Nothing is
+automatically merged or newly authorized.
+
+The final documentation/integrity pass reran the93 public-data/pure-metric
+tests:93 passed/1.10s, no failures/skips/warnings; compile, local links, strict
+JSON and unchanged pre-score source/protocol hashes passed. A separate read-only
+model-agent evidence audit found no open material factual finding in this matrix,
+scope or access request; this is not human scientific or merge approval.
+
+### Three evidence categories
+
+| Category | Existing evidence that can be cited | Boundary |
+|---|---|---|
+| **Measured GNSS interference** | LC and FIOT: actual files, native labels, source-specific published splits, six fixed-score results above; parent/crop and hash separation; coverage and bootstrap counts | No independent-session proof, cross-source transfer, GEO field truth, plans, dual polarization or payload validation. RGB is an image representation. LC empties and absent classes remain visible; Fraunhofer license conflict remains unresolved |
+| **Measured amplifier behavior** | [P17](../plan/P17_r1_robustness_eval.md), `opendpd_mp.json`: APA K5/M3 val/test NMSE−31.04/−30.64dB; DPA K5/M16 −33.78/−33.89dB, train fitting/val selection/test afterward. Source hashes already checked | Solid-state Doherty, weak compression, not satellite TWTA. DPA memory hits grid edge; nominal IBO11dB mapping and bandwidth-scaled memory are assumptions. The later selected artifact, not the exploratory probe, supplies these NMSEs. Code Apache-2.0 does not settle separate raw-data rights |
+| **Simulated GEO/payload behavior** | Reference-channel/NPR checks; [ASI](asi_visibility.md)120 controlled groups; [CuC](cuc_visibility.md)24groups×6levels; [P20 cancellation](b2_feat_pilot.md)64scenes/8groups; historical A1/R1 and plan interventions | Simulated/offline diagnostic evidence only. Oracle no-event twins/truth-selected bands never become deployable detector inputs. A1, canonical P20 B2 and distinct P21b receiver results are not pooled. SmartSpace, if accessible, adds simulated satellite comparisons, not measured GEO truth |
+
+### C1–C3 completion matrix
+
+“Support now” means a bounded statement justified by existing results, **not**
+guaranteed venue acceptance. Original contributions are at
+[proposal lines19–21](../../sources/original_proposal.md).
+
+| Original contribution | Exact existing evidence, including negatives | Minimum missing experiment for the original claim | Data and compute cost | Publishable claim support now |
+|---|---|---|---|---|
+| **C1: payload-realistic open-source generator** | [NPR](npr_check.md): reference TWTA15.7→20.7dB over IBO10→14, slope1.25dB/dB, one noise seed. H.2 low-drive downturn is a digitization artifact. [Atlas](B2_SCIENTIFIC_RESULTS_ATLAS.md): cancellation core-depth12.78–16.47dB; paired CuC median contrast0.986→6.461dB,8/8 pairs improve | **None for a reference-traceable simulator/physical-consistency claim.** Stronger empirical satellite/TWTA-fidelity claims need independent GEO hardware data that are absent | Existing committed numerical summaries/figures: **0 new RF/training compute**. Independent hardware validation: access/cost unknown, external dependency | **Yes, narrowed methodology**, with reference filters, digitized transfer curves and simplified waveform disclosed. No empirical GEO validation/full DVB-S2-framing claim |
+| **C2: plan-conditioned dual-pol open-set recognizer** | Canonical P20 tiny neural pilot:16train/16known-test,12.5% accuracy. XGB6/16 is a different fixture. P21b is different. [A1 plan pilot](plan_shortcut_pilot.md):0.5MHz mismatch causes28/30 clean alarms versus1/30 baseline; dependence is not benefit | Predeclared multi-seed paired observables ablation, clean calibration, proper unknown and matched evaluation. Existing3views×3seeds=9fits test added polarization/residual; **all contain plans**. A learned plan-benefit claim needs3 additional matched no-plan fits, or must be dropped. Plan corruption cannot replace retraining ablation | Original route requires authorized frozen B2 inventory21350 observations and at least9 primary fits (12 if claiming learned plan benefit), plus evaluation. Width16 nine-fit band **9.95–21.87 GPU-h is extrapolated, not measured**; extra control unprofiled. No run authorized | **No superiority/open-set performance claim.** Observability limits, counterexamples and plan sensitivity can be discussed now, clearly as controlled/pilot evidence |
+| **C3: quantified payload gap and unseen-condition generalization** | [Pilot A](pilot_A.md),2seeds/~6%data:78.7→76.8% accuracy, overlapping intervals, accuracy-gap claim unsupported. [R1](r1_pilot.md),1seed: common-four-class IBO-shift FA14/60 versus1/60; accuracy79.1/83.7%. Five-class thresholds drift to18–27% FA; Rapp overdrive59/60 predicted clean | Minimum two same-architecture, **same-four-class** linear/nonlinear models×3seeds=6fits; paired condition evaluation with frozen calibration and uncertainty. Unseen carrier-loading holdout is missing; IBO/BW pilots do not supply it. Extra five-class training confounds comparisons | Existing A1/R1 pilots only support exploration. New matched data/loading definition and separate authorization required. Exact six-fit campaign cost **unmeasured**; historical R1 pilot three-model CPU training1947s and A1+R1 generation1111s wall with4workers are not production estimates | **Yes only for exploratory calibration-transfer failures. No confirmed payload-gap effect size, nonlinear-training benefit or unseen-loading claim** |
+
+The [resource reconciliation](../operations/B2_RESOURCE_BUDGET_RECONCILIATION.md)
+estimates full B2 generation22.5–29.7h wall/~26–35core-h and~8.7GB with metadata;
+these are extrapolations, not a host qualification or permission. The stale
+width8 six-GPU-hour budget does not price width16. Neither full B2 route is a
+prerequisite for the deliberately narrower paper recommended below.
+
+### Smallest defensible manuscript and finite finish line
+
+**Recommendation:** a short empirical/observability study, provisionally
+*Observable-dependent interference detection: measured GNSS evidence and
+payload-aware GEO simulation*. Lead with representation, coverage and fixed
+calibration limits. C1 is supporting reproducible methodology; C2/C3 superiority
+is explicitly outside the claim. Do not relabel the original full-GEO proposal
+as completed. Novelty/venue suitability still require a current literature
+comparison; an evidence section alone does not guarantee publication.
+
+| Manuscript result/table | Exact source and population | Disposition |
+|---|---|---|
+| T1 data/representation/coverage/rights | P8 + this report: native GNSS labels, crop parent split, LC120/159 coverage; SmartSpace0raw files | Ready; resolve intended-publication license terms, no raw redistribution |
+| T2 measured GNSS detection | All6 dataset×score rows in committed JSON: AUROC/AP/FPR95, fixed-threshold detection/FA counts, calibration counts, intervals, missing classes and abstentions | Ready; all three scores, no post-test primary-scorer choice. Existing ROC/per-class figures; do not imply matched LC/FIOT cross-source transfer |
+| T3 measured PA support | P17 + `opendpd_mp.json`: two val-selected fits, NMSEs, measurement bandwidth/frequency/support and hash identity | Ready for secondary methods/supplement; no refit or new Chalmers run |
+| T4 simulated GEO observability | Existing NPR/ASI/CuC/cancellation results/atlas figures with exact groups and units; CuC20/30dB total-plan C/I contrast0.373/0.041dB | Ready as simulation-only diagnostic; ASI PSD-C/I and CuC total-plan C/I are different definitions. No operational Pd from oracle twins |
+| S1 exploratory failures | Pilot A/R1/plan pilot above: uncertain accuracy gap, shifted false alarms, plan misalignment, Rapp cause-label ambiguity | Ready as separately labelled supplement; no pooled pilot ranking or confirmatory conclusion |
+| Optional T5 native satellite comparison | SmartSpace on-board6location labels and NGSO binary detection, only after authenticated access/schema/group audit and pre-score protocol | **Blocked, optional for this narrowed paper**. Native-task CPU runtime unmeasured; propose one fixed run/task,2threads,≤15min/task after explicit budget agreement, no automatic retries/search. This is a proposed cap, not a cost measurement or authorization |
+
+**Four finite remaining actions:** (1) use the prepared, unsent
+[SmartSpace request](../plan/P8_dis_veri.md#smartspace-erişim-kararı-ve-hazır-talep--2026-10-26),
+with at most one follow-up and a ten-working-day cutoff from sending; omit T5
+if unavailable. (2) Clarify Fraunhofer's conflicting license and permission for
+the intended derived publication; retain all attributions and do not bundle raw
+files. (3) Draft methods/results/discussion from T1–T4 and S1, and check novelty
+against the two SmartSpace papers, Fraunhofer source study and OpenDPD paper;
+do not claim new datasets or generic baselines as novel algorithms. (4) Select
+a short-paper/reproducibility venue and approve the narrowed claim/author list.
+No new model, full B2 campaign or architecture is on this finish line. If a venue
+requires a new recognition algorithm or confirmed C3 effect, it does not fit
+this scope; choose a different venue or separately authorize that larger study.
+
+**Working abstract, with only existing evidence:**
+We examine how released observation representations constrain interference
+detection and calibration. Using measured GNSS receiver telemetry and rendered
+spectrograms, we evaluate three fixed CPU scores on publisher partitions with
+parent-recording isolation and clean-only threshold calibration. Receiver-level
+scoring yields AUROC0.984 on120 nonempty LC test records, but39 of159 published
+test records are empty. On243 FIOT parent records, clean-distance scoring yields
+AUROC0.858 while RGB-level scoring yields0.259 without retrospective reversal.
+These results are source-specific and do not establish independent-session or
+GEO transfer. Separately, existing measured solid-state amplifier fits constrain
+amplifier-model support, while controlled reference-channel simulations expose
+GEO payload/observability limits. We document missing public satellite access,
+license uncertainty and the unverified status of the original learned open-set
+and payload-gap claims. The evidence supports transparent limits and reproducible
+comparison, rather than a new recognizer or operational performance guarantee.
