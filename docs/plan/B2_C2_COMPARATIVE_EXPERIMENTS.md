@@ -34,6 +34,11 @@ No performance claim for C2 or C3 is made.
 | D1/D2 | Descriptive decomposition | `dual` − `dual_planmask`; `dual` − `dual_noplan` | everything the canonical recipe derives from the plan | confirmatory statements |
 
 A plan-corruption (A5) result is not interpreted as H3 evidence anywhere in this repository; H3 is answered only by the matched pair.
+Two interpretation limits are part of the design, not footnotes: (i) some labels are **defined relative to the plan** (`unauthorized` versus `adjacent_satellite` by placement relative to
+the operator plan, P18), so a model without the plan cannot separate them by construction and part of any H3 gap on those classes (and on the ASI-like `adjacent_satellite_downlink` near family)
+is definitional rather than learned; (ii) the matched arms use one global plan-free level reference, whereas the canonical recipe normalizes each sample by its planned-carrier core, so the
+descriptive D2 contrast upper-bounds the value of plan access. A plan-free per-sample normalization variant is **not** in the declared roster; if the researcher wants H3 against that stronger
+plan-free baseline it must be pre-declared as a sensitivity arm before any test read.
 Metric: `near_fpr95` = known-test fraction scored unknown at the first threshold that detects 95 % of the pooled near-family unknowns (`pulsed`,
 `intermittent_bursts`, `adjacent_satellite_downlink`; unknown = positive; larger score = more unknown-like); lower is better; contrast = richer − baseline,
 so negative favours the richer arm. AUROC, closed-set accuracy and macro-F1 are exploratory. The D-4 headline is `dual_residual` `near_fpr95`,
@@ -58,7 +63,10 @@ Views (`geoml.data.C2_VIEWS`): `co_noplan` (1 channel), `dual_noplan` (2), `co_p
 ## 4. Fairness of the matched pair, and the three declared deltas to the canonical recipe
 
 `*_planmask` and `*_noplan` share: seed, data order, augmentation RNG stream, AdamW/OneCycle, epochs, batch, width, time-pool, CE + center loss,
-the plan-free reference, checkpoint selection (val-select macro-F1), Mahalanobis fit (train only), calibration populations (known val-calib only).
+the plan-free reference, checkpoint selection (val-select macro-F1), Mahalanobis fit (train only), calibration populations (known val-calib only) and the **initialization of every
+non-stem tensor** (`train._fresh_model`: the review found that a different stem size shifted the RNG stream so all later layers started differently; for C2 views the non-stem modules are now
+re-initialized from a seed that depends on the run seed only, and the global RNG is re-seeded afterwards; canonical models start bit-identically to before — tested). The stem convolution
+differs in shape by construction, so its draw differs.
 They differ in the mask channels and therefore only in the stem convolution: `dual_planmask` − `dual_noplan` = 400 parameters at width 8 and 800 at
 width 16 of ≈ 79 k / 311 k (analytic; `docs/results/b2_c2_bounded_verification.json`). Capacity is therefore matched except for the input being tested;
 the canonical arms carry 79 177 (`dual`) and 79 377 (`dual_residual`) parameters at width 8 and 311 305 / 311 705 at width 16 (the latter equals the E8 figure).
@@ -83,8 +91,14 @@ Smoke configurations: `configs/c2/smoke_{canonical,dual_matched,co_matched}_seed
 1. `train-only` per seed (fit and Mahalanobis on train only; val-select picks the checkpoint) → 2. `calibrate` (known val-calib only) →
 3. `freeze --profile {proposed-full|c2-h3-dual|c2-h3-co}`: complete inventory, hashes of every checkpoint/scorer/calibrator, no held-out source opened →
 4. `evaluate` once (test, test-only families and matched set read after the inventory verified; per-sample `unknown_families` scores persisted) →
-5. `python -m geoml.b2_c2 contrasts --evaluation DIR…` (offline; opens no dataset; refuses unequal populations or artifacts, duplicate cells, tampered outputs, and any
-stored point estimate it cannot reproduce).
+5. `python -m geoml.b2_c2 contrasts --evaluation DIR… [--primary-scorer S]` (offline; opens no dataset; refuses unequal populations or artifacts, a different source revision, runtime or
+known-data identity between evaluations, unequal training budgets (`epochs, batch, width, time_pool, lr, weight_decay, augment, center_loss_weight`; only the declared recipe deltas may differ),
+duplicate cells, tampered outputs, and any stored point estimate it cannot reproduce; each evaluated model now records its `TrainConfig`). `--primary-scorer` only records a designation approved
+before the final read; without it the table says NOT DESIGNATED. A metric that is undefined (for example no near-family unknowns) is reported `UNAVAILABLE` with a reason, never `MEASURED` with nulls.
+
+**Forking-path rule.** Canonical, `c2-h3-dual` and (optionally) `c2-h3-co` are three separate `evaluate` calls that each read the test role. Each call is individually gated, but the optional
+co-pol roster could be chosen after seeing primary results. The final-evaluation approval (checklist item 8) must therefore name all evaluate calls in a fixed order and decide tier 3 *before the
+first test read*; the code does not enforce this ordering.
 
 Uncertainty: whole scenario groups (all paired variants and test-only families) are resampled once per replicate and shared by every arm and seed;
 intervals are conditional on the frozen models and calibrators and contain **no training-seed uncertainty**. Seed-level values are reported individually with
@@ -98,16 +112,17 @@ center loss (K17/K18) exists to make class prototypes the geometry of the embedd
 logit confidence, which near-family unknowns that physically resemble a known class are expected to keep high. The pilots are at chance and cannot inform
 the choice. If the researcher prefers MSP or energy, the contrasts and table are unchanged. `b2_c2` keeps `primary_scorer = null`; the table prints
 "NOT DESIGNATED". Required approval text: *"The primary scorer for B2-C2 and decision D-4 is `<msp|energy|mahalanobis>`; all three remain reported; this
-designation precedes any authorized final test read."* Selecting or switching the scorer after seeing protected results is forbidden.
+designation precedes any authorized final test read."* Selecting or switching the scorer after seeing protected results is forbidden. The code cannot bind the designation into the frozen inventory; the approval record must predate the first `evaluate`
+call and be passed to `contrasts --primary-scorer`.
 
 ## 8. Bounded verification actually performed (measured; functional and arithmetic only)
 
 | Check | Result |
 |---|---|
-| C2 test modules (`tests/test_b2_c2_{noplan,contrasts,configs}.py`) | see section 10 |
-| Mutation check of 22 defenses (plan-key reads, reference, stream drop, TrainConfig refusals, channel concatenation, contrast sign/direction/pairing, population/stored-estimate/roster checks, matched recipe) | 22/22 killed after three survivors were closed with new tests (percentile pin, stored-estimate tamper, re-signed incomplete inventory) |
+| C2 test modules (`tests/test_b2_c2_{noplan,contrasts,configs}.py`) | 97 passed (57 + 35 + 5) after the red-team fixes; every invariance test has a positive control |
+| Mutation check of 32 defenses (plan-key reads, reference, stream drop, TrainConfig refusals, channel concatenation, contrast sign/direction/pairing, population/stored-estimate/roster checks, matched recipe) | 32/32 killed: 22 on the first version (three survivors closed with new tests: percentile pin, stored-estimate tamper, re-signed incomplete inventory) plus 10 for the red-team fixes (merge provenance/budget/training-required, alignment, UNAVAILABLE, training config recorded, matched init, downstream re-seed, canonical init unchanged, fixture roster) |
 | Real-physics 2-group fixture `data/b2-feat-pilot` (B2-feat/1, 16 observations per role): 12 view-fits (6 `train-only` runs: 3 seeds × {dual, co} matched bundles) → 6 `calibrate` → 2 `freeze` | all succeeded; `c2-h3-dual` and `c2-h3-co` inventories have six cells each, `full_protocol_admission=false`, `production_authorized=false`; train/val-select/val-calib opened, **test role not opened** |
-| Cost on that fixture (measured, CPU, 2 threads) | `train-only` 7.7–10.4 s wall, peak RSS 0.96–0.99 GiB; `calibrate` 3.6–4.3 s, 0.69–0.70 GiB. RSS is dominated by the torch import at this size; **not** extrapolable |
+| Cost on that fixture (measured, CPU, 2 threads) | `train-only` 9.0–10.4 s wall, peak RSS 0.93–0.98 GiB; `calibrate` 4.2–4.9 s, 0.68–0.70 GiB (run on the post-review code; the recorded `source_revision` is the parent commit of a dirty working tree, the exact source is bound by the training markers' file hashes). RSS is dominated by the torch import at this size; **not** extrapolable |
 | `evaluate` + `contrasts` end to end | on the deterministic stand-in fixture only (tests); the real-physics fixture's test role was deliberately not read |
 
 ```bash
@@ -149,11 +164,29 @@ python -m geoml.b2_experiment --mode freeze --profile c2-h3-co   --seeds 0 1 2 -
 **Ordered approval checklist** (each item is the researcher's or operator's, none is implied by this work): (1) designate the primary scorer; (2) designate generation,
 training/GPU and backup hosts and measure them; (3) DR-04 generation record with run-bound ceilings, then a separate release decision; (4) authorize and run the bounded GPU
 probe, replacing the screening bands; (5) review and merge a production-scope training executor that consumes the approved R1–R10 matrix; (6) authorize training of the 21
-(or the 15 required) fits; (7) verify the frozen 9/6/6-cell inventories; (8) approve one final held-out evaluation with the D-1 disclosures; (9) run `contrasts` once and fill the template.
+(or the 15 required) fits; (7) verify the frozen 9/6/6-cell inventories; (8) approve the final held-out evaluation with the D-1 disclosures, naming **all** evaluate calls (canonical, `c2-h3-dual`, and whether `c2-h3-co` is included) in a fixed order, decided before the first test read; (9) run `contrasts` once and fill the template.
 
 ## 10. Independent scientific red-team (Phase 7)
 
-*Filled in below after the independent review.*
+A separate model agent (not a human approval) reviewed commit `50d4b41` read-only. **No blocker; no path by which plan information reaches a `*_noplan` model; no hidden test-role read.**
+It re-derived the contrast arithmetic and the paired bootstrap independently (point estimates and per-seed intervals reproduced) and ran the old and new source trees against each other:
+config fingerprints and in-memory/streaming fits of `co`, `dual`, `dual_residual` (with and without `plan_consistency`) were identical, so canonical behaviour is unchanged. Its findings and their disposition:
+
+| # | Severity | Finding | Disposition |
+|---|---|---|---|
+| 1 | MAJOR | Cross-evaluation contrasts (H1, H2, D1, D2 mix a canonical and a `c2-h3-*` evaluation) did not check that arms were fitted by the same code, runtime or training budget | **Fixed**: `results.json` records each model's `TrainConfig`; `merge_cells` refuses differing source/runtime/data identity and differing budget fields; tests with a control that allows the declared recipe deltas |
+| 2 | MINOR | Matched arms did not start identically outside the stem (stem size shifted the RNG stream) | **Fixed** for C2 views only (`_fresh_model`); canonical init bit-identical (tested); control test shows the old behaviour differed |
+| 3 | MINOR | `paired_contrasts`/`endpoint` applied one cell's group index to all cells without asserting alignment | **Fixed**: public functions refuse differing populations |
+| 4 | MINOR | `endpoint` reported `MEASURED` with null values and no reason (D-4 requires null with reason) | **Fixed**: `UNAVAILABLE` + `unavailable_reason`; the table prints it |
+| 5 | unverified | Three evaluate calls = forking path against "test evaluated once" | **Procedural** (section 6 forking-path rule, checklist item 8); not code-enforced |
+| 6 | unverified | Primary-scorer designation cannot be bound before the read | **Partly**: `--primary-scorer` records it; binding into the frozen inventory is not implemented (procedural) |
+| 7 | unverified | `CONTRASTS` strings overstated isolation (H1 also adds the cross-pol mask channel; D2 baseline lacks per-sample normalization) | **Fixed** (wording; section 2) |
+| 8 | unverified | Plan-relative labels make part of an H3 gap definitional | **Documented** (section 2) |
+| 9 | unverified | FPR@95TPR operating point is chosen from test unknowns (not deployable) | **Documented** (module docstring, section 2/D-4) |
+| 10 | unverified | Observed-level 90th percentile is fragile near ≈10 % carrier occupancy (11–13 % on the fixture) | **Documented**; only one global training mean is used, identically by both arms |
+| 11 | unverified | `fixture` profile accepted all seven views | **Reverted** to the canonical views (behaviour unchanged) |
+
+Negative and inconclusive results are kept: this review found the cross-evaluation gap in the first version; the fixes are tested but the review is a model review, not an independent human audit.
 
 ## 11. The single comparison table
 

@@ -192,8 +192,31 @@ def test_an_empty_unknown_population_gives_null_not_zero_and_strict_json():
     cells = make_cells(n_unknown=0)
     out = b2_c2.paired_contrasts(cells, scorer="msp", contrasts=["H1_dual_vs_co"], n_boot=10)["H1_dual_vs_co"]
     assert all(r["delta"] is None and r["richer"] is None for r in out["per_seed"]) and out["seed_summary"] is None
+    assert out["status"] == "UNAVAILABLE"
     json.dumps(out, allow_nan=False)
     assert b2_c2.paired_contrasts(cells, scorer="msp", contrasts=["H1_dual_vs_co"], n_boot=10, )["H1_dual_vs_co"]["n_unknown_near"] == 0
+
+
+def test_cells_of_different_populations_are_refused_by_the_public_statistics():
+    import dataclasses
+    cells = make_cells()
+    cells[(1, "dual")] = dataclasses.replace(cells[(1, "dual")], population="q" * 64)
+    with pytest.raises(ValueError, match="different population"):
+        b2_c2.paired_contrasts(cells, scorer="msp", n_boot=5)
+    with pytest.raises(ValueError, match="different population"):
+        b2_c2.endpoint({(s, "dual_residual"): (cells[(s, "dual_residual")] if s else dataclasses.replace(cells[(0, "dual_residual")], population="q" * 64))
+                        for s in b2_c2.SEEDS}, scorer="msp", n_boot=5)
+
+
+def test_an_unavailable_endpoint_or_contrast_says_so_and_is_not_labelled_measured():
+    cells = make_cells(n_unknown=0)
+    contrast = b2_c2.paired_contrasts(cells, scorer="msp", contrasts=["H1_dual_vs_co"], n_boot=5)["H1_dual_vs_co"]
+    assert contrast["status"] == "UNAVAILABLE" and "no near-family unknown" in contrast["unavailable_reason"]
+    endpoint = b2_c2.endpoint(cells, scorer="msp", n_boot=5)
+    assert endpoint["status"] == "UNAVAILABLE" and endpoint["descriptive_mean"] is None and "no near-family unknown" in endpoint["unavailable_reason"]
+    table = b2_c2.comparison_table({s: b2_c2.paired_contrasts(cells, scorer=s, n_boot=5) for s in b2_c2.SCORERS})
+    assert any(line.endswith("**UNAVAILABLE** (no near-family unknown events in the evaluated population) |") for line in table.splitlines())
+    assert make_cell(0, "dual", n_unknown=3) and b2_c2.endpoint(make_cells(), scorer="msp", n_boot=5)["status"] == "MEASURED"
 
 
 def test_invalid_requests_are_refused():
@@ -381,6 +404,54 @@ def test_a_resigned_inventory_that_is_not_the_complete_six_cell_roster_opens_no_
     assert not (tmp_path / f"refused-{change}").exists()
 
 
+def fake_evaluations(monkeypatch, *, specs):
+    """Register synthetic evaluation directories: ``specs`` maps a name to (views, results overrides, training overrides)."""
+    base_training = dict(epochs=2, batch=32, width=8, time_pool=2, lr=1e-3, weight_decay=1e-4, augment=True, center_loss_weight=0.005,
+                         level="absolute", plan_consistency=False, plan_shift_fraction=0.0)
+    loaded = {}
+    for name, (views, results_over, training_over) in specs.items():
+        cells = {(s, v): dataclasses.replace(make_cell(s, v), training={**base_training, **training_over}) for s in b2_c2.SEEDS for v in views}
+        results = {"scope": "BOUNDED_FIXTURE", "profile": name, "evaluation_artifacts": {"known": "k"}, "source": {"files": "A"},
+                   "runtime": {"torch": "2.9", "threads": 1}, "data_identity": "d" * 8, **results_over}
+        loaded[name] = (cells, results)
+    monkeypatch.setattr(b2_c2, "load_evaluation", lambda directory: loaded[directory])
+    return list(specs)
+
+
+import dataclasses  # noqa: E402
+
+
+def test_merge_requires_one_source_runtime_data_identity_and_training_budget(monkeypatch):
+    ok = fake_evaluations(monkeypatch, specs={"a": (("dual_planmask", "dual_noplan"), {}, {}),
+                                              "b": (("co", "dual", "dual_residual"), {}, dict(level="carrier", plan_consistency=True, plan_shift_fraction=0.15))})
+    cells, _ = b2_c2.merge_cells(ok)                                   # the declared recipe differences are allowed
+    assert len(cells) == 15
+    for label, over, training, message in (("source", {"source": {"files": "B"}}, {}, "source revision, runtime or known-data"),
+                                           ("runtime", {"runtime": {"torch": "2.4", "threads": 8}}, {}, "source revision, runtime or known-data"),
+                                           ("data", {"data_identity": "e" * 8}, {}, "source revision, runtime or known-data"),
+                                           ("width", {}, {"width": 16}, "different training budgets"),
+                                           ("epochs", {}, {"epochs": 30}, "different training budgets"),
+                                           ("lr", {}, {"lr": 3e-3}, "different training budgets")):
+        bad = fake_evaluations(monkeypatch, specs={"a": (("dual_planmask", "dual_noplan"), {}, {}), "b": (("co", "dual", "dual_residual"), over, training)})
+        with pytest.raises(ValueError, match=message):
+            b2_c2.merge_cells(bad)
+    missing = fake_evaluations(monkeypatch, specs={"a": (("dual_planmask", "dual_noplan"), {}, {})})
+    cells, results = b2_c2.load_evaluation("a")
+    cells[(0, "dual_noplan")] = dataclasses.replace(cells[(0, "dual_noplan")], training=None)
+    with pytest.raises(ValueError, match="lacks the per-model training configuration"):
+        b2_c2.merge_cells(missing)
+
+
+def test_each_evaluated_model_records_its_training_configuration(fixture, tmp_path, monkeypatch):
+    _, _, out, _ = produce(fixture, tmp_path, monkeypatch)
+    cells, results = b2_c2.load_evaluation(out)
+    assert len(cells) == 6
+    for model in results["models"]:
+        assert model["training"]["input_mode"] == model["view"] and model["training"]["plan_consistency"] is False
+        assert model["training"]["level"] == "absolute" and model["training"]["plan_shift_fraction"] == 0.0
+    assert all(c.training is not None and c.training["epochs"] == 1 for c in cells.values())
+
+
 def test_two_rosters_on_one_population_merge_into_twelve_cells_and_a_foreign_population_is_refused(fixture, tmp_path, monkeypatch):
     states = install_optional_artifacts(fixture, monkeypatch)
     _, dual_inventory = fit_roster(fixture, tmp_path)
@@ -435,6 +506,19 @@ def test_same_seed_matched_arms_share_data_order_and_budget_in_the_executor(fixt
         assert {k: plan["config"][k] for k in keys} == {k: noplan["config"][k] for k in keys}
         assert plan["config"]["plan_consistency"] is False and plan["config"]["plan_shift_fraction"] == 0.0
         assert plan["n_parameters"] - noplan["n_parameters"] == 2 * 2 * 25          # only the two extra stem input channels (width 2, 5x5)
+
+
+def test_a_primary_scorer_is_only_recorded_when_given_and_must_be_a_declared_scorer(fixture, tmp_path, monkeypatch):
+    _, _, out, _ = produce(fixture, tmp_path, monkeypatch)
+    assert b2_c2.run_contrasts([out], n_boot=5)["primary_scorer"] is None
+    report, table = tmp_path / "r.json", tmp_path / "t.md"
+    b2_c2.main(["contrasts", "--evaluation", str(out), "--out", str(report), "--table", str(table), "--n-boot", "5", "--primary-scorer", "mahalanobis"])
+    assert json.loads(report.read_text())["primary_scorer"] == "mahalanobis" and "Primary scorer: mahalanobis" in table.read_text()
+    with pytest.raises(ValueError):
+        b2_c2.run_contrasts([out], n_boot=5, primary_scorer="softmax")
+    with pytest.raises(SystemExit) as raised:
+        b2_c2.main(["contrasts", "--evaluation", str(out), "--out", str(tmp_path / "x.json"), "--primary-scorer", "softmax"])
+    assert raised.value.code == 2
 
 
 def test_cli_roster_template_and_contrasts_write_strict_files(fixture, tmp_path, monkeypatch, capsys):

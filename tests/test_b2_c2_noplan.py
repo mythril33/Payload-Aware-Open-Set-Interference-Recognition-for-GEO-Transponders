@@ -17,7 +17,7 @@ from geoml.b2_stream import B2Source, fit_streaming, infer_streaming
 from geoml.data import (C2_NOPLAN_VIEWS, C2_PLANMASK_VIEWS, C2_VIEWS, OBSERVED_LEVEL_PERCENTILE, VIEW_CHANNELS, observed_level_db,
                         preprocess, preprocess_c2, preprocess_dual)
 from geoml.model import SmallResNet
-from geoml.train import TrainConfig, _inputs, _training_reference, fit
+from geoml.train import TrainConfig, _fresh_model, _inputs, _model, _training_reference, fit
 
 FORBIDDEN = frozenset({"mask", "residual", "plan_consistency", "meta", "plans"})
 
@@ -251,6 +251,39 @@ def test_matched_arms_have_the_same_budget_objective_and_differ_in_capacity_only
     assert fa["train_diagnostics"]["schema"] == fb["train_diagnostics"]["schema"] if "train_diagnostics" in fa and fa["train_diagnostics"] else True
 
 
+def non_stem(model):
+    return {k: v for k, v in model.state_dict().items() if not k.startswith("stem")}
+
+
+@pytest.mark.parametrize("pair", [("dual_planmask", "dual_noplan"), ("co_planmask", "co_noplan")])
+def test_matched_arms_start_from_identical_non_stem_weights_and_the_same_downstream_rng_stream(pair):
+    states = []
+    for view in pair:
+        torch.manual_seed(3)
+        model = _fresh_model(config(view))
+        states.append((model, torch.get_rng_state()))
+    (plan, plan_rng), (noplan, noplan_rng) = states
+    assert non_stem(plan).keys() == non_stem(noplan).keys() and len(non_stem(plan)) > 20
+    for key, tensor in non_stem(plan).items():
+        assert torch.equal(tensor, non_stem(noplan)[key]), key
+    assert torch.equal(plan_rng, noplan_rng)                                   # center-loss init etc. see one stream
+    assert plan.stem[0].weight.shape != noplan.stem[0].weight.shape            # only the stem differs, by construction
+    torch.manual_seed(3)
+    plain = [_model(config(view)) for view in pair]
+    assert any(not torch.equal(v, non_stem(plain[1])[k]) for k, v in non_stem(plain[0]).items())   # control: without the fix they differ
+
+
+@pytest.mark.parametrize("view", ["co", "dual", "dual_residual"])
+def test_canonical_models_start_bit_identically_to_before(view):
+    cfg = config(view)
+    torch.manual_seed(cfg.seed)
+    old = _model(cfg)
+    old_rng = torch.get_rng_state()
+    torch.manual_seed(cfg.seed)
+    new = _fresh_model(cfg)
+    assert all(torch.equal(v, new.state_dict()[k]) for k, v in old.state_dict().items()) and torch.equal(old_rng, torch.get_rng_state())
+
+
 @pytest.mark.parametrize("view", C2_VIEWS)
 @pytest.mark.parametrize("bad", [dict(level="carrier"), dict(plan_consistency=True), dict(plan_shift_fraction=0.15)])
 def test_c2_views_refuse_plan_derived_settings(view, bad):
@@ -304,7 +337,7 @@ def test_experiment_config_accepts_homogeneous_c2_configs_and_refuses_mixtures_a
 
 
 def test_cli_profile_choices_equal_the_executor_profiles():
-    assert tuple(PROFILE_CHOICES) == tuple(execution.PROFILES)
+    assert tuple(PROFILE_CHOICES) == tuple(execution.ALL_PROFILES) and execution.PROFILES == ("proposed-full", "fixture")
 
 
 def test_production_scale_canonical_arms_equal_the_approved_r1_r10_parameters():
@@ -344,7 +377,7 @@ def test_production_scale_configs_cannot_run_in_the_bounded_executor():
 def test_inventory_rosters_are_complete_six_cell_sets_for_the_matched_pairs(tmp_path):
     for profile, views in execution.C2_ROSTERS.items():
         assert execution._roster(profile) == views and len(views) == 2
-    assert execution._roster("proposed-full") == VIEWS and execution._roster("fixture") == ALL_VIEWS
+    assert execution._roster("proposed-full") == VIEWS and execution._roster("fixture") == VIEWS     # the fixture profile is unchanged
     with pytest.raises(ValueError, match="three seeds"):
         execution._profile("c2-h3-dual", [0, 1])
     assert execution._profile("c2-h3-dual", [0, 1, 2]) == [0, 1, 2]

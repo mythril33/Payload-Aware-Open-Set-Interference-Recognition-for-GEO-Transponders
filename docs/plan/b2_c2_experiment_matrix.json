@@ -1555,14 +1555,14 @@
    "D2_canonical_vs_noplan": {
     "baseline": "dual_noplan",
     "hypothesis": "decomposition",
-    "isolates": "everything the canonical recipe derives from the plan, versus no plan access at all",
+    "isolates": "everything the canonical recipe derives from the plan (masks, per-sample carrier-referenced level, plan-consistency target, plan shift) versus no plan access and one global plan-free reference; upper-bounds the value of plan access",
     "richer": "dual",
     "role": "descriptive"
    },
    "H1_dual_vs_co": {
     "baseline": "co",
     "hypothesis": "H1",
-    "isolates": "cross-pol channel, with plan masks and the canonical recipe in both arms",
+    "isolates": "cross-pol spectrum and its operator-plan mask channel (the canonical dual view carries both), canonical recipe in both arms",
     "richer": "dual",
     "role": "primary"
    },

@@ -243,6 +243,24 @@ def _model(cfg: TrainConfig) -> SmallResNet:
                        aux_outputs=1 if cfg.plan_consistency else 0)
 
 
+def _fresh_model(cfg: TrainConfig) -> SmallResNet:
+    """The model a training run starts from. Canonical views: exactly ``_model`` (bit-identical to the former behaviour).
+
+    C2 views differ in stem input channels, so the stem draws a different amount of the RNG stream and every later layer would
+    start from different weights. For them every non-stem tensor is re-initialized from a seed that depends only on ``cfg.seed``
+    and the global RNG is re-seeded afterwards, so a ``*_planmask`` arm and its ``*_noplan`` arm start identically except for
+    the stem convolution (whose shape differs by construction) and see the same downstream RNG stream."""
+    model = _model(cfg)
+    if cfg.input_mode in C2_VIEWS:
+        with torch.random.fork_rng(devices=[]):
+            torch.manual_seed(cfg.seed + 1_000_003)
+            for name, module in model.named_modules():
+                if name and not name.startswith("stem") and hasattr(module, "reset_parameters"):
+                    module.reset_parameters()
+        torch.manual_seed(cfg.seed + 2_000_003)
+    return model
+
+
 DIAGNOSTICS_SCHEMA = "B2-train-diagnostics/1"
 DIAGNOSTICS_LOSS_CONVENTION = (
     "loss = cross_entropy(logits, y) + center_loss_weight * center(embedding, y) "
@@ -387,7 +405,7 @@ def fit(train: dict, val: dict, cfg: TrainConfig, device: str | None = None, log
         pt = torch.from_numpy(_plan_targets(train, "training")).float()
         pv = _plan_targets(val, "validation")
     train_plans = _training_plans(train, cfg) if cfg.plan_shift_fraction > 0 else None
-    model = _model(cfg).to(device)
+    model = _fresh_model(cfg).to(device)
     center = CenterLoss(len(cfg.labels), model.embedding_dim).to(device) if cfg.center_loss_weight > 0 else None
     parameters = list(model.parameters()) + ([] if center is None else list(center.parameters()))
     opt = torch.optim.AdamW(parameters, lr=cfg.lr, weight_decay=cfg.weight_decay)

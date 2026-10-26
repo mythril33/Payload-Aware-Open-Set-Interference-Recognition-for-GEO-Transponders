@@ -60,7 +60,7 @@ from geosim.b2_test_dataset import iter_b2_test_shards, read_b2_test_manifest
 from .data import C2_NOPLAN_VIEWS, C2_VIEWS, CORE_DB, observed_level_db, reference_level
 from .model import CenterLoss, n_parameters
 from .metrics import macro_f1
-from .train import (TrainConfig, TrainDiagnostics, _apply_plan_shift, _forward, _inputs, _model, _plan_targets,
+from .train import (TrainConfig, TrainDiagnostics, _apply_plan_shift, _forward, _fresh_model, _inputs, _model, _plan_targets,
                     _training_plans)
 
 INDEX_KEYS = {"known": ("label", "seed", "plan_consistency"),
@@ -521,7 +521,7 @@ def fit_streaming(train, val, cfg: TrainConfig, *, window_shards=DEFAULT_WINDOW_
     torch.manual_seed(cfg.seed)
     ref = _training_reference(train, cfg)
     with_plans = cfg.plan_shift_fraction > 0
-    model = _model(cfg).to(device)
+    model = _fresh_model(cfg).to(device)
     center = CenterLoss(len(cfg.labels), model.embedding_dim).to(device) if cfg.center_loss_weight > 0 else None
     parameters = list(model.parameters()) + ([] if center is None else list(center.parameters()))
     opt = torch.optim.AdamW(parameters, lr=cfg.lr, weight_decay=cfg.weight_decay)

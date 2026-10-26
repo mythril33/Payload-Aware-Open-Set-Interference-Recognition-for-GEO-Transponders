@@ -15,7 +15,9 @@ The matched arms are additional, separately versioned fits. Contrasts are comput
 the frozen evaluation persists; this module opens no dataset, fits nothing and calibrates nothing.
 
 Metric convention: ``near_fpr95`` is the known-test fraction scored unknown at the first threshold detecting 95 % of the
-pooled near-family unknowns (unknown positive, larger score = more unknown-like); lower is better. A contrast is
+pooled near-family unknowns (unknown positive, larger score = more unknown-like); lower is better. The operating point is
+chosen from the test unknowns themselves (decision D-4): it is a descriptive ranking statistic, not a deployable threshold
+(deployable thresholds are the val-calib ones frozen before evaluation). A contrast is
 ``richer - baseline``; for ``near_fpr95`` a negative value favours the richer arm.
 """
 from __future__ import annotations
@@ -65,7 +67,7 @@ TIERS = {1: "approved primary design (R1: three views x three seeds)",
 # Pre-declared contrasts. ``role`` separates the confirmatory-style primary question from descriptive decompositions.
 CONTRASTS = {
     "H1_dual_vs_co": dict(hypothesis="H1", richer="dual", baseline="co", role="primary",
-                          isolates="cross-pol channel, with plan masks and the canonical recipe in both arms"),
+                          isolates="cross-pol spectrum and its operator-plan mask channel (the canonical dual view carries both), canonical recipe in both arms"),
     "H2_residual_vs_dual": dict(hypothesis="H2", richer="dual_residual", baseline="dual", role="primary",
                                 isolates="observed cancellation residual channel (itself plan-dependent), canonical recipe"),
     "H3_planmask_vs_noplan_dual": dict(hypothesis="H3", richer="dual_planmask", baseline="dual_noplan", role="primary",
@@ -77,7 +79,7 @@ CONTRASTS = {
     "D1_canonical_vs_matched_planmask": dict(hypothesis="decomposition", richer="dual", baseline="dual_planmask", role="descriptive",
                                              isolates="plan-referenced level + plan-consistency target + plan shift (canonical recipe) versus the matched recipe"),
     "D2_canonical_vs_noplan": dict(hypothesis="decomposition", richer="dual", baseline="dual_noplan", role="descriptive",
-                                   isolates="everything the canonical recipe derives from the plan, versus no plan access at all"),
+                                   isolates="everything the canonical recipe derives from the plan (masks, per-sample carrier-referenced level, plan-consistency target, plan shift) versus no plan access and one global plan-free reference; upper-bounds the value of plan access"),
 }
 METRICS = {"near_fpr95": ("lower_is_better", "pooled near-family unknown-positive FPR at 95 % TPR; known test events are the negatives"),
            "near_auroc": ("higher_is_better", "pooled near-family unknown-positive AUROC"),
@@ -202,6 +204,7 @@ class Cell:
     unknown_groups: np.ndarray       # near-family unknown samples only
     unknown_scores: dict
     population: str                  # digest of the exact evaluated sample ids and family names
+    training: dict | None = None     # the cell's TrainConfig as recorded by the evaluation (budget fairness across evaluations)
 
 
 def _sha(path):
@@ -227,6 +230,7 @@ def load_evaluation(directory):
     cells, models = {}, {(m["seed"], m["view"]): m for m in results["models"]}
     for entry in predictions:
         key = (entry["seed"], entry["view"])
+        model = models.get(key)
         family = entry.get("unknown_families")
         if family is None:
             raise ValueError(f"{root}: evaluation lacks test-only family scores; contrasts need the near-family populations")
@@ -239,8 +243,9 @@ def load_evaluation(directory):
                     known_scores={m: np.asarray(v, dtype=np.float64) for m, v in entry["unknown_scores"].items()},
                     unknown_groups=unknown_ids[near, 0],
                     unknown_scores={m: np.asarray(v, dtype=np.float64)[near] for m, v in family["scores"].items()},
-                    population=hashlib.sha256(json.dumps([entry["sample_ids"], family["sample_ids"], names], separators=(",", ":")).encode()).hexdigest())
-        _check_against_results(cell, models.get(key), root)
+                    population=hashlib.sha256(json.dumps([entry["sample_ids"], family["sample_ids"], names], separators=(",", ":")).encode()).hexdigest(),
+                    training=None if model is None else model.get("training"))
+        _check_against_results(cell, model, root)
         cells[key] = cell
     return cells, results
 
@@ -259,13 +264,21 @@ def _check_against_results(cell, model, root):
             raise ValueError(f"{root}: recomputed near-family FPR@95TPR {again} differs from the stored {stored}")
 
 
+BUDGET_FIELDS = ("epochs", "batch", "width", "time_pool", "lr", "weight_decay", "augment", "center_loss_weight")
+
+
 def merge_cells(evaluations):
-    """Cells of several evaluations as one roster; every cell must have been evaluated on the identical population."""
-    cells, scopes, populations, artifacts = {}, set(), set(), set()
+    """Cells of several evaluations as one roster, only if they are comparable.
+
+    Every cell must have been evaluated on the identical population and artifacts, by the same source revision and runtime on
+    the same known data, and fitted with the same training budget (``BUDGET_FIELDS``): the declared recipe differences
+    (level reference, plan target, plan shift) are the only training settings allowed to differ between arms."""
+    cells, scopes, populations, artifacts, provenance = {}, set(), set(), set(), set()
     for directory in evaluations:
         part, results = load_evaluation(directory)
         scopes.add((results.get("scope"), results.get("profile")))
         artifacts.add(json.dumps(results.get("evaluation_artifacts"), sort_keys=True))
+        provenance.add(json.dumps({k: results.get(k) for k in ("source", "runtime", "data_identity")}, sort_keys=True))
         for key, cell in part.items():
             if key in cells:
                 raise ValueError(f"duplicate seed/view cell {key}")
@@ -273,6 +286,13 @@ def merge_cells(evaluations):
             populations.add(cell.population)
     if len(populations) > 1 or len(artifacts) > 1:
         raise ValueError("cells were evaluated on different populations or artifacts: contrasts are only defined on identical evaluation populations")
+    if len(provenance) > 1:
+        raise ValueError("evaluations differ in source revision, runtime or known-data identity: arms are only comparable when fitted and evaluated by the same code and environment")
+    if any(cell.training is None for cell in cells.values()):
+        raise ValueError("an evaluation lacks the per-model training configuration: its training budget cannot be compared")
+    budgets = {json.dumps({field: cell.training.get(field) for field in BUDGET_FIELDS}, sort_keys=True) for cell in cells.values()}
+    if len(budgets) > 1:
+        raise ValueError(f"cells were fitted with different training budgets {BUDGET_FIELDS}: contrasts would confound capacity or compute with the compared factor")
     return cells, sorted(scopes, key=str)
 
 
@@ -308,6 +328,14 @@ def _percentile_ci(values):
     return [float(low), float(high)]
 
 
+def _require_aligned(cells):
+    """The group index of one reference cell is applied to every cell, so all cells must share one evaluated population."""
+    reference = next(iter(cells.values()))
+    for key, cell in cells.items():
+        if cell.population != reference.population:
+            raise ValueError(f"cell {key} was evaluated on a different population than the others; per-group resampling would misalign")
+
+
 def paired_contrasts(cells, *, scorer, metric=PRIMARY_METRIC, contrasts=None, n_boot=DEFAULT_BOOTSTRAPS, seed=BOOTSTRAP_SEED,
                      seeds=SEEDS):
     """Paired scenario-group bootstrap of ``richer - baseline`` for each contrast whose six cells are present.
@@ -325,6 +353,7 @@ def paired_contrasts(cells, *, scorer, metric=PRIMARY_METRIC, contrasts=None, n_
     reference = next(iter(cells.values()), None)
     if reference is None:
         return {name: _not_run(name, spec, scorer, metric, "no evaluated cells") for name, spec in wanted.items()}
+    _require_aligned(cells)
     universe = np.unique(np.concatenate([reference.known_groups, reference.unknown_groups]))
     known_by_group = _group_indices(reference.known_groups, universe)
     unknown_by_group = _group_indices(reference.unknown_groups, universe)
@@ -362,10 +391,11 @@ def paired_contrasts(cells, *, scorer, metric=PRIMARY_METRIC, contrasts=None, n_
                              "ci95_conditional_on_frozen_models": _percentile_ci(replicate) if use_ci else None,
                              "undefined_replicates": int(sum(v is None for v in replicate)) if use_ci else None})
         deltas = [row["delta"] for row in per_seed if row["delta"] is not None]
+        unavailable = None if deltas else _unavailable_reason(reference)
         seed_means = [None if None in row else float(np.mean(row)) for row in estimates[name]]
         out[name] = {"id": name, **{k: spec[k] for k in ("hypothesis", "richer", "baseline", "role", "isolates")},
                      "scorer": scorer, "metric": metric, "direction": METRICS[metric][0], "delta_definition": "richer - baseline",
-                     "status": "MEASURED", "per_seed": per_seed,
+                     "status": "MEASURED" if deltas else "UNAVAILABLE", "unavailable_reason": unavailable, "per_seed": per_seed,
                      "seed_summary": None if len(deltas) != len(per_seed) else {
                          "mean_delta": float(np.mean(deltas)), "min_delta": float(np.min(deltas)), "max_delta": float(np.max(deltas)),
                          "sd_delta": float(np.std(deltas, ddof=1)) if len(deltas) > 1 else None, "n_seeds": len(deltas),
@@ -375,6 +405,14 @@ def paired_contrasts(cells, *, scorer, metric=PRIMARY_METRIC, contrasts=None, n_
                      "n_unknown_near": int(len(reference.unknown_groups)), "bootstrap_replicates": n_boot if use_ci else 0,
                      "interval_unavailable_reason": None if use_ci else "fewer than two scenario groups"}
     return out
+
+
+def _unavailable_reason(reference):
+    if not len(reference.unknown_groups):
+        return "no near-family unknown events in the evaluated population"
+    if not len(reference.known_groups):
+        return "no known test events in the evaluated population"
+    return "the metric is undefined for the evaluated population"
 
 
 def _not_run(name, spec, scorer, metric, reason):
@@ -387,6 +425,7 @@ def endpoint(cells, *, scorer, n_boot=DEFAULT_BOOTSTRAPS, seed=BOOTSTRAP_SEED, s
     keys = [(s, "dual_residual") for s in seeds]
     if not all(k in cells for k in keys):
         return {"status": "NOT_RUN", "reason": f"dual_residual cells for seeds {list(seeds)} were not evaluated", "scorer": scorer}
+    _require_aligned({k: cells[k] for k in keys})
     reference = cells[keys[0]]
     universe = np.unique(np.concatenate([reference.known_groups, reference.unknown_groups]))
     known_by_group, unknown_by_group = _group_indices(reference.known_groups, universe), _group_indices(reference.unknown_groups, universe)
@@ -404,7 +443,8 @@ def endpoint(cells, *, scorer, n_boot=DEFAULT_BOOTSTRAPS, seed=BOOTSTRAP_SEED, s
              "ci95_conditional_on_frozen_models": _percentile_ci(replicate[k]) if use_ci else None} for k in keys]
     values = [r["fpr_at_95_tpr"] for r in rows]
     mean = None if None in values else float(np.mean(values))
-    return {"status": "MEASURED", "scorer": scorer, "metric": PRIMARY_METRIC, "view": "dual_residual", "per_seed": rows,
+    return {"status": "MEASURED" if mean is not None else "UNAVAILABLE",
+            "unavailable_reason": None if mean is not None else _unavailable_reason(reference), "scorer": scorer, "metric": PRIMARY_METRIC, "view": "dual_residual", "per_seed": rows,
             "descriptive_mean": mean, "min": None if mean is None else float(min(values)), "max": None if mean is None else float(max(values)),
             "n_scenario_groups": int(len(universe)), "n_known": int(len(reference.known_groups)),
             "n_unknown_near": int(len(reference.unknown_groups)),
@@ -428,6 +468,9 @@ def comparison_table(results=None, *, scope_note=None, primary_scorer=None):
     for name, spec in CONTRASTS.items():
         for scorer in SCORERS:
             row = None if results is None else results.get(scorer, {}).get(name)
+            if row is not None and row["status"] == "UNAVAILABLE":
+                lines.append(f"| `{name}` | {spec['hypothesis']} ({spec['role']}): `{spec['richer']}` − `{spec['baseline']}` | {spec['isolates']} | {scorer} | — | — | — | — | — | {row['n_scenario_groups']} | **UNAVAILABLE** ({row['unavailable_reason']}) |")
+                continue
             if row is None or row["status"] != "MEASURED":
                 lines.append(f"| `{name}` | {spec['hypothesis']} ({spec['role']}): `{spec['richer']}` − `{spec['baseline']}` | {spec['isolates']} | {scorer} | — | — | — | — | — | — | **NOT RUN** |")
                 continue
@@ -441,12 +484,15 @@ def comparison_table(results=None, *, scope_note=None, primary_scorer=None):
     return "\n".join(lines) + "\n"
 
 
-def run_contrasts(evaluations, *, n_boot=DEFAULT_BOOTSTRAPS):
+def run_contrasts(evaluations, *, n_boot=DEFAULT_BOOTSTRAPS, primary_scorer=None):
+    """``primary_scorer`` only records a designation made (and approved) before the final read; it selects nothing."""
+    if primary_scorer is not None and primary_scorer not in SCORERS:
+        raise ValueError(f"primary scorer must be one of {SCORERS}")
     cells, scopes = merge_cells(evaluations)
     results = {scorer: paired_contrasts(cells, scorer=scorer, n_boot=n_boot) for scorer in SCORERS}
     headline = {scorer: endpoint(cells, scorer=scorer, n_boot=n_boot) for scorer in SCORERS}
     return {"version": VERSION, "scopes": scopes, "cells": sorted(f"{s}/{v}" for s, v in cells), "contrasts": results,
-            "endpoint": headline, "primary_scorer": None, "bootstrap_seed": BOOTSTRAP_SEED, "n_boot": n_boot,
+            "endpoint": headline, "primary_scorer": primary_scorer, "bootstrap_seed": BOOTSTRAP_SEED, "n_boot": n_boot,
             "limitations": ["conditional on the frozen models; no training-seed interval", "exploratory: no multiplicity adjustment, no confirmatory superiority claim",
                             "bounded fixtures establish functional and arithmetic correctness only"]}
 
@@ -463,6 +509,8 @@ def main(argv=None):
     contrasts.add_argument("--out", required=True)
     contrasts.add_argument("--table")
     contrasts.add_argument("--n-boot", type=int, default=DEFAULT_BOOTSTRAPS)
+    contrasts.add_argument("--primary-scorer", choices=SCORERS,
+                           help="record the researcher-approved designation made before the final read; omitted = NOT DESIGNATED")
     args = parser.parse_args(argv)
     try:
         if args.action == "roster":
@@ -472,11 +520,11 @@ def main(argv=None):
         elif args.action == "template":
             Path(args.out).write_text(comparison_table())
         else:
-            result = run_contrasts(args.evaluation, n_boot=args.n_boot)
+            result = run_contrasts(args.evaluation, n_boot=args.n_boot, primary_scorer=args.primary_scorer)
             Path(args.out).write_text(json.dumps(result, indent=1, sort_keys=True, allow_nan=False))
             if args.table:
                 scope = "; ".join(f"{s} / {p}" for s, p in result["scopes"])
-                Path(args.table).write_text(comparison_table(result["contrasts"], scope_note=scope))
+                Path(args.table).write_text(comparison_table(result["contrasts"], scope_note=scope, primary_scorer=args.primary_scorer))
     except (ValueError, FileNotFoundError, KeyError) as error:
         parser.exit(2, f"error: {error}\n")
 

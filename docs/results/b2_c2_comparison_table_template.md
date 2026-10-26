@@ -6,9 +6,9 @@ Scope: NO EXPERIMENT RUN — template
 
 | Contrast | Question | Isolates | Scorer | seed 0 | seed 1 | seed 2 | mean Δ (descriptive) | 95 % CI of mean (groups only) | n groups | Status |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `H1_dual_vs_co` | H1 (primary): `dual` − `co` | cross-pol channel, with plan masks and the canonical recipe in both arms | msp | — | — | — | — | — | — | **NOT RUN** |
-| `H1_dual_vs_co` | H1 (primary): `dual` − `co` | cross-pol channel, with plan masks and the canonical recipe in both arms | energy | — | — | — | — | — | — | **NOT RUN** |
-| `H1_dual_vs_co` | H1 (primary): `dual` − `co` | cross-pol channel, with plan masks and the canonical recipe in both arms | mahalanobis | — | — | — | — | — | — | **NOT RUN** |
+| `H1_dual_vs_co` | H1 (primary): `dual` − `co` | cross-pol spectrum and its operator-plan mask channel (the canonical dual view carries both), canonical recipe in both arms | msp | — | — | — | — | — | — | **NOT RUN** |
+| `H1_dual_vs_co` | H1 (primary): `dual` − `co` | cross-pol spectrum and its operator-plan mask channel (the canonical dual view carries both), canonical recipe in both arms | energy | — | — | — | — | — | — | **NOT RUN** |
+| `H1_dual_vs_co` | H1 (primary): `dual` − `co` | cross-pol spectrum and its operator-plan mask channel (the canonical dual view carries both), canonical recipe in both arms | mahalanobis | — | — | — | — | — | — | **NOT RUN** |
 | `H2_residual_vs_dual` | H2 (primary): `dual_residual` − `dual` | observed cancellation residual channel (itself plan-dependent), canonical recipe | msp | — | — | — | — | — | — | **NOT RUN** |
 | `H2_residual_vs_dual` | H2 (primary): `dual_residual` − `dual` | observed cancellation residual channel (itself plan-dependent), canonical recipe | energy | — | — | — | — | — | — | **NOT RUN** |
 | `H2_residual_vs_dual` | H2 (primary): `dual_residual` − `dual` | observed cancellation residual channel (itself plan-dependent), canonical recipe | mahalanobis | — | — | — | — | — | — | **NOT RUN** |
@@ -24,9 +24,9 @@ Scope: NO EXPERIMENT RUN — template
 | `D1_canonical_vs_matched_planmask` | decomposition (descriptive): `dual` − `dual_planmask` | plan-referenced level + plan-consistency target + plan shift (canonical recipe) versus the matched recipe | msp | — | — | — | — | — | — | **NOT RUN** |
 | `D1_canonical_vs_matched_planmask` | decomposition (descriptive): `dual` − `dual_planmask` | plan-referenced level + plan-consistency target + plan shift (canonical recipe) versus the matched recipe | energy | — | — | — | — | — | — | **NOT RUN** |
 | `D1_canonical_vs_matched_planmask` | decomposition (descriptive): `dual` − `dual_planmask` | plan-referenced level + plan-consistency target + plan shift (canonical recipe) versus the matched recipe | mahalanobis | — | — | — | — | — | — | **NOT RUN** |
-| `D2_canonical_vs_noplan` | decomposition (descriptive): `dual` − `dual_noplan` | everything the canonical recipe derives from the plan, versus no plan access at all | msp | — | — | — | — | — | — | **NOT RUN** |
-| `D2_canonical_vs_noplan` | decomposition (descriptive): `dual` − `dual_noplan` | everything the canonical recipe derives from the plan, versus no plan access at all | energy | — | — | — | — | — | — | **NOT RUN** |
-| `D2_canonical_vs_noplan` | decomposition (descriptive): `dual` − `dual_noplan` | everything the canonical recipe derives from the plan, versus no plan access at all | mahalanobis | — | — | — | — | — | — | **NOT RUN** |
+| `D2_canonical_vs_noplan` | decomposition (descriptive): `dual` − `dual_noplan` | everything the canonical recipe derives from the plan (masks, per-sample carrier-referenced level, plan-consistency target, plan shift) versus no plan access and one global plan-free reference; upper-bounds the value of plan access | msp | — | — | — | — | — | — | **NOT RUN** |
+| `D2_canonical_vs_noplan` | decomposition (descriptive): `dual` − `dual_noplan` | everything the canonical recipe derives from the plan (masks, per-sample carrier-referenced level, plan-consistency target, plan shift) versus no plan access and one global plan-free reference; upper-bounds the value of plan access | energy | — | — | — | — | — | — | **NOT RUN** |
+| `D2_canonical_vs_noplan` | decomposition (descriptive): `dual` − `dual_noplan` | everything the canonical recipe derives from the plan (masks, per-sample carrier-referenced level, plan-consistency target, plan shift) versus no plan access and one global plan-free reference; upper-bounds the value of plan access | mahalanobis | — | — | — | — | — | — | **NOT RUN** |
 
 No cell of this table is a research conclusion unless its scope line says a production-scale authorized run produced it.
 Bounded fixtures (two scenario groups per role) establish functional and arithmetic correctness only.

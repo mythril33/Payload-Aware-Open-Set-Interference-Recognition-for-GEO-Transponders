@@ -38,7 +38,8 @@ VIEWS = ex.VIEWS
 # B2-C2-ablation/1: each matched pair is its own complete roster (two views x three seeds = six cells); the canonical
 # nine-cell "proposed-full" admission is unchanged.
 C2_ROSTERS = {"c2-h3-dual": ("dual_planmask", "dual_noplan"), "c2-h3-co": ("co_planmask", "co_noplan")}
-PROFILES = ("proposed-full", "fixture", *C2_ROSTERS)
+PROFILES = ("proposed-full", "fixture")          # canonical admission profiles; unchanged (pinned by the E9 contract tests)
+ALL_PROFILES = (*PROFILES, *C2_ROSTERS)          # + the separately versioned C2 ablation rosters
 CAPS = {"groups_per_role":2, "epochs":2, "width":8, "batch":32}
 ALARM_RULE = "R10 higher empirical quantile at 1-pfa (clean_alarm_threshold); alarm strictly score > threshold"
 
@@ -373,12 +374,12 @@ def _verify_calibration(root):
 
 def _roster(profile):
     """Views a complete inventory of this profile must contain for every seed."""
-    return VIEWS if profile == "proposed-full" else C2_ROSTERS.get(profile, ex.ALL_VIEWS)
+    return C2_ROSTERS.get(profile, VIEWS)
 
 
 def _profile(profile,seeds):
-    if profile not in PROFILES:
-        raise ValueError(f"profile must be one of {PROFILES}")
+    if profile not in ALL_PROFILES:
+        raise ValueError(f"profile must be one of {ALL_PROFILES}")
     if (not isinstance(seeds,(list,tuple)) or not seeds or any(type(v) is not int or v<0 for v in seeds)
             or len(set(seeds))!=len(seeds) or (profile!="fixture" and len(seeds)!=3)):
         raise ValueError("inventory requires explicit distinct seeds; proposed-full requires three seeds")
@@ -547,7 +548,8 @@ def evaluate_b2_inventory(data,inventory,out,*,unknown_data=None,matched_data=No
             "clean_false_alarm":ex._rate(alarm[clean],groups[clean]),"event_detection":ex._rate(alarm[~clean],groups[~clean]),
             "alarm":calibrated["alarm"],"rejection":rejection,"plan_consistency":ex._plan_metrics(values["plan_logits"],parts["test"]["plan_consistency"],groups),
             "matched":None if matched_out is None else ex._matched_metrics(matched,matched_out,calibrations,scorer,threshold,parts["test"],prediction)}
-        models.append({"seed":cell["seed"],"view":cell["view"],"checkpoint_sha256":trained["files"][f"model_{cell['view']}.pt"],"metrics":metrics})
+        models.append({"seed":cell["seed"],"view":cell["view"],"checkpoint_sha256":trained["files"][f"model_{cell['view']}.pt"],
+                       "training":asdict(cfg.train_config(cell["view"])),"metrics":metrics})
         entry={"seed":cell["seed"],"view":cell["view"],"sample_ids":[[int(g),int(l)] for g,l in zip(groups,labels)],
             "prediction":prediction.tolist(),"event_probability":event.tolist(),"alarm":alarm.tolist(),
             "unknown_scores":{m:s.tolist() for m,s in scores.items()}}

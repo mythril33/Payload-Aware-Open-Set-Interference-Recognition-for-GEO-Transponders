@@ -73,10 +73,10 @@
   ],
   "test_role_opened": false
  },
- "interpretation": "functional and arithmetic correctness only; 16 training observations, 2 epochs, chance-level validation macro-F1 (0.028-0.11); no recognition-quality statement",
+ "interpretation": "functional and arithmetic correctness only; 16 training observations, 2 epochs, chance-level validation macro-F1; no recognition-quality statement",
  "inventories": {
   "c2-h3-co": {
-   "artifact_id": "0d473c5c3ee09f6068d0f4d766ad3ff1d3ca6060b7470b852427c30fd9e39ce5",
+   "artifact_id": "e946a76547ec4036f517a729aa1bf3f7f36e34aa1f09d2af04857335a389f48d",
    "cells": [
     [
      0,
@@ -108,7 +108,7 @@
    "production_authorized": false
   },
   "c2-h3-dual": {
-   "artifact_id": "c490724b34b3437c1d311caa27c04f1b949b0c2c0635115bd222d099bd58d263",
+   "artifact_id": "ba81cb3f7b9853cbd185a3fd97045f8f4f7952751e02bcc83bfb4fed3cea8e8a",
    "cells": [
     [
      0,
@@ -146,77 +146,78 @@
  "steps": {
   "co_matched/calibrate": {
    "peak_rss_mib_min_max": [
-    693.4,
-    696.7
+    697.0,
+    702.4
    ],
    "runs": 3,
    "user_cpu_s_min_max": [
-    3.81,
-    4.15
+    4.28,
+    4.35
    ],
    "wall_s_min_max": [
-    3.61,
-    4.03
+    4.16,
+    4.29
    ]
   },
   "co_matched/train-only": {
    "peak_rss_mib_min_max": [
-    964.0,
-    974.8
+    957.0,
+    979.7
    ],
    "runs": 3,
    "user_cpu_s_min_max": [
-    8.79,
-    9.16
+    10.32,
+    10.83
    ],
    "wall_s_min_max": [
-    7.66,
-    8.39
+    9.02,
+    9.61
    ]
   },
   "dual_matched/calibrate": {
    "peak_rss_mib_min_max": [
-    699.8,
-    701.7
+    700.7,
+    713.2
    ],
    "runs": 3,
    "user_cpu_s_min_max": [
-    3.99,
-    4.4
+    4.64,
+    4.94
    ],
    "wall_s_min_max": [
-    3.91,
-    4.3
+    4.63,
+    4.9
    ]
   },
   "dual_matched/train-only": {
    "peak_rss_mib_min_max": [
-    968.3,
-    988.2
+    979.6,
+    1004.0
    ],
    "runs": 3,
    "user_cpu_s_min_max": [
-    9.3,
-    10.09
+    10.29,
+    11.57
    ],
    "wall_s_min_max": [
-    8.66,
-    10.4
+    9.0,
+    10.42
    ]
   }
  },
  "training": {
+  "all_training_markers_share_source": true,
   "batch": 32,
   "center_loss_weight": 0.005,
   "epochs": 2,
   "level": "absolute",
   "plan_consistency": false,
   "plan_shift_fraction": 0.0,
-  "selected_epochs": {
+  "selected_epochs_seed0_dual": {
    "dual_noplan": 0,
    "dual_planmask": 0
   },
-  "source_revision": "47795c41dde586420e1732b2f64b22a09e63d639",
+  "source_revision": "964bf1f6a327d03021811a6e97c8ce4d3ce78fb1",
   "time_pool": 2,
   "width": 8
  }
