@@ -1,0 +1,8 @@
+% Keep long identifiers and wide descriptive tables legible in the draft.
+\emergencystretch=3em
+\setlength{\tabcolsep}{3pt}
+\usepackage{etoolbox}
+\BeforeBeginEnvironment{longtable}{\begingroup\footnotesize}
+\AfterEndEnvironment{longtable}{\endgroup}
+\usepackage{float}
+\floatplacement{figure}{H}
