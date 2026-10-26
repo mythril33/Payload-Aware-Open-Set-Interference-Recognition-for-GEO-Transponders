@@ -1,6 +1,7 @@
 # B2 E18 — synthetic executor lifecycle
 
-Version 1, 2026-10-25. Verified base: `ad3e241d63875c4603b5843d8ba7a9fe15532253` (PR #41 merged).
+Version 1, 2026-10-25; revision 2 (same day) after the second independent review. Verified base: `ad3e241d63875c4603b5843d8ba7a9fe15532253` (PR #41 merged);
+revision 2 builds on the merged E18 state `5efa287` (PR #42).
 **Engineering only — DR-04 NO-GO — NO COMPUTE AUTHORIZED.** Nothing in this milestone generates data, trains, probes a GPU or
 starts a production child. Fabricated bytes only; every lifecycle result says `execution_permitted=false`.
 
@@ -51,7 +52,8 @@ transition table is explicit (`TRANSITIONS`); an operation called in the wrong s
 effects.
 
 * **BLOCKED** — a required fact is missing, stale or unproven (evidence source unreachable, signature refused, gates closed, journal
-  not yet open, boundary facts incomplete or malformed, a verification older than the 300 s the signed answers allow). Nothing ran
+  not yet open, boundary facts incomplete or malformed, a verification older than 300 s **or past the earlier expiry the signed revocation/CI answers
+  themselves state**, a resumed run whose resource observer cannot be reconciled with the journal's span). Nothing ran
   beyond the point of refusal; `retry()` rewinds to `PREPARED` so that **evidence is verified again from scratch** (only a block at the
   stage-end check returns to the backup-verified state, whose check itself re-verifies). Before `run_opened` is written the journal is
   never touched, so a blocked start cannot corrupt the chain.
@@ -71,7 +73,8 @@ with `SyntheticExecutorLifecycle.recover(profile)`.
 1. **`verify_evidence`** — fresh challenge from the replay custody, fresh reference, fresh signed revocation/CI snapshots, E17
    evaluation. Only a `DR04_GENERATION_RECORD_VALID`, `SYNTHETIC_TEST_ROOT`, `execution_permitted=false` result passes. Opens the
    journal (`run_opened`, `authorization_snapshot`) on first success. The challenge is consumed whether the answer was good or not.
-   `check_admission` and the start of `run_stage` refuse to proceed on a verification older than 300 s.
+   `check_admission` and the start of `run_stage` refuse to proceed on a verification older than 300 s or past the earlier `expires_at` of the
+   signed revocation and CI answers (their validity may be shorter than 300 s).
 2. **`check_admission`** — builds the E16 boundary report for the coming stage (`pre_launch`, `after_known`, `after_test`) from the
    *real* work tree, journal, a **freshly re-verified** backup (never a cached result) and a fabricated K17d comparison; all adapters
    answer from one instant. The permanent `execution.boundary` condition must be exactly `BLOCKED`, otherwise the run stops (a changed
@@ -81,7 +84,8 @@ with `SyntheticExecutorLifecycle.recover(profile)`.
    rows, count must equal the plan), publishes `part`, `meta`, then `descriptor` (last), admits it through the E16 barrier,
    journals `shard_admitted` (with the last cumulative CPU/wall reading), then evaluates the E16 stop conditions. The admission record
    must equal the controller's own hashes of what it published. Source identity, anchor/ledger custody and a fresh signed revocation
-   are rechecked every 64 admitted shards **or** every 3600 s of run time, whichever comes first. The producer receives only
+   are rechecked every 64 admitted shards **or** every 3600 s of run time, whichever comes first — and the same check runs **before** the
+   next shard is produced, so a run that sat idle between budgeted calls cannot produce one more shard on a stale answer. The producer receives only
    `{stage, role, ordinal, observations}` and the byte bounds — no scenario seeds, no request identity.
 4. **`verify_stage`** — deep classification must be `COMPLETE`, manifests are rebuilt and must equal **the bytes this controller
    admitted** (and any manifest the journal already holds), files must be read-only; `stage_completed` is journaled once.
@@ -98,6 +102,7 @@ with `SyntheticExecutorLifecycle.recover(profile)`.
 |---|---|---|
 | `durability.<later stage>` has data | STOPPED | `stage_order_violation` |
 | `durability.<this or earlier stage>`, `backup.*` | QUARANTINED | `backup_mismatch` (backup) |
+| `backup.*` where the *device* failed (I/O error, not a missing or different byte) | STOPPED | `backup_unavailable` (E16's own action for it is `stop`) |
 | `k17d.metadata` | STOPPED | `k17d_mismatch` |
 | `journal.external` (checked after K17d) | STOPPED, journal marked failed | none (the journal is the problem) |
 | `isolation.roles` / `isolation.consumers` | STOPPED | `identity_mismatch` |
@@ -119,17 +124,26 @@ The journal is the durable state; memory is never trusted. `recover(profile)`:
    every completed stage has its journaled verification and backup;
 2. re-derives later request bindings from the journaled manifests and refuses a mismatch;
 3. classifies the role directories of stages that were admitted or completed (a run that died before its first admission has none
-   to judge); any orphan, partial, corrupt, unplanned or unreadable state, a shard that differs from its journaled admission digest,
+   to judge). Only **one** committed shard that the journal never admitted is adopted — the one that was in flight at the crash, which must
+   be the next planned shard — and it is journaled at once (`shard_admitted`, `adopted_at_recovery`); several, or one out of order,
+   are `QUARANTINED` (`orphan_files`) even when each is well-formed. Any orphan, partial, corrupt, unplanned or unreadable state, a shard that differs from its journaled admission digest,
    a journaled shard that is missing, a completed role that differs from its manifest, **or a committed shard that breaks the
    fabricated-bytes-only contract (marker, size bound, row count, synthetic rows)** → `QUARANTINED`;
-4. re-admits committed shards (verify → fsync → verify), verifies completed stages' backups **read-only**, and continues the
-   cumulative CPU/wall floor from the journal; the resource port may not report less wall time than the span the journal itself
-   records (a 40-hour outage cannot be hidden by a port that restarts its counters);
+4. re-admits committed shards (verify → fsync → verify), verifies completed stages' backups **read-only** (a backup *device* that cannot be
+   read refuses the recovery and writes nothing, so it can be retried; a backup that is missing or different is `QUARANTINED`), and
+   continues the cumulative CPU/wall floor from the journal; the resource port may not report less wall time than the span the journal
+   itself records (a 40-hour outage cannot be hidden by a port that restarts its counters: the resumed run is `BLOCKED`, and downtime
+   counts against the wall-time budget);
 5. records an unannounced exit as an inferred `interruption` and appends `resume` with the identical identity; a clock that runs
    backwards or a journal that cannot be extended is a refusal.
 
 A restart starts at `PREPARED`: fresh signed evidence is required again, and the restart allowance (failed attempts, interruptions,
-total attempts) is enforced by the E16 evaluator with `restarting=true`.
+total attempts) is enforced by the E16 evaluator with `restarting=true`. The counters are **run-wide** while the plan's ceilings are
+per stage: this is conservative (a second failed attempt in another stage already exhausts the allowance of 2). A resumed run also
+passes the *standing* boundary checks before it produces another byte — the permanent execution-boundary canary, no data in any later
+stage, the consumer declaration, and the K17d comparison once `known` is complete — because the full E16 report is only meaningful at a
+stage start. A resource observer that disagrees with the journal's wall-clock span *during* a run (clock step, suspend) is a resumable
+interruption (`OBSERVER_CLOCK_SKEW`), not a verdict.
 
 ## Why real production stays unreachable
 
@@ -154,8 +168,13 @@ See [stage-boundary checklist](../operations/B2_E18_STAGE_BOUNDARY_CHECKLIST.md)
 Historical guards of the E15/E16/E17 workflows (fixed commits `290f9d5…`, `d828739…`) are untouched and re-asserted. The E18
 workflow compares against the **PR merge base**, so a legitimately merged earlier change is never an "alteration of history", while a
 changed scientific record, canonical gate, historical dossier, reviewed contract module or any path outside the E18 scope fails. The
-judge is the policy script **as the base has it**, so a pull request cannot rewrite its own judge (the introducing change falls back
-to its head copy and says so — a one-time, human-reviewed exception). Allow-list globs match one path segment (`*` never crosses `/`),
+policy script is taken **from the base**, so a pull request cannot loosen the rules by editing the script (the introducing change falls back
+to its head copy and says so — a one-time, human-reviewed exception). **It cannot protect the workflow file itself**: a pull request that
+edits `.github/workflows/b2-e18-lifecycle-ci.yml` also edits what runs on it (and every older workflow is path-filtered). The workflow is
+therefore *outside* the E18 scope (a change to it fails the guard whenever the guard runs) and the lint requires the guard steps to be
+present, but both are tripwires; the real protection is repository settings (required reviews, rulesets or CODEOWNERS on
+`.github/workflows`), which this repository cannot configure or verify — an external dependency for a human. The lint is likewise a
+text-level tripwire (variables and here-documents can defeat a line scan), not a proof. Allow-list globs match one path segment (`*` never crosses `/`),
 implicit-code files (`conftest.py`, `sitecustomize.py`, `.pth`, …) are never allowed, and the workflow lint accepts only the reviewed
 `on:` shape and bounds every job timeout.
 `b2_e18_ci_policy.py gate-decision` accepts only `CLOSED_CANONICAL` today; an approved-shaped gate is rejected whenever no production
@@ -163,7 +182,18 @@ trust root is configured, and a `SYNTHETIC_TEST_ROOT` report never validates a r
 
 ## Not integrated (E19 candidates, all need human decisions)
 
-Real trust-root provisioning and signer/issuer custody; the designated host, real CPU/RSS/disk observer and independent persistent
+Branch protection / required reviews for workflow files; real trust-root provisioning and signer/issuer custody; the designated host, real CPU/RSS/disk observer and independent persistent
 backup; an external append-only journal sink and replay custodian; the production K17d metadata cross-check; the DR-04 record,
 final lock on the approval commit and a separate launch decision; the guard/activation mechanism for a reviewed release; and the
 physical generators (changing `src/geosim` would re-open the D-8 re-derivation sequence).
+
+## Known residuals (accepted, documented)
+
+* A writer that can append to the ledger but not to the anchor store can inject exactly one trailing entry that recovery will adopt and
+  anchor (the legitimate crash window). It cannot relax any constraint (a stage-complete marker needs its verification and backup
+  entries), so the effect is a denial of service, not an approval.
+* A hostile or mistaken injected port (producer, evidence source, clock, resources, attestor) is caller code and is trusted at
+  construction; its outputs are bounded and marked, but a port can still lie about the measurements it supplies.
+* The AST test is a tripwire against launch-like names and imports, not a proof (a computed attribute name can evade it).
+* `SYNTHETIC_TEST_ROOT` labels what the controller *does*; supplying a real `TrustRoot` object would still be labelled that way (cosmetic,
+  not execution: nothing here can launch).

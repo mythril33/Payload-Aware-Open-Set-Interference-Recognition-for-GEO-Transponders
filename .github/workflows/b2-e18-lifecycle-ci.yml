@@ -52,9 +52,11 @@ jobs:
         run: |
           # The comparison tree is the current reviewed base of this pull request. A legitimate earlier-merged change is
           # therefore never an "alteration"; a changed scientific record, canonical gate, historical dossier, reviewed
-          # contract module or any path outside the E18 scope fails. The judge is the policy as the reviewed base has it,
-          # so a pull request cannot rewrite its own judge; a base that predates the policy (the introducing change) falls
-          # back to the head copy and says so.
+          # contract module or any path outside the E18 scope fails. The policy script is taken from the reviewed base, so a
+          # pull request cannot loosen the rules by editing the script; a base that predates the policy (the introducing
+          # change) falls back to the head copy and says so. This workflow file belongs to the pull request itself and is
+          # outside the E18 scope: only repository settings (required reviews, rulesets or CODEOWNERS on .github/workflows)
+          # can protect the workflow that runs the guard.
           BASE="${{ github.event.pull_request.base.sha }}"
           if [ -z "$BASE" ]; then BASE="origin/main"; fi
           if git cat-file -e "$BASE:scripts/b2_e18_ci_policy.py" 2>/dev/null; then

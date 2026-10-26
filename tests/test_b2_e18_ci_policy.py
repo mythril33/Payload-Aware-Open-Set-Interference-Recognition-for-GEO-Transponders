@@ -21,6 +21,7 @@ import b2_e16_policy as P  # noqa: E402
 import b2_e17_evidence as E  # noqa: E402
 import b2_e18_ci_policy as CI  # noqa: E402
 from test_b2_e17_evidence import custody, integrated  # noqa: E402,F401
+from e18_support import scratch  # noqa: E402,F401
 
 WORKFLOWS = ROOT / ".github/workflows"
 E18 = WORKFLOWS / "b2-e18-lifecycle-ci.yml"
@@ -49,7 +50,7 @@ def test_paths_fall_in_the_expected_protection_class(path, expected):
 def test_the_e18_scope_allows_only_e18_artifacts_and_the_status_log():
     ok = CI.check_diff(["scripts/b2_e18_lifecycle.py", "scripts/b2_e18_synthetic.py", "scripts/b2_e18_ci_policy.py", "tests/test_b2_e18_recovery.py",
                         "tests/e18_support.py", "docs/plan/B2_E18_EXECUTOR_LIFECYCLE.md", "docs/operations/B2_E18_STAGE_BOUNDARY_CHECKLIST.md",
-                        "docs/results/B2_E18_VERIFICATION.md", ".github/workflows/b2-e18-lifecycle-ci.yml", "docs/plan/DURUM.md"])
+                        "docs/results/B2_E18_VERIFICATION.md", "docs/plan/DURUM.md"])
     assert ok["ok"] and ok["violations"] == [] and ok["execution_permitted"] is False and ok["authorizes_nothing"] is True
     assert CI.check_diff([])["ok"]
 
@@ -62,6 +63,7 @@ def test_the_e18_scope_allows_only_e18_artifacts_and_the_status_log():
     (".github/workflows/b2-readiness-ci.yml", "reviewed_contract"), (".github/workflows/b2-e16-integration-ci.yml", "reviewed_contract"),
     ("scripts/new_tool.py", "outside_scope"), ("README.md", "outside_scope"), ("tests/test_something_else.py", "outside_scope"),
     ("docs/plan/B2_E19_PLAN.md", "outside_scope"), ("data/dump.npz", "outside_scope"),
+    (".github/workflows/b2-e18-lifecycle-ci.yml", "outside_scope"),                       # a PR may not edit the workflow that judges it
 ])
 def test_a_protected_or_out_of_scope_change_fails_the_guard(path, kind):
     report = CI.check_diff(["scripts/b2_e18_lifecycle.py", path])
@@ -415,3 +417,39 @@ def test_only_the_reviewed_trigger_shape_is_accepted(name, text):
 def test_lint_gaps_found_by_the_independent_review_are_closed(old, new, expected):
     problems = CI.lint_workflow(mutate(old, new))
     assert any(expected in p for p in problems), problems
+
+
+# ---- round-2 review: the workflow is outside the scope it enforces; the guard steps may not silently disappear ------------------------------
+
+def test_editing_the_workflow_that_runs_the_guard_is_outside_the_e18_scope():
+    report = CI.check_diff(["scripts/b2_e18_lifecycle.py", ".github/workflows/b2-e18-lifecycle-ci.yml"])
+    assert not report["ok"] and [v["path"] for v in report["violations"]] == [".github/workflows/b2-e18-lifecycle-ci.yml"]
+
+
+@pytest.mark.parametrize("step", [
+    'git show "$BASE:scripts/b2_e18_ci_policy.py" > "$RUNNER_TEMP/b2_e18_ci_policy_base.py"',
+    'python "$POLICY" check-diff --base "$BASE" --profile e18',
+    'python "$POLICY" lint .github/workflows',
+    "python scripts/b2_e16_policy.py ci-gate",
+    "python scripts/b2_e18_ci_policy.py gate-decision",
+])
+def test_lint_requires_the_guard_steps_of_the_e18_workflow(step):
+    problems = CI.lint_workflow(mutate(step, "echo removed"), "b2-e18-lifecycle-ci.yml")
+    assert any("required guard step is missing" in p for p in problems), problems
+    assert not any("required guard step" in p for p in CI.lint_workflow(mutate(step, "echo removed"), "some-other-workflow.yml"))
+
+
+@pytest.mark.parametrize("command", [
+    "pip install git+https://example.invalid/pkg.git",
+    "python - <<'PY'\n          from geosim import b2_dataset\n          PY",
+    "M=geoml; python -m ${M}.b2_experiment",
+    "import geoml.train",
+])
+def test_lint_closes_the_indirection_gaps_reported_by_the_second_review(command):
+    problems = CI.lint_workflow(mutate("python -m compileall -q src scripts tests", command))
+    assert any("forbidden command" in p for p in problems), problems
+
+
+def test_the_reviewed_here_document_checks_of_the_older_workflows_stay_acceptable():
+    assert "python - <<" in (WORKFLOWS / "b2-readiness-ci.yml").read_text()
+    assert CI.lint_directory(WORKFLOWS)["ok"]

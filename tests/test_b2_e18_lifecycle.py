@@ -20,7 +20,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "tests"))
 import e18_support as T  # noqa: E402
 from test_b2_e17_evidence import custody, integrated  # noqa: E402,F401
-from e18_support import admitted, complete, known, make  # noqa: E402,F401
+from e18_support import admitted, complete, known, make, scratch  # noqa: E402,F401
 from test_b2_e13_generation_plan import decision_record, k17d_report, reference  # noqa: E402,F401
 
 M, X, L, I, D, S, E, P, G, C = T.M, T.X, T.L, T.M.I, T.M.D, T.M.S, T.M.E, T.M.P, T.M.G, T.C
@@ -523,3 +523,20 @@ def test_interrupt_refuses_the_reserved_producer_failure_signal(make):
     with pytest.raises(M.LifecycleRefused):
         life.interrupt("PRODUCER_FAILURE")
     assert life.state == "PREPARED"
+
+
+def test_scratch_purge_removes_read_only_trees_and_never_follows_a_link_out(tmp_path):
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "keep.txt").write_text("evidence stays")
+    scratch_root = tmp_path / "scratch"
+    sealed = scratch_root / "a" / "sealed"
+    sealed.mkdir(parents=True)
+    (sealed / "shard.bin").write_bytes(b"x")
+    os.chmod(sealed / "shard.bin", 0o444)
+    os.chmod(sealed, 0o555)
+    os.chmod(scratch_root / "a", 0o555)
+    (scratch_root / "link").symlink_to(outside, target_is_directory=True)
+    T.discard(scratch_root)
+    assert not scratch_root.exists()
+    assert (outside / "keep.txt").read_text() == "evidence stays"
