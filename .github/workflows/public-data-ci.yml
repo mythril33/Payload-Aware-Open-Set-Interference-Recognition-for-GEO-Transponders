@@ -1,0 +1,35 @@
+name: Public research data checks
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "research/public_data/**"
+      - "research/__init__.py"
+      - ".github/workflows/public-data-ci.yml"
+      - "docs/results/public_data*"
+      - "docs/plan/P8_dis_veri.md"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      OMP_NUM_THREADS: "2"
+      OPENBLAS_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
+      PYTHONHASHSEED: "0"
+      MPLBACKEND: Agg
+      CUDA_VISIBLE_DEVICES: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install numerical and test dependencies only
+        run: python -m pip install -e ".[dev]"
+      - name: Compile external-data research code
+        run: python -m compileall -q research/public_data
+      - name: Test published schemas, recording isolation and detection arithmetic
+        run: python -m pytest -q -rs research/public_data/tests tests/test_openset_metrics.py

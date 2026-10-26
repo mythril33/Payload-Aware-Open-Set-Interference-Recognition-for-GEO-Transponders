@@ -1,0 +1,66 @@
+{
+  "protocol": "public-interference-pilot/1",
+  "seed": 20261025,
+  "calibration_fraction": 0.25,
+  "calibration_assignment": "first eight hex digits of sha256('public-calib-v1:' + parent_recording_id), divided by 2**32, less than 0.25; publisher training population only",
+  "pfa_target": 0.05,
+  "threshold": "clean calibration 0.95 empirical quantile, method=higher; alarm strictly score > threshold",
+  "bootstrap_draws": 500,
+  "bootstrap_unit": "publisher parent-recording ID, all retained rows of an ID together; acquisition-session independence unknown",
+  "fiot_selection": "ALL publisher parent-recording IDs, crop 0 only (878 train / 243 test); expansion capped at 2 GiB and 300 seconds on two CPU cores; fixed before detector metrics",
+  "lc_selection": "all publisher train/test records, at most 1024 per partition; empty recordings are abstentions with explicit counts",
+  "lc_features": [
+    "mean_positive_ss",
+    "std_positive_ss",
+    "positive_ss_fraction",
+    "std_timestep_mean_positive_ss",
+    "mean_sdr",
+    "mean_kur"
+  ],
+  "lc_columns_zero_based": {
+    "ss": [
+      57,
+      98
+    ],
+    "sdr": [
+      180,
+      244
+    ],
+    "kur": [
+      244,
+      308
+    ]
+  },
+  "fiot_features": [
+    "mean_R",
+    "mean_G",
+    "mean_B",
+    "std_R",
+    "std_G",
+    "std_B",
+    "mean_abs_axis0_gradient",
+    "mean_abs_axis1_gradient"
+  ],
+  "fiot_units": "stored RGB image levels, not calibrated PSD, IQ or linear RF power",
+  "scores": [
+    "native_level",
+    "clean_diagonal_distance",
+    "binary_centroid_margin"
+  ],
+  "directions": {
+    "lc_native_level": "negative mean positive receiver ss",
+    "fiot_native_level": "mean stored RGB level",
+    "distances": "higher means more interference-like; never flip from test results"
+  },
+  "fitting": "clean center/standard deviation and constant-column mask from fitting-train clean records only; positive centroid from fitting-train native labels != 0 only",
+  "selection": "no hyperparameter/checkpoint search; publisher test never fits statistics or thresholds",
+  "limits": {
+    "max_records_per_partition": 1024,
+    "max_bootstrap_draws": 2000,
+    "cpu_threads": 2,
+    "gpu": false
+  },
+  "b2_protocol_modified": false,
+  "benchmark_complete": false,
+  "capacity_decision": "Initial 256-parent access pilot had only 7 clean calibration / 16 clean test records; expanded to all published parent crop-0 IDs before first score computation, without changing scoring or split rules"
+}
