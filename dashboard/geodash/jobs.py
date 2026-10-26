@@ -188,7 +188,8 @@ class JobManager:
             self._procs[job_id] = proc
             _write_json(job_dir / "job.json", {
                 "job_id": job_id, "key": key, "title": spec.title, "scope": spec.scope, "values": resolved,
-                "argv": argv, "pid": proc.pid, "started_at": _now_iso(), "started_epoch": self._clock(),
+                "argv": argv, "pid": proc.pid, "owner_pid": os.getpid(),
+                "started_at": _now_iso(), "started_epoch": self._clock(),
                 "timeout_s": spec.timeout_s, "state": RUNNING, "returncode": None, "reason": "",
             })
             return job_id
@@ -240,6 +241,11 @@ class JobManager:
                 self._stop(job_id, record["pid"])
                 state, reason = TIMED_OUT, f"exceeded the {record['timeout_s']} s GUI timeout; process group stopped"
                 self._finish(job_id, record, state, returncode, reason)
+            elif not alive and self._owner_still_watching(record, proc is not None):
+                # Another live dashboard process started this job and holds its exit status. Report it as
+                # running, and write nothing: only the owner may record the outcome.
+                state = RUNNING
+                reason = "the process has ended; the dashboard process that started it will record the exit status"
             elif not alive:
                 spec = self._spec(record["key"])
                 ok, why = spec.success(job_dir) if spec else (returncode == 0, "exit status")
@@ -260,6 +266,13 @@ class JobManager:
             stage_detail=detail, reason=reason, job_dir=job_dir, log_tail=tail(job_dir / "log.txt"),
             generator_log_tail=generator_log_tail(record["key"], job_dir),
         )
+
+    @staticmethod
+    def _owner_still_watching(record: dict, owned_here: bool) -> bool:
+        owner = record.get("owner_pid")
+        if owned_here or owner is None or owner == os.getpid():
+            return False
+        return _pid_alive(owner)
 
     def cancel(self, job_id: str) -> JobStatus:
         record = self._record(job_id)

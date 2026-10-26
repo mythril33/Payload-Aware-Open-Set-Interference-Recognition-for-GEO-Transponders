@@ -116,7 +116,7 @@ Each job has its own folder with `log.txt`, `job.json` and its outputs. Nothing 
 
 - Only the commands listed in the Development runner can start. You cannot type a command, a path or a flag.
 - One job runs at a time. The dashboard stops any job that exceeds its time limit, and it can cancel a job.
-- If the dashboard restarts while a job runs, the job keeps running and the dashboard picks it up again. If the job ends while no dashboard process is watching it, the dashboard reports it as `finished_unrecorded` when its outputs verify, because the exit status was not recorded. It is never reported as a success with exit status zero, and it is never reported as a failure when its outputs are valid.
+- Only the dashboard process that started a job can record its outcome. If that process stops before the job ends, the job keeps running; any dashboard started later shows it as running until the job's output or exit status settles it. If the owning process has gone and the job ended with its outputs verified, the dashboard reports it as `finished_unrecorded`, because the exit status was not recorded. It is never reported as a success with exit status zero, and it is never reported as a failure when its outputs are valid.
 - The development runner uses only the `train`, `val-select` and `val-calib` roles. The RF Explorer refuses test and matched groups before any simulation runs.
 - Progress shown by the runner is inferred from the files a job writes. The scripts print no progress bar, and the dashboard says so.
 

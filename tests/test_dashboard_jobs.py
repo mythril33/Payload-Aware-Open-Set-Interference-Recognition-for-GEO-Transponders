@@ -4,6 +4,7 @@ Child processes are harmless `sys.executable -c` programs injected through a tes
 is disabled only for those injected specs; the production registry is always guarded (see the commands tests).
 """
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -223,3 +224,22 @@ def test_a_finished_job_without_a_recorded_exit_status_and_no_outputs_is_failed(
         time.sleep(0.1)
     status = _manager(tmp_path, registry).status(job_id)
     assert status.state == J.FAILED and "did not verify" in status.reason
+
+
+def test_a_non_owner_process_does_not_record_the_outcome_of_a_job_it_did_not_start(tmp_path):
+    """Only the dashboard process that owns a job may finalise it. A second process must leave the record alone."""
+    registry = {"quick": _spec("quick", 0.2, success=lambda job_dir: (True, "outputs verified"))}
+    owner = _manager(tmp_path, registry)
+    job_id = owner.start("quick")
+    deadline = time.time() + 20
+    while J._pid_alive(json.loads((tmp_path / "home" / "jobs" / job_id / "job.json").read_text())["pid"]) \
+            and time.time() < deadline:
+        time.sleep(0.1)
+    job_json = tmp_path / "home" / "jobs" / job_id / "job.json"
+    record = json.loads(job_json.read_text())
+    record["owner_pid"] = os.getppid()  # a different, live process owns it
+    job_json.write_text(json.dumps(record))
+    other = _manager(tmp_path, registry)
+    seen = other.status(job_id)
+    assert seen.state == J.RUNNING and "will record the exit status" in seen.reason
+    assert json.loads(job_json.read_text())["state"] == J.RUNNING, "a non-owner must not write the outcome"
