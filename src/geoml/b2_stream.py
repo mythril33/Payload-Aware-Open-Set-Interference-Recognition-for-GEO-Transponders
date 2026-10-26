@@ -57,7 +57,7 @@ from geosim.b2_protocol import BASE_ROLES, LABELS, role_for_group
 from geosim.b2_scenarios import MATCHED_LABELS, TEST_FAMILIES
 from geosim.b2_test_dataset import iter_b2_test_shards, read_b2_test_manifest
 
-from .data import CORE_DB, reference_level
+from .data import C2_NOPLAN_VIEWS, C2_VIEWS, CORE_DB, observed_level_db, reference_level
 from .model import CenterLoss, n_parameters
 from .metrics import macro_f1
 from .train import (TrainConfig, TrainDiagnostics, _apply_plan_shift, _forward, _inputs, _model, _plan_targets,
@@ -365,8 +365,11 @@ def _require(source, cfg, name, role):
         raise ValueError(f"{name} labels contain an out-of-range class index")
 
 
-def _shard_arrays(shard):
-    return {key: shard[key] for key in ARRAY_KEYS if key in shard}
+def _shard_arrays(shard, cfg=None):
+    """Observation arrays handed to the input builder. A plan-free C2 view receives the spectra only: the plan masks
+    and the plan-dependent residual are dropped here, so no later code can read them for a model that must not know the plan."""
+    keys = ("spec",) if cfg is not None and cfg.input_mode in C2_NOPLAN_VIEWS else ARRAY_KEYS
+    return {key: shard[key] for key in keys if key in shard}
 
 
 PREPROCESS_CHUNK = 16
@@ -388,6 +391,18 @@ def _inputs_chunked(arrays, cfg, ref, chunk=PREPROCESS_CHUNK):
 
 def _training_reference(train, cfg):
     """Training co-pol reference from per-sample levels, identical to ``geoml.train._training_reference``."""
+    if cfg.input_mode in C2_VIEWS:                  # plan-free C2 reference: reads only the spectra of each shard
+        levels = []
+        for shard in train.shards():
+            spec = np.asarray(shard["spec"])
+            if spec.ndim != 4 or spec.shape[1] != 2:
+                raise ValueError("C2 training requires [N,2,time,frequency] spectra")
+            levels.append(observed_level_db(spec[:, 0]))
+            del shard, spec
+        ref = float(np.concatenate(levels).mean())
+        if not np.isfinite(ref):
+            raise ValueError("training reference must be finite")
+        return ref
     values = []
     for shard in train.shards():
         spec, mask = np.asarray(shard["spec"]), np.asarray(shard["mask"])
@@ -416,7 +431,7 @@ def _training_reference(train, cfg):
 
 def _window(shards, cfg, ref, with_plans):
     """Preprocess a list of verified shards into one window of model inputs and targets."""
-    x = torch.cat([_inputs_chunked(_shard_arrays(shard), cfg, ref) for shard in shards])
+    x = torch.cat([_inputs_chunked(_shard_arrays(shard, cfg), cfg, ref) for shard in shards])
     y = torch.from_numpy(np.concatenate([np.asarray(shard["label"]).astype(np.int64) for shard in shards]))
     seed = np.concatenate([np.asarray(shard["seed"]).astype(np.int64) for shard in shards])
     piece = {"x": x, "y": y, "seed": seed, "p": None, "spec": None, "residual": None, "plans": None}
@@ -597,7 +612,7 @@ def infer_streaming(fitted: dict, source, batch: int = 32) -> dict:
         raise ValueError("input_mode 'dual_residual' requires the stored cancellation residual (B2-feat/1)")
     outputs = {"logits": [], "embedding": [], "plan_logits": []}
     for shard in source.shards():
-        arrays = _shard_arrays(shard)
+        arrays = _shard_arrays(shard, cfg)
         n = np.shape(arrays["spec"])[0]
         for start in range(0, n, batch):          # preprocess and run one inference batch at a time
             x = _inputs({key: value[start:start + batch] for key, value in arrays.items()}, cfg, fitted["absolute_ref_db"])

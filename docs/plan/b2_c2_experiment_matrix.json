@@ -1,0 +1,1663 @@
+{
+ "arms": {
+  "co": {
+   "production": [
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": true,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "carrier",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.15,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 0,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "co"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": true,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "carrier",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.15,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 1,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "co"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": true,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "carrier",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.15,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 2,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "co"
+     ]
+    }
+   ],
+   "smoke": [
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": true,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "carrier",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.15,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 0,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "co"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": true,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "carrier",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.15,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 1,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "co"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": true,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "carrier",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.15,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 2,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "co"
+     ]
+    }
+   ]
+  },
+  "co_noplan": {
+   "production": [
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 0,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "co_noplan"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 1,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "co_noplan"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 2,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "co_noplan"
+     ]
+    }
+   ],
+   "smoke": [
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 0,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "co_noplan"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 1,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "co_noplan"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 2,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "co_noplan"
+     ]
+    }
+   ]
+  },
+  "co_planmask": {
+   "production": [
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 0,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "co_planmask"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 1,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "co_planmask"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 2,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "co_planmask"
+     ]
+    }
+   ],
+   "smoke": [
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 0,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "co_planmask"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 1,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "co_planmask"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 2,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "co_planmask"
+     ]
+    }
+   ]
+  },
+  "dual": {
+   "production": [
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": true,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "carrier",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.15,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 0,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "dual"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": true,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "carrier",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.15,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 1,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "dual"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": true,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "carrier",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.15,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 2,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "dual"
+     ]
+    }
+   ],
+   "smoke": [
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": true,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "carrier",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.15,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 0,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "dual"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": true,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "carrier",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.15,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 1,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "dual"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": true,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "carrier",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.15,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 2,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "dual"
+     ]
+    }
+   ]
+  },
+  "dual_noplan": {
+   "production": [
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 0,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "dual_noplan"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 1,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "dual_noplan"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 2,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "dual_noplan"
+     ]
+    }
+   ],
+   "smoke": [
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 0,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "dual_noplan"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 1,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "dual_noplan"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 2,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "dual_noplan"
+     ]
+    }
+   ]
+  },
+  "dual_planmask": {
+   "production": [
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 0,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "dual_planmask"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 1,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "dual_planmask"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 2,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "dual_planmask"
+     ]
+    }
+   ],
+   "smoke": [
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 0,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "dual_planmask"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 1,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "dual_planmask"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": false,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "absolute",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.0,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 2,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "dual_planmask"
+     ]
+    }
+   ]
+  },
+  "dual_residual": {
+   "production": [
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": true,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "carrier",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.15,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 0,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "dual_residual"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": true,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "carrier",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.15,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 1,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "dual_residual"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": true,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 30,
+      "level": "carrier",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.15,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 2,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 16
+     },
+     "views": [
+      "dual_residual"
+     ]
+    }
+   ],
+   "smoke": [
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": true,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "carrier",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.15,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 0,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "dual_residual"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": true,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "carrier",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.15,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 1,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "dual_residual"
+     ]
+    },
+    {
+     "mahalanobis_regularization": 0.1,
+     "methods": [
+      "msp",
+      "energy",
+      "mahalanobis"
+     ],
+     "pfa": 0.05,
+     "plan_consistency": true,
+     "protocol": "B2-feat/1",
+     "target_acceptance": 0.95,
+     "training": {
+      "augment": true,
+      "batch": 32,
+      "center_loss_weight": 0.005,
+      "epochs": 2,
+      "level": "carrier",
+      "lr": 0.001,
+      "plan_loss_weight": 1.0,
+      "plan_shift_fraction": 0.15,
+      "plan_shift_max_hz": 500000.0,
+      "seed": 2,
+      "time_pool": 2,
+      "weight_decay": 0.0001,
+      "width": 8
+     },
+     "views": [
+      "dual_residual"
+     ]
+    }
+   ]
+  }
+ },
+ "benchmark_complete": false,
+ "bundles": {
+  "c2-h3-co": {
+   "profile": "c2-h3-co",
+   "views": [
+    "co_planmask",
+    "co_noplan"
+   ]
+  },
+  "c2-h3-dual": {
+   "profile": "c2-h3-dual",
+   "views": [
+    "dual_planmask",
+    "dual_noplan"
+   ]
+  },
+  "canonical": {
+   "profile": "proposed-full",
+   "views": [
+    "co",
+    "dual",
+    "dual_residual"
+   ]
+  }
+ },
+ "fits": [
+  {
+   "arm": "co",
+   "profile": "proposed-full",
+   "seed": 0,
+   "tier": 1
+  },
+  {
+   "arm": "co",
+   "profile": "proposed-full",
+   "seed": 1,
+   "tier": 1
+  },
+  {
+   "arm": "co",
+   "profile": "proposed-full",
+   "seed": 2,
+   "tier": 1
+  },
+  {
+   "arm": "dual",
+   "profile": "proposed-full",
+   "seed": 0,
+   "tier": 1
+  },
+  {
+   "arm": "dual",
+   "profile": "proposed-full",
+   "seed": 1,
+   "tier": 1
+  },
+  {
+   "arm": "dual",
+   "profile": "proposed-full",
+   "seed": 2,
+   "tier": 1
+  },
+  {
+   "arm": "dual_residual",
+   "profile": "proposed-full",
+   "seed": 0,
+   "tier": 1
+  },
+  {
+   "arm": "dual_residual",
+   "profile": "proposed-full",
+   "seed": 1,
+   "tier": 1
+  },
+  {
+   "arm": "dual_residual",
+   "profile": "proposed-full",
+   "seed": 2,
+   "tier": 1
+  },
+  {
+   "arm": "dual_planmask",
+   "profile": "c2-h3-dual",
+   "seed": 0,
+   "tier": 2
+  },
+  {
+   "arm": "dual_planmask",
+   "profile": "c2-h3-dual",
+   "seed": 1,
+   "tier": 2
+  },
+  {
+   "arm": "dual_planmask",
+   "profile": "c2-h3-dual",
+   "seed": 2,
+   "tier": 2
+  },
+  {
+   "arm": "dual_noplan",
+   "profile": "c2-h3-dual",
+   "seed": 0,
+   "tier": 2
+  },
+  {
+   "arm": "dual_noplan",
+   "profile": "c2-h3-dual",
+   "seed": 1,
+   "tier": 2
+  },
+  {
+   "arm": "dual_noplan",
+   "profile": "c2-h3-dual",
+   "seed": 2,
+   "tier": 2
+  },
+  {
+   "arm": "co_planmask",
+   "profile": "c2-h3-co",
+   "seed": 0,
+   "tier": 3
+  },
+  {
+   "arm": "co_planmask",
+   "profile": "c2-h3-co",
+   "seed": 1,
+   "tier": 3
+  },
+  {
+   "arm": "co_planmask",
+   "profile": "c2-h3-co",
+   "seed": 2,
+   "tier": 3
+  },
+  {
+   "arm": "co_noplan",
+   "profile": "c2-h3-co",
+   "seed": 0,
+   "tier": 3
+  },
+  {
+   "arm": "co_noplan",
+   "profile": "c2-h3-co",
+   "seed": 1,
+   "tier": 3
+  },
+  {
+   "arm": "co_noplan",
+   "profile": "c2-h3-co",
+   "seed": 2,
+   "tier": 3
+  }
+ ],
+ "matched_recipe_deltas": {
+  "plan_consistency": {
+   "canonical": true,
+   "matched": false
+  },
+  "training.level": {
+   "canonical": "carrier",
+   "matched": "absolute"
+  },
+  "training.plan_shift_fraction": {
+   "canonical": 0.15,
+   "matched": 0.0
+  }
+ },
+ "production_authorized": false,
+ "roster": {
+  "arms": {
+   "co": {
+    "channels": 2,
+    "plan_level_reference": true,
+    "plan_masks": true,
+    "plan_shift": true,
+    "plan_target": true,
+    "recipe": "canonical",
+    "tier": 1,
+    "view": "co"
+   },
+   "co_noplan": {
+    "channels": 1,
+    "plan_level_reference": false,
+    "plan_masks": false,
+    "plan_shift": false,
+    "plan_target": false,
+    "recipe": "c2-matched",
+    "tier": 3,
+    "view": "co_noplan"
+   },
+   "co_planmask": {
+    "channels": 2,
+    "plan_level_reference": false,
+    "plan_masks": true,
+    "plan_shift": false,
+    "plan_target": false,
+    "recipe": "c2-matched",
+    "tier": 3,
+    "view": "co_planmask"
+   },
+   "dual": {
+    "channels": 4,
+    "plan_level_reference": true,
+    "plan_masks": true,
+    "plan_shift": true,
+    "plan_target": true,
+    "recipe": "canonical",
+    "tier": 1,
+    "view": "dual"
+   },
+   "dual_noplan": {
+    "channels": 2,
+    "plan_level_reference": false,
+    "plan_masks": false,
+    "plan_shift": false,
+    "plan_target": false,
+    "recipe": "c2-matched",
+    "tier": 2,
+    "view": "dual_noplan"
+   },
+   "dual_planmask": {
+    "channels": 4,
+    "plan_level_reference": false,
+    "plan_masks": true,
+    "plan_shift": false,
+    "plan_target": false,
+    "recipe": "c2-matched",
+    "tier": 2,
+    "view": "dual_planmask"
+   },
+   "dual_residual": {
+    "channels": 5,
+    "plan_level_reference": true,
+    "plan_masks": true,
+    "plan_shift": true,
+    "plan_target": true,
+    "recipe": "canonical",
+    "tier": 1,
+    "view": "dual_residual"
+   }
+  },
+  "contrasts": {
+   "D1_canonical_vs_matched_planmask": {
+    "baseline": "dual_planmask",
+    "hypothesis": "decomposition",
+    "isolates": "plan-referenced level + plan-consistency target + plan shift (canonical recipe) versus the matched recipe",
+    "richer": "dual",
+    "role": "descriptive"
+   },
+   "D2_canonical_vs_noplan": {
+    "baseline": "dual_noplan",
+    "hypothesis": "decomposition",
+    "isolates": "everything the canonical recipe derives from the plan, versus no plan access at all",
+    "richer": "dual",
+    "role": "descriptive"
+   },
+   "H1_dual_vs_co": {
+    "baseline": "co",
+    "hypothesis": "H1",
+    "isolates": "cross-pol channel, with plan masks and the canonical recipe in both arms",
+    "richer": "dual",
+    "role": "primary"
+   },
+   "H1_dual_vs_co_noplan": {
+    "baseline": "co_noplan",
+    "hypothesis": "H1",
+    "isolates": "cross-pol channel when no plan information exists in either arm",
+    "richer": "dual_noplan",
+    "role": "secondary"
+   },
+   "H2_residual_vs_dual": {
+    "baseline": "dual",
+    "hypothesis": "H2",
+    "isolates": "observed cancellation residual channel (itself plan-dependent), canonical recipe",
+    "richer": "dual_residual",
+    "role": "primary"
+   },
+   "H3_planmask_vs_noplan_co": {
+    "baseline": "co_noplan",
+    "hypothesis": "H3",
+    "isolates": "operator-plan mask channel only, co-pol",
+    "richer": "co_planmask",
+    "role": "secondary"
+   },
+   "H3_planmask_vs_noplan_dual": {
+    "baseline": "dual_noplan",
+    "hypothesis": "H3",
+    "isolates": "operator-plan mask channels only; identical spectra, level reference, objective, budget",
+    "richer": "dual_planmask",
+    "role": "primary"
+   }
+  },
+  "declared_fits": {
+   "additional_matched_control_fits": 12,
+   "approved_primary_fits": 9,
+   "per_tier": {
+    "1": {
+     "fits": 9,
+     "meaning": "approved primary design (R1: three views x three seeds)"
+    },
+    "2": {
+     "fits": 6,
+     "meaning": "H3 primary matched control (dual-pol): required to answer H3"
+    },
+    "3": {
+     "fits": 6,
+     "meaning": "H3 secondary matched control (co-pol): optional, gives the H1-without-plan contrast"
+    }
+   },
+   "required_for_h3_primary": 15,
+   "total_fits": 21
+  },
+  "metrics": {
+   "known_accuracy": {
+    "definition": "closed-set accuracy on known test events",
+    "direction": "higher_is_better"
+   },
+   "known_macro_f1": {
+    "definition": "closed-set macro-F1 on known test events",
+    "direction": "higher_is_better"
+   },
+   "near_auroc": {
+    "definition": "pooled near-family unknown-positive AUROC",
+    "direction": "higher_is_better"
+   },
+   "near_fpr95": {
+    "definition": "pooled near-family unknown-positive FPR at 95 % TPR; known test events are the negatives",
+    "direction": "lower_is_better"
+   }
+  },
+  "primary_scorer": null,
+  "primary_scorer_note": "OPEN: requires explicit researcher approval before any final test read",
+  "scorers": [
+   "msp",
+   "energy",
+   "mahalanobis"
+  ],
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "version": "B2-C2-ablation/1"
+ },
+ "sample_passes": {
+  "all_21_fits": 7560000,
+  "basis": "analytic: fits x epochs x train observations (1500 groups x 8 variants)",
+  "canonical_9_fits": 3240000,
+  "epochs": 30,
+  "matched_co_6_fits": 2160000,
+  "matched_dual_6_fits": 2160000,
+  "per_fit": 360000,
+  "train_observations_per_fit": 12000
+ },
+ "schema": "B2-C2-experiment-matrix/1",
+ "status": "UNAPPROVED_NOT_EXECUTABLE",
+ "version": "B2-C2-ablation/1"
+}

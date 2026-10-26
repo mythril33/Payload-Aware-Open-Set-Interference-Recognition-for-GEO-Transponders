@@ -41,7 +41,16 @@ def preprocess(spec_db: np.ndarray, mask_db: np.ndarray, level: str = "carrier",
 
 
 VIEWS = ("co", "dual", "dual_residual")
-VIEW_CHANNELS = {"single": 2, "co": 2, "dual": 4, "dual_residual": 5}
+
+# B2-C2-ablation/1: matched views that isolate operator-plan availability (separately versioned; the three canonical
+# views above and their preprocessing are unchanged). ``*_noplan`` receive no plan-derived channel and no plan-derived
+# level reference; ``*_planmask`` receive exactly the same spectral channels plus the operator-plan mask channels.
+C2_NOPLAN_VIEWS = ("co_noplan", "dual_noplan")
+C2_PLANMASK_VIEWS = ("co_planmask", "dual_planmask")
+C2_VIEWS = C2_NOPLAN_VIEWS + C2_PLANMASK_VIEWS
+VIEW_CHANNELS = {"single": 2, "co": 2, "dual": 4, "dual_residual": 5,
+                 "co_noplan": 1, "dual_noplan": 2, "co_planmask": 2, "dual_planmask": 4}
+OBSERVED_LEVEL_PERCENTILE = 90.0   # C2 plan-free level reference: carriers sit near 0 dB without being told where they are
 
 
 def preprocess_dual(spec_db: np.ndarray, mask_db: np.ndarray, level: str = "carrier", time_pool: int = 2,
@@ -140,4 +149,75 @@ def select(d: dict, labels: tuple, all_labels: tuple) -> dict:
     for key in EXTRA_ARRAYS:
         if key in d:
             result[key] = np.asarray(d[key])[keep]
+    return result
+
+
+def observed_level_db(spec_db: np.ndarray) -> np.ndarray:
+    """Plan-free per-sample level (dB) of co-pol spectrograms ``[N,T,F]``.
+
+    The ``OBSERVED_LEVEL_PERCENTILE`` of the time-averaged linear PSD over frequency. It reads the observed spectrum only,
+    never an operator plan, so it can reference the level of a model that must not know the plan. Unlike
+    ``reference_level`` it is not tied to planned-carrier bins and is therefore not shifted by a wrong or missing plan.
+    """
+    spec = np.asarray(spec_db)
+    if spec.dtype.kind not in "iuf" or spec.ndim != 3 or not len(spec) or not spec.shape[1] or not spec.shape[2]:
+        raise ValueError("observed level needs a nonempty numeric [N,time,frequency] spectrogram")
+    if not np.isfinite(spec).all():
+        raise ValueError("observed level needs finite spectra")
+    try:
+        with np.errstate(over="raise", invalid="raise", divide="raise", under="ignore"):
+            level = 10 * np.log10(np.mean(10 ** (spec.astype(np.float32) / 10), axis=1))
+    except FloatingPointError as error:
+        raise ValueError("observed level exceeds the supported finite range") from error
+    return np.percentile(level.astype(np.float64), OBSERVED_LEVEL_PERCENTILE, axis=1)
+
+
+def preprocess_c2(spec_db: np.ndarray, mask_db: np.ndarray | None, view: str, time_pool: int,
+                  absolute_ref_db: float) -> np.ndarray:
+    """Model channels of a B2-C2-ablation/1 view.
+
+    ``spec_db`` is ``[N,2,T,F]``; only the polarizations the view uses are read. All four views share one plan-free
+    absolute reference ``absolute_ref_db`` (the training mean of ``observed_level_db``). ``*_noplan`` views must be called
+    with ``mask_db=None`` and return spectra only; ``*_planmask`` views append the operator-plan mask channels in the
+    canonical order, so their leading channels are bit-identical to the matching ``*_noplan`` view.
+    """
+    if view not in C2_VIEWS:
+        raise ValueError(f"C2 view must be one of {C2_VIEWS}")
+    spec = np.asarray(spec_db)
+    if (spec.dtype.kind not in "iuf" or spec.ndim != 4 or not len(spec) or spec.shape[1] != 2
+            or not spec.shape[2] or not spec.shape[3]):
+        raise ValueError("C2 spec must be a nonempty numeric [N,2,time,frequency] array")
+    if isinstance(time_pool, bool) or not isinstance(time_pool, int) or time_pool < 1 or spec.shape[2] % time_pool:
+        raise ValueError("time_pool must be a positive integer dividing the spectrogram time dimension")
+    reference = np.asarray(absolute_ref_db)
+    if reference.shape != () or reference.dtype.kind not in "iuf" or not np.isfinite(reference):
+        raise ValueError("C2 views need a finite plan-free absolute_ref_db from the training split")
+    n_pol = 1 if view.startswith("co_") else 2
+    if view in C2_NOPLAN_VIEWS:
+        if mask_db is not None:
+            raise ValueError(f"view {view!r} is plan-free and takes no plan masks")
+        plans = None
+    else:
+        plans = np.asarray(mask_db)
+        if plans.dtype.kind not in "iuf" or plans.shape != (len(spec), 2, spec.shape[3]) or not np.isfinite(plans).all():
+            raise ValueError("planmask views need finite numeric [N,2,frequency] plan masks matching spec")
+        if np.any(~np.any(plans[:, :n_pol] > CORE_DB, axis=2)):
+            raise ValueError("each used plan mask must contain a planned carrier core bin")
+    if not np.isfinite(spec[:, :n_pol]).all():
+        raise ValueError("C2 observations must be finite")
+    try:
+        with np.errstate(over="raise", invalid="raise", divide="raise", under="ignore"):
+            values = spec[:, :n_pol].astype(np.float32)
+            n, pols, t, f = values.shape
+            if time_pool > 1:
+                power = 10 ** (values.reshape(n, pols, t // time_pool, time_pool, f) / 10)
+                values = 10 * np.log10(power.mean(axis=3))
+            channels = [np.clip(values - np.float32(reference), *CLIP_DB) / SCALE_DB]
+            if plans is not None:
+                channels.append(np.broadcast_to(plans[:, :n_pol].astype(np.float32)[:, :, None, :] / SCALE_DB, channels[0].shape))
+            result = np.concatenate(channels, axis=1).astype(np.float32)
+    except FloatingPointError as error:
+        raise ValueError("C2 observations exceed the supported finite preprocessing range") from error
+    if not np.isfinite(result).all():
+        raise ValueError("preprocessed C2 observations must be finite")
     return result

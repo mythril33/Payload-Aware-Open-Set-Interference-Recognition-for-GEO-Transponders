@@ -14,7 +14,8 @@ from .artifacts import fingerprint
 from geosim.plan import plan_mask_db
 from geosim.waveform import Carrier
 
-from .data import CORE_DB, SCALE_DB, VIEW_CHANNELS, preprocess, preprocess_dual, reference_level
+from .data import (C2_NOPLAN_VIEWS, C2_VIEWS, CORE_DB, SCALE_DB, VIEW_CHANNELS, observed_level_db, preprocess,
+                   preprocess_c2, preprocess_dual, reference_level)
 from .metrics import macro_f1
 from .model import CenterLoss, SmallResNet, n_parameters
 
@@ -32,6 +33,8 @@ class TrainConfig:
     weight_decay: float = 1e-4
     seed: int = 0
     input_mode: str = "single"  # single: [N,T,F]; dual/co: [N,2,T,F]; dual_residual: + residual [N,T,F]
+    # B2-C2-ablation/1 views (co_noplan, dual_noplan, co_planmask, dual_planmask) need level="absolute", no
+    # plan-consistency head and no plan shift; the *_noplan views never read plan masks, residuals or plan targets.
     plan_consistency: bool = False   # independent binary auxiliary head (B2/1, P18 §7a)
     plan_loss_weight: float = 1.0    # BCE weight of the auxiliary head
     center_loss_weight: float = 0.0  # prototype/center loss weight; 0 disables (frozen before training)
@@ -49,6 +52,15 @@ class TrainConfig:
             raise ValueError(f"input_mode must be one of {tuple(VIEW_CHANNELS)}")
         if not isinstance(self.plan_consistency, bool):
             raise ValueError("plan_consistency must be a boolean")
+        if self.input_mode in C2_VIEWS:
+            # The matched C2 arms share one plan-free normalization and one objective: CE + center loss only. The
+            # plan-consistency target is defined by the operator plan, and plan shift only exists for plan masks.
+            if self.level != "absolute":
+                raise ValueError(f"input_mode {self.input_mode!r} uses the plan-free observed reference: level must be 'absolute'")
+            if self.plan_consistency:
+                raise ValueError(f"input_mode {self.input_mode!r} is trained without the plan-derived consistency target")
+            if self.plan_shift_fraction:
+                raise ValueError(f"input_mode {self.input_mode!r} is trained without operator-plan shift augmentation")
         for name in ("plan_loss_weight", "center_loss_weight", "plan_shift_fraction", "plan_shift_max_hz"):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, (int, float)) or not np.isfinite(value) or value < 0:
@@ -71,6 +83,11 @@ class TrainConfig:
 
 
 def _inputs(d: dict, cfg: TrainConfig, absolute_ref_db):
+    if cfg.input_mode in C2_VIEWS:
+        # Plan-free views read only the spectra (and, for *_planmask, the plan masks); a *_noplan view never touches
+        # d["mask"], d["residual"], d["plan_consistency"] or any operator-plan metadata.
+        mask = None if cfg.input_mode in C2_NOPLAN_VIEWS else np.asarray(d["mask"])
+        return torch.from_numpy(preprocess_c2(np.asarray(d["spec"]), mask, cfg.input_mode, cfg.time_pool, absolute_ref_db))
     spec, mask = np.asarray(d["spec"]), np.asarray(d["mask"])
     if cfg.input_mode != "single":
         residual = None
@@ -98,8 +115,21 @@ def _inputs(d: dict, cfg: TrainConfig, absolute_ref_db):
     return torch.from_numpy(x)
 
 
+def observed_training_reference(spec) -> float:
+    """Plan-free absolute reference of the C2 views: the training mean of ``observed_level_db`` of the co-pol spectra."""
+    spec = np.asarray(spec)
+    if spec.ndim != 4 or spec.shape[1] != 2:
+        raise ValueError("C2 training requires [N,2,time,frequency] spectra")
+    ref = float(observed_level_db(spec[:, 0]).mean())
+    if not np.isfinite(ref):
+        raise ValueError("training reference must be finite")
+    return ref
+
+
 def _training_reference(d: dict, cfg: TrainConfig) -> float:
     """Absolute reference from known training co-pol observations only."""
+    if cfg.input_mode in C2_VIEWS:
+        return observed_training_reference(d["spec"])          # plan-free: never reads d["mask"]
     spec, mask = np.asarray(d["spec"]), np.asarray(d["mask"])
     if cfg.input_mode != "single":
         if spec.ndim != 4 or spec.shape[1] != 2 or mask.ndim != 3 or mask.shape[1] != 2:
