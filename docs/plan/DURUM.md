@@ -1,5 +1,12 @@
 # Proje durumu ve eksik kaydı
 
+## C2 karşılaştırmalı deney hazırlığı — 2026-10-26
+
+- Taban `main` `47795c4` (PR #46). Yeni E-numarası yok; tek odaklı belge: [B2_C2_COMPARATIVE_EXPERIMENTS.md](B2_C2_COMPARATIVE_EXPERIMENTS.md). H1 (çapraz kutup), H2 (gözlenen iptal artığı; operatör planına bağlı olduğu için plan rejiminde kalır) ve H3 (operatör planına erişim) **ayrı sorular** olarak ayrıldı; plan bozma (A5) testi H3 kanıtı sayılmaz.
+- `B2-C2-ablation/1`: plan bilgisi taşımayan eşleşmiş kontrol (`*_noplan` / `*_planmask`; yalnız plan maskesi kanalı farklı), tam altı-hücre envanter profilleri, çevrimdışı eşleşmiş senaryo-grup karşıtlıkları, önceden ilan edilmiş 21-fit matrisi. Kanonik görünümler ve dokuz-hücre kabulü değişmedi; kaynak karması değiştiği için eski checkpoint'ler reddedilir.
+- Sınırlı doğrulama: sızıntı/izolasyon testleri (32 savunma mutasyonunun 32’si öldürüldü), 2 gruplu gerçek-fizik pilotta eşleşmiş kollar için train-only → calibrate → freeze (test rolü açılmadı; yalnız işlevsel/aritmetik doğruluk, eğitim 2 epoch, doğrulama makro-F1 şans düzeyi), evaluate + karşıtlıklar yalnız deterministik stand-in'de. **Hiçbir C2/C3 performans sonucu yoktur;** karşılaştırma tablosu şablonu tamamen NOT RUN.
+- **Karar: C2 BLOCKED** — karşılaştırma tasarımı tamam, ancak üretim ölçeği için ortak (C2'ye özgü olmayan) engeller sürüyor: üretim kapsamlı eğitim yürütücüsü yok (CAPS + E9 guard), GPU yolu hiç koşmadı, tam üretim/DR-04 yetkisi yok, tahsis edilmiş host yok, birincil skorer atanmadı (öneri Mahalanobis, araştırmacı onayı gerekir), nihai held-out okuma onaylı değil. Üretim/GPU/LOKO/held-out çalıştırılmadı; `benchmark_complete=false`.
+
 ## Tam makale taslağı V1 — 2026-10-26
 
 - Doğrulanan uzak main `7f58150bbcb674cb9985bcfa4ed56391f3b91c8a`: PR44 ve PR45 birleşmiş. [Makale paketi](../../paper/README.md), tam İngilizce Markdown, türetilmiş LaTeX/PDF, T1–T4/S1 tabloları, dört mevcut şekil,14 doğrulanmış birincil atıf ve iddia–kanıt manifesti içeriyor. Yeni E-numarası/mimari yok.

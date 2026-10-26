@@ -1,0 +1,224 @@
+{
+ "analytic_parameter_counts": {
+  "co/w16": {
+   "input_channels": 2,
+   "parameters": 310505
+  },
+  "co/w8": {
+   "input_channels": 2,
+   "parameters": 78777
+  },
+  "co_noplan/w16": {
+   "input_channels": 1,
+   "parameters": 309848
+  },
+  "co_noplan/w8": {
+   "input_channels": 1,
+   "parameters": 78448
+  },
+  "co_planmask/w16": {
+   "input_channels": 2,
+   "parameters": 310248
+  },
+  "co_planmask/w8": {
+   "input_channels": 2,
+   "parameters": 78648
+  },
+  "dual/w16": {
+   "input_channels": 4,
+   "parameters": 311305
+  },
+  "dual/w8": {
+   "input_channels": 4,
+   "parameters": 79177
+  },
+  "dual_noplan/w16": {
+   "input_channels": 2,
+   "parameters": 310248
+  },
+  "dual_noplan/w8": {
+   "input_channels": 2,
+   "parameters": 78648
+  },
+  "dual_planmask/w16": {
+   "input_channels": 4,
+   "parameters": 311048
+  },
+  "dual_planmask/w8": {
+   "input_channels": 4,
+   "parameters": 79048
+  },
+  "dual_residual/w16": {
+   "input_channels": 5,
+   "parameters": 311705
+  },
+  "dual_residual/w8": {
+   "input_channels": 5,
+   "parameters": 79377
+  }
+ },
+ "base_main": "47795c41dde586420e1732b2f64b22a09e63d639",
+ "benchmark_complete": false,
+ "date": "2026-10-26",
+ "fixture": {
+  "groups_per_role": 2,
+  "note": "two-group real-physics pilot generated earlier for development; the test role of this fixture was NOT opened by any step here",
+  "observations_per_role": 16,
+  "path": "data/b2-feat-pilot (local, untracked)",
+  "protocol": "B2-feat/1",
+  "roles_opened": [
+   "train",
+   "val-select",
+   "val-calib"
+  ],
+  "test_role_opened": false
+ },
+ "interpretation": "functional and arithmetic correctness only; 16 training observations, 2 epochs, chance-level validation macro-F1; no recognition-quality statement",
+ "inventories": {
+  "c2-h3-co": {
+   "artifact_id": "e946a76547ec4036f517a729aa1bf3f7f36e34aa1f09d2af04857335a389f48d",
+   "cells": [
+    [
+     0,
+     "co_noplan"
+    ],
+    [
+     0,
+     "co_planmask"
+    ],
+    [
+     1,
+     "co_noplan"
+    ],
+    [
+     1,
+     "co_planmask"
+    ],
+    [
+     2,
+     "co_noplan"
+    ],
+    [
+     2,
+     "co_planmask"
+    ]
+   ],
+   "full_protocol_admission": false,
+   "n_cells": 6,
+   "production_authorized": false
+  },
+  "c2-h3-dual": {
+   "artifact_id": "ba81cb3f7b9853cbd185a3fd97045f8f4f7952751e02bcc83bfb4fed3cea8e8a",
+   "cells": [
+    [
+     0,
+     "dual_noplan"
+    ],
+    [
+     0,
+     "dual_planmask"
+    ],
+    [
+     1,
+     "dual_noplan"
+    ],
+    [
+     1,
+     "dual_planmask"
+    ],
+    [
+     2,
+     "dual_noplan"
+    ],
+    [
+     2,
+     "dual_planmask"
+    ]
+   ],
+   "full_protocol_admission": false,
+   "n_cells": 6,
+   "production_authorized": false
+  }
+ },
+ "production_authorized": false,
+ "schema": "B2-C2-bounded-verification/1",
+ "scope": "BOUNDED_FIXTURE",
+ "steps": {
+  "co_matched/calibrate": {
+   "peak_rss_mib_min_max": [
+    697.0,
+    702.4
+   ],
+   "runs": 3,
+   "user_cpu_s_min_max": [
+    4.28,
+    4.35
+   ],
+   "wall_s_min_max": [
+    4.16,
+    4.29
+   ]
+  },
+  "co_matched/train-only": {
+   "peak_rss_mib_min_max": [
+    957.0,
+    979.7
+   ],
+   "runs": 3,
+   "user_cpu_s_min_max": [
+    10.32,
+    10.83
+   ],
+   "wall_s_min_max": [
+    9.02,
+    9.61
+   ]
+  },
+  "dual_matched/calibrate": {
+   "peak_rss_mib_min_max": [
+    700.7,
+    713.2
+   ],
+   "runs": 3,
+   "user_cpu_s_min_max": [
+    4.64,
+    4.94
+   ],
+   "wall_s_min_max": [
+    4.63,
+    4.9
+   ]
+  },
+  "dual_matched/train-only": {
+   "peak_rss_mib_min_max": [
+    979.6,
+    1004.0
+   ],
+   "runs": 3,
+   "user_cpu_s_min_max": [
+    10.29,
+    11.57
+   ],
+   "wall_s_min_max": [
+    9.0,
+    10.42
+   ]
+  }
+ },
+ "training": {
+  "all_training_markers_share_source": true,
+  "batch": 32,
+  "center_loss_weight": 0.005,
+  "epochs": 2,
+  "level": "absolute",
+  "plan_consistency": false,
+  "plan_shift_fraction": 0.0,
+  "selected_epochs_seed0_dual": {
+   "dual_noplan": 0,
+   "dual_planmask": 0
+  },
+  "source_revision": "964bf1f6a327d03021811a6e97c8ce4d3ce78fb1",
+  "time_pool": 2,
+  "width": 8
+ }
+}

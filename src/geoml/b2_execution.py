@@ -35,7 +35,11 @@ from .train import load, save
 CONTRACT = "B2-isolated-execution/1"
 ROLES = ex.ROLES
 VIEWS = ex.VIEWS
-PROFILES = ("proposed-full", "fixture")
+# B2-C2-ablation/1: each matched pair is its own complete roster (two views x three seeds = six cells); the canonical
+# nine-cell "proposed-full" admission is unchanged.
+C2_ROSTERS = {"c2-h3-dual": ("dual_planmask", "dual_noplan"), "c2-h3-co": ("co_planmask", "co_noplan")}
+PROFILES = ("proposed-full", "fixture")          # canonical admission profiles; unchanged (pinned by the E9 contract tests)
+ALL_PROFILES = (*PROFILES, *C2_ROSTERS)          # + the separately versioned C2 ablation rosters
 CAPS = {"groups_per_role":2, "epochs":2, "width":8, "batch":32}
 ALARM_RULE = "R10 higher empirical quantile at 1-pfa (clean_alarm_threshold); alarm strictly score > threshold"
 
@@ -368,11 +372,16 @@ def _verify_calibration(root):
     return value,trained,config,loaded
 
 
+def _roster(profile):
+    """Views a complete inventory of this profile must contain for every seed."""
+    return C2_ROSTERS.get(profile, VIEWS)
+
+
 def _profile(profile,seeds):
-    if profile not in PROFILES:
-        raise ValueError(f"profile must be one of {PROFILES}")
+    if profile not in ALL_PROFILES:
+        raise ValueError(f"profile must be one of {ALL_PROFILES}")
     if (not isinstance(seeds,(list,tuple)) or not seeds or any(type(v) is not int or v<0 for v in seeds)
-            or len(set(seeds))!=len(seeds) or (profile=="proposed-full" and len(seeds)!=3)):
+            or len(set(seeds))!=len(seeds) or (profile!="fixture" and len(seeds)!=3)):
         raise ValueError("inventory requires explicit distinct seeds; proposed-full requires three seeds")
     return list(seeds)
 
@@ -416,9 +425,11 @@ def freeze_inventory(runs_list,out,*,seeds=(0,1,2),profile="proposed-full"):
             cells.append({"seed":seed,"view":view,"runs":str(root),"training_sha256":_sha256(root/"training.json"),
                           "calibration_sha256":_sha256(root/"calibration.json"),"training_id":trained["artifact_id"],
                           "calibration_id":calibrated["artifact_id"]})
-    required={(seed,view) for seed in seeds for view in VIEWS}
+    required={(seed,view) for seed in seeds for view in _roster(profile)}
     if profile=="proposed-full" and keys!=required:
         raise ValueError("proposed-full inventory must contain all nine cells: three views x three seeds")
+    if profile in C2_ROSTERS and keys!=required:
+        raise ValueError(f"{profile} inventory must contain all six cells: {' and '.join(_roster(profile))} x three seeds")
     if profile=="fixture" and (len(keys)>9 or {s for s,_ in keys}!=set(seeds)):
         raise ValueError("fixture inventory is incomplete for its declared seeds or exceeds nine cells")
     out.parent.mkdir(parents=True,exist_ok=True)
@@ -433,7 +444,7 @@ def _load_inventory(path,profile):
     seeds=_profile(profile,inventory["seeds"]);cells=inventory["cells"]
     if not isinstance(cells,list) or not cells:
         raise ValueError("empty inventory")
-    required={(s,v) for s in seeds for v in VIEWS};seen=set();loaded=[];bundles={}
+    required={(s,v) for s in seeds for v in _roster(profile)};seen=set();loaded=[];bundles={}
     # Every cell is validated before any held-out source is opened.
     for cell in cells:
         if set(cell)!={"seed","view","runs","training_sha256","calibration_sha256","training_id","calibration_id"}:
@@ -452,6 +463,8 @@ def _load_inventory(path,profile):
         loaded.append((cell,trained,config,views[cell["view"]],calibrated["views"][cell["view"]]))
     if profile=="proposed-full" and (seen!=required or len(cells)!=9 or inventory["full_protocol_admission"] is not True):
         raise ValueError("evaluation requires the complete nine-cell inventory")
+    if profile in C2_ROSTERS and (seen!=required or len(cells)!=len(required) or inventory["full_protocol_admission"] is not False):
+        raise ValueError("evaluation requires the complete six-cell C2 roster inventory")
     if profile=="fixture" and (len(cells)>9 or inventory["full_protocol_admission"] is not False or {s for s,_ in seen}!=set(seeds)):
         raise ValueError("fixture inventory cannot claim full-protocol admission")
     return inventory,loaded,bundles
@@ -519,12 +532,13 @@ def evaluate_b2_inventory(data,inventory,out,*,unknown_data=None,matched_data=No
         probabilities=ex._softmax(values["logits"]);prediction=values["logits"].argmax(1)
         event=clean_alarm_score(probabilities);threshold=calibrated["alarm"]["threshold"];alarm=event>threshold;clean=labels==0
         calibrations={m:RejectionCalibration.from_dict(c) for m,c in calibrated["rejection"].items()}
-        rejection={};scores={}
+        rejection={};scores={};family_scores={}
         for method,calibration in calibrations.items():
             scores[method]=scorer.score(values["embedding"]) if method=="mahalanobis" else unknown_scores(values["logits"],method)
             families=None
             if unknown_out is not None:
                 unknown_values=scorer.score(unknown_out["embedding"]) if method=="mahalanobis" else unknown_scores(unknown_out["logits"],method)
+                family_scores[method]=unknown_values
                 families={"scores":unknown_values,"groups":unknown["seed"],"info":ex._unknown_families(unknown),
                           "predictions":unknown_out["logits"].argmax(1)}
             rejection[method]=_rejection_metrics(calibration,scores[method],labels,prediction,groups,families)
@@ -534,10 +548,16 @@ def evaluate_b2_inventory(data,inventory,out,*,unknown_data=None,matched_data=No
             "clean_false_alarm":ex._rate(alarm[clean],groups[clean]),"event_detection":ex._rate(alarm[~clean],groups[~clean]),
             "alarm":calibrated["alarm"],"rejection":rejection,"plan_consistency":ex._plan_metrics(values["plan_logits"],parts["test"]["plan_consistency"],groups),
             "matched":None if matched_out is None else ex._matched_metrics(matched,matched_out,calibrations,scorer,threshold,parts["test"],prediction)}
-        models.append({"seed":cell["seed"],"view":cell["view"],"checkpoint_sha256":trained["files"][f"model_{cell['view']}.pt"],"metrics":metrics})
-        predictions_json.append({"seed":cell["seed"],"view":cell["view"],"sample_ids":[[int(g),int(l)] for g,l in zip(groups,labels)],
+        models.append({"seed":cell["seed"],"view":cell["view"],"checkpoint_sha256":trained["files"][f"model_{cell['view']}.pt"],
+                       "training":asdict(cfg.train_config(cell["view"])),"metrics":metrics})
+        entry={"seed":cell["seed"],"view":cell["view"],"sample_ids":[[int(g),int(l)] for g,l in zip(groups,labels)],
             "prediction":prediction.tolist(),"event_probability":event.tolist(),"alarm":alarm.tolist(),
-            "unknown_scores":{m:s.tolist() for m,s in scores.items()}})
+            "unknown_scores":{m:s.tolist() for m,s in scores.items()}}
+        if unknown_out is not None:   # per-sample test-only scores: paired scenario-group contrasts are computed offline from these
+            entry["unknown_families"]={"sample_ids":[[int(g),int(f)] for g,f in zip(unknown["seed"],unknown["family"])],
+                "families":list(unknown["families"]),"prediction":unknown_out["logits"].argmax(1).tolist(),
+                "scores":{m:s.tolist() for m,s in family_scores.items()}}
+        predictions_json.append(entry)
     if _sha256(inventory_path)!=inventory_hash:raise ValueError("inventory changed during evaluation")
     for root in bundles:_verify_calibration(root)  # catches changed inputs; never modifies them
     # The optional legacy readers validate their current manifest on each pass.

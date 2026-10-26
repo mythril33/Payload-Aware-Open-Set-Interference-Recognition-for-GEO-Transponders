@@ -46,7 +46,7 @@ from geosim.b2_scenarios import MATCHED_BIN_NAMES, MATCHED_BINS, MATCHED_LABELS
 from .artifacts import fingerprint
 from .b2_stream import DEFAULT_WINDOW_SHARDS, fit_streaming, infer_streaming, open_b2_known, open_b2_matched, open_b2_test
 from .calibration import RejectionCalibration, calibrate_scores
-from .data import VIEW_CHANNELS
+from .data import C2_VIEWS, VIEW_CHANNELS
 from .experiment import _sha256, _source_identity, _write_json
 from .mahalanobis import MahalanobisScorer, fit_mahalanobis
 from .metrics import cluster_ci, confusion, expected_calibration_error, macro_f1, threshold_at_pfa
@@ -57,6 +57,8 @@ from .train import TrainConfig, load, save
 ROLES = ("train", "val-select", "val-calib", "test")
 METHODS = ("msp", "energy", "mahalanobis")
 VIEWS = ("co", "dual", "dual_residual")
+ALL_VIEWS = VIEWS + C2_VIEWS   # canonical views + the separately versioned B2-C2-ablation/1 matched views
+PROFILE_CHOICES = ("proposed-full", "fixture", "c2-h3-dual", "c2-h3-co")   # kept equal to b2_execution.ALL_PROFILES by a test
 LEGACY_MAX_GROUPS = 12  # Coupled fit/test is retained only for the historical small-pilot workflow.
 HISTORICAL_TEST_GROUPS = frozenset((3200000, 3200001))
 HISTORICAL_MATCHED_GROUPS = frozenset((3300000, 3300001))
@@ -81,8 +83,10 @@ class B2ExperimentConfig:
         if self.protocol not in (BASE_PROTOCOL, FEATURE_PROTOCOL):
             raise ValueError(f"protocol must be {BASE_PROTOCOL} or {FEATURE_PROTOCOL}")
         if (not isinstance(self.views, (list, tuple)) or not self.views
-                or any(view not in VIEWS for view in self.views) or len(set(self.views)) != len(self.views)):
-            raise ValueError(f"views must be unique choices from {VIEWS}")
+                or any(view not in ALL_VIEWS for view in self.views) or len(set(self.views)) != len(self.views)):
+            raise ValueError(f"views must be unique choices from {ALL_VIEWS}")
+        if any(view in C2_VIEWS for view in self.views) and any(view in VIEWS for view in self.views):
+            raise ValueError("canonical and C2 ablation views use different level/objective settings and must not share a configuration")
         if self.protocol == BASE_PROTOCOL and "dual_residual" in self.views:
             raise ValueError("the dual_residual view requires the B2-feat/1 stage with a stored residual")
         if (not isinstance(self.methods, (list, tuple)) or not self.methods
@@ -865,8 +869,9 @@ def main(argv=None):
     parser.add_argument("--bundle", action="append", help="calibrated training bundle; repeat for freeze inventory")
     parser.add_argument("--seeds", nargs="+", type=int,
                         help="declared inventory seeds (default 0 1 2; proposed-full requires three distinct seeds)")
-    parser.add_argument("--profile", choices=("proposed-full", "fixture"),
-                        help="freeze/evaluate admission profile (default proposed-full; fixture must be explicit)")
+    parser.add_argument("--profile", choices=PROFILE_CHOICES,
+                        help="freeze/evaluate admission profile (default proposed-full; fixture must be explicit; "
+                             "c2-h3-dual / c2-h3-co are the six-cell matched no-plan control rosters)")
     args = parser.parse_args(argv)
     required = {"legacy":("config", "data", "out"), "train-only":("config", "data", "out"),
                 "calibrate":("data", "runs"), "freeze":("bundle", "out"),

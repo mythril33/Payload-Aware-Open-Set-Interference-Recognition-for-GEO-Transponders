@@ -1,0 +1,32 @@
+{
+  "protocol": "B2-feat/1",
+  "views": [
+    "co",
+    "dual",
+    "dual_residual"
+  ],
+  "plan_consistency": true,
+  "methods": [
+    "msp",
+    "energy",
+    "mahalanobis"
+  ],
+  "target_acceptance": 0.95,
+  "pfa": 0.05,
+  "mahalanobis_regularization": 0.1,
+  "training": {
+    "epochs": 2,
+    "batch": 32,
+    "width": 8,
+    "time_pool": 2,
+    "lr": 0.001,
+    "weight_decay": 0.0001,
+    "seed": 0,
+    "augment": true,
+    "center_loss_weight": 0.005,
+    "plan_loss_weight": 1.0,
+    "plan_shift_max_hz": 500000.0,
+    "level": "carrier",
+    "plan_shift_fraction": 0.15
+  }
+}
