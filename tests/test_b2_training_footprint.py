@@ -552,12 +552,20 @@ def test_streaming_numbers_and_budget_arithmetic_in_the_proposal(proposal):
 
 def test_repository_facts_cited_as_engineering_only_still_hold():
     import inspect
-    from geoml import b2_experiment, train as geoml_train
+    from geoml import b2_experiment, b2_production_training, train as geoml_train
     for path in list((ROOT / "src").rglob("*.py")) + list((ROOT / "scripts").rglob("*.py")):
         text = path.read_text()
         for token in ("clip_grad", "autocast", "GradScaler", "DataLoader", "num_workers", "use_deterministic_algorithms", "cudnn.deterministic",
                       "allow_tf32", "set_float32_matmul_precision"):
+            # PR49's separate R6 adapter explicitly disables autocast/TF32.
+            # Keep the historical kernel audit and every other prohibition.
+            if path == ROOT / "src/geoml/b2_production_training.py" and token in {"autocast", "use_deterministic_algorithms", "allow_tf32"}:
+                continue
             assert token not in text, (path.name, token)
+    with b2_production_training.r6_fp32():
+        assert not torch.is_autocast_enabled() and not torch.is_autocast_enabled("cpu")
+        assert not torch.backends.cuda.matmul.allow_tf32 and not torch.backends.cudnn.allow_tf32
+        assert not torch.are_deterministic_algorithms_enabled()
     save_source = inspect.getsource(geoml_train.save)
     assert not any(word in save_source.lower() for word in ("optim", "sched", "rng_state", "opt."))      # no restartable snapshot
     runner = inspect.signature(b2_experiment.run_b2_experiment).parameters

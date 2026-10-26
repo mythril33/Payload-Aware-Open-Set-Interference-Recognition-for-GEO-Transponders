@@ -3,6 +3,7 @@
 ## Dashboard CI dependency repair — 2026-10-26
 
 - Base `3ba1d25` (PR50 merged): readiness run 40377329063 passed 107 E4 checks, then failed collection because Streamlit was absent. Readiness now installs `dashboard/requirements.txt` and triggers on `dashboard/**`; existing scientific/gate checks are unchanged.
+- Full CI run 40389841693 cleared dashboard collection: 107 E4 passed; remainder 4,867 passed / 1 failed / 7 environment skips / 52 warnings. The sole failure was an obsolete global R6-API absence assertion in the historical footprint test. Its audit now recognizes only PR49’s exact adapter and checks effective autocast/TF32/determinism flags; all other prohibitions, scientific source and gates remain unchanged.
 - Python 3.12.14: all 162 dashboard tests passed (6 Streamlit/pandas deprecation warnings); 263 existing execution/calibration/scientific-freeze/held-out-access/CI-policy checks passed. Existing local launch command returned HTTP 200 for the app and health endpoint. No production experiment, GPU probe or protected observation access. Exact-head remote CI evidence belongs in the focused follow-up PR; no automatic merge.
 
 ## Gerçek yürütme adaptörü — 2026-10-26
