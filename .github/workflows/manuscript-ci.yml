@@ -19,9 +19,13 @@ jobs:
           python-version: "3.12"
       - name: Verify committed aggregate evidence without scientific execution
         run: python paper/audit_evidence.py
+      - name: Verify separate GEO manuscript claims and NOT RUN tables
+        run: python paper/validate_geo_b2.py
       - name: Install document rendering tools
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends pandoc texlive-latex-extra texlive-fonts-recommended lmodern poppler-utils
       - name: Compile manuscript (no shell escape, no raw data)
         run: sh paper/build.sh
+      - name: Compile separate GEO manuscript (no shell escape, no raw data)
+        run: sh paper/build_geo_b2.sh
