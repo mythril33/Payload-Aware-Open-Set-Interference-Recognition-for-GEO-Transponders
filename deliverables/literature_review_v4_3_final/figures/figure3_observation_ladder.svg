@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="407.741059pt" height="313.191852pt" viewBox="0 0 407.741059 313.191852" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-26T22:33:03.722781</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 313.191852 
+L 407.741059 313.191852 
+L 407.741059 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 10.513426 58.34731 
+L 399.544396 58.34731 
+Q 401.931089 58.34731 401.931089 55.584 
+L 401.931089 36.240828 
+Q 401.931089 33.477517 399.544396 33.477517 
+L 10.513426 33.477517 
+Q 8.126733 33.477517 8.126733 36.240828 
+L 8.126733 55.584 
+Q 8.126733 58.34731 10.513426 58.34731 
+z
+" clip-path="url(#p60e205a13a)" style="fill: #f4f6fa; stroke: #9aa8b8; stroke-width: 0.5; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 10.513426 86.901517 
+L 399.544396 86.901517 
+Q 401.931089 86.901517 401.931089 84.138207 
+L 401.931089 64.795034 
+Q 401.931089 62.031724 399.544396 62.031724 
+L 10.513426 62.031724 
+Q 8.126733 62.031724 8.126733 64.795034 
+L 8.126733 84.138207 
+Q 8.126733 86.901517 10.513426 86.901517 
+z
+" clip-path="url(#p60e205a13a)" style="fill: #eef3f8; stroke: #9aa8b8; stroke-width: 0.5; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 10.513426 115.455724 
+L 399.544396 115.455724 
+Q 401.931089 115.455724 401.931089 112.692414 
+L 401.931089 93.349241 
+Q 401.931089 90.585931 399.544396 90.585931 
+L 10.513426 90.585931 
+Q 8.126733 90.585931 8.126733 93.349241 
+L 8.126733 112.692414 
+Q 8.126733 115.455724 10.513426 115.455724 
+z
+" clip-path="url(#p60e205a13a)" style="fill: #e8f0f6; stroke: #9aa8b8; stroke-width: 0.5; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 10.513426 144.009931 
+L 399.544396 144.009931 
+Q 401.931089 144.009931 401.931089 141.246621 
+L 401.931089 121.903448 
+Q 401.931089 119.140138 399.544396 119.140138 
+L 10.513426 119.140138 
+Q 8.126733 119.140138 8.126733 121.903448 
+L 8.126733 141.246621 
+Q 8.126733 144.009931 10.513426 144.009931 
+z
+" clip-path="url(#p60e205a13a)" style="fill: #e0ebf3; stroke: #9aa8b8; stroke-width: 0.5; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 10.513426 172.564138 
+L 399.544396 172.564138 
+Q 401.931089 172.564138 401.931089 169.800828 
+L 401.931089 150.457655 
+Q 401.931089 147.694345 399.544396 147.694345 
+L 10.513426 147.694345 
+Q 8.126733 147.694345 8.126733 150.457655 
+L 8.126733 169.800828 
+Q 8.126733 172.564138 10.513426 172.564138 
+z
+" clip-path="url(#p60e205a13a)" style="fill: #d8e6f0; stroke: #9aa8b8; stroke-width: 0.5; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 10.513426 201.118345 
+L 399.544396 201.118345 
+Q 401.931089 201.118345 401.931089 198.355034 
+L 401.931089 179.011862 
+Q 401.931089 176.248552 399.544396 176.248552 
+L 10.513426 176.248552 
+Q 8.126733 176.248552 8.126733 179.011862 
+L 8.126733 198.355034 
+Q 8.126733 201.118345 10.513426 201.118345 
+z
+" clip-path="url(#p60e205a13a)" style="fill: #d0e1ee; stroke: #9aa8b8; stroke-width: 0.5; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 10.513426 229.672552 
+L 399.544396 229.672552 
+Q 401.931089 229.672552 401.931089 226.909241 
+L 401.931089 207.566069 
+Q 401.931089 204.802759 399.544396 204.802759 
+L 10.513426 204.802759 
+Q 8.126733 204.802759 8.126733 207.566069 
+L 8.126733 226.909241 
+Q 8.126733 229.672552 10.513426 229.672552 
+z
+" clip-path="url(#p60e205a13a)" style="fill: #c7dbeb; stroke: #9aa8b8; stroke-width: 0.5; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 10.513426 258.226759 
+L 399.544396 258.226759 
+Q 401.931089 258.226759 401.931089 255.463448 
+L 401.931089 236.120276 
+Q 401.931089 233.356966 399.544396 233.356966 
+L 10.513426 233.356966 
+Q 8.126733 233.356966 8.126733 236.120276 
+L 8.126733 255.463448 
+Q 8.126733 258.226759 10.513426 258.226759 
+z
+" clip-path="url(#p60e205a13a)" style="fill: #bfd5e8; stroke: #9aa8b8; stroke-width: 0.5; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 10.513426 286.780966 
+L 399.544396 286.780966 
+Q 401.931089 286.780966 401.931089 284.017655 
+L 401.931089 264.674483 
+Q 401.931089 261.911172 399.544396 261.911172 
+L 10.513426 261.911172 
+Q 8.126733 261.911172 8.126733 264.674483 
+L 8.126733 284.017655 
+Q 8.126733 286.780966 10.513426 286.780966 
+z
+" clip-path="url(#p60e205a13a)" style="fill: #f6efe2; stroke: #9aa8b8; stroke-width: 0.5; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_11">
+    <path d="M 10.911208 36.398917 
+Q 10.911208 144.930056 10.911208 252.566768 
+" clip-path="url(#p60e205a13a)" style="fill: none; stroke: #555555; stroke-width: 0.8; stroke-linecap: round"/>
+    <path d="M 12.111208 250.166768 
+L 10.911208 252.566768 
+L 9.711208 250.166768 
+z
+" clip-path="url(#p60e205a13a)" style="fill: #555555; stroke: #555555; stroke-width: 0.8; stroke-linecap: round"/>
+   </g>
+   <g id="text_1">
+    <text style="font-weight: 700; font-size: 6.4px; font-family: 'DejaVu Sans'; text-anchor: start" x="19.662416" y="19.481509" transform="rotate(-0 19.662416 19.481509)">Level</text>
+   </g>
+   <g id="text_2">
+    <text style="font-weight: 700; font-size: 6.4px; font-family: 'DejaVu Sans'; text-anchor: start" x="41.938218" y="19.481509" transform="rotate(-0 41.938218 19.481509)">Observation at the monitor</text>
+   </g>
+   <g id="text_3">
+    <text style="font-weight: 700; font-size: 6.4px; font-family: 'DejaVu Sans'; text-anchor: start" x="149.339406" y="19.481509" transform="rotate(-0 149.339406 19.481509)">What it can add (conditionally)</text>
+   </g>
+   <g id="text_4">
+    <text style="font-weight: 700; font-size: 6.4px; font-family: 'DejaVu Sans'; text-anchor: start" x="268.674059" y="19.481509" transform="rotate(-0 268.674059 19.481509)">Assumptions / remaining confounders</text>
+   </g>
+   <g id="text_5">
+    <text style="font-weight: 700; font-size: 6.6px; font-family: 'DejaVu Sans'; text-anchor: middle" x="26.026931" y="47.626867" transform="rotate(-0 26.026931 47.626867)">O1</text>
+   </g>
+   <g id="text_6">
+    <text style="font-size: 6px; font-family: 'DejaVu Sans'; text-anchor: start" x="41.938218" y="47.471242" transform="rotate(-0 41.938218 47.471242)">Band / total power</text>
+   </g>
+   <g id="text_7">
+    <text style="font-size: 5.6px; font-family: 'DejaVu Sans'; text-anchor: start" x="149.339406" y="47.457664" transform="rotate(-0 149.339406 47.457664)">gross level change, alarm</text>
+   </g>
+   <g id="text_8">
+    <text style="font-size: 5.4px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #3a2a1a" x="268.674059" y="47.402476" transform="rotate(-0 268.674059 47.402476)">cannot localize or separate mechanisms</text>
+   </g>
+   <g id="text_9">
+    <text style="font-weight: 700; font-size: 6.6px; font-family: 'DejaVu Sans'; text-anchor: middle" x="26.026931" y="76.181074" transform="rotate(-0 26.026931 76.181074)">O2</text>
+   </g>
+   <g id="text_10">
+    <text style="font-size: 6px; font-family: 'DejaVu Sans'; text-anchor: start" x="41.938218" y="76.025449" transform="rotate(-0 41.938218 76.025449)">Co-polar PSD (averaged)</text>
+   </g>
+   <g id="text_11">
+    <text style="font-size: 5.6px; font-family: 'DejaVu Sans'" transform="translate(149.339406 72.931871)">spectral location and shape;</text>
+    <text style="font-size: 5.6px; font-family: 'DejaVu Sans'" transform="translate(149.339406 79.091871)">CW vs. wideband; IM regrowth shape</text>
+   </g>
+   <g id="text_12">
+    <text style="font-size: 5.4px; font-family: 'DejaVu Sans'; fill: #3a2a1a" transform="translate(268.674059 72.986683)">CuC nearly invisible at high C/I; IM vs.</text>
+    <text style="font-size: 5.4px; font-family: 'DejaVu Sans'; fill: #3a2a1a" transform="translate(268.674059 78.926683)">coincident external energy ambiguous</text>
+   </g>
+   <g id="text_13">
+    <text style="font-weight: 700; font-size: 6.6px; font-family: 'DejaVu Sans'; text-anchor: middle" x="26.026931" y="104.735281" transform="rotate(-0 26.026931 104.735281)">O3</text>
+   </g>
+   <g id="text_14">
+    <text style="font-size: 6px; font-family: 'DejaVu Sans'; text-anchor: start" x="41.938218" y="104.579656" transform="rotate(-0 41.938218 104.579656)">Spectrogram (time-resolved PSD)</text>
+   </g>
+   <g id="text_15">
+    <text style="font-size: 5.6px; font-family: 'DejaVu Sans'; text-anchor: start" x="149.339406" y="104.566078" transform="rotate(-0 149.339406 104.566078)">swept CW, pulsed / burst, on-off cycling</text>
+   </g>
+   <g id="text_16">
+    <text style="font-size: 5.4px; font-family: 'DejaVu Sans'; fill: #3a2a1a" transform="translate(268.674059 101.788531)">needs RBW, dwell and frame rate</text>
+    <text style="font-size: 5.4px; font-family: 'DejaVu Sans'; fill: #3a2a1a" transform="translate(268.674059 107.48089)">matched to sweep or burst timing</text>
+   </g>
+   <g id="text_17">
+    <text style="font-weight: 700; font-size: 6.6px; font-family: 'DejaVu Sans'; text-anchor: middle" x="26.026931" y="133.289488" transform="rotate(-0 26.026931 133.289488)">O4</text>
+   </g>
+   <g id="text_18">
+    <text style="font-size: 6px; font-family: 'DejaVu Sans'; text-anchor: start" x="41.938218" y="133.133863" transform="rotate(-0 41.938218 133.133863)">+ operator carrier plan</text>
+   </g>
+   <g id="text_19">
+    <text style="font-size: 5.6px; font-family: 'DejaVu Sans'" transform="translate(149.339406 130.040284)">planned vs. unplanned occupancy;</text>
+    <text style="font-size: 5.6px; font-family: 'DejaVu Sans'" transform="translate(149.339406 136.200284)">predicted IM product locations</text>
+   </g>
+   <g id="text_20">
+    <text style="font-size: 5.4px; font-family: 'DejaVu Sans'; fill: #3a2a1a" transform="translate(268.674059 130.095097)">plan must be current and complete;</text>
+    <text style="font-size: 5.4px; font-family: 'DejaVu Sans'; fill: #3a2a1a" transform="translate(268.674059 136.035097)">legitimate PCMA must be flagged</text>
+   </g>
+   <g id="text_21">
+    <text style="font-weight: 700; font-size: 6.6px; font-family: 'DejaVu Sans'; text-anchor: middle" x="26.026931" y="161.843695" transform="rotate(-0 26.026931 161.843695)">O5</text>
+   </g>
+   <g id="text_22">
+    <text style="font-size: 6px; font-family: 'DejaVu Sans'; text-anchor: start" x="41.938218" y="161.68807" transform="rotate(-0 41.938218 161.68807)">+ cross-polar observation</text>
+   </g>
+   <g id="text_23">
+    <text style="font-size: 5.6px; font-family: 'DejaVu Sans'" transform="translate(149.339406 158.594491)">leakage consistency test</text>
+    <text style="font-size: 5.6px; font-family: 'DejaVu Sans'" transform="translate(149.339406 164.967554)">(co/cross correlation)</text>
+   </g>
+   <g id="text_24">
+    <text style="font-size: 5.4px; font-family: 'DejaVu Sans'; fill: #3a2a1a" transform="translate(268.674059 158.649304)">synchronized, frequency-aligned receivers;</text>
+    <text style="font-size: 5.4px; font-family: 'DejaVu Sans'; fill: #3a2a1a" transform="translate(268.674059 164.589304)">EP-U1 vs. EP-D coupling can remain confounded</text>
+   </g>
+   <g id="text_25">
+    <text style="font-weight: 700; font-size: 6.6px; font-family: 'DejaVu Sans'; text-anchor: middle" x="26.026931" y="190.397901" transform="rotate(-0 26.026931 190.397901)">O6</text>
+   </g>
+   <g id="text_26">
+    <text style="font-size: 6px; font-family: 'DejaVu Sans'; text-anchor: start" x="41.938218" y="190.242276" transform="rotate(-0 41.938218 190.242276)">Short IQ snapshots</text>
+   </g>
+   <g id="text_27">
+    <text style="font-size: 5.6px; font-family: 'DejaVu Sans'; text-anchor: start" x="149.339406" y="190.228698" transform="rotate(-0 149.339406 190.228698)">modulation and higher-order statistics</text>
+   </g>
+   <g id="text_28">
+    <text style="font-size: 5.4px; font-family: 'DejaVu Sans'; fill: #3a2a1a" transform="translate(268.674059 187.203511)">short records limit cyclic resolution;</text>
+    <text style="font-size: 5.4px; font-family: 'DejaVu Sans'; fill: #3a2a1a" transform="translate(268.674059 193.143511)">snapshots are not contiguous</text>
+   </g>
+   <g id="text_29">
+    <text style="font-weight: 700; font-size: 6.6px; font-family: 'DejaVu Sans'; text-anchor: middle" x="26.026931" y="218.952108" transform="rotate(-0 26.026931 218.952108)">O7</text>
+   </g>
+   <g id="text_30">
+    <text style="font-size: 6px; font-family: 'DejaVu Sans'; text-anchor: start" x="41.938218" y="218.796483" transform="rotate(-0 41.938218 218.796483)">Contiguous IQ</text>
+   </g>
+   <g id="text_31">
+    <text style="font-size: 5.6px; font-family: 'DejaVu Sans'; text-anchor: start" x="149.339406" y="218.782905" transform="rotate(-0 149.339406 218.782905)">spectral correlation; hidden symbol rates</text>
+   </g>
+   <g id="text_32">
+    <text style="font-size: 5.4px; font-family: 'DejaVu Sans'; fill: #3a2a1a" transform="translate(268.674059 215.757718)">longer records as the hidden carrier</text>
+    <text style="font-size: 5.4px; font-family: 'DejaVu Sans'; fill: #3a2a1a" transform="translate(268.674059 221.697718)">weakens; cycle frequencies must differ</text>
+   </g>
+   <g id="text_33">
+    <text style="font-weight: 700; font-size: 6.6px; font-family: 'DejaVu Sans'; text-anchor: middle" x="26.026931" y="247.506315" transform="rotate(-0 26.026931 247.506315)">O8</text>
+   </g>
+   <g id="text_34">
+    <text style="font-size: 6px; font-family: 'DejaVu Sans'; text-anchor: start" x="41.938218" y="247.35069" transform="rotate(-0 41.938218 247.35069)">+ host-carrier side information</text>
+   </g>
+   <g id="text_35">
+    <text style="font-size: 5.6px; font-family: 'DejaVu Sans'; text-anchor: start" x="149.339406" y="247.550175" transform="rotate(-0 149.339406 247.550175)">host cancellation residual (CuC)</text>
+   </g>
+   <g id="text_36">
+    <text style="font-size: 5.4px; font-family: 'DejaVu Sans'; fill: #3a2a1a" transform="translate(268.674059 244.311925)">decodable host, known pulse shaping,</text>
+    <text style="font-size: 5.4px; font-family: 'DejaVu Sans'; fill: #3a2a1a" transform="translate(268.674059 250.251925)">carrier and timing lock</text>
+   </g>
+   <g id="text_37">
+    <text style="font-weight: 700; font-size: 6.6px; font-family: 'DejaVu Sans'; text-anchor: middle" x="26.026931" y="276.060522" transform="rotate(-0 26.026931 276.060522)">O9</text>
+   </g>
+   <g id="text_38">
+    <text style="font-size: 6px; font-family: 'DejaVu Sans'; text-anchor: start" x="41.938218" y="275.904897" transform="rotate(-0 41.938218 275.904897)">External evidence</text>
+   </g>
+   <g id="text_39">
+    <text style="font-size: 5.6px; font-family: 'DejaVu Sans'" transform="translate(149.339406 272.811319)">source attribution: geolocation, CID,</text>
+    <text style="font-size: 5.6px; font-family: 'DejaVu Sans'" transform="translate(149.339406 278.971319)">operator coordination</text>
+   </g>
+   <g id="text_40">
+    <text style="font-size: 5.4px; font-family: 'DejaVu Sans'; fill: #3a2a1a" transform="translate(268.674059 272.866131)">second satellite and ephemeris; cooperative</text>
+    <text style="font-size: 5.4px; font-family: 'DejaVu Sans'; fill: #3a2a1a" transform="translate(268.674059 279.053772)">CID; administrative records</text>
+   </g>
+   <g id="text_41">
+    <text style="font-size: 5.2px; font-family: 'DejaVu Sans'" transform="translate(95.188661 296.779282)">Left arrow: increasing data rate, side-information and synchronization requirements.</text>
+    <text style="font-size: 5.2px; font-family: 'DejaVu Sans'" transform="translate(54.761911 303.020703)">Levels are not strictly nested: O4, O5, O8 and O9 are side channels whose availability is operator- and link-specific.</text>
+    <text style="font-size: 5.2px; font-family: 'DejaVu Sans'" transform="translate(37.774973 309.262125)">An entry under ‘what it can add’ is a conditional possibility under the listed assumptions, not a demonstrated recognition result.</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p60e205a13a">
+   <rect x="2.16" y="2.16" width="401.76" height="293.832"/>
+  </clipPath>
+ </defs>
+</svg>

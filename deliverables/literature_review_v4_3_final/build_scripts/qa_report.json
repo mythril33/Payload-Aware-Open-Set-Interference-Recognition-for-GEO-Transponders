@@ -1,0 +1,76 @@
+{
+ "C1_cited_exist": [],
+ "C2_uncited_refs": [],
+ "C3_first_citation_order_ok": true,
+ "C4_markers": [],
+ "C8_figures": [
+  1,
+  2,
+  3,
+  4
+ ],
+ "C8_tables": [
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "A1",
+  "B1",
+  "D1"
+ ],
+ "figure_refs_in_text": [
+  1,
+  2,
+  3,
+  4
+ ],
+ "table_refs_in_text": [
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "A1",
+  "B1",
+  "D1"
+ ],
+ "equation_numbers": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19
+ ],
+ "equation_refs_in_text": [
+  1,
+  2,
+  4,
+  5,
+  7,
+  10,
+  11,
+  17
+ ],
+ "n_references": 138,
+ "docx_omml_objects": 185,
+ "docx_images": 4,
+ "docx_tables": 10,
+ "docx_raw_latex_leftovers": 0
+}
