@@ -1,0 +1,314 @@
+{
+ "schema": "GEO-literature-review-V4.3-provenance/1",
+ "generated_utc": "2026-10-26T23:17:49Z",
+ "repository": {
+  "url": "https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders",
+  "head_sha": "9c2c89279662a0c72d3cb586c1f274310fe88ad8",
+  "branch": "claude/great-planck-q6v7p8",
+  "origin_main_sha": "9c2c89279662a0c72d3cb586c1f274310fe88ad8",
+  "working_tree_status_excluding_deliverables": [],
+  "note": "Local clone present. Deliverables were written only under deliverables/literature_review_v4_3_final/ (untracked); no existing tracked file was modified; nothing committed or pushed."
+ },
+ "missing_requested_inputs": [
+  "GEO_Payload_Aware_Interference_Literature_Review_V4_2.docx",
+  "Verification_Ledger_GEO_Review.docx",
+  "Progress_Summary_Kademe_A.docx",
+  "approved K1-K7 publication-scope record as a separate file (decisions taken from the assignment text)"
+ ],
+ "baseline_decision": "No V4.2 file found on disk, in the repository history or on any remote branch. The researcher-uploaded DOCX (latest, 2026-10-26) was used as the functional V4.2 baseline; the V4.1 editorial DOCX and the 105-reference technical revision were used for previously verified corrections. Original files were not modified.",
+ "reference_counts": {
+  "original_v4_docx": 95,
+  "technical_revision_md_1": 96,
+  "technical_revision_md_2": 105,
+  "v4_1_editorial": 106,
+  "uploaded_baseline": 95,
+  "v4_3_cited": 138,
+  "v4_3_legacy_retained": 102,
+  "v4_3_new": 36,
+  "legacy_not_cited": [
+   "R031",
+   "R044",
+   "R047",
+   "R057"
+  ],
+  "note": "The assignment mentions approximately 112 references; no file with 112 references was found."
+ },
+ "inputs": [
+  {
+   "path": "/root/.claude/uploads/887ebf34-f8d5-57b7-91ca-a1a8ca1e286f/2589db9d-Literature_Review-Payload-Aware_Open-Set_Interference_Recognition_for_GEO_Transponders_2.docx",
+   "sha256": "66e12744c3380fe4e036d6cc6aaf1103c9487c089233c3e8222851162f6c185f",
+   "bytes": 327254,
+   "role": "researcher-uploaded DOCX attached to the V4.3 request (core.xml: modified 2026-10-26T22:22Z, revision 38, 95 references, 3 OMML objects); used as the functional V4.2 baseline because no file named V4.2 exists"
+  },
+  {
+   "path": "repo:Literature_Review_GEO_Transponders_v4_1_Editorial.docx",
+   "sha256": "ee437ca80bdc55bacc51c66909c30fb8f7cbf7c71dc1b92ace2ffcf787f88afd",
+   "bytes": 144859,
+   "role": "V4.1 editorial DOCX (106 references, 17 OMML objects); technical secondary baseline"
+  },
+  {
+   "path": "repo:BurakTOS-Literature Review-Payload-Aware Open-Set Interference Recognition for GEO Transponders (2).docx",
+   "sha256": "657ecd3838bc6c50baec11556e4e0b01ea6f5a3b363129e8999334d291a9713a",
+   "bytes": 328922,
+   "role": "researcher DOCX rev 36 (2026-10-24); differs from upload only in the uplink equation"
+  },
+  {
+   "path": "repo:BurakTOS-Literature Review-Payload-Aware Open-Set Interference Recognition for GEO Transponders.docx",
+   "sha256": "da734616619323b034997b3f67232a996405c395fff57dfb25944a4981247bcd",
+   "bytes": 327671,
+   "role": "researcher DOCX rev 34 (2026-10-23)"
+  },
+  {
+   "path": "repo:Literature Review — Payload-Aware Open-Set Interference Recognition for GEO Transponders.docx",
+   "sha256": "dcc5dc5abc087d09f35f052bf8f645e5def0c773f22de7d9d98f933159615959",
+   "bytes": 295848,
+   "role": "original review DOCX (95 references; matches original_docx_sha256 in reconciliation JSON)"
+  },
+  {
+   "path": "repo:Literature_Review_GEO_Transponders.md",
+   "sha256": "e1a9a38ff26b4f163a7fc0ab3754c92466689a4bf602254975faf4faf9d8f384",
+   "bytes": 82581,
+   "role": "technical revision (23 Oct) Markdown, 96 references"
+  },
+  {
+   "path": "repo:Literature_Review_GEO_Transponders (1).md",
+   "sha256": "f4f238efc2014d2062f52ad98d874a6c9d2489f33a7c88e2e91e0bc4ea18d32d",
+   "bytes": 98991,
+   "role": "technical revision (23 Oct) Markdown, 105 references (V4 lineage)"
+  },
+  {
+   "path": "repo:Payload-Aware Open-Set Interference Recognition for GEO Transponders_ Literature Review.md",
+   "sha256": "5b4cff016694c39d54722c9173fb2df0369e704e20ea9f0202980d88d7e4d52b",
+   "bytes": 65114,
+   "role": "original gap-scan report (research tool)"
+  },
+  {
+   "path": "repo:refs.json",
+   "sha256": "785855d33ef63ca3dceb430bca2dfe8f76aa458ebcf38248acd7127a0e8b99fc",
+   "bytes": 38918,
+   "role": "legacy 95-entry reference manifest"
+  },
+  {
+   "path": "repo:reference_reconciliation_v4_1.json",
+   "sha256": "0a7f24b45ef449a85b353c347d8da8f0d11f519a2659c1a9242be6a18c62511b",
+   "bytes": 152467,
+   "role": "V4.1 reconciliation: stable IDs R001-R106"
+  },
+  {
+   "path": "repo:review_findings.md",
+   "sha256": "5a6aa555f77534ab71a3024af9fbd166a74e499308ed410d671652f02b2ecd01",
+   "bytes": 43448,
+   "role": "independent review findings F1-F46 on earlier draft"
+  },
+  {
+   "path": "repo:V4_1_revize_degisiklik_ozeti.md",
+   "sha256": "1d7c2e4c89bc6d3c4372f994b160769729c7d3bdec5d8d052e8f98945719af1e",
+   "bytes": 4089,
+   "role": "V4.1 change summary"
+  },
+  {
+   "path": "repo:GEO_Interference_Oturum_Envanteri.xlsx",
+   "sha256": "aa2c29205c6ecff3fa044985dc66b8fcc83cfaeaf00845ca463be2b49f51f79c",
+   "bytes": 72992,
+   "role": "session inventory workbook (no K1-K7 publication decisions inside)"
+  },
+  {
+   "path": "repo:litcheck.py",
+   "sha256": "631b90dbd99d523b4d0855034069479de696f74862e0892b86dfba0e2bf9e207",
+   "bytes": 7199,
+   "role": "legacy consistency checker (logic re-implemented for V4.3 QA because the V4.3 manifest uses new verification states)"
+  },
+  {
+   "path": "repo:paper/literature_audit.md",
+   "sha256": "b0880bf19343ba780ac199b9806fc65503f17fa348050e9f6a8ec05021ed640e",
+   "bytes": 10942,
+   "role": "manuscript V1 literature audit"
+  },
+  {
+   "path": "repo:docs/plan/P5_veri_protokol.md",
+   "sha256": "92b0c39e08fa83185e8da8c2cf177dfdd221123ca3a64c71cba2d4dafba40290",
+   "bytes": 9033,
+   "role": "Stage A data protocol (matched payload gap)"
+  },
+  {
+   "path": "repo:docs/results/pilot_A.md",
+   "sha256": "16771ba35431359da74f6efc8f741d95d598c3368fbe4388ed1775e2c333743e",
+   "bytes": 5706,
+   "role": "Stage A model pilot record (pipeline trial, not a result)"
+  },
+  {
+   "path": "repo:docs/plan/P18_b2_protocol.md",
+   "sha256": "d67a95a61b4399b4afcaa11f68a4899530c9868cef76774985d93145ab5bc3d3",
+   "bytes": 32766,
+   "role": "frozen B2/1 protocol"
+  },
+  {
+   "path": "repo:docs/plan/P20_b2_cancellation_residual.md",
+   "sha256": "6b2a0790e82f4ae4c46b9c64ea74b7012e26a6d8ad1041190dcd11445b6d18b6",
+   "bytes": 10572,
+   "role": "observation-based cancellation"
+  },
+  {
+   "path": "repo:docs/plan/P31_b2_e7b_isolated_execution.md",
+   "sha256": "6b99dbff7c0bc4d0a67ec551ca07fc0ece0c5b3ca68ab2dc1c3e77459ec732f1",
+   "bytes": 8115,
+   "role": "isolated execution and calibration"
+  },
+  {
+   "path": "repo:docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md",
+   "sha256": "9a6682df3ed2a3b353844440ddbe70d83e3cd4baaf4f98b4a54def460d9260fc",
+   "bytes": 9566,
+   "role": "E9 scientific approval"
+  },
+  {
+   "path": "repo:docs/plan/B2_E12_D1_D8_SCIENTIFIC_APPROVAL_2026-10-24.md",
+   "sha256": "817380b9fa10871da0774b1cc9cd043a56ae868c211b83f2967a0d6b6c372842",
+   "bytes": 12713,
+   "role": "E12 D-1..D-8 decisions"
+  },
+  {
+   "path": "repo:docs/plan/b2_e12_d1_d8_decisions_2026-10-24.json",
+   "sha256": "ce900de1ae1b324d5de73997a8b303f2158fddf33fd544337347bb3df91689b1",
+   "bytes": 10810,
+   "role": "E12 decisions JSON"
+  },
+  {
+   "path": "repo:docs/plan/DURUM.md",
+   "sha256": "4dca339fdb078b1b789fcb370738226196b97ce71132ec8f36b30f69e93c6bdc",
+   "bytes": 118994,
+   "role": "current status (benchmark_complete=false)"
+  },
+  {
+   "path": "repo:docs/plan/P2_sistem_modeli.md",
+   "sha256": "299dac523c19bd4e1e3630d45487859a68e5294da5f261b877b253c26caf3acf",
+   "bytes": 18696,
+   "role": "system model"
+  },
+  {
+   "path": "repo:docs/plan/P14_dual_polarization.md",
+   "sha256": "f504951e38e50c72a1458452a5b50d36216cc6584471b51bbc51b9ad9e8c0c9e",
+   "bytes": 8906,
+   "role": "dual-polarization model"
+  },
+  {
+   "path": "repo:docs/plan/kaynak_transponder_modeli.md",
+   "sha256": "f068a25e777d39dbd7d5bcb2dd28f7bcb6f0625c1c1d96ab5d82ab796294039a",
+   "bytes": 8516,
+   "role": "transponder source note"
+  },
+  {
+   "path": "repo:src/geosim/dual.py",
+   "sha256": "20f3652a458fd9fbdabaf23b612880414c5e869302ddf8feb5e57f99eec14d18",
+   "bytes": 19844,
+   "role": "entry-plane order in dual-pol simulator (read only)"
+  },
+  {
+   "path": "repo:docs/plan/00_ana_plan.md",
+   "sha256": "7b456db2dad6b3b7b2fab796c43448d046ef042840de4397ad25d46e10f1705c",
+   "bytes": 18889,
+   "role": "main plan (project K decisions; distinct from publication K1-K7)"
+  }
+ ],
+ "deliverables": [
+  {
+   "file": "FINAL_LITERATURE_REVIEW_ACCEPTANCE.md",
+   "sha256": "bdc1e12ea7d3558a620f4655701d271c95043e06bbe2b4e63813eb5816613016",
+   "bytes": 7834
+  },
+  {
+   "file": "GEO_Payload_Aware_Interference_Literature_Review_V4_3_FINAL.docx",
+   "sha256": "377b9e159392db3ab5fefbcbefe349c475b40c4dfb31435593c562b5522c47fe",
+   "bytes": 1403003
+  },
+  {
+   "file": "GEO_Payload_Aware_Interference_Literature_Review_V4_3_FINAL.pdf",
+   "sha256": "3827074be85526a468ec75295446ee527cebdf414480dfed95d04ff21b45b80a",
+   "bytes": 1678759
+  },
+  {
+   "file": "claim_evidence_matrix.csv",
+   "sha256": "382f844f504989271d2a9c07b562c70fe8326b535851a4a5a46fbfe2b66ed954",
+   "bytes": 12820
+  },
+  {
+   "file": "literature_review_v4_3.md",
+   "sha256": "0a7bb83784b9c550fb052c7ac58c54beb5c5617b59a08dae0aca96809f3dd9b1",
+   "bytes": 146272
+  },
+  {
+   "file": "literature_search_log.csv",
+   "sha256": "f9ca6f5c78a3471fa3057f91490fbe5b79db308611f81aea24f6b5004bd359b8",
+   "bytes": 111048
+  },
+  {
+   "file": "mechanism_observation_evidence_matrix.csv",
+   "sha256": "6acd83d685a77959640e828f895780d9e7950b7fab973427d3f70e7db6cbbddb",
+   "bytes": 11842
+  },
+  {
+   "file": "red_team_issue_register.csv",
+   "sha256": "237b9ef757e6a2b5cc0389a2ee17eb9fde5a1cc2045e3d6c9ae0eac992b6a9f3",
+   "bytes": 43601
+  },
+  {
+   "file": "reference_master.csv",
+   "sha256": "0bc422a946167034e8c43a9dd31371770f322b663a15b62f8c646fecfdd7a338",
+   "bytes": 148608
+  },
+  {
+   "file": "rf_and_mathematics_validation.md",
+   "sha256": "8cd24557a09c39e7e931692957d28732fdc900d439e135864efc64df744f722a",
+   "bytes": 13416
+  },
+  {
+   "file": "v4_2_to_v4_3_change_log.md",
+   "sha256": "b3ca8714b0a6ab09bba486197deb382cc2ae7b4216bc4491dedd0c78ad6f903a",
+   "bytes": 10781
+  }
+ ],
+ "database_availability": {
+  "Crossref API": "blocked (proxy 403 / DNS failure)",
+  "OpenAlex": "blocked",
+  "arXiv": "blocked",
+  "Semantic Scholar API": "blocked",
+  "doi.org": "blocked",
+  "IEEE Xplore": "blocked (direct); reachable only as search-engine results",
+  "Scopus": "not available",
+  "Web of Science": "not available",
+  "Google Scholar": "blocked",
+  "ETSI portal": "blocked (direct)",
+  "ITU portal": "blocked (direct)",
+  "General web search engine (WebSearch tool)": "available until per-turn budget of 200 calls was exhausted (shared across all agents)"
+ },
+ "tools": [
+  "pandoc 3.1.3 (Markdown+TeX math -> DOCX with native OMML)",
+  "python-docx (post-processing)",
+  "matplotlib 3.11 (vector/PNG diagrams)",
+  "LibreOffice 24.2 + libreoffice-math (PDF proof; Math module installed in the container only)",
+  "pdftoppm/pdfinfo (render QA)",
+  "WebSearch tool",
+  "parallel verification/search sub-agents (same model family)"
+ ],
+ "incomplete_verifications": [
+  "No reference reached verified_full_text (no full-text access).",
+  "24 legacy references not reached for re-verification (budget): R025, R026, R027, R048, R049, R050, R052, R053, R075, R076, R077, R078, R079, R080, R081, R096, R098, R099, R100, R101, R102, R103, R104, R105.",
+  "Dedicated novelty-threat search, polarization/PCMA/cyclostationarity primary-source searches and dataset searches not executed (budget).",
+  "ETSI clause contents confirmed at search-excerpt level only; informative status of EN 302 307-1 Annex H inherited from V4.1.",
+  "Dataset licences (IEEE DataPort R094, Fraunhofer R095, SmartSpace R092/R093, OpenDPD data vs code) unresolved.",
+  "Saleh coefficient provenance unresolved (4.0033 vs 4.033)."
+ ],
+ "declared_non_execution": {
+  "rf_simulation": false,
+  "dataset_generation": false,
+  "model_training": false,
+  "model_evaluation": false,
+  "held_out_access": false,
+  "gpu": false,
+  "github_actions": false,
+  "repository_files_modified": false,
+  "protocols_or_configs_changed": false,
+  "push_merge_publish": false,
+  "benchmark_complete": false,
+  "note": "benchmark_complete=false as recorded in docs/plan/DURUM.md (2026-10-26) and E12 JSON"
+ }
+}
