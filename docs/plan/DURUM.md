@@ -1,5 +1,10 @@
 # Proje durumu ve eksik kaydı
 
+## Ayrı GEO deneysel makale taslağı — 2026-10-27
+
+- Taban main `6e9ff7f1c29a33e813015753cc311080da2a77ff` (PR52 birleşmiş). [Düzenlenebilir GEO makalesi](../../paper/geo_b2_manuscript.md), ayrı PDF,15 birincil atıf, kaynak–iddia eşlemesi ve yayın tablo/şekil tanımları hazır; mevcut GNSS/karşılaştırmalı makale ve bağımsız literatür incelemesi korunuyor.
+- H1/H2/H3 eşleşmiş kontrolleri, zorunlu15fit, bilinen-sınıf kalibrasyonu, geçmiş test maruziyeti ve fiziksel belirsizlikler açık. Tanıma sonuçları **NOT RUN**, birincil scorer **NOT DESIGNATED**; mevcut simülasyon tanıları üstünlük kanıtı sayılmıyor. Yeni deney, üretim/GPU eğitimi veya korunan gözlem okuması yok; bilimsel kod/protokoller ve DR-04/DR-05/held-out kapıları değişmedi. Belge denetimi/derleme ve tam PR-head CI sonuçları odaklı taslak PR'da.
+
 ## Dashboard CI dependency repair — 2026-10-26
 
 - Base `3ba1d25` (PR50 merged): readiness run 40377329063 passed 107 E4 checks, then failed collection because Streamlit was absent. Readiness now installs `dashboard/requirements.txt` and triggers on `dashboard/**`; existing scientific/gate checks are unchanged.

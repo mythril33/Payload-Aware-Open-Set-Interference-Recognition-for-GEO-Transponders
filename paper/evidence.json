@@ -20,11 +20,18 @@
     "research/public_data/fraunhofer.py": "619c5803072956ab0b5626e2f24a047b6fe9ab035e4f7091b08d1faad1920f07",
     "docs/results/public_data_baselines.md": "1f7cc2fa163d3212731c1be7662d00ec6275a0c009d8cd0c0c11354b492086e7",
     "docs/plan/P17_r1_robustness_eval.md": "a23d0494cc6c61984b8b99fb78d89103b94f46f34bd142024b42bae78699a836",
-    "docs/plan/P18_b2_protocol.md": "a25a73e1675aff5fcce9a4fca0ea4a25ccdd6b81e2cb03013f788f199dd65d8a",
+    "docs/plan/P18_b2_protocol.md": "d67a95a61b4399b4afcaa11f68a4899530c9868cef76774985d93145ab5bc3d3",
     "research/public_data/protocol.json": "01a31bdac05438c0e2a81819275030f4d51e6f56f7b58870b3fdb96a30b2ac22",
     "docs/plan/b2_e12_d1_d8_decisions_2026-10-24.json": "ce900de1ae1b324d5de73997a8b303f2158fddf33fd544337347bb3df91689b1",
     "scripts/derive_opendpd_mp.py": "4f914fbcf343615b38ee3978f268e6ec817133d1981c09b178db9d412ada13f7"
   },
+  "source_refresh_log": [
+    {
+      "source": "docs/plan/P18_b2_protocol.md",
+      "reviewed_commit": "964bf1f6a327d03021811a6e97c8ce4d3ce78fb1",
+      "reason": "Only an additive section-10 C2 change-log row was added after this paper baseline; frozen protocol text and all M.P18_boundary claim anchors are unchanged. No result or manuscript content was updated."
+    }
+  ],
   "claims": [
     {
       "id": "T1.lc_counts",

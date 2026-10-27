@@ -1,0 +1,295 @@
+{
+  "schema": "GEO-B2-manuscript-evidence/1",
+  "baseline_main": "6e9ff7f1c29a33e813015753cc311080da2a77ff",
+  "scope": "COMMITTED_PROTOCOLS_AGGREGATES_AND_DERIVED_FIGURES_ONLY",
+  "no_new_experiments": true,
+  "claims": {
+    "E01": [
+      "docs/plan/P18_b2_protocol.md",
+      "src/geosim/b2_protocol.py"
+    ],
+    "E02": [
+      "docs/plan/P2_sistem_modeli.md",
+      "docs/plan/P14_dual_polarization.md",
+      "docs/plan/P15_phase_noise_and_events.md",
+      "configs/b2_base.json",
+      "src/geosim/dual.py",
+      "src/geosim/polarization.py",
+      "src/geosim/phase_noise.py",
+      "src/geosim/sensor.py",
+      "src/geosim/payload.py"
+    ],
+    "E03": [
+      "docs/plan/P19_b2_base_observations.md",
+      "docs/plan/P20_b2_cancellation_residual.md",
+      "configs/cancellation.json",
+      "src/geosim/cancellation.py"
+    ],
+    "E04": [
+      "docs/plan/P21_b2_observed_receiver.md",
+      "docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md",
+      "docs/results/b2_e6_decision_evidence.json"
+    ],
+    "E05": [
+      "docs/plan/P21_b2_test_families.md",
+      "src/geosim/b2_test_dataset.py"
+    ],
+    "E06": [
+      "docs/plan/P22_b2_matched_asi.md",
+      "src/geosim/b2_matched_dataset.py"
+    ],
+    "E07": [
+      "src/geoml/data.py",
+      "src/geoml/model.py",
+      "src/geoml/train.py",
+      "src/geoml/b2_stream.py",
+      "src/geoml/b2_production_training.py"
+    ],
+    "E08": [
+      "src/geoml/openset.py",
+      "src/geoml/mahalanobis.py",
+      "src/geoml/calibration.py",
+      "src/geoml/metrics.py",
+      "src/geoml/openset_metrics.py",
+      "src/geoml/b2_execution.py"
+    ],
+    "E09": [
+      "docs/plan/B2_C2_COMPARATIVE_EXPERIMENTS.md",
+      "docs/plan/b2_c2_experiment_matrix.json",
+      "src/geoml/b2_c2.py",
+      "docs/results/b2_c2_bounded_verification.json"
+    ],
+    "E10": [
+      "docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md",
+      "docs/plan/b2_e9_approved_scientific_protocol.json",
+      "docs/plan/B2_E12_D1_D8_SCIENTIFIC_APPROVAL_2026-10-24.md",
+      "docs/plan/b2_e12_d1_d8_decisions_2026-10-24.json"
+    ],
+    "E11": [
+      "docs/results/b2_feat_cancellation_check.json",
+      "docs/results/b2_feat_pilot.md"
+    ],
+    "E12": [
+      "docs/results/asi_visibility.json",
+      "docs/results/asi_visibility.md",
+      "docs/results/cuc_visibility.json",
+      "docs/results/cuc_visibility.md"
+    ],
+    "E13": [
+      "docs/results/b2_figure_manifest.json",
+      "docs/results/b2_figure_sources.json",
+      "docs/results/B2_SCIENTIFIC_RESULTS_ATLAS.md",
+      "paper/figures/asi_cuc_observability.png",
+      "docs/figures/b2/A5_asi_cuc_observability.png",
+      "docs/figures/b2/A3_cancellation_by_class.png"
+    ],
+    "E14": [
+      "docs/plan/P28_b2_e4_dual_pol_a5.md",
+      "docs/results/b2_a5_dual_pol_pilot.md"
+    ],
+    "E15": [
+      "docs/results/b2_c2_bounded_verification.json",
+      "docs/results/b2_feat_pilot.md"
+    ],
+    "E16": [
+      "src/geoml/b2_campaign.py",
+      "src/geoml/b2_production_training.py",
+      "scripts/b2_real_generation.py",
+      "docs/operations/B2_E18_STAGE_BOUNDARY_CHECKLIST.md",
+      "docs/plan/b2_readiness_gates_2026-10-21.json"
+    ],
+    "E17": [
+      "paper/geo_b2_display_specs.md"
+    ],
+    "E18": [
+      "paper/literature_audit.md",
+      "paper/manuscript.md",
+      "docs/plan/P1_literatur.md",
+      "docs/research/literature_review_2026-10-20.md",
+      "paper/geo_b2_references.bib",
+      "paper/geo_b2_literature_sources.md"
+    ]
+  },
+  "files_sha256": {
+    "configs/b2_base.json": "8626109431cf9bd19c01920109b9265f202b1e27d6a0f5be526d8e033813d1a7",
+    "configs/cancellation.json": "f3dc37078a5f289bf9e1c951bab480679178df8168b3dd297982f82a1f3260ec",
+    "docs/figures/b2/A3_cancellation_by_class.png": "77288c868466b6069a67b94ed967be213ad897659d1989731a1551ae8b5e5976",
+    "docs/figures/b2/A5_asi_cuc_observability.png": "23fc84191c1fae368e7eae0549b2ef260849c917e41fba9e94c168c66e6ca753",
+    "docs/operations/B2_E18_STAGE_BOUNDARY_CHECKLIST.md": "062286f5dfcd5de7e73b830e132089f8d8362a368c26f1651179307ca03b94e8",
+    "docs/plan/B2_C2_COMPARATIVE_EXPERIMENTS.md": "5eeab1a79a1c79ebfa31af7cadef5a7364c4b0d7b0020ff280b30dc9b1a410e5",
+    "docs/plan/B2_E12_D1_D8_SCIENTIFIC_APPROVAL_2026-10-24.md": "817380b9fa10871da0774b1cc9cd043a56ae868c211b83f2967a0d6b6c372842",
+    "docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md": "9a6682df3ed2a3b353844440ddbe70d83e3cd4baaf4f98b4a54def460d9260fc",
+    "docs/plan/P14_dual_polarization.md": "f504951e38e50c72a1458452a5b50d36216cc6584471b51bbc51b9ad9e8c0c9e",
+    "docs/plan/P15_phase_noise_and_events.md": "38ed1247a58977e66f351c5dde415f84ed887c3ffa35e3d719414cbf97b4f178",
+    "docs/plan/P18_b2_protocol.md": "d67a95a61b4399b4afcaa11f68a4899530c9868cef76774985d93145ab5bc3d3",
+    "docs/plan/P19_b2_base_observations.md": "12e8ec70c5751eba16bb0ca33eb36bda10ea8cea256a3ac76abdbeb0ea6dc1ba",
+    "docs/plan/P1_literatur.md": "34506be529aec82a2eab7948745f3b88c0c2ef16867442033d07ef11bb5ad024",
+    "docs/plan/P20_b2_cancellation_residual.md": "6b2a0790e82f4ae4c46b9c64ea74b7012e26a6d8ad1041190dcd11445b6d18b6",
+    "docs/plan/P21_b2_observed_receiver.md": "9cc1e694b398f557e93fc329be4176c582ffd726fb6a71b30ea15f22625d654e",
+    "docs/plan/P21_b2_test_families.md": "e0b9dfbb2234a48a969e3fc676785feabb2307c1735a6ca377d624511985da15",
+    "docs/plan/P22_b2_matched_asi.md": "1e8c684b12d5090e0588c9953b795b82794ae554493f1966968db51ed025f958",
+    "docs/plan/P28_b2_e4_dual_pol_a5.md": "f3f50066cd384f8602f3ea392554fa21ac0c00ec4daafe2fc5eeaa68472e089c",
+    "docs/plan/P2_sistem_modeli.md": "299dac523c19bd4e1e3630d45487859a68e5294da5f261b877b253c26caf3acf",
+    "docs/plan/b2_c2_experiment_matrix.json": "36e2c197e1319142dcdc92e33965c389491fdebd1b4a3e99167a2b8345bbd2d4",
+    "docs/plan/b2_e12_d1_d8_decisions_2026-10-24.json": "ce900de1ae1b324d5de73997a8b303f2158fddf33fd544337347bb3df91689b1",
+    "docs/plan/b2_e9_approved_scientific_protocol.json": "ab96b933284ad134411db638bc3e18540efb749db60de4654beb00c7d1cc6eb1",
+    "docs/plan/b2_readiness_gates_2026-10-21.json": "8cd5917a49d7cdd280f519fc71474392e8934845898bd449bf4a7f6e03711f99",
+    "docs/research/literature_review_2026-10-20.md": "388497a414c0ccaff933c124b3729d64c1e92aaa36246e8cd1cc8480f93c40fc",
+    "docs/results/B2_SCIENTIFIC_RESULTS_ATLAS.md": "b15c78ac62b2f5680370ac1065f9bf8fc50e5bb331a11c78a46855c255c58cac",
+    "docs/results/asi_visibility.json": "b4a60b756a76700aa3e65be4e40f06fba4781c5799e0f1d119ce7008b2049a1a",
+    "docs/results/asi_visibility.md": "097f3ee26ec84a641fcc2cd660638455d181ec9a28d255ee937d453b5f7c0485",
+    "docs/results/b2_a5_dual_pol_pilot.md": "92df5e984e3296eac81217609df94fddc58dc0d5ea83d48192a0bd2fc44cc0cc",
+    "docs/results/b2_c2_bounded_verification.json": "4e90ef220c419dc277e17a2113496f89ccbaf2edc895981571ac92006d434009",
+    "docs/results/b2_e6_decision_evidence.json": "968a05d887ce2f5296c1be1c2108e31679e029082c5b8167346cf0373d9aa087",
+    "docs/results/b2_feat_cancellation_check.json": "79233bfb0452741db1f2edf544bd541741974b14166611a0e404222244d33f5e",
+    "docs/results/b2_feat_pilot.md": "dd463f893b7558180357897fcf225054895f96067cf0ee62e035266b78602042",
+    "docs/results/b2_figure_manifest.json": "74ad2f7619890254cf841df04826564234f1f30c9bdc2a919dcd0399521c0cd7",
+    "docs/results/b2_figure_sources.json": "9fe18c5a2509ca14ae6ed8c22d0af964715c8851e8ffc7ece8c11631b9885c68",
+    "docs/results/cuc_visibility.json": "05b5ff7457283aec21c87b9256cde05cac1569814910c654c11389e6d87ee218",
+    "docs/results/cuc_visibility.md": "43802c86453f2657b470d956b489362d79e3424ed9ffdc75d7dac92941b10e6b",
+    "paper/figures/asi_cuc_observability.png": "23fc84191c1fae368e7eae0549b2ef260849c917e41fba9e94c168c66e6ca753",
+    "paper/geo_b2_display_specs.md": "812b94c1489998f27a6881e73c1d5006be4dd07aa9e9dd2c90a99040d8e00af9",
+    "paper/literature_audit.md": "b0880bf19343ba780ac199b9806fc65503f17fa348050e9f6a8ec05021ed640e",
+    "paper/manuscript.md": "3e6196c588abc765b1071df115dcb73051729af9a46b0663fbdd2a4fe7da37d0",
+    "scripts/b2_real_generation.py": "34b1a80ef93de636b6d76930222e1c4dd50779c548462d769798fed2efd66722",
+    "src/geoml/b2_c2.py": "3168f193192ff8e5fa7d2b908603877f415b4edb35f63dd679bc0d5c1026db06",
+    "src/geoml/b2_campaign.py": "cdb86fb2b2410cb08e57aff8df242a0438a59fa8c9eee6adb7cc49ce00a1bfc0",
+    "src/geoml/b2_execution.py": "f07ed42989334acb4ea35d06af9892ed32e210d5f2f002f158438bf5301e023f",
+    "src/geoml/b2_production_training.py": "00469021813c28c8af2b2b56de74ed1e166e05a82dfd245d2428e2ff7e696a35",
+    "src/geoml/b2_stream.py": "b298895f7f42411f2240d65978cd6c48ceb8fac7fc45b882d2afeac783709cc9",
+    "src/geoml/calibration.py": "081cf3fdcc5954a422bc40c7017ff95750a88d8cba7c808c3f2fd7fe4b6da1ae",
+    "src/geoml/data.py": "60b9ea1f85ec12769c78b43b8eb46161a096b3d7548826f671f3f966fb9094b4",
+    "src/geoml/mahalanobis.py": "0fbbc984e0af6317ce12b100efeeec46f36e0e7ea9f1e8efd5e774b9d2713ac0",
+    "src/geoml/metrics.py": "0f3f8bc78b2b5a887531b4172c5de48a3f5560619cdde67543ca6d20ebda4426",
+    "src/geoml/model.py": "0abe5bc4f76e5aa54a5e6080dcd8b05151536f12d058e7cf0b61951848a8d1f9",
+    "src/geoml/openset.py": "d1cd61b4d2a398ae547718573d3403acc1ed24310b8b6415b7096e8f6e87a4a9",
+    "src/geoml/openset_metrics.py": "81c1cffcf1f53bb07713eca70ddc4d8358283d142cb8b6a05205133bc4b45e66",
+    "src/geoml/train.py": "c9bdc90077cd6e72acda8b15f54360a719a07d56a95ea279304d0df94cb0e1b6",
+    "src/geosim/b2_matched_dataset.py": "cb175fed5f5fdd7c5a1738f62c3c52e72fd9df3682ea4b1ad1bdbf52d939883f",
+    "src/geosim/b2_protocol.py": "510f6dcd1e8ce0bda98b23cd8ec19ff7bbcfbdd4e3373bfe82876fc15ae2feb5",
+    "src/geosim/b2_test_dataset.py": "9f6371fa8112cb88c2b7ea9837b5c1b431242929adca1a4229caec0c5948408c",
+    "src/geosim/cancellation.py": "0e93258e565fde5d568a3a74d2c0e8b694a7c70d993be663aaf02bf0ffe6c3b2",
+    "src/geosim/dual.py": "20f3652a458fd9fbdabaf23b612880414c5e869302ddf8feb5e57f99eec14d18",
+    "src/geosim/payload.py": "01e364122bc6742ac3613a1ae2db28aa196ad33f60351d936ba36258d13a19aa",
+    "src/geosim/phase_noise.py": "529493b773f81df9e0e51b020b74a0bd52fdb4d4e5effc2cb741a18165142a96",
+    "src/geosim/polarization.py": "0d8c4c20a5d38b1e02287bbb74e81ad86172437b4d2b3d10beefaeedcf7ca7f7",
+    "src/geosim/sensor.py": "e78151a893e617b7eaa3af8016b4e47ee25a61e15eb30e37093bbf84971c3226",
+    "paper/geo_b2_references.bib": "321155a52ae16e8d97f6202077b1976e51f277ec11acfe297d019011869f9d2b",
+    "paper/geo_b2_literature_sources.md": "33837627829bec821f1b41e55d9fd226d044b02b2d1b5c864c11028dcb812a5d"
+  },
+  "source_anchors": {
+    "docs/plan/P2_sistem_modeli.md": [
+      "## 12.",
+      "dvbs2_nl"
+    ],
+    "docs/plan/B2_C2_COMPARATIVE_EXPERIMENTS.md": [
+      "H1",
+      "H2",
+      "H3",
+      "0.15"
+    ],
+    "src/geoml/mahalanobis.py": [
+      "max(len(x) - n_classes, 1)",
+      "variance * 1e-6, 1e-8"
+    ],
+    "src/geoml/data.py": [
+      "OBSERVED_LEVEL_PERCENTILE",
+      "CLIP_DB = (-60.0, 20.0)"
+    ],
+    "src/geoml/b2_campaign.py": [
+      "evaluation_step",
+      "primary_scorer"
+    ]
+  },
+  "numeric_assertions": [
+    {
+      "source": "docs/results/b2_feat_cancellation_check.json",
+      "pointer": "/n_observations",
+      "value": 64,
+      "format": "d"
+    },
+    {
+      "source": "docs/results/b2_feat_cancellation_check.json",
+      "pointer": "/per_label/cross_pol/mean_depth_db",
+      "value": 12.778685414571573,
+      "format": ".2f"
+    },
+    {
+      "source": "docs/results/b2_feat_cancellation_check.json",
+      "pointer": "/per_label/clean/mean_depth_db",
+      "value": 16.466462125859636,
+      "format": ".2f"
+    },
+    {
+      "source": "docs/results/b2_feat_cancellation_check.json",
+      "pointer": "/paired_cuc_summary/n_pairs",
+      "value": 8,
+      "format": "d"
+    },
+    {
+      "source": "docs/results/b2_feat_cancellation_check.json",
+      "pointer": "/paired_cuc_summary/median_delta_before_db",
+      "value": 0.9861261336341585,
+      "format": ".3f"
+    },
+    {
+      "source": "docs/results/b2_feat_cancellation_check.json",
+      "pointer": "/paired_cuc_summary/median_delta_after_db",
+      "value": 6.4614173150175915,
+      "format": ".3f"
+    },
+    {
+      "source": "docs/results/asi_visibility.json",
+      "pointer": "/geometry_summary/c_over_i_psd_db/n",
+      "value": 120,
+      "format": "d"
+    },
+    {
+      "source": "docs/results/asi_visibility.json",
+      "pointer": "/geometry_summary/c_over_i_psd_db/median",
+      "value": 20.32449363006822,
+      "format": ".1f"
+    },
+    {
+      "source": "docs/results/cuc_visibility.json",
+      "pointer": "/summary/3/n",
+      "value": 24,
+      "format": "d"
+    },
+    {
+      "source": "docs/results/cuc_visibility.json",
+      "pointer": "/summary/3/median_delta_db",
+      "value": 0.37271309041677214,
+      "format": ".3f"
+    },
+    {
+      "source": "docs/results/cuc_visibility.json",
+      "pointer": "/summary/5/median_delta_db",
+      "value": 0.0413588567712157,
+      "format": ".3f"
+    }
+  ],
+  "identical_figures": [
+    [
+      "paper/figures/asi_cuc_observability.png",
+      "docs/figures/b2/A5_asi_cuc_observability.png"
+    ]
+  ],
+  "literature_keys": [
+    "bendale2016openmax",
+    "daoud2023dataset",
+    "etsi2014dvbs2",
+    "etsi2021dvbs2guide",
+    "he2016resnet",
+    "henarejos2019interference",
+    "hendrycks2017baseline",
+    "lee2018mahalanobis",
+    "liu2020energy",
+    "pellaco2019spectrum",
+    "politis2017weak",
+    "saifaldawla2024genai",
+    "saleh1981twta",
+    "scheirer2013openset",
+    "wen2016center"
+  ]
+}
