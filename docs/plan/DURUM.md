@@ -1,5 +1,12 @@
 # Proje durumu ve eksik kaydı
 
+## ETSI-derived numerical data: provenance record — 2026-10-27
+
+- Committed derived files: `src/geosim/data/mux_fir.npz` (IMUX/OMUX FIR taps; 36 MHz from the TR 102 376-2 Annex E tables, 72 MHz by the TR scaling rule) and `src/geosim/data/dvbs2_twta.json` (EN 302 307-1 Annex H.7 Figures H.2/H.3, digitized). Raw ETSI documents are not in Git.
+- Checked at HEAD `3a6bd910`: the committed generator reproduces the committed arrays exactly from the Annex E text tables. The 36 MHz FIR matches the table to within 0.07 dB (IMUX) and below 0.005 dB (OMUX) wherever the table gain is at least −20 dB; deviations above 0.5 dB occur only below −53 dB (deep stopband). The 72 MHz taps are not checked numerically.
+- Permission: the researcher reports ETSI permission for this use; no written record is in the repository. Reference, date and scope remain to be recorded before publication. Details and fingerprints: [docs/research/ETSI_DERIVED_DATA_PROVENANCE.md](../research/ETSI_DERIVED_DATA_PROVENANCE.md).
+- No source, data, checkpoint or history was changed; nothing is committed.
+
 ## Ayrı GEO deneysel makale taslağı — 2026-10-27
 
 - Taban main `6e9ff7f1c29a33e813015753cc311080da2a77ff` (PR52 birleşmiş). [Düzenlenebilir GEO makalesi](../../paper/geo_b2_manuscript.md), ayrı PDF,15 birincil atıf, kaynak–iddia eşlemesi ve yayın tablo/şekil tanımları hazır; mevcut GNSS/karşılaştırmalı makale ve bağımsız literatür incelemesi korunuyor.

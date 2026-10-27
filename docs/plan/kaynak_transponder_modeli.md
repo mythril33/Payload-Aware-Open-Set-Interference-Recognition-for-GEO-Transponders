@@ -101,5 +101,5 @@ Sınırlar:
 ### Depoda ne var, ne yok
 
 - **Depoda:** türetilmiş FIR katsayıları (`src/geosim/data/mux_fir.npz`), sayısallaştırılmış TWTA tablosu (`src/geosim/data/dvbs2_twta.json`) ve bunları üreten iki betik.
-- **Depoda değil:** ETSI'nin ham tablo dosyaları ve PDF. Yerelde `data/` altında duruyor ve git tarafından yok sayılıyor; ETSI belgeleri telif korumalı olduğu için yeniden dağıtmadım. Hukuki bir değerlendirme değil, ihtiyatlı bir varsayılan; karar sizin.
+- **Depoda değil:** ETSI'nin ham tablo dosyaları ve PDF. Yerelde `data/` altında duruyor ve git tarafından yok sayılıyor; Decision (2026-10-27): the researcher reports ETSI permission for the derived tables committed here; the permission reference is still to be recorded. Provenance, fingerprints and regeneration check: [docs/research/ETSI_DERIVED_DATA_PROVENANCE.md](../research/ETSI_DERIVED_DATA_PROVENANCE.md).
 - **Kullanılmayanlar:** 26 ve 33 MHz tabloları (ileride "görülmemiş süzgeç" testi olabilir) ve `User_terminal_patterns.xlsx` (11,7 GHz'te 45–75 cm kullanıcı anteni azimut örüntüleri ve toplam C/(N+I) sayfası; komşu uydu girişimi sınıfı için Kademe B'de işe yarar).
