@@ -27,17 +27,19 @@ bash setup.sh --test   # the same, then runs pytest -q
 .venv/bin/python lessons/04_open_set.py --quick
 ```
 
-`--quick` is a smoke run: 2 epochs and very few devices. It checks that the code runs and nothing more. In one check on a 4-CPU machine, each of the quick runs for lessons 02 to 04 took between about 5 and 15 seconds. Drop the flag for the full run. Full runs of lessons 02 to 04 take minutes on a CPU, because they train several networks for up to 25 epochs; the scripts set PyTorch to 4 threads.
+For the interactive UI, run `.venv/bin/streamlit run app.py` from this folder. It opens in the browser and has four stages, each with its own controls and a run button. The UI and the lessons share the stage functions in `rfml/experiments.py`. The UI screens themselves are not covered by the tests.
 
-Results go to two places. Each lesson writes `results/<lesson>.json` (strict JSON with the numbers) and `results/<lesson>.png` (plots). Quick and full runs write the same file names, and the JSON `"mode"` field says which one it is (`"quick"` or `"default"`). Check that field before you read a result. The numbers are not copied into this README: rerun the lessons to regenerate them.
+`--quick` is a smoke run: 2 epochs and very few devices. It checks that the code runs and nothing more. In the checks made for this README, each quick run took from a few seconds to about 15 seconds. Drop the flag for the full run. Full runs train several networks for up to 25 epochs, so expect minutes rather than seconds on a CPU. The scripts set PyTorch to 4 threads.
+
+Results go to two places. Each lesson writes `results/<lesson>.json` (strict JSON with the numbers) and `results/<lesson>.png` (plots). Quick and full runs write the same file names, and the JSON `"mode"` field says which one it is (`"quick"` or `"default"`). Check that field before you read a result. Set `RFML_RESULTS_DIR` to write to another folder instead. The numbers are not copied into this README: rerun the lessons to regenerate them.
 
 ## Learning path
 
 | Stage | File | Question it answers | What to look at in the output |
 |---|---|---|---|
 | 1. Tensors and autograd | `lessons/01_tensors_autograd.py` | How do tensors and `backward()` produce gradients, and does a hand-written gradient descent match `nn.Linear` with `SGD`? | Section 3: the hand gradient and the autograd gradient agree. Section 4: gradient descent matches least squares. Section 5: the printed differences between the two code paths are tiny (the lesson asserts less than 1e-4). The PNG shows the loss curve and the fitted line. |
-| 2. Modulation classification | `lessons/02_modulation_classification.py` | Does a classifier recognise modulations from devices it has never seen, and how does accuracy change with SNR? | The per-SNR table: the `n` column, the chance level printed in the header (1/4), the row marked "below training SNRs" (-6 dB), and the MLP and CNN1D columns. The `overall` row pools all SNR rows. The second table lists train, val-select and test accuracy per model: a train accuracy far above test means the model memorised its training devices. |
-| 3. RF fingerprinting | `lessons/03_rf_fingerprint.py` | Can a 1D ResNet recognise an individual device when every device sends the same QPSK? | The `impaired` and `ideal` columns. The ideal column (identical devices) should sit near the chance level that the script prints. Read `devices_in_test` and the frame counts in the JSON. The split is frame-level (see section 2). |
+| 2. Modulation classification | `lessons/02_modulation_classification.py` | Does a classifier recognise modulations from devices it has never seen, and how does accuracy change with SNR? | The per-SNR table: the `n` column, the chance level printed in the header (1/4), the row marked "below training SNRs" (-6 dB), and the MLP and CNN1D columns. The `overall` row pools all SNR rows. The second table gives the val-select accuracy, the best epoch and the epoch count per model. |
+| 3. RF fingerprinting | `lessons/03_rf_fingerprint.py` | Can a 1D ResNet recognise an individual device when every device sends the same QPSK? | The `impaired` and `ideal` columns, each with its own `n`, because the frame-level test split puts a different number of frames in each SNR bin. An empty bin has `n` 0 and prints `null`. The ideal column (identical devices) should sit near the chance level that the script prints. The split is frame-level (see section 2). |
 | 4. Open-set recognition | `lessons/04_open_set.py` | Can a score reject modulations the model was never trained on, with a threshold set on known data only? | The table: threshold, known accepted (k/n), unknown rejected (k/n), AUROC, and closed-set accuracy on accepted frames (k/n). The PNG histograms show known and unknown scores with the threshold. The `Objectosphere + MSP` row is optimistic (see section 4). |
 
 ## 1. The synthetic physics model
@@ -125,7 +127,7 @@ A closed-set classifier can only name one of its C known classes. To allow "none
 
 - **MSP score (1 - max softmax).** s(x) = 1 - max_c softmax(z)_c, computed from the logits z (`msp_unknown_score`). Its range is [0, 1 - 1/C]. Softmax is trained only to be confident on known classes, so it is a weak unknown detector. Used by variants (a) and (c).
 - **Distance-to-centroid score.** Take the embedding e(x) from the penultimate layer (`embed`). `class_centroids` gives the mean embedding mu_c of the known training frames of each class, and s(x) = min_c ||e(x) - mu_c||_2 (`distance_unknown_score`). Used by variant (b). Unknowns tend to land away from every centroid.
-- **Objectosphere loss (Dhamija et al., 2018).** Implemented as `objectosphere_loss`, with xi = 10 and lam = 0.1 in lesson 04. For a known sample (label >= 0) the term is CE(z, y) + lam * max(0, xi - ||z||)^2, so the logit norm is pushed up to xi and no further. For an outlier (label -1) the term is -(1/C) sum_c log softmax_c(z) + lam * ||z||^2: the cross entropy to a uniform target, which is minimal for a flat softmax, plus a penalty that shrinks the logits. The batch loss is the sum over the batch divided by B. The code follows the idea of the paper; check the paper before you quote its exact constants or form.
+- **Objectosphere loss (Dhamija et al., 2018).** Implemented as `objectosphere_loss`, with xi = 10 and lam = 0.1 (`DEFAULT_XI` and `DEFAULT_LAM` in `rfml/experiments.py`). For a known sample (label >= 0) the term is CE(z, y) + lam * max(0, xi - ||z||)^2, so the logit norm is pushed up to xi and no further. For an outlier (label -1) the term is -(1/C) sum_c log softmax_c(z) + lam * ||z||^2: the cross entropy to a uniform target, which is minimal for a flat softmax, plus a penalty that shrinks the logits. The batch loss is the sum over the batch divided by B. The code follows the idea of the paper; check the paper before you quote its exact constants or form.
 - **Threshold calibration on known validation data.** `calibrate_threshold(scores, 0.95)` returns the k-th smallest known score, with k = ceil(0.95 n). A sample is accepted when s <= t. Only known val-calib frames are used, so the threshold cannot depend on unknown data.
 
 Positive classes and denominators (these are the definitions `open_set_report` and `auroc` use):
@@ -164,12 +166,12 @@ Self-check checklist for any number you read or report:
 Each exercise fits in about an hour. A full run takes minutes, and every run overwrites `results/`. Work in a copy of the folder (for example, `cp -r` it to a scratch directory) so the original source and `results/` stay unchanged, and copy the JSON file before each sweep run.
 
 1. **Predict, then remove impairments (stage 3).** Before running, predict what happens to the impaired-versus-ideal gap in lesson 03 if you narrow the IQ phase range from plus or minus 5 degrees to plus or minus 0.5 degrees. Then run the full lesson and compare. Hint: `Transmitter.random` in `rfml/signals.py` draws the parameters. For g = 1 the image ratio is tan(phi / 2), so you can estimate how small the image becomes. The other impairments are still present.
-2. **Move the training SNR grid (stage 2).** Change `TRAIN_SNRS` in lesson 02 so training starts at 0 dB, and predict whether accuracy at -4 dB and -6 dB falls more than at 0 dB. Hint: `TEST_SNRS` keeps -6 dB, and `print_table` marks every row below `TRAIN_SNRS[0]`.
+2. **Move the training SNR grid (stage 2).** Change `TRAIN_SNRS` in `rfml/experiments.py` so training starts at 0 dB, and predict whether accuracy at -4 dB and -6 dB falls more than at 0 dB. The grid is shared by lessons 02 to 04, so work in a copy. Hint: `MOD_TEST_SNRS` keeps the -6 dB test point for stage 2, and lesson 02 marks the rows below the training grid.
 3. **Add an unknown modulation (stage 4).** Add a 16-point ring constellation, for example "16APSK", to `constellation()` in `rfml/signals.py`. Add it to `MODULATIONS` and to `UNKNOWN_MODULATIONS`, then rerun lesson 04 and see whether AUROC moves. Predict first. Hint: `tests/test_signals.py` has an `EXPECTED_SIZES` table, and the unit-power test runs over every name in `MODULATIONS`, so both must be updated, and the test suite must pass.
-4. **Sweep xi and lam (stage 4).** The constants `XI` and `LAM` are at the top of `lessons/04_open_set.py`. Run a 2 x 2 grid on the full lesson, copying `results/04_open_set.json` after each run. Record the AUROC and the unknown reject rate with its k/n count. Hint: one seed per cell, so treat small differences as possible noise.
+4. **Sweep xi and lam (stage 4).** The defaults `DEFAULT_XI` and `DEFAULT_LAM` are in `rfml/experiments.py`. In a copy of the folder, run a 2 x 2 grid on the full lesson 04, using `RFML_RESULTS_DIR` to keep each run's JSON in its own folder. Record the AUROC and the unknown reject rate with its k/n count. Hint: one seed per cell, so treat small differences as possible noise.
 5. **Temperature-scaled MSP (stage 4).** Change `msp_unknown_score` so the logits are divided by a temperature T before the softmax. Decide which known split may fit T, and justify the choice against the role rules in section 2. Never use the unknown test frames. Hint: T = 1 must reproduce the current results. Temperature does not change the argmax, so closed-set accuracy stays the same, but the ranking of unknown scores can change.
 6. **Mahalanobis distance on the embeddings (stage 4).** Implement a score that uses one shared covariance Sigma, estimated from the known training embeddings, with s(x) = min_c (e - mu_c)^T Sigma^-1 (e - mu_c). Compare it with the Euclidean `distance_unknown_score`. Hint: `predict_embeddings` gives e, and `class_centroids` gives mu_c from known training data only. If Sigma is singular, use `np.linalg.pinv` or a small ridge term, and say which one you used.
-7. **Change the frame length (stage 2).** Set `N_SAMPLES` to 256 in lesson 02 and compare the per-SNR accuracy of MLP and CNN1D with the 512 run. Predict first which model is more affected. Hint: at `sps = 8`, 512 samples is 64 symbols and 256 samples is 32. The MLP's first layer size is `2 * n_samples`, so it is rebuilt from the same constant.
+7. **Change the frame length (stage 2).** Set `N_SAMPLES` to 256 in a copy of `rfml/experiments.py` and compare the per-SNR accuracy of MLP and CNN1D with the 512 run. Predict first which model is more affected. Hint: at `sps = 8`, 512 samples is 64 symbols and 256 samples is 32. The MLP's first layer size is `2 * n_samples`, so it follows the same constant.
 
 ## 6. Testing and layout
 
@@ -177,7 +179,8 @@ Each exercise fits in about an hour. A full run takes minutes, and every run ove
 learning/rfml-basics/
   README.md              this file
   setup.sh               creates .venv/, installs requirements.txt, smoke check; --test also runs pytest
-  requirements.txt       numpy, torch, matplotlib, pytest (versions not pinned)
+  requirements.txt       numpy, torch, matplotlib, pytest, streamlit (versions not pinned)
+  app.py                 Streamlit UI for the four stages (run with streamlit run app.py)
   pytest.ini             testpaths = tests, pythonpath = .
   .gitignore             ignores .venv/, __pycache__/, .pytest_cache/ and results/*.png
   rfml/                  the library; lessons 02 to 04 import it
@@ -188,7 +191,7 @@ learning/rfml-basics/
     train.py             TrainConfig, train_model, predict_*, ce_loss, accuracy_val_score
     openset.py           MSP score, centroids, distance score, Objectosphere loss, threshold
     metrics.py           accuracy, auroc, open_set_report, confusion_matrix
-    experiments.py       stage functions for the interactive app; no lesson imports it
+    experiments.py       stage functions and scale presets, shared by the lessons and app.py
   lessons/               run these; each prints its output and writes results/
     01_tensors_autograd.py
     02_modulation_classification.py
@@ -198,7 +201,7 @@ learning/rfml-basics/
   results/               JSON (tracked) and PNG (git-ignored), written by the lessons
 ```
 
-Run the tests with `.venv/bin/python -m pytest -q`, or `bash setup.sh --test`. `pytest.ini` points pytest at `tests/`. All 135 tests passed when this README was checked. The count changes when tests are added.
+Run the tests with `.venv/bin/python -m pytest -q`, or `bash setup.sh --test`. `pytest.ini` points pytest at `tests/`. All 165 tests passed when this README was checked. The count changes when tests are added.
 
 What the suite covers:
 
@@ -207,9 +210,11 @@ What the suite covers:
 - `test_models.py`: output shapes, the embed and fc split, finite gradients, rejection of (B, L, 2) input, and the ResNet block specification.
 - `test_train.py`: seeding, learning on a separable toy problem, early stopping, best-state restore, eval mode during prediction, `ce_loss` ignoring outliers, and `accuracy_val_score` counting known samples only.
 - `test_openset.py`: softmax stability, the MSP range, centroids that ignore outliers, distances against brute force, the Objectosphere loss against hand-computed values, threshold target and ties, AUROC against brute force, `open_set_report` and `confusion_matrix`.
-- `test_lesson01.py`: runs lesson 01's `main()`, checks its strict JSON output, and checks that lesson 01 does not import `rfml`.
+- `test_experiments.py`: the stage functions in `rfml/experiments.py` on a tiny scale: strict JSON output, the presets against the lesson sizes, seed reproducibility, role independence, and figure helpers.
+- `test_lesson01.py`: runs lesson 01's `main()` with its output folder redirected to a temporary directory, checks its strict JSON output, and checks that lesson 01 does not import `rfml`.
+- `test_lessons_experiments.py`: runs lessons 02 to 04 with `--quick` into a temporary folder, checks that their JSON parses strictly, and checks that each lesson's numbers equal the stage functions called directly.
 
-Two limits to keep in mind. Lessons 02 to 04 are not covered by pytest, so run them with `--quick` as a smoke test. And `test_lesson01.py` runs lesson 01, so pytest rewrites `results/01_tensors_autograd.json` and its PNG.
+One limit to keep in mind: pytest checks lessons 02 to 04 only in quick mode, so a full run is not part of the test suite. Running pytest leaves `results/` unchanged.
 
 ## 7. References
 
