@@ -2,7 +2,8 @@
 # One-shot setup for the RF-ML learning project.
 #
 # Creates a local virtual environment in .venv/, installs requirements.txt
-# (CPU-friendly PyTorch from PyPI, numpy, matplotlib, pytest) and runs a
+# (PyTorch from PyPI, numpy, matplotlib, pytest; on Linux the PyPI torch wheel also
+# pulls NVIDIA CUDA packages, which the CPU-only code never uses) and runs a
 # smoke check that imports the libraries and the rfml package.
 #
 # Usage:  bash setup.sh            # create .venv and verify
@@ -40,7 +41,6 @@ print(f"torch       {torch.__version__} (cuda available: {torch.cuda.is_availabl
 print(f"numpy       {numpy.__version__}")
 print(f"matplotlib  {matplotlib.__version__}")
 
-# The rfml package is written in parallel; check whatever is present.
 import importlib
 for name in ("signals", "dataset", "models", "train", "openset", "metrics"):
     try:
