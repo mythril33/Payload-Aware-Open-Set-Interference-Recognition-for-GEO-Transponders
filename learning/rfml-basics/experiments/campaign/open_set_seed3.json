@@ -1,0 +1,181 @@
+{
+  "stage": "open_set",
+  "scale": {
+    "name": "full",
+    "description": "lesson defaults",
+    "tx_train": 40,
+    "tx_val": 10,
+    "tx_test": 10,
+    "tx_aux": 20,
+    "tx_unknown": 10,
+    "frames_train": 20,
+    "frames_val": 10,
+    "frames_test": 10,
+    "fp_devices": 10,
+    "fp_frames": 300,
+    "epochs": 25,
+    "patience": 5
+  },
+  "seed": 3,
+  "split": "device-level; threshold from known val-calib frames; unknown test frames scored after calibration",
+  "known_classes": [
+    "BPSK",
+    "QPSK",
+    "8PSK",
+    "16QAM"
+  ],
+  "aux_outlier_classes_train_only": [
+    "16PSK",
+    "8PAM"
+  ],
+  "unknown_classes_test_only": [
+    "64QAM",
+    "4PAM"
+  ],
+  "target_known_accept": 0.95,
+  "objectosphere": {
+    "xi": 10.0,
+    "lam": 0.1
+  },
+  "n_samples": 512,
+  "snr_db": [
+    -4.0,
+    -2.0,
+    0.0,
+    2.0,
+    4.0,
+    6.0,
+    8.0,
+    10.0,
+    12.0,
+    14.0,
+    16.0,
+    18.0,
+    20.0
+  ],
+  "chance": {
+    "closed_set": 0.25,
+    "auroc": 0.5
+  },
+  "devices": {
+    "known_train_per_class": 40,
+    "known_val_per_class": 10,
+    "known_val_select_per_class": 5,
+    "known_val_calib_per_class": 5,
+    "known_test_per_class": 10,
+    "aux_outlier_per_class": 20,
+    "unknown_test_per_class": 10
+  },
+  "frames": {
+    "train_known": 3200,
+    "train_aux": 800,
+    "val_select": 200,
+    "val_calib": 200,
+    "test_known": 400,
+    "test_unknown": 200
+  },
+  "variants": {
+    "CE + MSP": {
+      "loss": "ce",
+      "score": "msp",
+      "threshold": 0.5026983648857124,
+      "report": {
+        "n_known": 400,
+        "n_unknown": 200,
+        "known_accept_rate": 0.95,
+        "unknown_reject_rate": 0.02,
+        "auroc": 0.3382625,
+        "threshold": 0.5026983648857124
+      },
+      "known_accepted": 380,
+      "unknown_rejected": 4,
+      "closed_set_on_accepted": {
+        "positive_denominator": "known test frames accepted (score <= threshold)",
+        "n": 380,
+        "n_correct": 341,
+        "accuracy": 0.8973684210526316
+      },
+      "closed_set_all_known_test": {
+        "n": 400,
+        "accuracy": 0.87
+      },
+      "n_calib_known": 200,
+      "seed": 3,
+      "use_aux": false,
+      "train_frames": 3200,
+      "train_outliers": 0,
+      "epochs_run": 18,
+      "best_epoch": 12,
+      "val_select_accuracy_best": 0.85
+    },
+    "CE + distance": {
+      "loss": "ce",
+      "score": "distance",
+      "threshold": 3.6147464759431194,
+      "report": {
+        "n_known": 400,
+        "n_unknown": 200,
+        "known_accept_rate": 0.95,
+        "unknown_reject_rate": 0.52,
+        "auroc": 0.7790125,
+        "threshold": 3.6147464759431194
+      },
+      "known_accepted": 380,
+      "unknown_rejected": 104,
+      "closed_set_on_accepted": {
+        "positive_denominator": "known test frames accepted (score <= threshold)",
+        "n": 380,
+        "n_correct": 305,
+        "accuracy": 0.8026315789473685
+      },
+      "closed_set_all_known_test": {
+        "n": 400,
+        "accuracy": 0.785
+      },
+      "n_calib_known": 200,
+      "seed": 4,
+      "use_aux": false,
+      "train_frames": 3200,
+      "train_outliers": 0,
+      "epochs_run": 14,
+      "best_epoch": 8,
+      "val_select_accuracy_best": 0.755
+    },
+    "Objectosphere + MSP": {
+      "loss": "objectosphere",
+      "score": "msp",
+      "threshold": 0.5709448605552713,
+      "report": {
+        "n_known": 400,
+        "n_unknown": 200,
+        "known_accept_rate": 0.915,
+        "unknown_reject_rate": 0.235,
+        "auroc": 0.5523875,
+        "threshold": 0.5709448605552713
+      },
+      "known_accepted": 366,
+      "unknown_rejected": 47,
+      "closed_set_on_accepted": {
+        "positive_denominator": "known test frames accepted (score <= threshold)",
+        "n": 366,
+        "n_correct": 311,
+        "accuracy": 0.8497267759562842
+      },
+      "closed_set_all_known_test": {
+        "n": 400,
+        "accuracy": 0.8175
+      },
+      "n_calib_known": 200,
+      "seed": 5,
+      "use_aux": true,
+      "train_frames": 4000,
+      "train_outliers": 800,
+      "epochs_run": 22,
+      "best_epoch": 16,
+      "val_select_accuracy_best": 0.8
+    }
+  },
+  "campaign": {
+    "stage_wall_time_s": 123.1
+  }
+}
