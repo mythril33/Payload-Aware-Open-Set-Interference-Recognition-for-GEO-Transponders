@@ -199,9 +199,14 @@ learning/rfml-basics/
     04_open_set.py
   tests/                 pytest suite (section below)
   results/               JSON (tracked) and PNG (git-ignored), written by the lessons
+  experiments/           pre-registered multi-seed campaign (see experiments/README.md)
+    PREREGISTRATION.md   hypotheses H1-H4 and success criteria, fixed before the runs
+    run_campaign.py      runs all stages over several seeds, writes campaign/aggregate.json
+    campaign/            per-seed metrics and the aggregate (raw/ with score arrays is git-ignored)
+  paper/                 benchmark paper draft (paper.md) and verified references.bib
 ```
 
-Run the tests with `.venv/bin/python -m pytest -q`, or `bash setup.sh --test`. `pytest.ini` points pytest at `tests/`. All 165 tests passed when this README was checked. The count changes when tests are added.
+Run the tests with `.venv/bin/python -m pytest -q`, or `bash setup.sh --test`. `pytest.ini` points pytest at `tests/`. The count changes when tests are added; `VALIDATION_REPORT.md` at the repository root records the counts actually observed.
 
 What the suite covers:
 
