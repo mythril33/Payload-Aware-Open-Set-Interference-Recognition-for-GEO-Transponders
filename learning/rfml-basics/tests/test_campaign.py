@@ -21,6 +21,7 @@ def test_campaign_quick_single_seed(tmp_path):
         capture_output=True,
         text=True,
         timeout=600,
+        check=False,  # the return code is asserted below with the captured output
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
