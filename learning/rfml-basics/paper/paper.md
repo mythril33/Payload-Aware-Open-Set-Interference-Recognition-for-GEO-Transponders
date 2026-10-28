@@ -30,9 +30,15 @@ pre-registered seeds, the distance score reaches a mean AUROC of
 seed: unknowns that are geometrically close to a known constellation are
 *accepted* more confidently by softmax than known classes. Objectosphere
 improves unknown rejection over MSP (0.158 ± 0.044 vs 0.034 ± 0.012 at the
-same calibration target, 5/5 seeds) but its advantage is partly attributable
-to outlier-unknown similarity (8PAM vs 4PAM), which we state as a designed-in
-caveat, and it remains far below the distance score (0.511 ± 0.032). All code, data generation, pre-registration
+same calibration target, 5/5 seeds) but remains far below the distance score
+(0.511 ± 0.032). A second pre-registered campaign pairs five post-hoc scores
+on one model per seed and dissects that Objectosphere gain: Mahalanobis
+scoring *underperforms* plain Euclidean distance (0.747 ± 0.019 vs
+0.777 ± 0.015, 0/5 seeds in the predicted direction), energy and max-logit
+stay below chance like MSP, and swapping the auxiliary-outlier pool shows
+the gain on 4PAM unknowns is similarity transfer: 4PAM rejection is
+0.404 under an 8PAM-only outlier pool but 0.002 under a 16PSK-only pool
+(5/5 seeds). All code, data generation, pre-registration
 and per-seed results are released; a laptop CPU reproduces the campaign in
 under an hour. The contribution is a transparent measurement instrument, not
 a new method.
@@ -75,12 +81,16 @@ Contributions:
    per-transmitter impairments, transmitter-level roles
    (train / val-select / val-calib / test), and a pre-registered multi-seed
    analysis plan written before the campaign ran.
-2. A paired comparison of MSP, distance-to-centroid and Objectosphere under
-   one calibration protocol, with per-seed values, means and dispersions.
-3. Two honestly reported cautionary results: softmax confidence can be
-   *anti-correlated* with unknownness for structurally related unknowns
-   (AUROC below 0.5), and the benefit of auxiliary outliers depends on
-   outlier-unknown similarity that the experimenter controls.
+2. A paired comparison of six open-set scores (MSP, max-logit, energy,
+   Euclidean distance, Mahalanobis, Objectosphere) under one calibration
+   protocol — the five post-hoc scores evaluated on the *same* trained
+   model per seed — with per-seed values, means and dispersions.
+3. Three honestly reported cautionary results: every output-space
+   confidence score is *anti-correlated* with unknownness for structurally
+   related unknowns (AUROC below 0.5); the benefit of auxiliary outliers is
+   almost entirely similarity transfer, measured directly by swapping the
+   outlier pool (H7); and the principled Mahalanobis upgrade loses to plain
+   Euclidean distance at this scale (H5).
 4. A sanity pair of companion tasks (closed-set modulation accuracy, and an
    RF-fingerprinting stage with an ideal-device control at chance) that
    validate the impairment model itself.
@@ -221,7 +231,10 @@ doing what it claims.
 ## 10. Results and Discussion
 
 All numbers are mean ± sample standard deviation over seeds 0–4, with
-per-seed values in `experiments/campaign/aggregate.json`.
+per-seed values in `experiments/campaign/aggregate.json` (campaign 1) and
+`experiments/campaign2/aggregate.json` (campaign 2).
+
+### Campaign 1: separately trained variants (H1–H4)
 
 **Open-set scores (H1, H2).**
 
@@ -264,15 +277,79 @@ capacity-rich flat model memorises training devices and transfers nothing. The C
 (0.833 ± 0.067 train vs 0.755 ± 0.041 test). A frame-level split would have
 hidden this failure entirely, which is the benchmark's core design point.
 
+### Campaign 2: paired scorers on one model (H5, H6)
+
+All numbers: mean ± sd over seeds 0–4 from
+`experiments/campaign2/aggregate.json`; per-seed values and OSCR areas in
+Figure 1 (`fig1_auroc.png`), OSCR curves in Figure 2 (`fig2_oscr.png`),
+score distributions in Figure 6 (`fig6_hists.png`).
+
+| Variant (one CE model per seed unless noted) | AUROC | Unknown reject | Known accept | OSCR area |
+| --- | --- | --- | --- | --- |
+| CE+MSP | 0.343 ± 0.061 | 0.034 ± 0.012 | 0.958 ± 0.018 | 0.319 ± 0.061 |
+| CE+max-logit | 0.302 ± 0.060 | 0.040 ± 0.024 | 0.948 ± 0.024 | 0.265 ± 0.053 |
+| CE+energy | 0.315 ± 0.063 | 0.042 ± 0.016 | 0.947 ± 0.023 | 0.271 ± 0.055 |
+| CE+distance | 0.777 ± 0.015 | 0.498 ± 0.038 | 0.955 ± 0.023 | 0.591 ± 0.067 |
+| CE+Mahalanobis | 0.747 ± 0.019 | 0.482 ± 0.018 | 0.939 ± 0.024 | 0.570 ± 0.064 |
+| Objectosphere, full aux (trained) | 0.560 ± 0.020 | 0.216 ± 0.057 | 0.932 ± 0.029 | 0.490 ± 0.032 |
+| Objectosphere, 16PSK-only aux (trained) | 0.324 ± 0.081 | 0.039 ± 0.032 | 0.945 ± 0.025 | 0.298 ± 0.069 |
+| Objectosphere, 8PAM-only aux (trained) | 0.591 ± 0.080 | 0.234 ± 0.179 | 0.938 ± 0.025 | 0.490 ± 0.049 |
+
+**H5 is NOT supported** (0/5 seeds, mean difference −0.030): with a shared
+within-class covariance shrunk by 0.1 toward the scaled identity,
+Mahalanobis scoring is consistently *worse* than plain Euclidean distance on
+the same embeddings. At D = 128 embedding dimensions and 3,200 training
+frames, covariance estimation evidently costs more than shape information
+buys; we did not sweep the shrinkage parameter, so the negative is specific
+to this estimator configuration. **H6 is NOT supported** (2/5 seeds, mean
+−0.027): energy (0.315 ± 0.063) and max-logit (0.302 ± 0.060) sit below
+chance alongside MSP. All three output-space scores fail in the same way,
+which locates the failure in the *space*, not in the particular confidence
+functional. An internal consistency check: the CE+MSP per-seed AUROCs in
+campaign 2 equal campaign 1's exactly, because the same seed produces the
+same CE model — the pipeline is deterministic end to end.
+
+### The auxiliary-outlier confound, measured (H7)
+
+**H7 is supported in 5/5 seeds** (Figure 4, `fig4_confound.png`): rejection
+of 4PAM unknowns is 0.404 ± 0.315 under the 8PAM-only outlier pool and
+0.002 ± 0.004 under the 16PSK-only pool (paired per-seed difference +0.050
+to +0.840). 64QAM rejection is low (0.06–0.08) in *every* arm. Campaign 1's
+H2 gain is therefore almost entirely similarity transfer from the 8PAM
+outliers to the 4PAM unknowns; outlier exposure did not generalize across
+constellation families in this benchmark. Two further honest observations:
+the PSK-only arm's overall AUROC (0.324 ± 0.081) is *below chance* — a
+dissimilar outlier pool did not merely fail to help, and the 8PAM-only
+arm's 4PAM rejection is wildly unstable across seeds (0.05 to 0.84,
+sd 0.315), so even the similarity transfer is unreliable at this scale.
+
+### SNR dependence of the MSP failure (H8)
+
+**H8 is supported by the pre-registered criterion (4/5 seeds) but the
+effect is small** (Figure 3, `fig3_snr_auroc.png`): CE+MSP AUROC is
+0.380 ± 0.065 on frames at ≤ 2 dB and 0.338 ± 0.084 at ≥ 10 dB (mean paired
+difference +0.042, one seed negative at −0.116). The direction matches the
+confidence mechanism — the anti-correlation is strongest where the
+classifier is most confident — but the per-SNR curve is not visually
+monotone and the band difference is within one sd, so we treat H8 as weak
+supporting evidence, not an established effect. The distance score stays
+above 0.58 at every SNR.
+
 **Interpretation.** The MSP failure mode is structural, not a training
 artifact: 64QAM frames contain 16QAM-like level patterns and 4PAM is a
 noisy BPSK superset, so the softmax assigns them to a known class with high
 confidence; a confidence threshold then *accepts* them. The distance score
 operates in embedding space, where the unknown constellations land away
-from the known centroids even when the classifier is confident. This is
-consistent with feature-space detectors outperforming output-space
-confidences under semantic similarity [5, 6], and we quantify it here under
-a fully controlled shift.
+from the known centroids even when the classifier is confident. Figure 6
+shows the mechanism directly: in MSP space the unknown mass piles up at
+score ≈ 0 — maximal confidence — on the *accept* side of the calibrated
+threshold, while in distance space a large unknown mass sits far beyond it.
+Campaign 2 sharpens the reading: every output-space functional we tried
+(MSP, max-logit, energy) fails below chance on the same model, while both
+embedding-space scores work, and the simpler of the two (Euclidean) works
+best. This is consistent with feature-space detectors outperforming
+output-space confidences under semantic similarity [5, 6], quantified here
+under a fully controlled shift.
 
 ## 11. Limitations and Threats to Validity
 
@@ -280,8 +357,17 @@ a fully controlled shift.
   filtering mismatch, timing jitter and real amplifier memory effects;
   nothing here predicts measured-RF performance.
 - **Outlier-unknown similarity.** 8PAM (auxiliary) is close to 4PAM
-  (unknown); the Objectosphere result is therefore optimistic by design and
-  is not evidence about disjoint unknowns.
+  (unknown); campaign 2 measured this designed-in confound directly (H7):
+  the Objectosphere gain on 4PAM collapses to 0.002 rejection when the
+  similar outlier class is removed, and even with it the per-seed spread is
+  large (sd 0.315). Campaign 1's H2 support should be read through this.
+- **Mahalanobis configuration.** The H5 negative holds for one estimator
+  (shared covariance, shrinkage 0.1); other shrinkage values, class-wise
+  covariances or lower-dimensional embeddings were not swept and could
+  reverse it.
+- **H8 is weak evidence.** It passes the pre-registered sign criterion at
+  4/5 seeds, but the band difference is within one sd and the per-SNR curve
+  is not monotone.
 - **Five seeds, no p-values.** The pre-registered sign-consistency criterion
   (≥ 4/5 seeds) bounds, not establishes, significance; 5/5 corresponds to a
   two-sided sign-test p of 0.0625.
@@ -296,18 +382,21 @@ a fully controlled shift.
 
 ## 12. Conclusion and Future Work
 
-Under transmitter-level splits with explicit hardware impairments, the
-output-space MSP score failed below chance on structurally related unknown
-modulations (AUROC 0.343 ± 0.061, 5/5 seeds), while a simple
-embedding-distance score with the identical network and calibration protocol
-reached 0.779 ± 0.013 and rejected 51% of unknown frames at ~95% known
-acceptance; Objectosphere improved on MSP in every seed yet stayed well
-below the distance score, and the predicted closed-set cost of hardware
-impairments did not replicate (H4 not supported). We release the
+Under transmitter-level splits with explicit hardware impairments, every
+output-space score we evaluated — MSP, max-logit, energy — failed below
+chance on structurally related unknown modulations (paired on one model per
+seed), while a simple embedding-distance score with the identical network
+and calibration protocol reached AUROC 0.777 ± 0.015 and rejected half the
+unknown frames at ~95% known acceptance. The principled upgrades did not
+pay: Mahalanobis scoring trailed plain Euclidean distance in every seed
+(H5), and the Objectosphere gain proved to be mostly similarity transfer
+from the 8PAM outlier pool to the 4PAM unknowns (H7: 0.404 vs 0.002
+rejection), unstable across seeds at that. Two pre-registered predictions
+of ours were wrong and are reported as such (H4, H6/H5 directions). We release the
 benchmark, pre-registration and per-seed results so the measurement can be
-extended rather than trusted: natural next steps are Mahalanobis scoring
-with shared covariance [5], disjoint auxiliary outliers to de-confound H2, a
-channel model (fading/multipath), temperature-scaled confidences, and
+extended rather than trusted: natural next steps are a shrinkage/estimator
+sweep for Mahalanobis [5], richer and genuinely disjoint outlier pools,
+a channel model (fading/multipath), temperature-scaled confidences, and
 validation against a measured dataset with per-device labels [10, 11].
 
 ## 13. References

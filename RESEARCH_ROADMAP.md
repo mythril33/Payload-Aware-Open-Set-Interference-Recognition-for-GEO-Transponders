@@ -53,10 +53,17 @@ The repository holds two tracks:
   CFO, device-level splits, MLP/CNN1D/ResNet1D, MSP / distance /
   Objectosphere, known-val threshold calibration), 165 passing tests,
   Streamlit UI, lessons 01–04 with full-run results.
-- Pre-registered multi-seed campaign
-  (`learning/rfml-basics/experiments/PREREGISTRATION.md`, `run_campaign.py`);
-  results in `learning/rfml-basics/experiments/campaign/` and
-  `VALIDATION_REPORT.md`.
+- Pre-registered multi-seed campaigns 1 and 2
+  (`learning/rfml-basics/experiments/PREREGISTRATION.md` and
+  `PREREGISTRATION_V2.md`, `run_campaign.py`, `run_campaign2.py`); results
+  in `learning/rfml-basics/experiments/campaign*/` and
+  `VALIDATION_REPORT.md`. Outcomes: H1/H2/H3/H7 supported, H8 weakly
+  supported, H4/H5/H6 honestly negative; all output-space scores below
+  chance, Euclidean distance best, Objectosphere gain shown to be
+  outlier-similarity transfer.
+- Benchmark paper draft v1.0 with six generated figures
+  (`learning/rfml-basics/paper/`), every number traceable to the committed
+  aggregates.
 
 ## 2. Remaining work, prioritized
 

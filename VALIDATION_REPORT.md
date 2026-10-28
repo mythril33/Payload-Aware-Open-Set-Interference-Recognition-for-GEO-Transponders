@@ -10,8 +10,8 @@ was not run here.
 
 | Suite | Command | Result |
 | --- | --- | --- |
-| Track B full suite | `cd learning/rfml-basics && .venv/bin/python -m pytest -q` | 166 passed (see §6; rerun after the campaign) |
-| Campaign runner smoke | `pytest -q tests/test_campaign.py` (subprocess, quick scale) | 1 passed |
+| Track B full suite | `cd learning/rfml-basics && .venv/bin/python -m pytest -q` | 187 passed (after the campaign-2 code landed; 166 before it) |
+| Campaign runner smokes | `pytest -q tests/test_campaign.py tests/test_campaign2.py` (subprocess, quick scale) | passing (included above) |
 
 Track A's suite was not rerun in this session; the latest recorded full CI is
 run 40389841693 (107 E4 + 4,867 passed / 1 failed / 7 environment skips; the
@@ -57,6 +57,27 @@ completed). Full numbers:
 | H2 Objectosphere − MSP unknown rejection | +0.124 | 5/5 | **Supported** (with the pre-registered 8PAM/4PAM caveat) |
 | H3 fingerprint impaired − ideal accuracy | +0.152 | 5/5 | **Supported**; control at chance |
 | H4 modulation ideal − impaired CNN accuracy | +0.015 | 3/5 | **Not supported** — honest negative; prediction did not replicate |
+
+## 2b. Campaign 2 (scorer bench, pre-registered amendment)
+
+Plan: `experiments/PREREGISTRATION_V2.md`, committed (`99dd4f2`) before any
+campaign-2 run. Command: `experiments/run_campaign2.py --scale full --seeds
+0 1 2 3 4`. Provenance: commit `2dbc00e`, wall time 1093 s, zero failures
+(the first attempt was killed by a container restart and the campaign was
+rerun whole; determinism is test-verified). Code passed two independent
+reviews (leakage/protocol with a perturbation test on unknown inputs, and
+numerics with brute-force OSCR cross-checks) with zero findings.
+
+| Hypothesis | Mean paired diff | Positive seeds | Verdict |
+| --- | --- | --- | --- |
+| H5 Mahalanobis − Euclidean AUROC | −0.030 | 0/5 | **Not supported** — Mahalanobis consistently worse |
+| H6 energy − MSP AUROC | −0.027 | 2/5 | **Not supported** — all output-space scores below chance |
+| H7 4PAM rejection, 8PAM-arm − 16PSK-arm | +0.402 | 5/5 | **Supported** — Objectosphere gain is similarity transfer |
+| H8 CE+MSP AUROC, low − high SNR band | +0.042 | 4/5 | **Supported, weak** — within one sd, curve not monotone |
+
+Internal consistency check: CE+MSP per-seed AUROCs in campaign 2 equal
+campaign 1's exactly (same seed → same CE model), confirming end-to-end
+determinism across the two campaigns.
 
 ### Reading rules
 
