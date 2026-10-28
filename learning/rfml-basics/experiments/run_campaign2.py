@@ -141,7 +141,7 @@ def summarize(values: list[float | None]) -> dict:
     }
 
 
-def provenance(scale: ex.Scale, seeds: list[int]) -> dict:
+def provenance(scale: ex.Scale, seeds: list[int], started_utc: str) -> dict:
     try:
         rev = subprocess.run(
             ["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True
@@ -158,7 +158,7 @@ def provenance(scale: ex.Scale, seeds: list[int]) -> dict:
         "seeds": seeds,
         "scorer_bench_params": dict(SCORER_BENCH_PARAMS),
         "preregistration": "experiments/PREREGISTRATION_V2.md",
-        "started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "started_utc": started_utc,
     }
 
 
@@ -203,6 +203,7 @@ def main() -> int:
     ap.add_argument("--threads", type=int, default=4)
     args = ap.parse_args()
 
+    started_utc = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     torch.set_num_threads(args.threads)
     scale = ex.get_scale(args.scale)
     out: Path = args.out
@@ -227,7 +228,7 @@ def main() -> int:
             print(f"[seed {seed}] {stage}: done in {r['campaign']['stage_wall_time_s']} s", flush=True)
 
     aggregate = {
-        "provenance": provenance(scale, list(args.seeds)),
+        "provenance": provenance(scale, list(args.seeds), started_utc),
         "metrics": {},
         "hypotheses": {},
         "failures": failures,

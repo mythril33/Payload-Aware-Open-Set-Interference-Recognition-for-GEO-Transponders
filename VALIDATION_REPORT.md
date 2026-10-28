@@ -110,6 +110,38 @@ determinism across the two campaigns.
   and the 15 mandatory fits DR-05; held-out read not authorized;
   `benchmark_complete=false`. These block any Track A performance claim.
 
+## 4b. Peer review of the paper (subagent panel)
+
+Three independent reviewers (methods/statistics; a scripted number audit of
+every value in the paper against the aggregates, 135 checks; claims versus
+evidence) examined draft v1.0. Verdicts: PASS, PASS, FAIL — 27 findings, of
+which 18 were applied, 4 deferred (immutable pre-registration texts and
+follow-up experiments), 0 rejected. The substantive corrections:
+
+- Campaign 1's CE+MSP vs CE+distance comparison used **separately trained**
+  models (seed offsets 0/1/2); the "identical network" wording was wrong and
+  is fixed — the paired same-model claim belongs to campaign 2 only.
+- **Pre-registration timing, stated honestly:** campaign 1's plan file was
+  committed (`07792b9`, 21:49:06Z) about 3.5 minutes *after* the campaign's
+  first output existed (21:45:36Z); the plan text was written beforehand,
+  but the auditable record only proves post-start commitment. Campaign 2's
+  pre-registration commit (`99dd4f2`) verifiably precedes its runs.
+- The Objectosphere arms differ in training seed as well as outlier pool
+  (offsets +101/102/103); "differ only in the aux pool" was corrected and
+  outlier frame counts (800/400/400) added.
+- H4's dispersion corrected to ±0.054; "every output-space score"
+  universalization narrowed to the three scores tested; the He et al.
+  citation moved off the skip-free CNN1D; missing n values and the
+  CCR@FPR=0.1 column added; sign-test p for 4/5 (0.375) stated.
+- The number audit found exactly one numeric error in 135 checks (the H4
+  sd last digit); all six figures regenerate **byte-identically** from
+  `make_figures.py`, and the raw seed-0 score file used by Figures 2 and 6
+  is now committed.
+- Historical note: in aggregates produced before 2026-10-28T23:30Z the
+  provenance field `started_utc` was recorded at aggregation time (end of
+  run), not start; the runners now record the true start. Committed
+  aggregates were not altered.
+
 ## 5. Known issues found and their disposition
 
 | Issue | Disposition |

@@ -51,7 +51,7 @@ The repository holds two tracks:
 
 - `rfml` package (signals with IQ imbalance / Rapp PA / phase noise / DC /
   CFO, device-level splits, MLP/CNN1D/ResNet1D, MSP / distance /
-  Objectosphere, known-val threshold calibration), 165 passing tests,
+  Objectosphere, known-val threshold calibration), 187 passing tests,
   Streamlit UI, lessons 01–04 with full-run results.
 - Pre-registered multi-seed campaigns 1 and 2
   (`learning/rfml-basics/experiments/PREREGISTRATION.md` and
