@@ -1,0 +1,195 @@
+{
+  "lesson": "03_rf_fingerprint",
+  "mode": "default",
+  "n_devices": 10,
+  "modulation": "QPSK",
+  "n_samples": 512,
+  "frames_per_device": 300,
+  "split": "frame-level within each device (device is the label), fractions train/val/test = 0.6/0.2/0.2",
+  "train_snr_db": [
+    -4.0,
+    -2.0,
+    0.0,
+    2.0,
+    4.0,
+    6.0,
+    8.0,
+    10.0,
+    12.0,
+    14.0,
+    16.0,
+    18.0,
+    20.0
+  ],
+  "chance_level": 0.1,
+  "runs": {
+    "impaired": {
+      "impaired": true,
+      "chance_level": 0.1,
+      "frames": {
+        "train": 1800,
+        "val_select": 600,
+        "test": 600
+      },
+      "devices_in_test": 10,
+      "epochs_run": 11,
+      "best_epoch": 5,
+      "val_select_accuracy_best": 0.16,
+      "per_snr": [
+        {
+          "snr_db": -4.0,
+          "n": 46,
+          "accuracy": 0.13043478260869565
+        },
+        {
+          "snr_db": -2.0,
+          "n": 66,
+          "accuracy": 0.10606060606060606
+        },
+        {
+          "snr_db": 0.0,
+          "n": 50,
+          "accuracy": 0.06
+        },
+        {
+          "snr_db": 2.0,
+          "n": 30,
+          "accuracy": 0.06666666666666667
+        },
+        {
+          "snr_db": 4.0,
+          "n": 51,
+          "accuracy": 0.0784313725490196
+        },
+        {
+          "snr_db": 6.0,
+          "n": 51,
+          "accuracy": 0.21568627450980393
+        },
+        {
+          "snr_db": 8.0,
+          "n": 41,
+          "accuracy": 0.12195121951219512
+        },
+        {
+          "snr_db": 10.0,
+          "n": 50,
+          "accuracy": 0.08
+        },
+        {
+          "snr_db": 12.0,
+          "n": 43,
+          "accuracy": 0.20930232558139536
+        },
+        {
+          "snr_db": 14.0,
+          "n": 39,
+          "accuracy": 0.23076923076923078
+        },
+        {
+          "snr_db": 16.0,
+          "n": 40,
+          "accuracy": 0.1
+        },
+        {
+          "snr_db": 18.0,
+          "n": 52,
+          "accuracy": 0.23076923076923078
+        },
+        {
+          "snr_db": 20.0,
+          "n": 41,
+          "accuracy": 0.1951219512195122
+        }
+      ],
+      "overall": {
+        "n": 600,
+        "accuracy": 0.14
+      }
+    },
+    "ideal_ablation": {
+      "impaired": false,
+      "chance_level": 0.1,
+      "frames": {
+        "train": 1800,
+        "val_select": 600,
+        "test": 600
+      },
+      "devices_in_test": 10,
+      "epochs_run": 15,
+      "best_epoch": 9,
+      "val_select_accuracy_best": 0.11833333333333333,
+      "per_snr": [
+        {
+          "snr_db": -4.0,
+          "n": 60,
+          "accuracy": 0.11666666666666667
+        },
+        {
+          "snr_db": -2.0,
+          "n": 48,
+          "accuracy": 0.020833333333333332
+        },
+        {
+          "snr_db": 0.0,
+          "n": 31,
+          "accuracy": 0.0967741935483871
+        },
+        {
+          "snr_db": 2.0,
+          "n": 47,
+          "accuracy": 0.1276595744680851
+        },
+        {
+          "snr_db": 4.0,
+          "n": 45,
+          "accuracy": 0.08888888888888889
+        },
+        {
+          "snr_db": 6.0,
+          "n": 47,
+          "accuracy": 0.06382978723404255
+        },
+        {
+          "snr_db": 8.0,
+          "n": 44,
+          "accuracy": 0.13636363636363635
+        },
+        {
+          "snr_db": 10.0,
+          "n": 38,
+          "accuracy": 0.13157894736842105
+        },
+        {
+          "snr_db": 12.0,
+          "n": 54,
+          "accuracy": 0.05555555555555555
+        },
+        {
+          "snr_db": 14.0,
+          "n": 49,
+          "accuracy": 0.10204081632653061
+        },
+        {
+          "snr_db": 16.0,
+          "n": 47,
+          "accuracy": 0.10638297872340426
+        },
+        {
+          "snr_db": 18.0,
+          "n": 46,
+          "accuracy": 0.06521739130434782
+        },
+        {
+          "snr_db": 20.0,
+          "n": 44,
+          "accuracy": 0.09090909090909091
+        }
+      ],
+      "overall": {
+        "n": 600,
+        "accuracy": 0.09166666666666666
+      }
+    }
+  }
+}
