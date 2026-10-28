@@ -5,7 +5,9 @@ classifier recognise the same modulations from NEW devices, and how does accurac
 with SNR (including -6 dB, below the training range)?
 Look at: the per-SNR table (n on every row; chance 1/4), the CNN1D curve against the
 MLP curve, and the 'overall' row. The split is by device, so no test device was seen in
-training. Frames of one device are correlated, so n overstates independent samples.
+training. Compare train against test accuracy: a large gap means the model memorised
+the training devices instead of learning the modulation. Frames of one device are
+correlated, so n overstates independent samples.
 Run: python lessons/02_modulation_classification.py [--quick]
 """
 
@@ -61,10 +63,14 @@ def print_table(result: dict) -> None:
     overall_cells = " ".join(_fmt(runs[m]["overall"]["accuracy"]) for m in names)
     print(f"{'overall':>7} {runs[names[0]]['overall']['n']:>5} {overall_cells}")
     print()
-    print(f"{'model':>7} {'val-sel':>7} {'best ep':>8} {'epochs':>7}   (val-select scored the checkpoint)")
+    print(f"{'model':>7} {'train':>7} {'val-sel':>7} {'overall':>7} {'best ep':>8} {'epochs':>7}")
+    print("(train = seen devices, overall = unseen test devices; val-select picked the checkpoint)")
     for m in names:
         r = runs[m]
-        print(f"{m:>7} {_fmt(r['val_select_accuracy_best'])} {r['best_epoch'] + 1:>8} {r['epochs_run']:>7}")
+        print(
+            f"{m:>7} {_fmt(r['train_accuracy'])} {_fmt(r['val_select_accuracy_best'])} "
+            f"{_fmt(r['overall']['accuracy'])} {r['best_epoch'] + 1:>8} {r['epochs_run']:>7}"
+        )
 
 
 def progress(message: str) -> None:

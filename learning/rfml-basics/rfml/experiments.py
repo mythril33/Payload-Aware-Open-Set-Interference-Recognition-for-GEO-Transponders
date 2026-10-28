@@ -497,11 +497,15 @@ def run_modulation(
         )
         _emit(progress, f"{name}: test değerlendiriliyor…")
         per_snr, overall, cm = _evaluate_modulation(model, test_by_snr)
+        # Diagnostic only: train accuracy next to test accuracy exposes memorisation
+        # (a large gap means the model fits the training devices, not the modulation).
+        train_pred = predict_logits(model, train["iq"]).argmax(axis=1)
         best = hist["best_epoch"]
         runs[name] = {
             "epochs_run": len(hist["train_loss"]),
             "best_epoch": best,
             "val_select_accuracy_best": hist["val_score"][best],
+            "train_accuracy": accuracy(train_pred, train["label"]),
             "per_snr": per_snr,
             "overall": overall,
             "confusion_overall": cm,

@@ -79,6 +79,7 @@
       "epochs_run": 9,
       "best_epoch": 3,
       "val_select_accuracy_best": 0.295,
+      "train_accuracy": 0.9071875,
       "per_snr": [
         {
           "snr_db": -6.0,
@@ -186,6 +187,7 @@
       "epochs_run": 11,
       "best_epoch": 5,
       "val_select_accuracy_best": 0.795,
+      "train_accuracy": 0.776875,
       "per_snr": [
         {
           "snr_db": -6.0,
