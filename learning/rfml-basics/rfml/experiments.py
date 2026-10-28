@@ -38,8 +38,8 @@ from __future__ import annotations
 
 import json
 import math
+from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
-from typing import Callable, Sequence
 
 import numpy as np
 import torch
@@ -47,7 +47,12 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 from torch import nn
 
-from rfml.dataset import ModulationDataset, build_frames, make_transmitters, split_frames_stratified
+from rfml.dataset import (
+    ModulationDataset,
+    build_frames,
+    make_transmitters,
+    split_frames_stratified,
+)
 from rfml.metrics import accuracy, confusion_matrix, open_set_report
 from rfml.models import CNN1D, MLP, ResNet1D
 from rfml.openset import (
@@ -165,13 +170,15 @@ QUICK = Scale(
     frames_train=5, frames_val=3, frames_test=3,
     fp_devices=4, fp_frames=40, epochs=2,
 )
-# Standard sits between the two. Its sizes are calibrated by timing, not by theory.
+# Standard costs about a third of full. Measured on one torch thread under load from other
+# processes: full about 450 s, standard about 137 s. Chosen by compute, not to match a
+# wall-clock target.
 STANDARD = Scale(
     name="standard",
-    description="medium size",
-    tx_train=16, tx_val=6, tx_test=6, tx_aux=8, tx_unknown=6,
-    frames_train=10, frames_val=6, frames_test=6,
-    fp_devices=6, fp_frames=100, epochs=10,
+    description="about a third of full's compute",
+    tx_train=24, tx_val=8, tx_test=8, tx_aux=12, tx_unknown=8,
+    frames_train=12, frames_val=8, frames_test=8,
+    fp_devices=8, fp_frames=150, epochs=15,
 )
 # Full equals the default sizes of lessons 02-04 and lesson 03.
 FULL = Scale(
