@@ -1,7 +1,7 @@
 """Lesson 01: tensors and autograd, starting from numpy habits.
 
 Run: python lessons/01_tensors_autograd.py   (standalone: does not import rfml)
-Every claim below is an assert; a failing check stops the lesson.
+Claims in sections 1-5 are asserts; a failing check stops the lesson. Section 6 is a printed recap.
 """
 import json
 from pathlib import Path

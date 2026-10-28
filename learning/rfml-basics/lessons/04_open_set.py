@@ -275,6 +275,11 @@ def print_table(results: dict[str, dict]) -> None:
             f"{_rate(r['unknown_rejected'], rep['n_unknown']):<26}{auroc:>7}  "
             f"{_rate(cs['n_correct'], cs['n'])}"
         )
+    print(
+        "Rates are on test devices; the threshold is fixed on val-calib, so they can differ from 95%. "
+        "AUROC positive class = unknown; AUROC < 0.5 means unknown frames are more confident than "
+        "known frames (not a sign error)."
+    )
 
 
 def save_plot(raw: dict[str, dict], path: Path) -> None:

@@ -58,6 +58,7 @@
     "MLP": {
       "epochs_run": 11,
       "best_epoch": 5,
+      "train_accuracy": 0.9809375,
       "val_select_accuracy_best": 0.2975,
       "per_snr": [
         {
@@ -165,6 +166,7 @@
     "CNN1D": {
       "epochs_run": 18,
       "best_epoch": 12,
+      "train_accuracy": 0.8540625,
       "val_select_accuracy_best": 0.7875,
       "per_snr": [
         {

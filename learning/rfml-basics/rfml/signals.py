@@ -53,7 +53,10 @@ def constellation(name: str) -> np.ndarray:
 
 
 def root_raised_cosine(sps: int, rolloff: float, span: int) -> np.ndarray:
-    """Unit-energy root-raised-cosine pulse, length span*sps+1, centred on its middle sample.
+    """Unit-energy root-raised-cosine pulse, length span*sps+1, symmetric about the middle of its length.
+
+    A sample sits on the centre only when span*sps is even; for odd span*sps the two central
+    taps are equal and the peak falls half a sample off the array centre.
 
     The RRC pair (TX pulse, matched RX filter) gives zero inter-symbol interference
     at symbol spacing: the cascade is a raised cosine with zero crossings at k*T.
@@ -160,7 +163,8 @@ def apply_impairments(x: np.ndarray, tx: Transmitter, rng: np.random.Generator) 
     increments = rng.normal(0.0, tx.phase_noise_std, size=y.shape[-1])
     y = y * np.exp(1j * np.cumsum(increments))
 
-    # (4) DC offset: a constant complex bias added at the carrier.
+    # (4) DC offset: a per-device complex bias (carrier leakage). It is added before the
+    # frame CFO, so make_frame rotates it; its frame-mean is not a fixed device value.
     return y + tx.dc_offset
 
 

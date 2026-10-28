@@ -202,10 +202,11 @@ def test_calibrated_threshold_holds_with_ties() -> None:
 
 
 def test_calibrated_threshold_is_not_pushed_up_by_float_error() -> None:
-    # 0.95 * 100 is 95.00000000000001 in floating point. The correct answer is
-    # the 95th of 100 scores, not the 96th.
+    # 0.07 * 100 is 7.000000000000001 in floating point (0.95 * 100 is exact, so it
+    # would not catch a missing guard). The correct answer is the 7th of 100 scores,
+    # not the 8th.
     scores = np.arange(1.0, 101.0)
-    assert calibrate_threshold(scores, 0.95) == 95.0
+    assert calibrate_threshold(scores, 0.07) == 7.0
 
 
 def test_calibrate_threshold_rejects_bad_inputs() -> None:

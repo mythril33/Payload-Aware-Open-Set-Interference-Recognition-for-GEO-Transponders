@@ -4,8 +4,10 @@ Question: trained on BPSK, QPSK, 8PSK and 16QAM from devices it has seen, does a
 classifier recognise the same modulations from NEW devices, and how does accuracy fall
 with SNR (including -6 dB, below the training range)?
 Look at: the per-SNR table (n on every row; chance 1/4), the CNN1D curve against the
-MLP curve, and the 'overall' row. The MLP ignores time order, so CNN1D should win at most
-SNRs. Frames of one device are correlated, so n overstates independent samples.
+MLP curve, and the 'overall' row. Then compare each model's train accuracy with its test
+accuracy. An MLP has no shift or phase invariance, so it can memorise its training devices:
+train near 1.0 with test near chance is memorisation, not a broken pipeline. Frames of one
+device are correlated, so n overstates independent samples.
 Run: python lessons/02_modulation_classification.py [--quick]
 """
 
@@ -129,10 +131,14 @@ def run_model(name: str, sz: Sizes, train: dict, val: dict, test_by_snr: dict[fl
         accuracy_val_score,  # closed-set accuracy on val-select, higher is better
     )
     per_snr, overall, cm = evaluate(model, test_by_snr)
+    # Diagnostic only: train accuracy is never used for selection. It exposes memorisation,
+    # since a large train-test gap means the model learned the training devices.
+    train_accuracy = accuracy(predict_logits(model, train["iq"]).argmax(axis=1), train["label"])
     best = hist["best_epoch"]
     return {
         "epochs_run": len(hist["train_loss"]),
         "best_epoch": best,
+        "train_accuracy": train_accuracy,
         "val_select_accuracy_best": hist["val_score"][best],
         "per_snr": per_snr,
         "overall": overall,
@@ -156,6 +162,15 @@ def print_table(runs: dict[str, dict]) -> None:
     overall_n = runs[names[0]]["overall"]["n"]
     cells = " ".join(_fmt(runs[m]["overall"]["accuracy"]) for m in names)
     print(f"{'overall':>7} {overall_n:>5} {cells}")
+    # Train and val-select sit next to test so a memorising model is visible at a glance.
+    print()
+    print(f"{'model':>7} {'train':>7} {'val-sel':>7} {'test':>7}   (accuracy; train >> test means memorisation)")
+    for m in names:
+        r = runs[m]
+        print(
+            f"{m:>7} {_fmt(r['train_accuracy'])} {_fmt(r['val_select_accuracy_best'])} "
+            f"{_fmt(r['overall']['accuracy'])}"
+        )
 
 
 def save_plot(runs: dict[str, dict], path: Path) -> None:

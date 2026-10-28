@@ -146,7 +146,7 @@ def calibrate_threshold(known_scores: np.ndarray, target_known_accept: float = 0
     if not np.all(np.isfinite(s)):
         raise ValueError("known_scores contains NaN or inf")
     # k = ceil(target * n) is the number of samples that must be accepted. The
-    # 1e-9 guards against float error such as 0.95 * 100 = 95.00000000000001,
+    # 1e-9 guards against float error such as 0.07 * 100 = 7.000000000000001,
     # which would otherwise push the threshold one sample too high.
     k = int(math.ceil(target_known_accept * s.size - 1e-9))
     k = min(max(k, 1), s.size)

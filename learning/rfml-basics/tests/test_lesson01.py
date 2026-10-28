@@ -22,14 +22,16 @@ def _load_lesson():
 lesson = _load_lesson()
 
 
-def test_main_runs_to_completion(capsys):
+def test_main_runs_to_completion(capsys, monkeypatch, tmp_path):
+    monkeypatch.setattr(lesson, "RESULTS", tmp_path)  # keep tracked results/ untouched
     lesson.main()
     out = capsys.readouterr().out
     for n in range(1, 7):
         assert f"== {n}." in out
 
 
-def test_results_are_strict_json_and_png_written():
+def test_results_are_strict_json_and_png_written(monkeypatch, tmp_path):
+    monkeypatch.setattr(lesson, "RESULTS", tmp_path)  # keep tracked results/ untouched
     lesson.main()
     text = (lesson.RESULTS / "01_tensors_autograd.json").read_text()
 

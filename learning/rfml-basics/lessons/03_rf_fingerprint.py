@@ -1,9 +1,11 @@
 """Lesson 03: RF fingerprinting. Can a 1D ResNet tell devices apart by their hardware?
 
 Question: every device sends the same QPSK, so only the hardware impairments (IQ
-gain and phase, PA compression, phase noise, DC offset) can identify the device.
+gain and phase, PA compression, phase noise, DC offset, which the frame CFO rotates) can
+identify the device.
 Look at: the impaired-device accuracy against the ideal-device ablation. With identical
-devices the accuracy must sit near chance, 1/N_DEVICES, which the output states. The
+devices the accuracy should sit near chance, 1/N_DEVICES (binomial SE about 0.04 per SNR
+row at n of about 50, about 0.012 overall), so small gaps there are noise. The
 split is FRAME-level on purpose, because the device is the label (see the comment in
 run_fingerprint before you compare these numbers with lesson 02).
 
