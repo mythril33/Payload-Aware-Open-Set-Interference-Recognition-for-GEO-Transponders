@@ -105,6 +105,9 @@ def render() -> None:
     spec = C.REGISTRY[key]
     st.write(SCOPE_NOTE[spec.scope])
     st.write(spec.description)
+    available, unavailable_reason = C.is_available(spec)
+    if not available:
+        st.warning(f"Not available on this system: {unavailable_reason}")
 
     values = {}
     for param in spec.params:
@@ -123,7 +126,8 @@ def render() -> None:
     if active:
         st.warning("A job is running. Only one bounded job runs at a time.")
         _active_panel(active[0].job_id)
-    elif st.button("Start", type="primary", key=f"start-{key}"):
+    elif st.button("Start", type="primary", key=f"start-{key}", disabled=not available,
+                   help=unavailable_reason or None):
         try:
             job_id = manager.start(key, values)
         except (C.CommandRefused, LocationError, J.ActiveJobError) as error:

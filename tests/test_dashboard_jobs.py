@@ -132,12 +132,16 @@ def test_the_gui_passes_a_fixed_environment_with_cuda_hidden(tmp_path):
         seen.update(kwargs)
         return J.subprocess.Popen([sys.executable, "-c", "pass"], **{k: v for k, v in kwargs.items()
                                                                    if k in ("stdin", "stdout", "stderr", "cwd",
-                                                                            "start_new_session")})
+                                                                            "start_new_session", "creationflags")})
 
     manager = J.JobManager(tmp_path / "home", registry={"quick": _spec("quick", 0.1)},
                            popen=fake_popen, argv_guard=lambda a, s: None)
     manager.start("quick")
-    assert seen["shell"] is False and seen["start_new_session"] is True
+    assert seen["shell"] is False
+    if os.name == "posix":
+        assert seen["start_new_session"] is True
+    else:
+        assert seen["creationflags"] & J.subprocess.CREATE_NEW_PROCESS_GROUP
     assert seen["env"]["CUDA_VISIBLE_DEVICES"] == "" and seen["cwd"] == str(ROOT)
 
 

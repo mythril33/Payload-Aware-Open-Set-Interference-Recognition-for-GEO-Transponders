@@ -24,6 +24,7 @@ SCOPE_CPU_TEST = "CPU_TEST"
 DASHBOARD_TESTS = (
     "tests/test_dashboard_commands.py",
     "tests/test_dashboard_jobs.py",
+    "tests/test_dashboard_portable.py",
     "tests/test_dashboard_results.py",
     "tests/test_dashboard_evidence.py",
     "tests/test_dashboard_rf.py",
@@ -70,6 +71,26 @@ class CommandSpec:
     timeout_s: int
     success: Callable[[Path], tuple[bool, str]]
     outputs: tuple[str, ...] = ()
+    # True for commands whose governed script chain uses POSIX-only mechanisms (fcntl file locks),
+    # so they run on Linux or WSL2 but not on native Windows. Checked at call time by validate().
+    requires_posix: bool = False
+
+
+def current_platform_is_posix() -> bool:
+    """Platform check consulted at call time by validate() and is_available().
+
+    A module-level function so tests can monkeypatch geodash.commands.current_platform_is_posix
+    to exercise the non-POSIX refusal on any platform.
+    """
+    return os.name == "posix"
+
+
+def is_available(spec: CommandSpec) -> tuple[bool, str]:
+    """Whether the command can run on this platform, and the reason when it cannot."""
+    if spec.requires_posix and not current_platform_is_posix():
+        return False, (f"{spec.key} requires a POSIX system (Linux or WSL2); not available on native Windows, "
+                       "because its governed script chain uses POSIX-only file locks")
+    return True, ""
 
 
 def _python(python: str | None) -> str:
@@ -139,12 +160,14 @@ REGISTRY: dict[str, CommandSpec] = {
         scope=SCOPE_DEVELOPMENT,
         description=("Runs scripts/b2_real_execution.py on CPU. It generates one or two development groups per "
                      "role (train, val-select, val-calib), trains a tiny dual_residual model, calibrates on "
-                     "val-calib and freezes. It reads no held-out role and grants no production or GPU authority."),
+                     "val-calib and freezes. It reads no held-out role and grants no production or GPU authority. "
+                     "It needs Linux or WSL2, because its governed script chain uses POSIX-only file locks."),
         params=(_groups_choice(),),
         builder=_build_real_exercise,
         timeout_s=5400,
         success=_exercise_success,
         outputs=("exercise/exercise.json", "exercise/freeze.json"),
+        requires_posix=True,
     ),
     "preflight-gates": CommandSpec(
         key="preflight-gates",
@@ -197,6 +220,9 @@ def validate(key: str, values: Mapping | None = None, registry: Mapping | None =
     if not isinstance(key, str) or key not in registry:
         raise CommandRefused(f"command {key!r} is not in the allowlist")
     spec = registry[key]
+    available, why = is_available(spec)
+    if not available:
+        raise CommandRefused(why)
     values = dict(values or {})
     known = {p.name: p for p in spec.params}
     unknown = sorted(set(values) - set(known))
@@ -255,5 +281,5 @@ def build_environment(base: Mapping[str, str] | None = None) -> dict[str, str]:
 
 
 __all__ = ["REGISTRY", "CommandSpec", "Param", "CommandRefused", "validate", "build_argv", "assert_safe_argv",
-           "build_environment", "SCOPE_DEVELOPMENT", "SCOPE_READ_ONLY", "SCOPE_CPU_TEST", "DASHBOARD_TESTS",
-           "CPU_EXECUTION_TESTS"]
+           "build_environment", "is_available", "current_platform_is_posix", "SCOPE_DEVELOPMENT",
+           "SCOPE_READ_ONLY", "SCOPE_CPU_TEST", "DASHBOARD_TESTS", "CPU_EXECUTION_TESTS"]

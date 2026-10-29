@@ -18,9 +18,17 @@ A local Streamlit application for understanding and inspecting this repository. 
 - It does not change any committed result, gate or protocol. Generated files go outside the repository.
 - It does not show held-out observation values. Restricted files are listed, and their values are never displayed.
 
+## Native Windows
+
+The dashboard runs natively on Windows 10/11 with Python 3.12, without WSL2 and without administrator rights. The "Windows package CI" workflow runs the test suite on `windows-latest`.
+
+- **Runs natively**: every page (Dashboard, RF Explorer, Development runner, Model analysis, Experiment browser, System diagnostics, Setup guide), and the runner commands `preflight-gates`, `host-inventory`, `test-dashboard` and `test-cpu-execution`.
+- **Does not run natively**: the runner command `real-exercise`. Its governed script chain uses POSIX-only file locks (`fcntl`), so on native Windows the runner shows it as unavailable, with that reason, and refuses to start it. To run it on a Windows machine, use the WSL2 guide below, which remains the full-functionality path.
+- For a guided native-Windows install with launcher scripts, see the Turkish quick start `windows/BENIOKU.md`.
+
 ## 1. Requirements
 
-- Windows 10 (version 2004 or later) or Windows 11, with administrator rights for the first install.
+- Windows 10 (version 2004 or later) or Windows 11. Administrator rights are needed only for the WSL2 route below (the first `wsl --install`); the native Windows route above does not need them.
 - About 20 GB of free disk space and 16 GB of RAM. The memory and disk actually available are shown on the System diagnostics page.
 - A 4-core CPU is enough. No GPU is needed or used.
 
@@ -137,5 +145,5 @@ Each job has its own folder with `log.txt`, `job.json` and its outputs. Nothing 
 The dashboard has its own tests (`tests/test_dashboard_*.py`). They use synthetic fixtures and the simulator, and they never open held-out values. Run them from the dashboard's **System diagnostics** page, or from the repository folder with:
 
 ```bash
-python -m pytest -q tests/test_dashboard_commands.py tests/test_dashboard_jobs.py tests/test_dashboard_results.py tests/test_dashboard_evidence.py tests/test_dashboard_rf.py tests/test_dashboard_diagnostics.py tests/test_dashboard_app.py
+python -m pytest -q tests/test_dashboard_commands.py tests/test_dashboard_jobs.py tests/test_dashboard_portable.py tests/test_dashboard_results.py tests/test_dashboard_evidence.py tests/test_dashboard_rf.py tests/test_dashboard_diagnostics.py tests/test_dashboard_app.py
 ```

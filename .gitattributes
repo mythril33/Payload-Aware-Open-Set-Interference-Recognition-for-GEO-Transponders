@@ -1,0 +1,4 @@
+# Windows batch files must keep CRLF line endings byte-for-byte: cmd.exe mis-parses some LF-only
+# constructs, and the Windows package CI verifies CRLF inside the built zip (which is produced from
+# the committed blobs via `git archive HEAD`). `-text` stops git from ever normalizing them.
+windows/*.bat -text
