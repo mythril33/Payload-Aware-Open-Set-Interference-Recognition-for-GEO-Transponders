@@ -1,0 +1,256 @@
+# Windows package CI: the real Windows compatibility test for the two Streamlit
+# tracks (Track A dashboard, Track B learning app) and the portable zip package.
+# This workflow publishes NO release and creates NO tags: release assets are
+# produced only from reviewed, merged, green commits by a human decision.
+# It must not generate the full B2 dataset, train production models, or open
+# any production/GPU/LOKO/held-out gate (benchmark_complete=false).
+name: Windows package CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "dashboard/**"
+      - "learning/**"
+      - "windows/**"
+      - "scripts/build_windows_package.py"
+      - ".github/workflows/windows-package.yml"
+      - "pyproject.toml"
+      - "src/**"
+      - "tests/test_dashboard_*.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-package-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    name: Windows install, tests, app smoke starts, package build
+    runs-on: windows-latest
+    # 60 is the E18 CI-policy ceiling (scripts/b2_e18_ci_policy.py MAX_TIMEOUT_MINUTES);
+    # the first full run reached the Track B stage in ~9 minutes, so 60 has ample margin.
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      PYTHONHASHSEED: "0"
+      MPLBACKEND: Agg
+      CUDA_VISIBLE_DEVICES: ""
+      OMP_NUM_THREADS: "2"
+      # Python UTF-8 mode: the lesson scripts print Turkish progress text, which the
+      # Windows legacy cp1252 console cannot encode (UnicodeEncodeError). Subprocesses
+      # inherit this, so the Track B lesson/campaign tests get a UTF-8 stdout too.
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          # The repository's readiness CI validates Python 3.12; keep parity.
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Track A (dashboard) dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          # CPU-only torch first (no GPU may be required to install+launch);
+          # the PyTorch index may be unreachable, so fall back to plain PyPI.
+          python -m pip install "torch==2.14.1+cpu" --index-url https://download.pytorch.org/whl/cpu
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "PyTorch CPU index failed; falling back to PyPI torch>=2.2"
+            python -m pip install "torch>=2.2"
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+          }
+          python -m pip install -e ".[dev,ml]"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          python -m pip install -r dashboard/requirements.txt
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Run dashboard tests on real Windows
+        run: |
+          python -m pytest -q tests/test_dashboard_commands.py tests/test_dashboard_jobs.py tests/test_dashboard_portable.py tests/test_dashboard_results.py tests/test_dashboard_evidence.py tests/test_dashboard_rf.py tests/test_dashboard_diagnostics.py tests/test_dashboard_app.py
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Smoke-start Track A dashboard on 127.0.0.1:8501
+        run: |
+          # Connection-refused during polling is expected while the app boots;
+          # catch it instead of failing the step.
+          $ErrorActionPreference = "Continue"
+          $log = Join-Path $env:RUNNER_TEMP "dashboard_smoke.log"
+          $proc = Start-Process -FilePath "python" `
+            -ArgumentList "-m","streamlit","run","dashboard/app.py","--server.address","127.0.0.1","--server.port","8501","--server.headless","true" `
+            -PassThru -NoNewWindow -RedirectStandardOutput $log -RedirectStandardError "$log.err"
+          Write-Host "Started dashboard streamlit PID $($proc.Id)"
+          $healthy = $false
+          $deadline = (Get-Date).AddSeconds(150)
+          while ((Get-Date) -lt $deadline) {
+            try {
+              $resp = Invoke-WebRequest -Uri "http://127.0.0.1:8501/_stcore/health" -UseBasicParsing -TimeoutSec 3
+              if ($resp.Content.Trim() -eq "ok") { $healthy = $true; break }
+            } catch {
+              # not up yet (connection refused); keep polling
+            }
+            Start-Sleep -Seconds 3
+          }
+          if (-not $healthy) {
+            Write-Host "Dashboard health endpoint never returned 'ok'. Streamlit log:"
+            Get-Content $log -ErrorAction SilentlyContinue
+            Get-Content "$log.err" -ErrorAction SilentlyContinue
+            taskkill /PID $($proc.Id) /T /F 2>$null | Out-Null
+            exit 1
+          }
+          try {
+            $root = Invoke-WebRequest -Uri "http://127.0.0.1:8501/" -UseBasicParsing -TimeoutSec 10
+          } catch {
+            Write-Host "Dashboard root GET failed. Streamlit log:"
+            Get-Content $log -ErrorAction SilentlyContinue
+            Get-Content "$log.err" -ErrorAction SilentlyContinue
+            taskkill /PID $($proc.Id) /T /F 2>$null | Out-Null
+            exit 1
+          }
+          if ($root.StatusCode -ne 200) {
+            Write-Host "Dashboard root returned HTTP $($root.StatusCode). Streamlit log:"
+            Get-Content $log -ErrorAction SilentlyContinue
+            taskkill /PID $($proc.Id) /T /F 2>$null | Out-Null
+            exit 1
+          }
+          taskkill /PID $($proc.Id) /T /F
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "taskkill failed for dashboard PID $($proc.Id). Streamlit log:"
+            Get-Content $log -ErrorAction SilentlyContinue
+            exit 1
+          }
+          $stopped = $false
+          $stopDeadline = (Get-Date).AddSeconds(30)
+          while ((Get-Date) -lt $stopDeadline) {
+            try {
+              Invoke-WebRequest -Uri "http://127.0.0.1:8501/_stcore/health" -UseBasicParsing -TimeoutSec 2 | Out-Null
+            } catch {
+              $stopped = $true; break
+            }
+            Start-Sleep -Seconds 2
+          }
+          if (-not $stopped) {
+            Write-Host "Dashboard health endpoint still answers after taskkill. Streamlit log:"
+            Get-Content $log -ErrorAction SilentlyContinue
+            exit 1
+          }
+          Write-Host "Dashboard smoke start OK"
+
+      - name: Install Track B (learning app) dependencies into separate venv
+        run: |
+          # A SEPARATE venv proves Track A / Track B separation on Windows.
+          python -m venv .venv-rfml
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          $py = ".\.venv-rfml\Scripts\python.exe"
+          & $py -m pip install --upgrade pip
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          & $py -m pip install "torch==2.14.1+cpu" --index-url https://download.pytorch.org/whl/cpu
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "PyTorch CPU index failed; falling back to PyPI torch>=2.2"
+            & $py -m pip install "torch>=2.2"
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+          }
+          & $py -m pip install -r learning/rfml-basics/requirements.txt
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Run Track B tests with the rfml venv
+        run: |
+          Push-Location learning/rfml-basics
+          & ..\..\.venv-rfml\Scripts\python.exe -m pytest -q
+          $code = $LASTEXITCODE
+          Pop-Location
+          if ($code -ne 0) { exit 1 }
+
+      - name: Smoke-start Track B learning app on 127.0.0.1:8511
+        run: |
+          $ErrorActionPreference = "Continue"
+          $log = Join-Path $env:RUNNER_TEMP "rfml_smoke.log"
+          $py = Join-Path $env:GITHUB_WORKSPACE ".venv-rfml\Scripts\python.exe"
+          $appDir = Join-Path $env:GITHUB_WORKSPACE "learning\rfml-basics"
+          $proc = Start-Process -FilePath $py `
+            -ArgumentList "-m","streamlit","run","app.py","--server.address","127.0.0.1","--server.port","8511","--server.headless","true" `
+            -WorkingDirectory $appDir `
+            -PassThru -NoNewWindow -RedirectStandardOutput $log -RedirectStandardError "$log.err"
+          Write-Host "Started rfml streamlit PID $($proc.Id)"
+          $healthy = $false
+          $deadline = (Get-Date).AddSeconds(150)
+          while ((Get-Date) -lt $deadline) {
+            try {
+              $resp = Invoke-WebRequest -Uri "http://127.0.0.1:8511/_stcore/health" -UseBasicParsing -TimeoutSec 3
+              if ($resp.Content.Trim() -eq "ok") { $healthy = $true; break }
+            } catch {
+              # not up yet (connection refused); keep polling
+            }
+            Start-Sleep -Seconds 3
+          }
+          if (-not $healthy) {
+            Write-Host "Learning app health endpoint never returned 'ok'. Streamlit log:"
+            Get-Content $log -ErrorAction SilentlyContinue
+            Get-Content "$log.err" -ErrorAction SilentlyContinue
+            taskkill /PID $($proc.Id) /T /F 2>$null | Out-Null
+            exit 1
+          }
+          try {
+            $root = Invoke-WebRequest -Uri "http://127.0.0.1:8511/" -UseBasicParsing -TimeoutSec 10
+          } catch {
+            Write-Host "Learning app root GET failed. Streamlit log:"
+            Get-Content $log -ErrorAction SilentlyContinue
+            Get-Content "$log.err" -ErrorAction SilentlyContinue
+            taskkill /PID $($proc.Id) /T /F 2>$null | Out-Null
+            exit 1
+          }
+          if ($root.StatusCode -ne 200) {
+            Write-Host "Learning app root returned HTTP $($root.StatusCode). Streamlit log:"
+            Get-Content $log -ErrorAction SilentlyContinue
+            taskkill /PID $($proc.Id) /T /F 2>$null | Out-Null
+            exit 1
+          }
+          taskkill /PID $($proc.Id) /T /F
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "taskkill failed for learning app PID $($proc.Id). Streamlit log:"
+            Get-Content $log -ErrorAction SilentlyContinue
+            exit 1
+          }
+          $stopped = $false
+          $stopDeadline = (Get-Date).AddSeconds(30)
+          while ((Get-Date) -lt $stopDeadline) {
+            try {
+              Invoke-WebRequest -Uri "http://127.0.0.1:8511/_stcore/health" -UseBasicParsing -TimeoutSec 2 | Out-Null
+            } catch {
+              $stopped = $true; break
+            }
+            Start-Sleep -Seconds 2
+          }
+          if (-not $stopped) {
+            Write-Host "Learning app health endpoint still answers after taskkill. Streamlit log:"
+            Get-Content $log -ErrorAction SilentlyContinue
+            exit 1
+          }
+          Write-Host "Learning app smoke start OK"
+
+      - name: Build the Windows package
+        run: |
+          python scripts/build_windows_package.py --out dist --version "0.1.0-win.${{ github.run_number }}"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          if (-not (Test-Path "dist/Payload-Aware-GEO-Workbench-Windows.zip.sha256")) { exit 1 }
+          Get-Content dist/Payload-Aware-GEO-Workbench-Windows.zip.sha256
+
+      # CI artifact only: this is NOT a release. Release assets come only from
+      # reviewed, merged, green commits.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Payload-Aware-GEO-Workbench-Windows
+          path: |
+            dist/Payload-Aware-GEO-Workbench-Windows.zip
+            dist/Payload-Aware-GEO-Workbench-Windows.zip.sha256
+            dist/RELEASE_NOTES.md
+          if-no-files-found: error

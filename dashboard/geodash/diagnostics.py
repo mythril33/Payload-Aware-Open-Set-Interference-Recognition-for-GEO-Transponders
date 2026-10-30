@@ -35,17 +35,40 @@ def dependency_versions(names: tuple[str, ...] = DEPENDENCIES) -> dict[str, str 
 
 
 def memory_facts(meminfo: Path = Path("/proc/meminfo")) -> dict:
-    """Total and available RAM in GiB from /proc/meminfo. None where the file is not available."""
-    if not meminfo.is_file():
-        return {"total_gib": None, "available_gib": None, "source": "/proc/meminfo not available"}
-    values = {}
-    for line in meminfo.read_text(encoding="utf-8").splitlines():
-        match = re.match(r"(MemTotal|MemAvailable):\s+(\d+)\s+kB", line)
-        if match:
-            values[match.group(1)] = int(match.group(2)) / (1024 ** 2)
-    return {"total_gib": round(values.get("MemTotal"), 2) if "MemTotal" in values else None,
-            "available_gib": round(values.get("MemAvailable"), 2) if "MemAvailable" in values else None,
-            "source": "/proc/meminfo"}
+    """Total and available RAM in GiB: from /proc/meminfo where it exists, from GlobalMemoryStatusEx on
+    native Windows, otherwise None (never reported as zero)."""
+    if meminfo.is_file():
+        values = {}
+        for line in meminfo.read_text(encoding="utf-8").splitlines():
+            match = re.match(r"(MemTotal|MemAvailable):\s+(\d+)\s+kB", line)
+            if match:
+                values[match.group(1)] = int(match.group(2)) / (1024 ** 2)
+        return {"total_gib": round(values.get("MemTotal"), 2) if "MemTotal" in values else None,
+                "available_gib": round(values.get("MemAvailable"), 2) if "MemAvailable" in values else None,
+                "source": "/proc/meminfo"}
+    if os.name == "nt":
+        return _windows_memory_facts()
+    return {"total_gib": None, "available_gib": None, "source": "/proc/meminfo not available"}
+
+
+def _windows_memory_facts() -> dict:
+    """Total and available RAM on native Windows through the kernel32 GlobalMemoryStatusEx call."""
+    import ctypes
+
+    class MEMORYSTATUSEX(ctypes.Structure):
+        _fields_ = [("dwLength", ctypes.c_uint32), ("dwMemoryLoad", ctypes.c_uint32),
+                    ("ullTotalPhys", ctypes.c_uint64), ("ullAvailPhys", ctypes.c_uint64),
+                    ("ullTotalPageFile", ctypes.c_uint64), ("ullAvailPageFile", ctypes.c_uint64),
+                    ("ullTotalVirtual", ctypes.c_uint64), ("ullAvailVirtual", ctypes.c_uint64),
+                    ("ullAvailExtendedVirtual", ctypes.c_uint64)]
+
+    status = MEMORYSTATUSEX()
+    status.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+    if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+        return {"total_gib": None, "available_gib": None, "source": "GlobalMemoryStatusEx failed"}
+    return {"total_gib": round(status.ullTotalPhys / 1024 ** 3, 2),
+            "available_gib": round(status.ullAvailPhys / 1024 ** 3, 2),
+            "source": "GlobalMemoryStatusEx"}
 
 
 def storage_facts(paths: dict[str, Path]) -> dict:

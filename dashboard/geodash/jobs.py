@@ -1,17 +1,16 @@
 """Job manager for allowlisted development commands.
 
 One job runs at a time (an exclusive file lock guards the start). Each job is a child process in its own
-session, started without a shell, with the fixed environment from commands.build_environment. Its folder,
-log and job.json live under run_home(), outside the repository. Progress is inferred from the files a
-command writes, and the report says so. A GUI timeout terminates the whole process group.
+session (POSIX) or process group (native Windows), started without a shell, with the fixed environment
+from commands.build_environment. Its folder, log and job.json live under run_home(), outside the
+repository. Progress is inferred from the files a command writes, and the report says so. A GUI timeout
+terminates the whole process tree. All platform-specific mechanics live in geodash.portable.
 """
 from __future__ import annotations
 
-import fcntl
 import json
 import os
 import secrets
-import signal
 import subprocess
 import sys
 import time
@@ -23,6 +22,7 @@ from typing import Callable, Mapping
 
 from . import commands as C
 from .paths import REPO_ROOT, assert_outside_repo
+from .portable import exclusive_lock, pid_alive, popen_kwargs, terminate_tree
 
 RUNNING, SUCCEEDED, FAILED, CANCELLED, TIMED_OUT = "running", "succeeded", "failed", "cancelled", "timed_out"
 # The process ended, its outputs verified, but no exit status was recorded (the dashboard process that
@@ -118,24 +118,8 @@ def generator_log_tail(key: str, job_dir: Path) -> list[str]:
     return tail(logs[-1], lines=40) if logs else []
 
 
-def _pid_alive(pid: int | None) -> bool:
-    """True only for a live process. A zombie (exited, not yet reaped) is not running."""
-    if not pid:
-        return False
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        return True
-    stat = Path(f"/proc/{pid}/stat")
-    if stat.is_file():
-        try:
-            state = stat.read_text(encoding="utf-8").rsplit(")", 1)[1].split()[0]
-        except (OSError, IndexError):
-            return True
-        return state != "Z"
-    return True
+# Thin alias kept for callers and tests; the platform-specific logic lives in geodash.portable.
+_pid_alive = pid_alive
 
 
 class JobManager:
@@ -159,11 +143,8 @@ class JobManager:
     @contextmanager
     def _exclusive(self):
         with self._lock_path.open("a+") as handle:
-            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
-            try:
+            with exclusive_lock(handle):
                 yield
-            finally:
-                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
     def _record(self, job_id: str) -> dict:
         path = self.jobs_dir / job_id / "job.json"
@@ -184,7 +165,7 @@ class JobManager:
             self._guard(argv, spec)
             with (job_dir / "log.txt").open("wb") as log:
                 proc = self._popen(argv, cwd=str(REPO_ROOT), env=self._environment, stdin=subprocess.DEVNULL,
-                                   stdout=log, stderr=subprocess.STDOUT, start_new_session=True, shell=False)
+                                   stdout=log, stderr=subprocess.STDOUT, shell=False, **popen_kwargs())
             self._procs[job_id] = proc
             _write_json(job_dir / "job.json", {
                 "job_id": job_id, "key": key, "title": spec.title, "scope": spec.scope, "values": resolved,
@@ -201,29 +182,9 @@ class JobManager:
         record.update({"state": state, "returncode": returncode, "reason": reason, "finished_at": _now_iso()})
         _write_json(self.jobs_dir / job_id / "job.json", record)
 
-    def _signal_group(self, pid: int, sig: int) -> None:
-        try:
-            os.killpg(pid, sig)
-        except ProcessLookupError:
-            pass
-
     def _stop(self, job_id: str, pid: int) -> None:
-        """Terminate the process group, then reap the child so its pid is no longer reported as alive."""
-        proc = self._procs.get(job_id)
-        self._signal_group(pid, signal.SIGTERM)
-        try:
-            if proc is not None:
-                proc.wait(timeout=TERMINATE_GRACE_S)
-            else:
-                deadline = self._clock() + TERMINATE_GRACE_S
-                while _pid_alive(pid) and self._clock() < deadline:
-                    time.sleep(0.1)
-                if _pid_alive(pid):
-                    raise subprocess.TimeoutExpired(cmd=str(pid), timeout=TERMINATE_GRACE_S)
-        except subprocess.TimeoutExpired:
-            self._signal_group(pid, signal.SIGKILL)
-            if proc is not None:
-                proc.wait(timeout=TERMINATE_GRACE_S)
+        """Terminate the process tree, then reap the child so its pid is no longer reported as alive."""
+        terminate_tree(pid, self._procs.get(job_id), TERMINATE_GRACE_S, self._clock)
 
     def status(self, job_id: str) -> JobStatus:
         record = self._record(job_id)

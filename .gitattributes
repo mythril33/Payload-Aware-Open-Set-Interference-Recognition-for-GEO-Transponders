@@ -1,0 +1,11 @@
+# This repository's provenance validators hash files byte-for-byte (e.g. the K17d record binds the
+# sha256 of every src/geosim file; checkpoint provenance hashes src/**/*.py). A Windows checkout
+# with git's default core.autocrlf=true would rewrite LF to CRLF and make every such record read
+# STALE, so line-ending conversion is disabled for the whole tree: working trees are byte-identical
+# to the committed blobs on every platform. An explicit attribute takes precedence over autocrlf.
+* -text
+
+# Windows batch files additionally keep their CRLF bytes as committed: cmd.exe mis-parses some
+# LF-only constructs, and the Windows package CI verifies CRLF inside the built zip (produced from
+# the committed blobs via `git archive HEAD`). Covered by `* -text`; kept explicit as documentation.
+windows/*.bat -text

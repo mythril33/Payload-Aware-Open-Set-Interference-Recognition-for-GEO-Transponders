@@ -1,6 +1,7 @@
 """Diagnostics and provenance: parsing, readiness logic, digest agreement with the K17d script, staleness detection."""
 import importlib.util
 import json
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -33,7 +34,13 @@ def test_memory_facts_are_parsed_from_meminfo_in_gib(tmp_path):
 
 def test_missing_meminfo_is_reported_as_unknown_not_as_zero(tmp_path):
     facts = D.memory_facts(tmp_path / "absent")
-    assert facts["total_gib"] is None and facts["available_gib"] is None
+    if os.name == "nt":
+        # Native Windows has no /proc/meminfo; the kernel32 GlobalMemoryStatusEx values are used.
+        assert facts["source"] == "GlobalMemoryStatusEx"
+        assert facts["total_gib"] and facts["available_gib"]
+    else:
+        assert facts["total_gib"] is None and facts["available_gib"] is None
+        assert facts["source"] == "/proc/meminfo not available"
 
 
 def test_storage_facts_report_free_space_and_refuse_nothing(tmp_path):

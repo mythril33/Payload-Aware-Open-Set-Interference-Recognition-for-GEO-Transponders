@@ -17,6 +17,14 @@ from geodash.paths import LocationError  # noqa: E402
 JOB_DIR = Path("/tmp/geo-dashboard-test-run/jobs/20260101T000000-abcdef")
 
 
+@pytest.fixture(autouse=True)
+def _posix_platform(monkeypatch):
+    """These template and refusal tests are platform-neutral: the platform check is pinned to POSIX so
+    the file also runs on native Windows CI. The native-Windows gate on requires_posix commands is
+    tested in tests/test_dashboard_portable.py."""
+    monkeypatch.setattr(C, "current_platform_is_posix", lambda: True)
+
+
 def _python():
     return sys.executable
 
