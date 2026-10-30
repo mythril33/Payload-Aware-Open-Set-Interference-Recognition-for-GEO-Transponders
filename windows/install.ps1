@@ -7,6 +7,9 @@
 # Windows codepage. Exit code: 0 on success, nonzero on hard failure.
 
 $ErrorActionPreference = 'Continue'
+# Python UTF-8 modu: betikler Turkce metin yazar; eski cp1252 konsol kodlamasi bunu temsil edemez
+# (UnicodeEncodeError). pip ve import denetimleri dahil tum alt surecler bu degiskeni devralir.
+$env:PYTHONUTF8 = '1'
 $ProgressPreference = 'SilentlyContinue'
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path

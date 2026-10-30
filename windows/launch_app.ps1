@@ -81,6 +81,10 @@ if ($Port -eq 0) {
 }
 Write-Host ("[OK]    " + $DisplayName + " baslatiliyor (port " + $Port + "). Ilk acilis yavas olabilir.")
 
+# Python UTF-8 mode for the app and everything it spawns: the apps log Turkish text, which the
+# legacy cp1252 console encoding cannot represent (UnicodeEncodeError). Child processes inherit it.
+$env:PYTHONUTF8 = '1'
+
 # Start a hidden cmd.exe wrapper that redirects the output itself. Start-Process with
 # -RedirectStandardOutput forces UseShellExecute=$false, in which case -WindowStyle is ignored and
 # the console child would attach to the launcher's cmd window: the window would linger for the

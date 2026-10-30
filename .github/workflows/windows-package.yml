@@ -31,7 +31,9 @@ jobs:
   windows:
     name: Windows install, tests, app smoke starts, package build
     runs-on: windows-latest
-    timeout-minutes: 90
+    # 60 is the E18 CI-policy ceiling (scripts/b2_e18_ci_policy.py MAX_TIMEOUT_MINUTES);
+    # the first full run reached the Track B stage in ~9 minutes, so 60 has ample margin.
+    timeout-minutes: 60
     defaults:
       run:
         shell: pwsh
@@ -40,6 +42,10 @@ jobs:
       MPLBACKEND: Agg
       CUDA_VISIBLE_DEVICES: ""
       OMP_NUM_THREADS: "2"
+      # Python UTF-8 mode: the lesson scripts print Turkish progress text, which the
+      # Windows legacy cp1252 console cannot encode (UnicodeEncodeError). Subprocesses
+      # inherit this, so the Track B lesson/campaign tests get a UTF-8 stdout too.
+      PYTHONUTF8: "1"
     steps:
       - uses: actions/checkout@v4
         with:
