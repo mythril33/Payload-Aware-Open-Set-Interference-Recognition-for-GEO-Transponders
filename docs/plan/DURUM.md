@@ -1,6 +1,10 @@
 # Proje durumu ve eksik kaydı
 
-## ETSI-derived numerical data: provenance record — 2026-10-27
+## E18 CI-policy extension for the Windows package workflow — 2026-11-02
+
+- Base main `c6f6cb418b556ba12cd95bb51b64b2e8fac91cf9` (PR #58 merged). The merged `.github/workflows/windows-package.yml` uses `runs-on: windows-latest` and `actions/upload-artifact@v4`, which the E18 workflow lint (`scripts/b2_e18_ci_policy.py`) forbade; seven tests in `tests/test_b2_e18_ci_policy.py` therefore failed on main.
+- Policy decision request (researcher review required): `ALLOWED_ACTIONS` now includes `actions/upload-artifact@v4`, and the runner rule is `ALLOWED_RUNNERS = ("ubuntu-latest", "windows-latest")` so the merged Windows package CI lints clean. Only these two allowances changed; `MAX_TIMEOUT_MINUTES=60`, the permissions/trigger/secrets/container/forbidden-command rules, the guard-step requirements and the gate-decision matrix are untouched, and self-hosted runners, job/service containers, other actions and other majors of upload-artifact stay refused (new regression tests cover each).
+- Nothing scientific changes: no workflow file was edited, frozen protocols, gates and `benchmark_complete=false` are unchanged, and the change touches only the E18 allow-listed paths (`check-diff --base origin/main --profile e18` passes).
 
 - Committed derived files: `src/geosim/data/mux_fir.npz` (IMUX/OMUX FIR taps; 36 MHz from the TR 102 376-2 Annex E tables, 72 MHz by the TR scaling rule) and `src/geosim/data/dvbs2_twta.json` (EN 302 307-1 Annex H.7 Figures H.2/H.3, digitized). Raw ETSI documents are not in Git.
 - Checked at HEAD `3a6bd910`: the committed generator reproduces the committed arrays exactly from the Annex E text tables. The 36 MHz FIR matches the table to within 0.07 dB (IMUX) and below 0.005 dB (OMUX) wherever the table gain is at least −20 dB; deviations above 0.5 dB occur only below −53 dB (deep stopband). The 72 MHz taps are not checked numerically.

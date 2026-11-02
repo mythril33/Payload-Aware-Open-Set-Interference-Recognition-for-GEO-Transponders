@@ -204,7 +204,8 @@ def test_every_existing_workflow_passes_the_hygiene_lint():
     report = CI.lint_directory(WORKFLOWS)
     assert report["ok"], {k: v["problems"] for k, v in report["workflows"].items() if v["problems"]}
     assert sorted(report["workflows"]) == ["b2-e15-operational-ci.yml", "b2-e16-integration-ci.yml", "b2-e17-evidence-ci.yml",
-                                           "b2-e18-lifecycle-ci.yml", "b2-readiness-ci.yml", "manuscript-ci.yml", "public-data-ci.yml"]
+                                           "b2-e18-lifecycle-ci.yml", "b2-readiness-ci.yml", "manuscript-ci.yml", "public-data-ci.yml",
+                                           "windows-package.yml"]
 
 
 def test_read_only_permissions_at_the_end_of_the_header_do_not_need_a_blank_line():
@@ -280,6 +281,62 @@ def test_lint_rejects_each_widening_of_the_boundary(old, new, expected):
 def test_commented_commands_are_not_executed_commands():
     text = mutate("python -m pip install --upgrade pip", "# python -m geosim.b2_dataset is only mentioned here\n          python -m pip install --upgrade pip")
     assert CI.lint_workflow(text) == []
+
+
+# ---- the Windows package extension: windows-latest and upload-artifact@v4 are allowed, nothing else was widened -------------------
+
+WINDOWS_SYNTHETIC = textwrap.dedent("""\
+    name: Synthetic windows package workflow
+    on:
+      pull_request:
+        branches: [main]
+      workflow_dispatch:
+
+    permissions:
+      contents: read
+
+    jobs:
+      windows:
+        runs-on: windows-latest
+        timeout-minutes: 60
+        defaults:
+          run:
+            shell: pwsh
+        steps:
+          - uses: actions/checkout@v4
+          - uses: actions/setup-python@v5
+          - name: Run packaging tests
+            run: |
+              python -m pip install --upgrade pip
+              if ($LASTEXITCODE -ne 0) { exit 1 }
+              python -m pytest -q tests/test_dashboard_portable.py
+              if ($LASTEXITCODE -ne 0) { exit 1 }
+          - uses: actions/upload-artifact@v4
+            with:
+              name: synthetic-package
+              path: dist/synthetic.zip
+""")
+
+
+def test_a_windows_latest_package_workflow_with_the_allowed_actions_lints_clean():
+    assert CI.lint_workflow(WINDOWS_SYNTHETIC, "synthetic-windows.yml") == []
+    assert CI.lint_workflow((WORKFLOWS / "windows-package.yml").read_text(), "windows-package.yml") == []
+
+
+@pytest.mark.parametrize("old,new,expected", [
+    ("runs-on: windows-latest", "runs-on: self-hosted", "runner"),                                       # self-hosted stays refused
+    ("runs-on: windows-latest", "runs-on: macos-latest", "runner"),                                      # the allowance names two runners, not "hosted"
+    ("runs-on: windows-latest", "runs-on: [self-hosted, windows]", "runner"),
+    ("uses: actions/upload-artifact@v4", "uses: actions/cache@v4", "allow list"),                        # actions off the list stay refused
+    ("uses: actions/upload-artifact@v4", "uses: actions/upload-artifact@v3", "allow list"),              # a different major of the same action is a different action
+    ("uses: actions/upload-artifact@v4", "uses: actions/upload-artifact@main", "allow list"),
+    ("    runs-on: windows-latest\n", "    runs-on: windows-latest\n    container: attacker/image\n", "container"),
+    ("timeout-minutes: 60", "timeout-minutes: 61", "timeout"),
+])
+def test_the_windows_extension_does_not_weaken_the_other_boundaries(old, new, expected):
+    assert old in WINDOWS_SYNTHETIC
+    problems = CI.lint_workflow(WINDOWS_SYNTHETIC.replace(old, new, 1), "synthetic-windows.yml")
+    assert problems and any(expected in p for p in problems), problems
 
 
 # ---- the gate-state decision matrix ------------------------------------------------------------------------------------------
