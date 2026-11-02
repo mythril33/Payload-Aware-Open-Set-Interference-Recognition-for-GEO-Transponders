@@ -71,6 +71,11 @@ class CommandSpec:
     timeout_s: int
     success: Callable[[Path], tuple[bool, str]]
     outputs: tuple[str, ...] = ()
+    # Exit statuses that, together with a passing success() check, count as a completed command.
+    # scripts/b2_production_preflight.py documents 0 PASS, 3 FAIL, 4 BLOCKED, 5 NOT_RUN: for the
+    # read-only inventories a BLOCKED verdict (every compute gate closed) is the expected state of
+    # this repository, so exit 4 is a successful read there — it reports closure, it grants nothing.
+    ok_returncodes: tuple[int, ...] = (0,)
     # True for commands whose governed script chain uses POSIX-only mechanisms (fcntl file locks),
     # so they run on Linux or WSL2 but not on native Windows. Checked at call time by validate().
     requires_posix: bool = False
@@ -148,9 +153,43 @@ def _exercise_success(job_dir: Path) -> tuple[bool, str]:
     return True, "exercise.json matches the bounded-development boundary"
 
 
+ACCEPTED_INVENTORY_VERDICTS = ("PASS", "BLOCKED")
+
+
+def _verdict_reason(verdict: str, blocked_means: str) -> tuple[bool, str]:
+    if verdict == "BLOCKED":
+        return True, f"verdict BLOCKED: {blocked_means}; this authorizes nothing"
+    if verdict == "PASS":
+        return True, "verdict PASS"
+    return False, f"verdict {verdict or 'missing'}: the inventory did not verify a readable state"
+
+
+def _gates_success(job_dir: Path) -> tuple[bool, str]:
+    """The gates command prints one JSON report to its log; success is a readable PASS/BLOCKED verdict."""
+    log = job_dir / "log.txt"
+    if not log.is_file():
+        return False, "no log was written"
+    try:
+        report = json.loads(log.read_text(encoding="utf-8", errors="replace"))
+    except ValueError:
+        return False, "the gate inventory did not print a readable JSON report"
+    return _verdict_reason(str(report.get("verdict", "")),
+                           "the inventory ran and reports every compute gate closed — the expected state "
+                           "of this repository")
+
+
 def _host_success(job_dir: Path) -> tuple[bool, str]:
-    return ((job_dir / "host.json").is_file(), "host.json written" if (job_dir / "host.json").is_file()
-            else "host.json was not written")
+    path = job_dir / "host.json"
+    if not path.is_file():
+        return False, "host.json was not written"
+    try:
+        report = json.loads(path.read_text(encoding="utf-8"))
+    except ValueError:
+        return False, "host.json is not readable JSON"
+    ok, reason = _verdict_reason(str(report.get("verdict", "")),
+                                 "this host does not meet the production-resource bar — informational on a "
+                                 "development machine")
+    return ok, f"host.json written; {reason}"
 
 
 REGISTRY: dict[str, CommandSpec] = {
@@ -173,22 +212,28 @@ REGISTRY: dict[str, CommandSpec] = {
         key="preflight-gates",
         title="Read-only gate inventory",
         scope=SCOPE_READ_ONLY,
-        description="Runs scripts/b2_production_preflight.py gates. Reads the gate and memo files; writes nothing.",
+        description=("Runs scripts/b2_production_preflight.py gates. Reads the gate and memo files; writes "
+                     "nothing. Exit 4 with verdict BLOCKED means every compute gate is closed — the expected "
+                     "state — and is reported as a successful read, never as an authorization."),
         params=(),
         builder=_build_preflight_gates,
         timeout_s=300,
-        success=_exit_zero,
+        success=_gates_success,
+        ok_returncodes=(0, 4),
     ),
     "host-inventory": CommandSpec(
         key="host-inventory",
         title="Read-only host inventory",
         scope=SCOPE_READ_ONLY,
-        description="Runs scripts/b2_host_inventory.py for one role and writes host.json into the job folder.",
+        description=("Runs scripts/b2_host_inventory.py for one role and writes host.json into the job folder. "
+                     "Exit 4 with verdict BLOCKED means this host does not meet the production-resource bar — "
+                     "informational on a development machine, and never an authorization either way."),
         params=(Param("role", ("generation", "training"), "generation", "host role"),),
         builder=_build_host_inventory,
         timeout_s=300,
         success=_host_success,
         outputs=("host.json",),
+        ok_returncodes=(0, 4),
     ),
     "test-dashboard": CommandSpec(
         key="test-dashboard",
@@ -264,14 +309,30 @@ def assert_safe_argv(argv: list[str], spec: CommandSpec) -> None:
     raise CommandRefused(f"argv does not match an allowlisted template for {spec.key}")
 
 
+POSIX_INHERITED = ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR", "USER", "LOGNAME")
+# Windows children need the system set on top: without SystemRoot/ComSpec the Win32 layer itself
+# (Winsock, crypto providers) fails to initialize, without TEMP/TMP tempfile has no writable
+# fallback, and without USERPROFILE/USERNAME getpass and pytest's tmp factory break. The installed
+# dashboard's test-dashboard job died with pytest INTERNALERROR — exit status 3 — for exactly this
+# reason (job 20261101T211747-745f83). Still a fixed allowlist: no secrets, CUDA stays hidden.
+WINDOWS_INHERITED = POSIX_INHERITED + (
+    "SYSTEMROOT", "SYSTEMDRIVE", "WINDIR", "COMSPEC", "PATHEXT", "TEMP", "TMP",
+    "USERPROFILE", "LOCALAPPDATA", "APPDATA", "PROGRAMDATA", "USERNAME",
+    "NUMBER_OF_PROCESSORS", "PROCESSOR_ARCHITECTURE")
+
+
 def build_environment(base: Mapping[str, str] | None = None) -> dict[str, str]:
     """A fixed environment. Only listed variables are inherited; CUDA is hidden; no secrets are passed."""
     base = os.environ if base is None else base
-    inherited = {k: base[k] for k in ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR", "USER", "LOGNAME") if k in base}
+    names = WINDOWS_INHERITED if os.name == "nt" else POSIX_INHERITED
+    inherited = {k: base[k] for k in names if k in base}
     inherited.update({
         "PYTHONPATH": str(REPO_ROOT / "src"),
         "PYTHONHASHSEED": "0",
         "PYTHONDONTWRITEBYTECODE": "1",
+        # UTF-8 mode, matching the Windows launchers and CI: job logs hold Turkish text that the
+        # legacy cp1252 stream encoding cannot represent.
+        "PYTHONUTF8": "1",
         "OMP_NUM_THREADS": "2",
         "OPENBLAS_NUM_THREADS": "2",
         "MKL_NUM_THREADS": "2",
@@ -282,4 +343,5 @@ def build_environment(base: Mapping[str, str] | None = None) -> dict[str, str]:
 
 __all__ = ["REGISTRY", "CommandSpec", "Param", "CommandRefused", "validate", "build_argv", "assert_safe_argv",
            "build_environment", "is_available", "current_platform_is_posix", "SCOPE_DEVELOPMENT",
-           "SCOPE_READ_ONLY", "SCOPE_CPU_TEST", "DASHBOARD_TESTS", "CPU_EXECUTION_TESTS"]
+           "SCOPE_READ_ONLY", "SCOPE_CPU_TEST", "DASHBOARD_TESTS", "CPU_EXECUTION_TESTS",
+           "POSIX_INHERITED", "WINDOWS_INHERITED"]

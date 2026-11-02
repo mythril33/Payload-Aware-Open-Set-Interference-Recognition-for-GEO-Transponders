@@ -1,7 +1,10 @@
 # Research roadmap
 
-Status date: 2026-10-28, branch `claude/serene-johnson-urtxgj` (base main
-`8911fee`). This file tracks the route from the current state to publication.
+Status date: 2026-11-02 (previous: 2026-10-28, branch
+`claude/serene-johnson-urtxgj`, base main `8911fee`). Since then the Windows
+workbench packaging merged (PR #58, main `c6f6cb4`); it is software-only
+delivery and changes no gate or scientific status.
+This file tracks the route from the current state to publication.
 It summarizes and links evidence; it never replaces the protocol documents
 (`docs/plan/P18_b2_protocol.md` and the frozen stages) or the researcher
 decision records. Where this file and a protocol disagree, the protocol wins.

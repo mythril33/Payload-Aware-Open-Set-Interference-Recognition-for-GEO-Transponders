@@ -203,6 +203,44 @@ def test_the_exercise_job_is_only_successful_with_a_valid_report(tmp_path):
     assert not spec.success(job)[0]
 
 
+def test_an_accepted_blocked_exit_status_succeeds_with_the_closure_named(tmp_path):
+    """A read-only inventory exiting 4 (verdict BLOCKED: gates closed, the expected state) is a
+    successful read; the reason keeps the exit status and the closure visible. Exit 3 stays failed."""
+    blocked = C.CommandSpec(key="inv", title="inv", scope=C.SCOPE_READ_ONLY, description="", params=(),
+                            builder=lambda v, d, p: [sys.executable, "-c", "import sys;sys.exit(4)"],
+                            timeout_s=60, success=lambda d: (True, "verdict BLOCKED: gates closed"),
+                            ok_returncodes=(0, 4))
+    manager = _manager(tmp_path, {"inv": blocked})
+    status = _wait_for(manager, manager.start("inv"), {J.SUCCEEDED, J.FAILED})
+    assert status.state == J.SUCCEEDED and status.returncode == 4
+    assert "exit status 4" in status.reason and "BLOCKED" in status.reason
+    failing = C.CommandSpec(key="inv3", title="inv3", scope=C.SCOPE_READ_ONLY, description="", params=(),
+                            builder=lambda v, d, p: [sys.executable, "-c", "import sys;sys.exit(3)"],
+                            timeout_s=60, success=lambda d: (True, "verdict would not matter"),
+                            ok_returncodes=(0, 4))
+    manager2 = _manager(tmp_path / "second", {"inv3": failing})
+    status = _wait_for(manager2, manager2.start("inv3"), {J.SUCCEEDED, J.FAILED})
+    assert status.state == J.FAILED and status.returncode == 3
+
+
+def test_the_fixed_job_environment_can_actually_run_pytest_in_a_child_process():
+    """Regression for the installed-Windows failure (job 20261101T211747-745f83, exit status 3).
+
+    The job manager starts every command with the fixed environment from commands.build_environment.
+    pytest must be able to start and collect under that environment on THIS platform: on Windows a
+    child without the system variables (SystemRoot, ComSpec, TEMP/TMP, USERPROFILE, USERNAME, ...)
+    dies in pytest's own startup with INTERNALERROR, which is exit status 3 — before any test runs.
+    """
+    import subprocess
+
+    done = subprocess.run(
+        [sys.executable, "-m", "pytest", "--collect-only", "-q", "-p", "no:cacheprovider",
+         "tests/test_dashboard_commands.py"],
+        cwd=str(ROOT), env=C.build_environment(), capture_output=True, text=True, timeout=180)
+    assert done.returncode == 0, (f"pytest child exited {done.returncode} under the fixed job environment\n"
+                                  f"stdout tail:\n{done.stdout[-2000:]}\nstderr tail:\n{done.stderr[-2000:]}")
+
+
 def test_a_finished_job_without_a_recorded_exit_status_is_not_reported_as_success(tmp_path):
     """A job that outlived the dashboard process that started it: outputs verified, exit status unknown."""
     registry = {"quick": _spec("quick", 0.2, success=lambda job_dir: (True, "outputs verified"))}
