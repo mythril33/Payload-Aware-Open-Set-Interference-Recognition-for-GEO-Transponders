@@ -28,6 +28,22 @@ The E7a readiness paragraph below is a historical snapshot.
 
 **B2 production supervisor (E7a, merged; post-merge hotfix 2026-10-24):** verified main `0e8c467` contains merged PR #22 (the independent-review hardening; Actions [run 40035525938](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40035525938): 1486 passed, 7 skipped + E4 step) after PR #21 (first E7a state), PR #20 (E6, run 40004028017: 1333 passed). E7a adds a fail-closed [staged production supervisor](docs/plan/P30_b2_e7a_production_supervisor.md) (dry run by default; known -> test-only -> matched; immutable lock, anchored hash-chained journal, ceilings, heartbeats, first-shard timing gate, interruption and orphan quarantine; bounded to two groups per stage, the production launch is not implemented), observation-only K18 training diagnostics, a candidate [training specification](docs/plan/B2_E7_TRAINING_SPEC_PROPOSAL.md) (not frozen, not approved; decisions R1-R10) and a capped real-physics [verification](docs/results/b2_e7a_supervisor_verification.md). The hotfix branch adds the fixes of a second read-only audit. [Readiness checklist](docs/plan/B2_E6_PRODUCTION_READINESS_CHECKLIST.md): PASS 31 / FAIL 1 / BLOCKED 15 / NOT_RUN 1. No full generation, GPU training or LOKO was run; all gates remain closed and `benchmark_complete=false`. Earlier sections below are historical development records; [current status](docs/plan/DURUM.md) supersedes their pending-work snapshots.
 
+## Windows research workbench (software, not benchmark evidence)
+
+The repository ships a native Windows package (installer `windows/KURULUM.bat`, no
+admin rights, no GPU, no API key) that installs two **separate** applications with
+separate virtual environments (`.venv-dashboard`, `.venv-rfml`), launched via desktop
+shortcuts: the governed **Track A** research dashboard (`dashboard/app.py`) and the
+independent **Track B** learning app (`learning/rfml-basics/app.py`). The Track A /
+Track B separation is strict: the two apps share no data, no models and no scientific
+claims. The apps are Python/Streamlit script launchers (`.bat` + PowerShell), not a
+standalone `.exe`. The package is built and smoke-tested by the "Windows package CI"
+workflow on `windows-latest` and distributed as the `Payload-Aware-GEO-Workbench-Windows`
+CI artifact; no GitHub Release is published. This is a SOFTWARE delivery only: it
+executes no gated experiment and changes no scientific status (`benchmark_complete=false`;
+production, GPU, LOKO and held-out evaluation remain unauthorized). See
+[windows/BENIOKU.md](windows/BENIOKU.md) (Turkish quick start) and
+[dashboard/README.md](dashboard/README.md) (including its Native Windows section).
 
 GEO bent-pipe transponderindeki girişimi, operatörün downlink spektrum izlemesinden tanıyan derin öğrenme çalışması. Ders projesi; makaleye genişletilecek.
 
