@@ -113,7 +113,10 @@ def check_diff(changed, profile="e18"):
 
 # ---- workflow hygiene ---------------------------------------------------------------------------------------------------
 
-ALLOWED_ACTIONS = ("actions/checkout@v4", "actions/setup-python@v5")
+ALLOWED_ACTIONS = ("actions/checkout@v4", "actions/setup-python@v5", "actions/upload-artifact@v4")
+# GitHub-hosted runners only. windows-latest was added for the reviewed Windows package workflow
+# (.github/workflows/windows-package.yml); self-hosted runners and job/service containers stay forbidden.
+ALLOWED_RUNNERS = ("ubuntu-latest", "windows-latest")
 FORBIDDEN_COMMANDS = (
     r"geosim\.b2_dataset", r"geoml\.b2_experiment", r"geoml\.train\b", r"b2_production_supervisor\.py", r"--mode\s+production",
     r"b2_production_preflight\.py\s+(lock-create|drill|run)", r"\bnvidia-smi\b", r"\btorch\.cuda\b", r"\bcurl\b", r"\bwget\b", r"\bscp\b",
@@ -172,8 +175,8 @@ def lint_workflow(text, name="workflow"):
         if re.search(pattern, code, re.M):
             problems.append(label)
     runners = re.findall(r"^\s*runs-on:\s*(\S+)", code, re.M)
-    if not runners or any(r != "ubuntu-latest" for r in runners):
-        problems.append("only the hosted ubuntu-latest runner is allowed")
+    if not runners or any(r not in ALLOWED_RUNNERS for r in runners):
+        problems.append("only the hosted ubuntu-latest and windows-latest runners are allowed")
     for action in re.findall(r"^\s*-?\s*uses:\s*(\S+)", code, re.M):
         if action not in ALLOWED_ACTIONS:
             problems.append(f"action not on the allow list: {action}")
