@@ -156,13 +156,12 @@ def _exercise_success(job_dir: Path) -> tuple[bool, str]:
 ACCEPTED_INVENTORY_VERDICTS = ("PASS", "BLOCKED")
 
 
-def _verdict_reason(verdict: str) -> tuple[bool, str]:
+def _verdict_reason(verdict: str, blocked_means: str) -> tuple[bool, str]:
     if verdict == "BLOCKED":
-        return True, ("verdict BLOCKED: the inventory ran and reports every compute gate closed — the "
-                      "expected state of this repository; this authorizes nothing")
+        return True, f"verdict BLOCKED: {blocked_means}; this authorizes nothing"
     if verdict == "PASS":
         return True, "verdict PASS"
-    return False, f"verdict {verdict or 'missing'}: the inventory did not verify a readable gate state"
+    return False, f"verdict {verdict or 'missing'}: the inventory did not verify a readable state"
 
 
 def _gates_success(job_dir: Path) -> tuple[bool, str]:
@@ -174,7 +173,9 @@ def _gates_success(job_dir: Path) -> tuple[bool, str]:
         report = json.loads(log.read_text(encoding="utf-8", errors="replace"))
     except ValueError:
         return False, "the gate inventory did not print a readable JSON report"
-    return _verdict_reason(str(report.get("verdict", "")))
+    return _verdict_reason(str(report.get("verdict", "")),
+                           "the inventory ran and reports every compute gate closed — the expected state "
+                           "of this repository")
 
 
 def _host_success(job_dir: Path) -> tuple[bool, str]:
@@ -185,7 +186,9 @@ def _host_success(job_dir: Path) -> tuple[bool, str]:
         report = json.loads(path.read_text(encoding="utf-8"))
     except ValueError:
         return False, "host.json is not readable JSON"
-    ok, reason = _verdict_reason(str(report.get("verdict", "")))
+    ok, reason = _verdict_reason(str(report.get("verdict", "")),
+                                 "this host does not meet the production-resource bar — informational on a "
+                                 "development machine")
     return ok, f"host.json written; {reason}"
 
 
