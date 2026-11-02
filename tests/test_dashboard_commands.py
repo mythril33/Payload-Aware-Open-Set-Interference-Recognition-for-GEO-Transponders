@@ -199,6 +199,35 @@ def test_environment_is_rebuilt_from_a_fixed_list_and_hides_cuda():
 
 # ---- the runner's test files exist and do not read generated data --------------------------------------
 
+def test_a_blocked_gate_inventory_is_a_successful_read_that_names_the_closure(tmp_path):
+    """Exit 4 / verdict BLOCKED is the EXPECTED state (all compute gates closed). The read-only
+    inventories report it as a successful reading that grants nothing; FAIL and NOT_RUN stay errors."""
+    (tmp_path / "log.txt").write_text('{"verdict": "BLOCKED"}', encoding="utf-8")
+    ok, reason = C._gates_success(tmp_path)
+    assert ok and "BLOCKED" in reason and "closed" in reason and "authorizes nothing" in reason
+    (tmp_path / "log.txt").write_text('{"verdict": "FAIL"}', encoding="utf-8")
+    assert not C._gates_success(tmp_path)[0]
+    (tmp_path / "log.txt").write_text("not json at all", encoding="utf-8")
+    assert not C._gates_success(tmp_path)[0]
+    assert not C._gates_success(tmp_path / "missing")[0]
+
+
+def test_host_inventory_success_reads_the_verdict_from_host_json(tmp_path):
+    assert not C._host_success(tmp_path)[0]
+    (tmp_path / "host.json").write_text('{"verdict": "BLOCKED"}', encoding="utf-8")
+    ok, reason = C._host_success(tmp_path)
+    assert ok and reason.startswith("host.json written") and "BLOCKED" in reason
+    (tmp_path / "host.json").write_text('{"verdict": "NOT_RUN"}', encoding="utf-8")
+    assert not C._host_success(tmp_path)[0]
+
+
+def test_only_the_read_only_inventories_accept_the_blocked_exit_status():
+    assert C.REGISTRY["preflight-gates"].ok_returncodes == (0, 4)
+    assert C.REGISTRY["host-inventory"].ok_returncodes == (0, 4)
+    for key in ("real-exercise", "test-dashboard", "test-cpu-execution"):
+        assert C.REGISTRY[key].ok_returncodes == (0,), key
+
+
 @pytest.mark.parametrize("relative", list(C.CPU_EXECUTION_TESTS))
 def test_allowlisted_cpu_test_files_exist_and_read_no_generated_directory(relative):
     """The runner executes these files, so none may read the generated run folders."""

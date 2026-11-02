@@ -216,8 +216,11 @@ class JobManager:
                               "that started it" if ok else
                               f"process ended with no recorded exit status and its outputs did not verify: {why}")
                 else:
-                    state = SUCCEEDED if (returncode == 0 and ok) else FAILED
-                    reason = why if state == SUCCEEDED else f"exit status {returncode}; {why}"
+                    ok_rcs = spec.ok_returncodes if spec else (0,)
+                    state = SUCCEEDED if (returncode in ok_rcs and ok) else FAILED
+                    # A non-zero accepted exit status (the preflight scripts' documented BLOCKED=4)
+                    # stays visible in the reason even on success; it is a reading, not an authorization.
+                    reason = why if (state == SUCCEEDED and returncode == 0) else f"exit status {returncode}; {why}"
                 self._finish(job_id, record, state, returncode, reason)
         stage, detail = infer_stage(record["key"], job_dir)
         return JobStatus(
