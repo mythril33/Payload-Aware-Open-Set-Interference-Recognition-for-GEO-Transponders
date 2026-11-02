@@ -3,6 +3,7 @@
 CPU-only and synthetic. No command is executed here; argv and environments are built and inspected.
 """
 import ast
+import os
 import sys
 from pathlib import Path
 
@@ -186,9 +187,14 @@ def test_environment_is_rebuilt_from_a_fixed_list_and_hides_cuda():
     assert env["PYTHONPATH"] == str(ROOT / "src")
     assert env["PYTHONHASHSEED"] == "0"
     assert env["OMP_NUM_THREADS"] == "2" and env["OPENBLAS_NUM_THREADS"] == "2"
-    assert set(env) <= {"PATH", "HOME", "LANG", "LC_ALL", "TMPDIR", "USER", "LOGNAME", "PYTHONPATH",
-                        "PYTHONHASHSEED", "PYTHONDONTWRITEBYTECODE", "OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS",
-                        "MKL_NUM_THREADS", "CUDA_VISIBLE_DEVICES"}
+    fixed = {"PYTHONPATH", "PYTHONHASHSEED", "PYTHONDONTWRITEBYTECODE", "PYTHONUTF8", "OMP_NUM_THREADS",
+             "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "CUDA_VISIBLE_DEVICES"}
+    inherited = set(C.WINDOWS_INHERITED if os.name == "nt" else C.POSIX_INHERITED)
+    assert set(env) <= inherited | fixed
+    assert env["PYTHONUTF8"] == "1"
+    # The Windows list is the POSIX list plus system variables; neither may ever carry secrets.
+    assert set(C.POSIX_INHERITED) <= set(C.WINDOWS_INHERITED)
+    assert "SECRET_TOKEN" not in C.WINDOWS_INHERITED and "LD_PRELOAD" not in C.WINDOWS_INHERITED
 
 
 # ---- the runner's test files exist and do not read generated data --------------------------------------

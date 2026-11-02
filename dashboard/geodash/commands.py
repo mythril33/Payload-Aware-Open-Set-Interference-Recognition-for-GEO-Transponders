@@ -264,14 +264,30 @@ def assert_safe_argv(argv: list[str], spec: CommandSpec) -> None:
     raise CommandRefused(f"argv does not match an allowlisted template for {spec.key}")
 
 
+POSIX_INHERITED = ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR", "USER", "LOGNAME")
+# Windows children need the system set on top: without SystemRoot/ComSpec the Win32 layer itself
+# (Winsock, crypto providers) fails to initialize, without TEMP/TMP tempfile has no writable
+# fallback, and without USERPROFILE/USERNAME getpass and pytest's tmp factory break. The installed
+# dashboard's test-dashboard job died with pytest INTERNALERROR — exit status 3 — for exactly this
+# reason (job 20261101T211747-745f83). Still a fixed allowlist: no secrets, CUDA stays hidden.
+WINDOWS_INHERITED = POSIX_INHERITED + (
+    "SYSTEMROOT", "SYSTEMDRIVE", "WINDIR", "COMSPEC", "PATHEXT", "TEMP", "TMP",
+    "USERPROFILE", "LOCALAPPDATA", "APPDATA", "PROGRAMDATA", "USERNAME",
+    "NUMBER_OF_PROCESSORS", "PROCESSOR_ARCHITECTURE")
+
+
 def build_environment(base: Mapping[str, str] | None = None) -> dict[str, str]:
     """A fixed environment. Only listed variables are inherited; CUDA is hidden; no secrets are passed."""
     base = os.environ if base is None else base
-    inherited = {k: base[k] for k in ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR", "USER", "LOGNAME") if k in base}
+    names = WINDOWS_INHERITED if os.name == "nt" else POSIX_INHERITED
+    inherited = {k: base[k] for k in names if k in base}
     inherited.update({
         "PYTHONPATH": str(REPO_ROOT / "src"),
         "PYTHONHASHSEED": "0",
         "PYTHONDONTWRITEBYTECODE": "1",
+        # UTF-8 mode, matching the Windows launchers and CI: job logs hold Turkish text that the
+        # legacy cp1252 stream encoding cannot represent.
+        "PYTHONUTF8": "1",
         "OMP_NUM_THREADS": "2",
         "OPENBLAS_NUM_THREADS": "2",
         "MKL_NUM_THREADS": "2",
@@ -282,4 +298,5 @@ def build_environment(base: Mapping[str, str] | None = None) -> dict[str, str]:
 
 __all__ = ["REGISTRY", "CommandSpec", "Param", "CommandRefused", "validate", "build_argv", "assert_safe_argv",
            "build_environment", "is_available", "current_platform_is_posix", "SCOPE_DEVELOPMENT",
-           "SCOPE_READ_ONLY", "SCOPE_CPU_TEST", "DASHBOARD_TESTS", "CPU_EXECUTION_TESTS"]
+           "SCOPE_READ_ONLY", "SCOPE_CPU_TEST", "DASHBOARD_TESTS", "CPU_EXECUTION_TESTS",
+           "POSIX_INHERITED", "WINDOWS_INHERITED"]
