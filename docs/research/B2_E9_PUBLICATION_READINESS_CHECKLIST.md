@@ -1,5 +1,8 @@
 # B2 E9 — publication readiness checklist
 
+> **Current-status addendum (2026-11-03):** This checklist is an **E9 historical snapshot**, not the current 0/2-closed or 0/14-closed verdict. E10 engineering work addressed the C-2 metadata reproducibility gap and individual major items; E12 D-1 accepted explicit disclosure and 498/148 exposure-excluded sensitivity rows, and D-8 accepted the committed K17d identity metadata conditionally. The *future production-metadata cross-check and final held-out execution are NOT RUN*, so neither C-1's historical exposure nor C-2's remaining production verification should be silently marked fully solved. The primary endpoint was designated by D-4 but the scorer still requires designation. See [E10 closure](B2_E10_CRITICAL_FINDINGS_CLOSURE.md), [E12 approval](../plan/B2_E12_D1_D8_SCIENTIFIC_APPROVAL_2026-10-24.md), [K17d drift report](../results/B2_K17D_M14_DRIFT_TABLE.md), and [M-11 erratum](../results/B2_P1_RESOURCE_ERRATA.md). No production/GPU/LOKO/held-out authorization follows from this addendum.
+
+
 **Status:** review checklist, read-only. Companion to
 [the independent audit](B2_E9_INDEPENDENT_SCIENTIFIC_AUDIT.md) and
 [the open-set statistical review](B2_E9_OPEN_SET_STATISTICAL_REVIEW.md).

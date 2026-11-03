@@ -1,6 +1,6 @@
 # Research roadmap
 
-Status date: 2026-11-02 (previous: 2026-10-28, branch
+Status date: 2026-11-03 (previous: 2026-10-28, branch
 `claude/serene-johnson-urtxgj`, base main `8911fee`). Since then the Windows
 workbench packaging merged (PR #58, main `c6f6cb4`); it is software-only
 delivery and changes no gate or scientific status.
@@ -75,15 +75,18 @@ The repository holds two tracks:
 
 ### P1 — executable now, no approval needed (next concrete steps on Track A)
 
-1. Reconcile status documents: CLAUDE.md's readiness paragraph (PASS 31/FAIL 1)
-   contradicts `B2_E8_GO_NO_GO.md` (36/0/19/1) and the current
-   `B2_E6_PRODUCTION_READINESS_CHECKLIST.md` (39/0/16/1); K18/K17d/OBS-CANCEL/2
-   read PENDING in CLAUDE.md but were approved at E9. One truth, one pointer.
-2. Apply documented errata at the source: the M-11 arithmetic error via the
-   checklist generator (`scripts/b2_production_preflight.py`), the M-6
-   no-uncertainty note near atlas line 162 (erratum, not a hash-locked edit).
-3. Produce the M-14 K17d 35-group drift table from the committed
-   `docs/results/k17d_drift_audit.json` (metadata only).
+1. **P1.1 addressed in the 2026-11-03 documentation reconciliation:** `CLAUDE.md`
+   and root `README.md` now lead with current E9/E12 scientific ratification,
+   the generated 39/0/16/1 readiness count and NO-GO compute status. Earlier
+   E7/E8 counts and pending decisions remain explicitly historical.
+2. **P1.2 partially addressed:** [M-11 arithmetic erratum](docs/results/B2_P1_RESOURCE_ERRATA.md)
+   correctly distinguishes 7.0/6 = 1.17x from 11.5/6 = 1.92x without silently
+   rewriting the approved machine record. The atlas already explicitly states
+   on line 162 that no uncertainty is drawn; no seed CI is claimed.
+   Generator/checklist source-of-truth and resource reconciliation need review.
+3. **P1.3 addressed:** [K17d / M-14 full 35-group drift table](docs/results/B2_K17D_M14_DRIFT_TABLE.md)
+   comes only from the committed audit metadata with checked per-row formula,
+   counts and median/p90/max. Future production cross-check remains NOT RUN.
 4. Add the ETSI provenance statement (with its explicit placeholder) to both
    manuscripts and `paper/geo_b2_evidence.json`; rerun
    `paper/validate_geo_b2.py` and `paper/audit_evidence.py`.
