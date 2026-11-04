@@ -1,5 +1,8 @@
 # Payload-Aware Open-Set Interference Recognition for GEO Transponders
 
+**Status update — 2026-11-03 (baseline `8aa6645`).** E9/E12 scientific-method decisions are approved, but **no full-scale compute, GPU qualification/training, LOKO or final held-out read is authorized**. Readiness checklist: PASS 39 / FAIL 0 / BLOCKED 16 / NOT_RUN 1; `benchmark_complete=false`. The B2 readiness and Windows package GitHub Actions runs on baseline main passed. This is a working research software stack, **not a completed GEO recognition benchmark**. See [current decisions and gates](CLAUDE.md), [project log](docs/plan/DURUM.md), [K17d M-14 drift table](docs/results/B2_K17D_M14_DRIFT_TABLE.md) and [M-11 estimate erratum](docs/results/B2_P1_RESOURCE_ERRATA.md). Sections below contain dated historical implementation snapshots.
+
+
 **E7b execution engineering (2026-10-24):** verified base main
 `ed65eb54632fc4373accebc88452ddf0ff9fadfe` includes merged PR #22 and
 PR #23. The additive [P31 execution path](docs/plan/P31_b2_e7b_isolated_execution.md)

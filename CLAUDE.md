@@ -1,6 +1,9 @@
 # CLAUDE.md — Claude Code context for this repository
 
-**Current state (2026-10-24):** E8 decision/resource preparation (P32, NO-GO, nothing approved) sits on main `4a1cc95` (PR #24 merged, exact-head CI 1771 passed / 7 skipped); see the E8 paragraph below.
+**Current authoritative status (2026-11-03; baseline main `8aa6645`).** E9 scientific choices R1–R10 and OBS-CANCEL/2, K17d, K18 were ratified on 2026-10-24; E12 D-1–D-8 were also ratified, including the D-1 prior test-exposure disclosure and D-8 metadata acceptance. These are **scientific-method decisions only, not compute authorizations**. The current readiness checklist reads PASS 39 / FAIL 0 / BLOCKED 16 / NOT_RUN 1, overall **BLOCKED**. Full B2 generation, GPU qualification/training, LOKO and protected held-out evaluation are **NO-GO**, with `benchmark_complete=false`. The canonical source of decisions is [E9](docs/plan/B2_E9_SCIENTIFIC_DECISION_APPROVAL_2026-10-24.md) and [E12](docs/plan/B2_E12_D1_D8_SCIENTIFIC_APPROVAL_2026-10-24.md); the authoritative gate inventory is [the generated checklist](docs/plan/B2_E6_PRODUCTION_READINESS_CHECKLIST.md), not the historical counts below. Successful exact-main GitHub Actions runs: [B2 readiness](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/41414105903) and [Windows package](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/41414109964). P1 reporting corrections: [K17d 35-group table](docs/results/B2_K17D_M14_DRIFT_TABLE.md), [M-11 arithmetic erratum](docs/results/B2_P1_RESOURCE_ERRATA.md). None changes the production gates.
+
+
+**Historical state (2026-10-24; superseded by current status above):** E8 decision/resource preparation (P32, NO-GO, nothing approved) sits on main `4a1cc95` (PR #24 merged, exact-head CI 1771 passed / 7 skipped); see the E8 paragraph below.
 
 **E7b execution scope (2026-10-24):** base main
 `ed65eb54632fc4373accebc88452ddf0ff9fadfe`, PR22/23 merged. Read
@@ -84,7 +87,7 @@ python -m geoml.b2_experiment --config configs/b2_feat.json --data data/b2-feat-
 - Unknown score: larger = more unknown-like. State positive class, denominator, n.
 - Strict JSON, `null` + counts for unavailable metrics. Pilots are pilots.
 
-## Current milestone (2026-10-24, through E8 preparation)
+## Historical milestone (2026-10-24, through E8 preparation)
 
 All frozen B2/1 data stages exist: B2-feat/1 (known + fifth channel), B2-test/1
 (test-only families), B2-match/1 (K17c level-matched ASI ↔ unauthorized).

@@ -1,5 +1,14 @@
 # Proje durumu ve eksik kaydı
 
+## P1 readiness reconciliation, M-14 drift and M-11 erratum — 2026-11-03
+
+- Starting main: `8aa6645718def6c49ca6ae6653bbb2cf2cb91b16`. Exact-main B2 readiness CI [41414105903](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/41414105903) and Windows package CI [41414109964](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/41414109964) both completed successfully on 2026-11-02.
+- The old E7b/E8 gate/pending-decision summaries in CLAUDE.md and README.md are now explicitly historical. E9 scientific choices and E12 D-1–D-8 are ratified, while the generated checklist remains PASS 39, FAIL 0, BLOCKED 16, NOT_RUN 1 (**BLOCKED**). No research decision is treated as compute permission.
+- [M-14 35-group K17d drift disclosure](../../docs/results/B2_K17D_M14_DRIFT_TABLE.md) reports the predeclared 500/35/465 populations, all 35 group identities, and independently validated 78-row arithmetic, using only existing committed audit JSON. D-8's future production identity cross-check is **NOT RUN**.
+- [M-11 dated arithmetic erratum](../../docs/results/B2_P1_RESOURCE_ERRATA.md) corrects the 7.0/6 versus 11.5/6 ratio interpretation without modifying the immutable E9 scientific approval record. The scientific atlas already explicitly rejects unjustified uncertainty claims.
+- Reporting/documentation-only changes. No simulator, model, dataset, checkpoint, scientific decision, gate, production runtime, held-out artifact or credential was read or modified. No generation, GPU fit, LOKO or final test evaluation was performed. `benchmark_complete=false`.
+
+
 ## E18 CI-policy extension for the Windows package workflow — 2026-11-02
 
 - Base main `c6f6cb418b556ba12cd95bb51b64b2e8fac91cf9` (PR #58 merged). The merged `.github/workflows/windows-package.yml` uses `runs-on: windows-latest` and `actions/upload-artifact@v4`, which the E18 workflow lint (`scripts/b2_e18_ci_policy.py`) forbade; seven tests in `tests/test_b2_e18_ci_policy.py` therefore failed on main.
