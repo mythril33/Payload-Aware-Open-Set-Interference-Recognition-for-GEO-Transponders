@@ -23,7 +23,8 @@
     "docs/plan/P18_b2_protocol.md": "d67a95a61b4399b4afcaa11f68a4899530c9868cef76774985d93145ab5bc3d3",
     "research/public_data/protocol.json": "01a31bdac05438c0e2a81819275030f4d51e6f56f7b58870b3fdb96a30b2ac22",
     "docs/plan/b2_e12_d1_d8_decisions_2026-10-24.json": "ce900de1ae1b324d5de73997a8b303f2158fddf33fd544337347bb3df91689b1",
-    "scripts/derive_opendpd_mp.py": "4f914fbcf343615b38ee3978f268e6ec817133d1981c09b178db9d412ada13f7"
+    "scripts/derive_opendpd_mp.py": "4f914fbcf343615b38ee3978f268e6ec817133d1981c09b178db9d412ada13f7",
+    "docs/research/ETSI_DERIVED_DATA_PROVENANCE.md": "41a62a4b5d3caae37de465bba593f6ac0c0772d20b932389be37f170318d401d"
   },
   "source_refresh_log": [
     {
@@ -2896,6 +2897,19 @@
         "gain = complex(np.vdot(x_tr, y_tr) / np.vdot(x_tr, x_tr))",
         "norm = {s: (x / rms, y / (gain * rms))",
         "np.sum(np.abs(y - y_hat) ** 2) / np.sum(np.abs(y) ** 2)"
+      ]
+    },
+    {
+      "id": "M.etsi_provenance",
+      "source": "docs/research/ETSI_DERIVED_DATA_PROVENANCE.md",
+      "population": "36 MHz IMUX/OMUX reference-table check; no measured satellite inference",
+      "unit": "documented provenance and permission status",
+      "text_contains": [
+        "0.07 dB (IMUX) and below 0.005 dB (OMUX)",
+        "801 table frequencies per table",
+        "Only the 36 MHz tables were checked numerically.",
+        "digitization error is not quantified",
+        "No written permission is stored in this repository"
       ]
     }
   ],

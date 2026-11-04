@@ -56,3 +56,13 @@ def test_resource_floor_refuses_before_creating_campaign(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match="free disk"):
         prepare(tmp_path / "campaign")
     assert not (tmp_path / "campaign").exists()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX process group cleanup")
+def test_interrupt_stops_and_reaps_the_whole_process_group(monkeypatch):
+    from research.cpu_delivery import run
+    calls = []
+    process = SimpleNamespace(pid=123, wait=lambda: calls.append("reaped"))
+    monkeypatch.setattr(run.os, "killpg", lambda pid, sig: calls.append((pid, sig)))
+    run.stop_process_tree(process, None)
+    assert calls == [(123, run.signal.SIGKILL), "reaped"]

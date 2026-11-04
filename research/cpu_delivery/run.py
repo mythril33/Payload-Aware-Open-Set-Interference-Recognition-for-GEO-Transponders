@@ -28,6 +28,19 @@ def write_json(path, data):
     temporary.replace(path)
 
 
+def stop_process_tree(process, log):
+    """Stop child generators too, including on a user's Ctrl-C."""
+    if os.name == "posix":
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+    else:
+        subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                       stdout=log, stderr=subprocess.STDOUT, check=False)
+    process.wait()
+
+
 def prepare(out, resume=False):
     from geoml.experiment import ExperimentConfig, _source_identity
 
@@ -102,19 +115,19 @@ def run(out, resume=False):
         print(f"Starting {name}; log: {out / (name + '.log')}", flush=True)
         start = time.monotonic()
         with (out / f"{name}.log").open("a") as log:
+            process = None
             try:
                 process = subprocess.Popen([sys.executable, *args], cwd=ROOT, env=env,
                                            stdout=log, stderr=subprocess.STDOUT,
                                            start_new_session=(os.name == "posix"))
                 status = {"returncode": process.wait(timeout=timeout), "timed_out": False}
             except subprocess.TimeoutExpired:
-                if os.name == "posix":
-                    os.killpg(process.pid, signal.SIGKILL)
-                else:
-                    subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
-                                   stdout=log, stderr=subprocess.STDOUT, check=False)
-                process.wait()
+                stop_process_tree(process, log)
                 status = {"returncode": None, "timed_out": True}
+            except BaseException:
+                if process is not None:
+                    stop_process_tree(process, log)
+                raise
         status.update(step=name, elapsed_s=time.monotonic() - start,
                       command=[sys.executable, *args], resume=resume)
         with (out / "execution.jsonl").open("a") as ledger:

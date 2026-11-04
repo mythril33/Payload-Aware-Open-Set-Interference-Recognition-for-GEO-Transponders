@@ -1,5 +1,39 @@
 # Proje durumu ve eksik kaydı
 
+## Pazar teslim hazırlığı — 2026-11-04
+
+- Son kullanıcı yönlendirmesi: deneyleri bu ortama uyarlayıp burada çalıştırmak.
+  [CPU-delivery-B1/1 ön kaydı](../../research/cpu_delivery/PREREGISTRATION.md)
+  ve çalıştırıcısı `4f4b74a` commit'inde sonuçlardan önce kaydedildi.
+  Dört bilinen/dört bilinmeyen, üç eğitim tohumu, en fazla 720 gözlem;
+  A1 fizik ve B1-dev/2 ayrımı korunuyor, B2 kapıları/held-out verisi açılmıyor.
+  Gerçek kampanya tamamlandı: 716 gözlem, 355,07 s alt-süreç toplamı; bilinen
+  doğruluk ortalama %70,25, bilinmeyen AUROC MSP/energy/Mahalanobis
+  0,6191/0,5647/0,3314. [Rapor ve grafikler](../results/CPU_DELIVERY_2026-11-04.md)
+  düşük bilinmeyen reddini ve olumsuz sonuçları koruyor. On arşiv/şekil
+  hash'i ve 45 ROC/AP/OSCR popülasyonu denetlendi; yeni B2 sonucu iddia edilmedi.
+- Kullanıcının son hedefi **8 Kasım Pazar: kod + deney sonuçları + rapor**.
+  [Somut teslim planı](DELIVERY_2026-11-08.md) ve
+  [bu oturumun doğrulama kaydı](../results/DELIVERY_VALIDATION_2026-11-04.md)
+  hazırlandı. Taban `3f26393`; tam GEO benchmark hâlâ tamamlanmadı.
+- İki makalenin ETSI kaynak/izin açıklamaları ve kanıt manifestleri güncellendi;
+  iki kanıt denetimi ve PDF derlemesi geçti. Düzenlenebilir Word çıktıları ve
+  uyarıda durdurulan aktarım komutu eklendi; GEO denklem sözdizimi anlamı
+  değişmeden Word ile uyumlu hale getirildi. Sekiz NOT RUN sonuç satırı korundu.
+- E9 yayın kontrol listesi E10/E12 kararlarıyla uzlaştırıldı; kaynak tablosu
+  zorunlu 15 fit'i dokuz-fit tahminlerinden ayırıyor. Yol haritasında mevcut
+  üretim/eğitim adaptörleri ve hâlâ eksik üretim held-out yolu doğru ayrıldı.
+- Gerçek-fizik CPU zinciri 24 train/validation gözlemiyle çalıştı; iki epoch,
+  üç skor için kalibrasyon, freeze ve yerel yedek hash doğrulaması geçti.
+  Test okuması sıfır; validation macro-F1 0,02778/0, tanıma başarısı kanıtı değil.
+  İlgili 58 test geçti. Tam test sonucu doğrulama kaydında ayrı tutulur.
+- Tam test: 5.073 geçti / 2 envanter hatası / 10 ortam-platform atlaması.
+  İki hata ve yeni CPU çalıştırıcı sınırları 28 odaklı testle doğrulandı;
+  eksik kanıt envanteri kayıtları doğru belge/pilot sınıfıyla eklendi.
+- Donmuş bilimsel kaynaklar, kararlar, veri rolleri ve compute izinleri
+  değiştirilmedi; üretim, GPU ve nihai değerlendirme çalıştırılmadı.
+  `benchmark_complete=false`.
+
 ## P1 readiness reconciliation, M-14 drift and M-11 erratum — 2026-11-03
 
 - Starting main: `8aa6645718def6c49ca6ae6653bbb2cf2cb91b16`. Exact-main B2 readiness CI [41414105903](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/41414105903) and Windows package CI [41414109964](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/41414109964) both completed successfully on 2026-11-02.

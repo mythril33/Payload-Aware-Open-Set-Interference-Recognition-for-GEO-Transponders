@@ -1,6 +1,6 @@
 # Research roadmap
 
-Status date: 2026-11-03 (previous: 2026-10-28, branch
+Status date: 2026-11-04 (previous: 2026-10-28, branch
 `claude/serene-johnson-urtxgj`, base main `8911fee`). Since then the Windows
 workbench packaging merged (PR #58, main `c6f6cb4`); it is software-only
 delivery and changes no gate or scientific status.
@@ -8,6 +8,16 @@ This file tracks the route from the current state to publication.
 It summarizes and links evidence; it never replaces the protocol documents
 (`docs/plan/P18_b2_protocol.md` and the frozen stages) or the researcher
 decision records. Where this file and a protocol disagree, the protocol wins.
+
+**Delivery target: Sunday 2026-11-08, code + experiment results + report** (latest user
+instruction, 2026-11-04). Manuscripts and figures remain included. See the
+[dated delivery plan](docs/plan/DELIVERY_2026-11-08.md).
+The existing evidence supports the comparative/observability draft; the separate
+GEO draft remains a methods/design paper until its experiments actually run.
+The [CPU B1 development campaign](docs/results/CPU_DELIVERY_2026-11-04.md)
+now supplies three actually-run fits (716 source observations, about six minutes)
+and figures. Its mean known accuracy is 0.7025, but unknown rejection is weak;
+it does not complete the eight-class dual-polarization B2 benchmark.
 
 The repository holds two tracks:
 
@@ -68,10 +78,10 @@ The repository holds two tracks:
 | Item | Gate / record |
 | --- | --- |
 | DR-04 full B2 generation (21,350 observations) | `docs/plan/B2_E8_GO_NO_GO.md` (NO-GO), `docs/plan/B2_E15_DR04_DECISION_DOSSIER.md` |
-| DR-05 GPU qualification and the 15 mandatory fits | `docs/plan/B2_C2_COMPARATIVE_EXPERIMENTS.md` §9 (no executor; GPU path never run) |
+| DR-05 GPU qualification and the 15 mandatory fits | Generation/training adapters exist; qualified host, external authority/storage integration and GPU qualification remain outstanding. See the real-execution handoff in `docs/operations/B2_E18_STAGE_BOUNDARY_CHECKLIST.md`. Production held-out inference is still unimplemented. |
 | Primary scorer designation (Mahalanobis is only a recommendation) | B2_C2 §7, decision D-4 |
 | Final held-out read authorization (test set non-pristine; sensitivity rows mandatory) | E12 compute gates, decision D-1 |
-| Authorship, venue, ETSI written permission record, Fraunhofer licence clarification, SmartSpace access request | `paper/README.md` blockers; `docs/plan/P8_dis_veri.md` |
+| Authorship, venue, ETSI written permission record, Fraunhofer licence clarification | `paper/README.md` blockers; `docs/plan/P8_dis_veri.md`. SmartSpace is an optional comparison, not a prerequisite for the scoped paper. |
 
 ### P1 — executable now, no approval needed (next concrete steps on Track A)
 
@@ -87,20 +97,24 @@ The repository holds two tracks:
 3. **P1.3 addressed:** [K17d / M-14 full 35-group drift table](docs/results/B2_K17D_M14_DRIFT_TABLE.md)
    comes only from the committed audit metadata with checked per-row formula,
    counts and median/p90/max. Future production cross-check remains NOT RUN.
-4. Add the ETSI provenance statement (with its explicit placeholder) to both
-   manuscripts and `paper/geo_b2_evidence.json`; rerun
-   `paper/validate_geo_b2.py` and `paper/audit_evidence.py`.
-5. Update the E9 publication checklist with the E10/E12 dispositions
-   (it still reads "Critical 0/2 closed", which is outdated).
-6. Build the consolidated resource table (E9 checklist §7) from existing
-   budget JSONs — no new measurement.
+4. **Addressed 2026-11-04:** ETSI provenance and the explicit written-permission
+   placeholder are in both manuscripts and their evidence manifests. Both
+   validators pass and both PDF/TeX builds were regenerated.
+5. **Addressed 2026-11-04:** the E9 publication checklist now separates E10
+   engineering fixes, E12 accepted dispositions and still-unrun verification;
+   the obsolete blanket 0/2 and 0/14 summaries no longer describe current status.
+6. **Addressed 2026-11-04:** [resource reconciliation](docs/results/B2_RESOURCE_RECONCILIATION.md)
+   consolidates existing budget evidence and distinguishes the mandatory
+   15-fit workload from earlier nine-fit estimates. It is not a new measurement.
 
 ### P2 — after gates open (Track A science)
 
-- DR-04 generation → 15 mandatory fits (canonical 9 + matched dual 6) →
-  frozen-threshold evaluation → H1 (cross-pol), H2 (observed residual),
-  H3 (plan access) matched contrasts → C3 payload-gap 2×2 design →
-  A5 counterfactuals on real checkpoints → held-out read, once.
+- DR-04 generation → separately qualified/authorized 15 mandatory fits
+  (canonical 9 + matched dual 6) → known-only calibration → freeze all fits,
+  primary scorer and evaluation order → separately authorized held-out
+  evaluation (canonical then matched dual) → offline H1 (cross-pol), H2
+  (observed residual), H3 (plan access) contrasts. C3 payload-gap 2×2 and A5
+  counterfactual work retain their own declared scope and execution requirements.
 - Only then can `paper/geo_b2_manuscript.md` §7.2 be filled; until then the
   GEO paper remains a methods/design manuscript.
 

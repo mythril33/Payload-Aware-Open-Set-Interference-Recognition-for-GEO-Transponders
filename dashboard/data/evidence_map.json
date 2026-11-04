@@ -11,7 +11,7 @@
     "PROTECTED_PRODUCTION": "reserved for protected production evaluations; no such record exists in this repository",
     "UNCLASSIFIED": "not in this map; treated as unverified until curated"
   },
-  "note": "Curated from the 104-file inventory of docs/results and docs/plan. Raw match counts are indicative and were not a leakage audit. Values are never displayed for RESTRICTED entries.",
+  "note": "Curated result and gate inventory. Raw match counts are indicative and are not a leakage audit. Values are never displayed for RESTRICTED entries.",
   "entries": {
     "docs/plan/b2_c2_experiment_matrix.json": {
       "class": "UNEXECUTED",
@@ -165,6 +165,30 @@
       },
       "rationale": "title: # E9-Preflight — concurrent-merge integration recovery"
     },
+    "docs/results/B2_K17D_M14_DRIFT_TABLE.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 35,
+        "3300000-3300149": 0
+      },
+      "rationale": "Metadata-only drift disclosure derived from committed K17d audit; not a new production evaluation"
+    },
+    "docs/results/B2_P1_RESOURCE_ERRATA.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "Dated arithmetic clarification of historical resource estimates; no reservation"
+    },
+    "docs/results/B2_RESOURCE_RECONCILIATION.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "Source-linked resource arithmetic; no new measured production result"
+    },
     "docs/results/B2_SCIENTIFIC_RESULTS_ATLAS.md": {
       "class": "DERIVED_DOCUMENTATION",
       "heldout_raw_matches": {
@@ -172,6 +196,22 @@
         "3300000-3300149": 0
       },
       "rationale": "title: # B2 scientific results atlas — E5"
+    },
+    "docs/results/CPU_DELIVERY_2026-11-04.md": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "Actually executed CPU B1-dev/2 single-polarization campaign, three seeds; not B2 production evidence"
+    },
+    "docs/results/DELIVERY_VALIDATION_2026-11-04.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "Actual bounded verification record and historical results with explicit limits"
     },
     "docs/results/asi_visibility.json": {
       "class": "VERIFIED_HISTORICAL",
@@ -605,6 +645,14 @@
       },
       "rationale": "title: # B2 E3b expert-feature/XGBoost baseline — bounded verification"
     },
+    "docs/results/cpu_delivery_2026-11-04.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "Actually executed CPU B1-dev/2 single-polarization campaign, three seeds; not B2 production evidence"
+    },
     "docs/results/cuc_visibility.json": {
       "class": "VERIFIED_HISTORICAL",
       "heldout_raw_matches": {
@@ -620,6 +668,14 @@
         "3300000-3300149": 0
       },
       "rationale": "title: # Taşıyıcı altı taşıyıcının (CuC) spektrumdaki görünürlüğü"
+    },
+    "docs/results/delivery_development_2026-11-04.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "24 train/validation observations, CPU only, no held-out reads; not recognition evidence"
     },
     "docs/results/dual_calibration_check.json": {
       "class": "DEVELOPMENT_PILOT",

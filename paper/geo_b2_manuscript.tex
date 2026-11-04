@@ -317,6 +317,30 @@ substituted into the headline experiment (Saleh 1981). Reference-curve
 agreement is a consistency target; it is not validation against a newly
 measured satellite.
 
+The 36 MHz IMUX and OMUX responses were derived from the numerical
+tables in the Annex E attachment of ETSI TR 102 376-2 V1.2.1. The
+documented check at the 801 table frequencies per filter found gain
+agreement within 0.07 dB (IMUX) and below 0.005 dB (OMUX) where the
+table gain is at least \(-20\) dB. It did not test intermediate
+frequencies; deeper-stopband deviations and group-delay discrepancies
+remain documented limitations. The 72 MHz responses follow the
+document's bandwidth-scaling rule and have not been checked against a
+separate table. The bundled TWTA curves were digitized from Figures H.2
+and H.3 of ETSI EN 302 307-1 V1.4.1, Annex H.7; digitization error has
+not been quantified. The source files, fingerprints and historical
+checks are recorded in the repository's ETSI-derived-data provenance
+record. These are reference-model checks, not measured satellite
+validation. {[}E02{]}
+
+\textbf{ETSI permission record pending:} the researcher reported
+permission on 27 October 2026, but no written permission record is
+stored in the repository or independently verified. Before publication,
+complete: permission reference \textbf{{[}to be filled in{]}}; date
+\textbf{{[}to be filled in{]}}; scope covering numerical tables,
+figure-derived curves, public repository use and publication
+\textbf{{[}to be filled in{]}}. This placeholder does not establish
+those rights. {[}E02{]}
+
 The physical coupling model preserves coherent complex mixing between
 polarization feeds before and after two separate nonlinear paths. Its
 unitary Jones approximation and effective-linewidth phase-noise model
@@ -542,7 +566,7 @@ Total-plan C/I 5--30 dB \\
 
 The ASI construction uses a simplified single-interferer,
 common-coverage uplink budget,
-\(C/I_{\rm PSD}=G_{\max}-G(\varphi)-\Delta\mathrm{EIRP}_{\rm density}\),
+\(C/I_{\mathrm{PSD}}=G_{\max}-G(\varphi)-\Delta\mathrm{EIRP}_{\mathrm{density}}\),
 with documented reference antenna-pattern branches and explicitly
 assumed diameter, pointing and EIRP distributions. Its natural level
 distribution differs from that of the gap carrier. Consequently, high
@@ -590,9 +614,9 @@ uses the plan, so removing only mask input channels would leave a
 plan-information path in an alleged plan-independent control. {[}E07,
 E09{]}
 
-The canonical views are \(X_{\rm co}=[S_c,M_c]\),
-\(X_{\rm dual}=[S_c,S_x,M_c,M_x]\) and
-\(X_{\rm residual}=[S_c,S_x,M_c,M_x,R_c]\), after their declared
+The canonical views are \(X_{\mathrm{co}}=[S_c,M_c]\),
+\(X_{\mathrm{dual}}=[S_c,S_x,M_c,M_x]\) and
+\(X_{\mathrm{residual}}=[S_c,S_x,M_c,M_x,R_c]\), after their declared
 preprocessing. Simulator truth such as realized IBO, XPD, C/I, source
 identity, active-carrier masks and event parameters remains metadata for
 auditing or registered stratification. It is never a learned input.
@@ -664,7 +688,7 @@ For a training batch of size \(B\), with embedding \(f_i\), class center
 \(c_{y_i}\) and physical missing-carrier indicator \(a_i\), the
 canonical objective is
 
-\[\mathcal L=\mathcal L_{\rm CE}+0.005\,\frac1B\sum_i\|f_i-c_{y_i}\|_2^2+1.0\,\mathcal L_{\rm BCE}(\widehat a_i,a_i).\]
+\[\mathcal L=\mathcal L_{\mathrm{CE}}+0.005\,\frac1B\sum_i\|f_i-c_{y_i}\|_2^2+1.0\,\mathcal L_{\mathrm{BCE}}(\widehat a_i,a_i).\]
 
 The center sum is not divided by embedding dimension and has no
 additional one-half factor. Centers share the network's AdamW parameter
@@ -706,7 +730,7 @@ The known prediction is \(\widehat y=\arg\max_k z_k\) for eight logits
 \(z_k\). Three unknown scores are reported, always with larger values
 meaning more unknown-like:
 
-\[s_{\rm MSP}=1-\max_k\operatorname{softmax}(\mathbf z)_k,\qquad s_E=-\log\sum_k e^{z_k},\]
+\[s_{\mathrm{MSP}}=1-\max_k\operatorname{softmax}(\mathbf z)_k,\qquad s_E=-\log\sum_k e^{z_k},\]
 
 \[s_M=\min_k(f-\mu_k)^T\widetilde\Sigma^{-1}(f-\mu_k).\]
 
@@ -954,13 +978,13 @@ sensitivity. The later production metadata comparison is mandatory and
 \textbf{NOT RUN}. {[}E05, E10{]}
 
 The separate ASI/unauthorized set uses 150 groups with shared requested
-\(C/I_{\rm PSD}\sim U(4,13)\) dB, symbol rate, roll-off, modulation and
-link conditions, alongside a clean twin. Its primary bin is 7--10 dB,
-with 4--7 and 10--13 dB neighboring bins. Frequency placement remains
-different by class definition: overlap versus free gap. Equal requested
-injected power does not force equal observed PSD rise, because the clean
-background and nonlinear interactions differ between the two bands.
-Results must retain full pair-class denominators, including
+\(C/I_{\mathrm{PSD}}\sim U(4,13)\) dB, symbol rate, roll-off, modulation
+and link conditions, alongside a clean twin. Its primary bin is 7--10
+dB, with 4--7 and 10--13 dB neighboring bins. Frequency placement
+remains different by class definition: overlap versus free gap. Equal
+requested injected power does not force equal observed PSD rise, because
+the clean background and nonlinear interactions differ between the two
+bands. Results must retain full pair-class denominators, including
 clean/other-known predictions and rejected samples; conditioning only on
 predictions of the two desired classes could conceal failure. {[}E06{]}
 
@@ -1064,8 +1088,8 @@ diagnostic \\
 \end{longtable}
 
 The event/no-event contrast is
-\(10\log_{10}(\overline P_{\rm event}/\overline P_{\rm twin})\) in a
-diagnostic region. The twin and truth-selected victim band are
+\(10\log_{10}(\overline P_{\mathrm{event}}/\overline P_{\mathrm{twin}})\)
+in a diagnostic region. The twin and truth-selected victim band are
 unavailable to a live monitor. The ASI PSD C/I and CuC total-plan C/I
 denominators are different and must not share an unlabeled horizontal
 axis. At high C/I, a small twin contrast motivates testing alternative
@@ -1324,14 +1348,14 @@ E07, E10, E16{]}
 This manuscript package contains Markdown, bibliography, traceability
 records, document-only validation/build tools and reused aggregate
 figures. It requires no raw IQ, protected dataset, checkpoint, simulator
-run or fitting operation to build. The existing comparative-methods
-manuscript and independent literature review remain separate and
-unchanged. Public primary references establish cited method identities
-and bounded prior-work statements, while the source audit records
-full-text versus metadata-only access. Authors, affiliations, venue
-suitability and publication approval remain human decisions. No claim of
-systematic literature completeness or priority is made. {[}E13, E16,
-E18{]}
+run or fitting operation to build. The comparative-methods manuscript
+remains separate, with the same ETSI provenance disclosure; the
+independent literature review is unchanged. Public primary references
+establish cited method identities and bounded prior-work statements,
+while the source audit records full-text versus metadata-only access.
+Authors, affiliations, venue suitability and publication approval remain
+human decisions. No claim of systematic literature completeness or
+priority is made. {[}E13, E16, E18{]}
 
 \section{9. Conclusion}\label{conclusion}
 
