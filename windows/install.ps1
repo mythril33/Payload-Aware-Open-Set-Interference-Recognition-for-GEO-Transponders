@@ -233,14 +233,10 @@ Write-Ok '.venv-rfml: numpy, torch, matplotlib, streamlit iceri aktarildi.'
 # ----------------------------------------------------------------- Shortcuts
 Write-Host ''
 Write-Host '--- Kisayollar ---'
+. (Join-Path $ScriptDir 'geo_shortcut.ps1')
 function New-Shortcut {
     param([string]$LnkPath, [string]$Target, [string]$Aciklama)
-    $shell = New-Object -ComObject WScript.Shell
-    $sc = $shell.CreateShortcut($LnkPath)
-    $sc.TargetPath = $Target
-    $sc.WorkingDirectory = $ScriptDir
-    $sc.Description = $Aciklama
-    $sc.Save()
+    New-GeoShortcut -LnkPath $LnkPath -Target $Target -WorkingDirectory $ScriptDir -Description $Aciklama
 }
 # Our own older Track A shortcut, superseded by "GEO Workbench"; removed only when it points at a
 # windows\launch_dashboard.bat (Track B shortcuts are never touched).
@@ -248,8 +244,7 @@ function Remove-OldGeoShortcut {
     param([string]$LnkPath)
     if (-not (Test-Path -LiteralPath $LnkPath -PathType Leaf)) { return }
     try {
-        $shell = New-Object -ComObject WScript.Shell
-        $target = $shell.CreateShortcut($LnkPath).TargetPath
+        $target = (Read-GeoShortcut -LnkPath $LnkPath).Target
         if ("$target" -like '*\windows\launch_dashboard.bat') {
             Remove-Item -LiteralPath $LnkPath -Force
             Write-Bilgi ('Eski kisayol kaldirildi: ' + $LnkPath)

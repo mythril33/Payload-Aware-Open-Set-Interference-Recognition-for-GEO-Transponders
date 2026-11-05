@@ -181,6 +181,25 @@ try {
     # ---- log
     Write-GeoLog 'INFO' ('test ' + $sCedilla)
     Assert-True ([System.IO.File]::Exists($script:GeoLogPathOverride)) 'log: written'
+
+    # ---- Unicode shortcuts (Turkish shortcut names; non-ASCII user-profile path)
+    . (Join-Path (Split-Path -Parent $PSScriptRoot) 'geo_shortcut.ps1')
+    $oUml = [char]0x00D6; $sC = [char]0x015F; $iDot = [char]0x0130
+    $profileLike = Join-Path $TempRoot ($oUml + 'mer ' + $sC + 'ahin ' + $iDot + 'pek')
+    [void][System.IO.Directory]::CreateDirectory($profileLike)
+    $target = Join-Path $profileLike 'GEO_Pilot_Baslat.bat'
+    [System.IO.File]::WriteAllText($target, "@echo off`r`n")
+    $lnkName = 'GEO Pilot Ba' + $sC + 'lat.lnk'
+    $lnk = Join-Path $profileLike $lnkName
+    New-GeoShortcut -LnkPath $lnk -Target $target -WorkingDirectory $profileLike -Description 'test'
+    $names = @([System.IO.Directory]::GetFiles($profileLike, '*.lnk') | ForEach-Object { [System.IO.Path]::GetFileName($_) })
+    Assert-Equal $lnkName ($names -join '|') 'shortcut: Turkish file name kept exactly (no ANSI best-fit)'
+    $readBack = Read-GeoShortcut -LnkPath $lnk
+    Assert-Equal $target $readBack.Target 'shortcut: non-ASCII target path round-trips'
+    Assert-Equal $profileLike $readBack.WorkingDirectory 'shortcut: non-ASCII working directory round-trips'
+    $lnk2 = Join-Path $profileLike ('GEO ' + $iDot + $sC + 'lem Durdur.lnk')
+    New-GeoShortcut -LnkPath $lnk2 -Target $target -WorkingDirectory $profileLike -Description 'test'
+    Assert-True ([System.IO.File]::Exists($lnk2)) 'shortcut: I-dot name created'
 } catch {
     $script:Failed++
     Write-Host ('FAIL: unexpected exception: ' + $_.Exception.Message)
