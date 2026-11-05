@@ -5,7 +5,9 @@ wrappers, ASCII-only .ps1, forbidden constructs and labels, consent-gated elevat
 through ``--exec``, Track B isolation and the documented exit-code table. On a machine with
 ``powershell``/``pwsh`` the PowerShell parser and the dependency-free helper harness also run.
 """
+import hashlib
 import importlib.util
+import json
 import re
 import shutil
 import subprocess
@@ -24,6 +26,10 @@ PS1_FILES = sorted(WIN.glob("*.ps1")) + sorted((WIN / "tests").glob("*.ps1"))
 BAT_FILES = sorted(WIN.glob("*.bat"))
 GEO_FILES = [WIN / "geo_common.ps1", WIN / "geo_workbench.ps1", WIN / "setup_wsl_backend.ps1",
              WIN / "tests" / "geo_common_tests.ps1"] + sorted(WIN.glob("GEO_*.bat"))
+FAKE_WSL_CMD = WIN / "tests" / "fake_wsl.cmd"
+FAKE_WSL_PY = WIN / "tests" / "fake_wsl.py"
+# sha256 of windows/launch_rfml.bat as committed (Track B launcher, must stay byte-identical).
+LAUNCH_RFML_SHA256 = "0ab4cd775038e50fbebb680d0b9f4b45ca651c00eec0c9731a4e456c0caa64df"
 
 BAT_TARGETS = {
     "GEO_Workbench.bat": ("geo_workbench.ps1", "-Action open"),
@@ -41,7 +47,8 @@ SHORTCUT_NAMES = {
     "RF-ML Ogrenme Uygulamasi",
     "Uygulamalari Durdur",
 }
-REQUIRED_CODES = {0, 2, 3, 5, 10, 11, 12, 13, 14, 15, 16, 20, 21, 22, 23, 24, 30, 31, 32, 33, 34, 40, 41}
+REQUIRED_CODES = {0, 2, 3, 5, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 30, 31, 32, 33, 34,
+                  40, 41, 42}
 FORBIDDEN_CONSTRUCTS = ("set-executionpolicy", "invoke-expression", " iex ", "downloadstring", "curl ", "wget ")
 FORBIDDEN_LABELS = ("--production", "cuda", "loko", "test-matched", "--roles", "21,350", "full benchmark",
                     "complete research")
@@ -240,7 +247,7 @@ def test_elevation_only_in_consent_gated_wsl_install():
 
 def test_wsl_is_only_invoked_through_exec():
     allowed_call = {"Get-WslDistros", "Test-WslStatus", "Invoke-WslExec"}
-    allowed_start = {"Start-WslHidden", "Install-WslWithConsent", "Install-VenvPackageWithConsent"}
+    allowed_start = {"Start-WslHidden", "Install-WslWithConsent", "Install-AptPackageWithConsent"}
     common = mask_powershell(_text(WIN / "geo_common.ps1"))
     spans = functions(common)
     start, end = spans["New-WslArgv"]
@@ -281,20 +288,14 @@ def test_stop_apps_never_touches_the_geo_pilot():
 
 
 def test_track_b_isolation():
-    for path in GEO_FILES:
+    for path in GEO_FILES + [FAKE_WSL_CMD, FAKE_WSL_PY]:
         lowered = _text(path).lower()
         for token in ("rfml", "learning"):
             assert token not in lowered, (path.name, token)
 
 
-def test_launch_rfml_unchanged_from_main():
-    if shutil.which("git") is None:
-        pytest.skip("git is not available")
-    done = subprocess.run(["git", "-C", str(ROOT), "show", "origin/main:windows/launch_rfml.bat"],
-                          capture_output=True)
-    if done.returncode != 0:
-        pytest.skip("origin/main is not available in this checkout")
-    assert (WIN / "launch_rfml.bat").read_bytes() == done.stdout
+def test_launch_rfml_is_byte_identical_to_the_pinned_track_b_launcher():
+    assert hashlib.sha256((WIN / "launch_rfml.bat").read_bytes()).hexdigest() == LAUNCH_RFML_SHA256
 
 
 # ---- parameters, shortcuts, installer ------------------------------------------------------------
@@ -366,14 +367,179 @@ def test_message_table_covers_every_documented_code():
     assert set(setup.CODE_NAMES) <= codes
 
 
+# ---- package / WSL identity, setup, pid files -----------------------------------------------------
+
+def _function_text(path: Path, name: str) -> str:
+    text = _text(path)
+    start, end = functions(mask_powershell(text))[name]
+    return text[start:end + 1]
+
+
+def test_backend_expectation_gates_open_and_pilot_but_not_stop_or_close():
+    get_backend = _function_text(WIN / "geo_workbench.ps1", "Get-Backend")
+    assert "Resolve-BackendExpectation" in get_backend and "'mismatch'" in get_backend
+    assert "Status -eq 'mismatch') { return 20 }" in _function_text(WIN / "geo_workbench.ps1", "Get-BackendProblemCode")
+    for name in ("Invoke-OpenAction", "Invoke-PilotAction"):
+        assert "$backend.Status -ne 'ok'" in _function_text(WIN / "geo_workbench.ps1", name), name
+    for name in ("Invoke-StopPilotAction", "Invoke-CloseAction", "Invoke-StatusAction"):
+        assert "Test-BackendUsable" in _function_text(WIN / "geo_workbench.ps1", name), name
+
+
+def test_serve_preflight_and_run_carry_the_expected_commit():
+    ui = _function_text(WIN / "geo_workbench.ps1", "Start-WorkbenchUi")
+    assert re.search(r"'serve', '--port', \[string\]\$port\) \+ \(Get-ExpectArgs -Commit \$Backend\.ExpectCommit\)", ui)
+    assert ui.count("Test-UiIdentity") == 2
+    pilot = _function_text(WIN / "geo_workbench.ps1", "Invoke-PilotAction")
+    assert "$expectArgs = Get-ExpectArgs -Commit $backend.ExpectCommit" in pilot
+    assert "@('preflight', '--groups', [string]$Groups) + $expectArgs + @('--json')" in pilot
+    assert "@($backend.Script, 'run', '--groups', [string]$Groups) + $expectArgs" in pilot
+    assert "--expect-manifest-sha256" not in _text(WIN / "geo_workbench.ps1")
+
+
+def test_job_id_is_printed_whenever_preflight_names_a_running_job():
+    pilot = _function_text(WIN / "geo_workbench.ps1", "Invoke-PilotAction")
+    assert pilot.index("Write-RunningJob $report") < pilot.index("if ($pre.ExitCode -eq 10)")
+    assert "JOB_ID=" in _function_text(WIN / "geo_workbench.ps1", "Write-RunningJob")
+
+
+def test_pid_file_writes_are_guarded():
+    text = _text(WIN / "geo_workbench.ps1")
+    code = mask_powershell(text)
+    spans = functions(code)
+    for pattern in (r"WriteAllText", r"Write-PidRecord\s"):
+        for match in re.finditer(pattern, code):
+            assert enclosing_function(spans, match.start()) in ("Write-UiPidRecord", "Write-PilotPidFile"), pattern
+    for name in ("Write-UiPidRecord", "Write-PilotPidFile"):
+        body = _function_text(WIN / "geo_workbench.ps1", name)
+        assert "try {" in body and "catch {" in body, name
+
+
+def test_wsl_list_parsing_keeps_multi_word_states():
+    body = _function_text(WIN / "geo_common.ps1", "ConvertFrom-WslListText")
+    assert "Name    = $tokens[0]" in body
+    assert "($tokens[1..($tokens.Count - 2)]) -join ' '" in body
+
+
+def test_setup_clones_the_git_bundle_and_never_copies_a_snapshot():
+    text = _text(WIN / "setup_wsl_backend.ps1")
+    assert "'install-git', '--bundle', $bundleWsl, '--commit', $version.Commit, '--to', $dest" in text
+    assert "'install', '--from'" not in text
+    assert "Get-FileHash -LiteralPath $bundleFile -Algorithm SHA256" in text
+    assert "$version.SourceBundleHead -cne $version.Commit" in text
+    assert "--expect-manifest-sha256" not in text
+
+
+def test_setup_installs_git_only_with_consent_and_retries_once():
+    setup = _function_text(WIN / "setup_wsl_backend.ps1", "Invoke-Setup")
+    block = setup[setup.index("if ($install.ExitCode -eq 17)"):]
+    block = block[:block.index("$result = ConvertFrom-PilotJson")]
+    assert "Install-AptPackageWithConsent -WslPath $wsl -Name $name -Package 'git' -Code 17" in block
+    assert block.count("Invoke-SetupPy") == 1
+    apt = _function_text(WIN / "setup_wsl_backend.ps1", "Install-AptPackageWithConsent")
+    assert apt.index("Read-Consent") < apt.index("Start-Process")
+    assert "-WindowStyle Hidden" not in apt
+
+
+def test_setup_refuses_root_and_records_the_linux_user():
+    setup = _function_text(WIN / "setup_wsl_backend.ps1", "Invoke-Setup")
+    assert "if ($linux.Uid -eq 0) {" in setup
+    assert setup.index("if ($linux.Uid -eq 0) {") < setup.index("'install-git'")
+    for key in ("linux_user      = $linux.User", "uid             = $linux.Uid", "source_mode     = 'git'"):
+        assert key in setup, key
+    state = _function_text(WIN / "geo_common.ps1", "Test-BackendState")
+    assert "linux_user" in state and "$user -eq 'root'" in state and "'^[1-9][0-9]{0,9}$'" in state
+
+
+def test_setup_stops_a_running_ui_with_consent_before_replacing():
+    setup = _function_text(WIN / "setup_wsl_backend.ps1", "Invoke-Setup")
+    assert setup.index("Stop-OldUiWithConsent") < setup.index("'--replace'")
+    stop = _function_text(WIN / "setup_wsl_backend.ps1", "Stop-OldUiWithConsent")
+    assert stop.index("Read-Consent") < stop.index("'ui-stop'")
+
+
+def test_wsl_install_counts_only_0_and_3010_as_started():
+    body = _function_text(WIN / "setup_wsl_backend.ps1", "Install-WslWithConsent")
+    assert "($code -eq 0 -or $code -eq 3010)" in body
+    assert "$null -ne $code" in body
+    assert body.rstrip().endswith("return 1\n}") or body.rstrip().endswith("return 1\r\n}")
+    assert body.index('"exit"') < body.index("Start-Process")
+
+
+# ---- fake WSL harness (runs everywhere; the PowerShell side runs in test_windows_oneclick_fakewsl.py) --
+
+def _fake_module():
+    spec = importlib.util.spec_from_file_location("fake_wsl_for_scripts", FAKE_WSL_PY)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_fake_wsl_cmd_is_crlf_ascii_and_runs_the_python_fake():
+    raw = FAKE_WSL_CMD.read_bytes()
+    assert raw.endswith(b"\r\n") and raw.count(b"\n") == raw.count(b"\r\n")
+    text = raw.decode("ascii")
+    assert text.startswith("@echo off\r\n")
+    assert '"%~dp0fake_wsl.py" %*' in text
+    assert text.rstrip().endswith("exit /b %ERRORLEVEL%")
+
+
+def test_fake_wsl_parses_every_emulated_form():
+    fake = _fake_module()
+    py = "/home/u/geo-workbench-src/.venv/bin/python"
+    assert fake.parse(["-l", "-v"])["key"] == "list"
+    for sub in ("preflight", "run", "status", "cancel", "serve", "ui-status", "ui-stop"):
+        call = fake.parse(["-d", "Ubuntu", "--cd", "/home/u/geo-workbench-src", "--exec", py,
+                           "/home/u/geo-workbench-src/dashboard/geo_pilot.py", sub, "--json"])
+        assert call["key"] == sub and call["distro"] == "Ubuntu" and call["exec"] == py
+    call = fake.parse(["-d", "Ubuntu", "--cd", "~", "--exec", "python3", "/mnt/c/p q/windows/wsl/geo_wsl_setup.py",
+                       "install-git", "--json"])
+    assert call["key"] == "setup:install-git"
+    call = fake.parse(["-d", "Ubuntu", "-u", "root", "--exec", "id", "-u"])
+    assert call["key"] == "exec:id -u" and call["fallback_key"] == "exec:id" and call["user"] == "root"
+    assert fake.parse(["--install", "-d", "Ubuntu-24.04"])["key"] == "wsl:--install"
+
+
+def test_fake_wsl_answers_from_the_scenario_and_logs_every_call(tmp_path):
+    scenario = {"commands": {
+        "status": {"exit": 3, "stdout": {"found": False}, "after_run": {"exit": 0, "stdout": {"found": True}}},
+        "setup:install-git": {"sequence": [{"exit": 17, "stdout": "missing"}, {"exit": 0, "stdout": "ok"}]},
+        "run": {"exit": 0}}}
+    path = tmp_path / "scenario.json"
+    path.write_text(json.dumps(scenario), encoding="utf-8")
+    log = tmp_path / "calls.log"
+    env = {"GEO_FAKE_WSL_SCENARIO": str(path), "GEO_FAKE_WSL_LOG": str(log), "PATH": ""}
+    pilot = ["-d", "U", "--cd", "/s", "--exec", "/s/.venv/bin/python", "/s/dashboard/geo_pilot.py"]
+    setup = ["-d", "U", "--cd", "~", "--exec", "python3", "/p/windows/wsl/geo_wsl_setup.py", "install-git"]
+
+    def fake(*argv):
+        return subprocess.run([sys.executable, str(FAKE_WSL_PY), *argv], env=env, capture_output=True, text=True,
+                              timeout=60)
+
+    done = fake("-l", "-v")
+    assert done.returncode == 0 and "Ubuntu-24.04" in done.stdout
+    done = fake(*pilot, "status", "--json")
+    assert done.returncode == 3 and json.loads(done.stdout) == {"found": False}
+    assert fake(*pilot, "run", "--groups", "1").returncode == 0
+    done = fake(*pilot, "status", "--json")
+    assert done.returncode == 0 and json.loads(done.stdout) == {"found": True}
+    assert [fake(*setup).returncode for _ in range(3)] == [17, 0, 0]
+    assert fake(*pilot, "serve", "--port", "8531").returncode == 127
+    keys = [json.loads(line)["key"] for line in log.read_text(encoding="utf-8").splitlines()]
+    assert keys == ["list", "status", "run", "status", "setup:install-git", "setup:install-git",
+                    "setup:install-git", "serve"]
+
+
 # ---- documentation -------------------------------------------------------------------------------
 
 def test_benioku_documents_the_workbench():
     text = _text(WIN / "BENIOKU.md")
     for name in SHORTCUT_NAMES:
         assert name in text, name
+    for code in sorted(REQUIRED_CODES - {0}):
+        assert re.search(rf"(?m)^\| [^|]*\b{code}\b[^|]*\|", text), f"exit code {code} missing from the table"
     for needle in ("WSL2", "GEO WSL Kurulumu", "inceleme modu", "geo_workbench.log", "windows\\logs",
-                   "~/.local/share/geo-dashboard", "benchmark değildir", "wsl_backend.json"):
+                   "~/.local/share/geo-dashboard", "benchmark değildir", "wsl_backend.json", "geo-source.bundle",
+                   "sudo apt-get install -y git", "linux_user", "3010"):
         assert needle in text, needle
 
 

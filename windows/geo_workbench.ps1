@@ -41,15 +41,30 @@ function Get-Backend {
     $match = @($distros | Where-Object { $_.Name -eq "$($state.distro)" })
     if ($match.Count -eq 0) { return [pscustomobject]@{ Status = 'no-distro'; State = $state } }
     if ($match[0].Version -ne 2) { return [pscustomobject]@{ Status = 'wsl1'; State = $state } }
+    $version = Read-PackageVersion
+    $packageCommit = ''
+    if ($null -ne $version -and $version.Commit) { $packageCommit = $version.Commit }
+    $expect = Resolve-BackendExpectation -StateCommit "$($state.commit)" -HasVersionFile (Test-PackageVersionFile) `
+        -PackageCommit $packageCommit
+    $status = 'ok'
+    if (-not $expect.Match) { $status = 'mismatch' }
+    # A mismatched copy still serves stop-pilot, close and status: its pilot or UI must stay controllable.
     return [pscustomobject]@{
-        Status = 'ok'
-        State  = $state
-        Wsl    = $wsl
-        Distro = "$($state.distro)"
-        Src    = "$($state.src)"
-        Python = "$($state.python)"
-        Script = "$($state.src)" + '/dashboard/geo_pilot.py'
+        Status        = $status
+        State         = $state
+        Wsl           = $wsl
+        Distro        = "$($state.distro)"
+        Src           = "$($state.src)"
+        Python        = "$($state.python)"
+        Script        = "$($state.src)" + '/dashboard/geo_pilot.py'
+        ExpectCommit  = $expect.Commit
+        PackageCommit = $expect.PackageCommit
     }
+}
+
+function Test-BackendUsable {
+    param($Backend)
+    return ($Backend.Status -eq 'ok' -or $Backend.Status -eq 'mismatch')
 }
 
 function Write-BackendProblem {
@@ -59,6 +74,14 @@ function Write-BackendProblem {
         'no-wsl'    { Write-GeoErr 'wsl.exe bulunamadi.'; Write-GeoErr (Get-PilotMessage 3) }
         'no-distro' { Write-GeoErr ('Kayitli WSL dagitimi bulunamadi: ' + $Backend.State.distro); Write-GeoErr (Get-PilotMessage 3) }
         'wsl1'      { Write-GeoErr ('Dagitim ' + $Backend.State.distro + ' WSL1 olarak calisiyor; pilot WSL2 gerektirir (wsl --set-version ' + $Backend.State.distro + ' 2).'); Write-GeoErr (Get-PilotMessage 8) }
+        'mismatch'  {
+            if ($Backend.PackageCommit) {
+                Write-GeoErr ('WSL kopyasi (wsl_backend.json) commit ' + $Backend.State.commit + ' icin kurulmus; bu paket commit ' + $Backend.PackageCommit + '.')
+            } else {
+                Write-GeoErr 'Paket surum bilgisi (VERSION.json commit) okunamadi; WSL kopyasi bu paketle eslestirilemez.'
+            }
+            Write-GeoErr (Get-PilotMessage 20)
+        }
     }
 }
 
@@ -66,7 +89,46 @@ function Get-BackendProblemCode {
     param($Backend)
     if ($Backend.Status -eq 'no-state') { return 2 }
     if ($Backend.Status -eq 'wsl1') { return 8 }
+    if ($Backend.Status -eq 'mismatch') { return 20 }
     return 3
+}
+
+function Write-MismatchNote {
+    param($Backend)
+    if ($Backend.Status -eq 'mismatch') {
+        Write-GeoWarn 'WSL kopyasi bu paketin commit degeriyle eslesmiyor; bu islem yine de WSL kopyasindaki isi/arayuzu hedefler.'
+        Write-GeoWarn 'Pilot ve pano icin "GEO WSL Kurulumu" kisayolunu yeniden calistirin.'
+    }
+}
+
+function Write-UiPidRecord {
+    param([int]$ProcessId, [int]$Port)
+    try {
+        Write-PidRecord -Path $UiPidFile -ProcessId $ProcessId -Port $Port -Engine 'wsl2'
+    } catch {
+        Write-GeoWarn ('PID kaydi yazilamadi (' + $UiPidFile + '): ' + $_.Exception.Message)
+    }
+}
+
+function Write-PilotPidFile {
+    param([string]$Text)
+    try {
+        [void][System.IO.Directory]::CreateDirectory((Split-Path -Parent $PilotPidFile))
+        [System.IO.File]::WriteAllText($PilotPidFile, $Text, (New-Object System.Text.ASCIIEncoding))
+    } catch {
+        Write-GeoWarn ('PID kaydi yazilamadi (' + $PilotPidFile + '): ' + $_.Exception.Message)
+    }
+}
+
+function Write-RunningJob {
+    param($Report)
+    if ($null -eq $Report -or -not $Report.running_job) { return }
+    $key = "$($Report.running_job_key)"
+    if ($key -and $key -ne 'real-exercise') {
+        Write-GeoWarn ('Calisan is: JOB_ID=' + $Report.running_job + ' (komut: ' + $key + ')')
+    } else {
+        Write-GeoWarn ('Calisan pilot: JOB_ID=' + $Report.running_job)
+    }
 }
 
 function Invoke-GeoPilot {
@@ -108,16 +170,18 @@ function Open-NativeInspection {
     return [int]$LASTEXITCODE
 }
 
+function Test-UiIdentity {
+    param($Backend, $UiStatus)
+    if ("$($UiStatus.expect_commit)" -ceq "$($Backend.ExpectCommit)") { return $true }
+    $served = "$($UiStatus.expect_commit)"
+    if (-not $served) { $served = 'yok' }
+    Write-GeoErr ('Calisan GEO Workbench arayuzu baska bir kaynak kimligi icin baslatilmis (arayuz: ' + $served + ', bu paket: ' + $Backend.ExpectCommit + ').')
+    Write-GeoErr 'Once "GEO Workbench Kapat" ile kapatip yeniden acin.'
+    return $false
+}
+
 function Start-WorkbenchUi {
     param($Backend)
-    $record = Read-PidRecord -Path $UiPidFile
-    if ($null -ne $record -and $record.Engine -eq 'wsl2' -and $record.ProcessId -gt 0) {
-        $p = Get-Process -Id $record.ProcessId -ErrorAction SilentlyContinue
-        if ($p -and $p.ProcessName -eq 'wsl' -and (Test-UiHealth -Port $record.Port)) {
-            Write-GeoOk ('GEO Workbench zaten calisiyor (port ' + $record.Port + ').')
-            return (New-UiResult 0 $record.Port)
-        }
-    }
     $r = Invoke-GeoPilot -Backend $Backend -Arguments @('ui-status', '--json')
     $status = ConvertFrom-PilotJson $r.Stdout
     if ($null -eq $status) {
@@ -125,9 +189,10 @@ function Start-WorkbenchUi {
         return (New-UiResult 3 0)
     }
     if ($status.running -and $status.port) {
+        if (-not (Test-UiIdentity -Backend $Backend -UiStatus $status)) { return (New-UiResult 20 0) }
         $port = [int]$status.port
         if (Wait-UiHealth -Port $port -Seconds 90) {
-            Write-PidRecord -Path $UiPidFile -ProcessId 0 -Port $port -Engine 'wsl2'
+            Write-UiPidRecord -ProcessId 0 -Port $port
             Write-GeoOk ('GEO Workbench zaten calisiyor (port ' + $port + ').')
             return (New-UiResult 0 $port)
         }
@@ -139,12 +204,12 @@ function Start-WorkbenchUi {
         Write-GeoInfo ('GEO Workbench WSL2 icinde baslatiliyor (port ' + $port + '). Ilk acilis bir dakika kadar surebilir.')
         try {
             $proc = Start-WslHidden -WslExe $Backend.Wsl -Distro $Backend.Distro -Cd $Backend.Src -Exec $Backend.Python `
-                -Arguments @($Backend.Script, 'serve', '--port', [string]$port)
+                -Arguments (@($Backend.Script, 'serve', '--port', [string]$port) + (Get-ExpectArgs -Commit $Backend.ExpectCommit))
         } catch {
             Write-GeoErr ('wsl.exe baslatilamadi: ' + $_.Exception.Message)
             return (New-UiResult 1 0)
         }
-        Write-PidRecord -Path $UiPidFile -ProcessId $proc.Id -Port $port -Engine 'wsl2'
+        Write-UiPidRecord -ProcessId $proc.Id -Port $port
         if (Wait-UiHealth -Port $port -Seconds 90 -Process $proc) {
             Write-GeoOk ('GEO Workbench hazir: http://127.0.0.1:' + $port + '/ (motor: WSL2, ' + $Backend.Distro + ')')
             return (New-UiResult 0 $port)
@@ -163,10 +228,13 @@ function Start-WorkbenchUi {
         }
         if ($code -eq 11) {
             $again = ConvertFrom-PilotJson (Invoke-GeoPilot -Backend $Backend -Arguments @('ui-status', '--json')).Stdout
-            if ($null -ne $again -and $again.running -and $again.port -and (Wait-UiHealth -Port ([int]$again.port) -Seconds 90)) {
-                Write-PidRecord -Path $UiPidFile -ProcessId 0 -Port ([int]$again.port) -Engine 'wsl2'
-                Write-GeoOk ('GEO Workbench zaten calisiyor (port ' + $again.port + ').')
-                return (New-UiResult 0 ([int]$again.port))
+            if ($null -ne $again -and $again.running -and $again.port) {
+                if (-not (Test-UiIdentity -Backend $Backend -UiStatus $again)) { return (New-UiResult 20 0) }
+                if (Wait-UiHealth -Port ([int]$again.port) -Seconds 90) {
+                    Write-UiPidRecord -ProcessId 0 -Port ([int]$again.port)
+                    Write-GeoOk ('GEO Workbench zaten calisiyor (port ' + $again.port + ').')
+                    return (New-UiResult 0 ([int]$again.port))
+                }
             }
         }
         Write-GeoErr ('Pano sureci beklenmedik sekilde bitti (cikis kodu ' + $code + ').')
@@ -208,15 +276,9 @@ function Invoke-PilotAction {
         if ($code -eq 2) { $null = Open-NativeInspection }
         return $code
     }
-    $version = Read-PackageVersion
-    if ($null -eq $version -or -not $version.Commit -or -not $version.ManifestSha256) {
-        Write-GeoErr 'Paket surum bilgisi (VERSION.json: commit ve source_manifest_sha256) okunamadi; kaynak kimligi dogrulanamaz.'
-        Write-GeoErr (Get-PilotMessage 20)
-        return 20
-    }
-    Write-GeoInfo ('On kontrol: ' + $Groups + ' grup, commit ' + $version.Commit.Substring(0, 12) + ' ...')
-    $pre = Invoke-GeoPilot -Backend $backend -Arguments @('preflight', '--groups', [string]$Groups,
-        '--expect-commit', $version.Commit, '--expect-manifest-sha256', $version.ManifestSha256, '--json')
+    $expectArgs = Get-ExpectArgs -Commit $backend.ExpectCommit
+    Write-GeoInfo ('On kontrol: ' + $Groups + ' grup, commit ' + $backend.ExpectCommit.Substring(0, 12) + ' ...')
+    $pre = Invoke-GeoPilot -Backend $backend -Arguments (@('preflight', '--groups', [string]$Groups) + $expectArgs + @('--json'))
     $report = ConvertFrom-PilotJson $pre.Stdout
     if ($null -eq $report) {
         Write-GeoErr ('On kontrol sonucu okunamadi (geo_pilot.py preflight, cikis kodu ' + $pre.ExitCode + ').')
@@ -224,9 +286,9 @@ function Invoke-PilotAction {
         if ($pre.ExitCode -eq 0) { return 1 }
         return $pre.ExitCode
     }
+    Write-RunningJob $report
     if ($pre.ExitCode -eq 10) {
         Write-GeoWarn (Get-PilotMessage 10)
-        Write-GeoWarn ('Calisan pilot: JOB_ID=' + $report.running_job)
         $ui = Start-WorkbenchUi -Backend $backend
         if ($ui.ExitCode -eq 0) { Open-WorkbenchBrowser -Port $ui.Port }
         return 10
@@ -249,13 +311,12 @@ function Invoke-PilotAction {
     if ($null -ne $before) { $beforeId = "$($before.job_id)" }
     try {
         $proc = Start-WslHidden -WslExe $backend.Wsl -Distro $backend.Distro -Cd $backend.Src -Exec $backend.Python `
-            -Arguments @($backend.Script, 'run', '--groups', [string]$Groups,
-                '--expect-commit', $version.Commit, '--expect-manifest-sha256', $version.ManifestSha256)
+            -Arguments (@($backend.Script, 'run', '--groups', [string]$Groups) + $expectArgs)
     } catch {
         Write-GeoErr ('Pilot denetcisi baslatilamadi: ' + $_.Exception.Message)
         return 1
     }
-    [System.IO.File]::WriteAllText($PilotPidFile, ('{0};{1};starting' -f $proc.Id, $Groups), (New-Object System.Text.ASCIIEncoding))
+    Write-PilotPidFile ('{0};{1};starting' -f $proc.Id, $Groups)
     Write-GeoInfo ('Pilot denetcisi baslatildi (wsl.exe PID ' + $proc.Id + '); is kimligi bekleniyor...')
 
     $job = $null
@@ -266,17 +327,27 @@ function Invoke-PilotAction {
         if ($null -ne $latest -and "$($latest.job_id)" -ne $beforeId) { $job = $latest; break }
         if ($proc.HasExited) { break }
     }
+    if ($null -eq $job -and $proc.HasExited) {
+        # The supervisor may have recorded its job just before it exited.
+        $latest = Get-LatestPilot -Backend $backend
+        if ($null -ne $latest -and "$($latest.job_id)" -ne $beforeId) { $job = $latest }
+    }
     if ($null -eq $job) {
         if ($proc.HasExited) {
             $code = $proc.ExitCode
             if ($null -eq $code) { $code = 1 }
             Remove-Item -LiteralPath $PilotPidFile -ErrorAction SilentlyContinue
-            if ($code -eq 10) {
-                Write-GeoWarn (Get-PilotMessage 10)
-                $running = Get-LatestPilot -Backend $backend
-                if ($null -ne $running) { Write-GeoWarn ('Calisan pilot: JOB_ID=' + $running.job_id) }
+            if ($code -eq 10 -or $code -eq 18) {
+                Write-GeoWarn (Get-PilotMessage $code -Action 'pilot')
+                $again = ConvertFrom-PilotJson (Invoke-GeoPilot -Backend $backend -Arguments (@('preflight', '--groups', [string]$Groups) + $expectArgs + @('--json'))).Stdout
+                Write-RunningJob $again
                 Open-WorkbenchBrowser -Port $ui.Port
-                return 10
+                return $code
+            }
+            if ($code -eq 0) {
+                Write-GeoErr 'Pilot denetcisi bir is kimligi gorulmeden bitti (cikis kodu 0).'
+                Write-GeoErr (Get-PilotMessage 6)
+                return 6
             }
             Write-GeoErr ('Pilot denetcisi is baslatmadan bitti (cikis kodu ' + $code + ').')
             Write-GeoErr (Get-PilotMessage $code -Action 'pilot')
@@ -286,7 +357,7 @@ function Invoke-PilotAction {
         Open-WorkbenchBrowser -Port $ui.Port
         return 6
     }
-    [System.IO.File]::WriteAllText($PilotPidFile, ('{0};{1};{2}' -f $proc.Id, $Groups, $job.job_id), (New-Object System.Text.ASCIIEncoding))
+    Write-PilotPidFile ('{0};{1};{2}' -f $proc.Id, $Groups, $job.job_id)
     Write-GeoOk (Get-PilotMessage 0 -Action 'pilot')
     Write-GeoInfo ('JOB_ID=' + $job.job_id + '  durum: ' + $job.state + '  grup: ' + $Groups)
     Write-GeoInfo ('Cikti klasoru (WSL icinde): ' + $job.job_dir)
@@ -302,10 +373,11 @@ function Invoke-StopPilotAction {
         Write-GeoInfo 'WSL2 arka ucu kurulu degil; calisan bir GEO pilotu olamaz.'
         return 3
     }
-    if ($backend.Status -ne 'ok') {
+    if (-not (Test-BackendUsable $backend)) {
         Write-BackendProblem $backend
         return (Get-BackendProblemCode $backend)
     }
+    Write-MismatchNote $backend
     $r = Invoke-GeoPilot -Backend $backend -Arguments @('cancel')
     Write-GeoLog 'INFO' ('cancel output: ' + $r.Stdout)
     if ($r.ExitCode -eq 0) {
@@ -390,7 +462,8 @@ function Stop-NativeDashboard {
 function Invoke-CloseAction {
     $backend = Get-Backend
     $runningPilot = $null
-    if ($backend.Status -eq 'ok') {
+    if (Test-BackendUsable $backend) {
+        Write-MismatchNote $backend
         $latest = Get-LatestPilot -Backend $backend
         if ($null -ne $latest -and "$($latest.state)" -eq 'running') { $runningPilot = "$($latest.job_id)" }
     }
@@ -413,7 +486,7 @@ function Invoke-CloseAction {
         }
     }
     $code = 0
-    if ($backend.Status -eq 'ok') {
+    if (Test-BackendUsable $backend) {
         $r = Invoke-GeoPilot -Backend $backend -Arguments @('ui-stop')
         Write-GeoLog 'INFO' ('ui-stop output: ' + $r.Stdout)
         if ($r.ExitCode -eq 0) {
@@ -443,16 +516,13 @@ function Invoke-StatusAction {
         Write-GeoInfo ('Paket: surum ' + $version.Version + ', commit ' + $version.Commit)
     }
     $backend = Get-Backend
-    if ($backend.Status -ne 'ok') {
+    if (-not (Test-BackendUsable $backend)) {
         Write-GeoInfo 'Motor: yerel Windows (yalniz inceleme)'
         Write-BackendProblem $backend
         if ($null -ne (Get-NativeDashboardProcess)) { Write-GeoInfo 'Yerel pano: calisiyor' } else { Write-GeoInfo 'Yerel pano: calismiyor' }
     } else {
-        $preArgs = @('preflight', '--groups', '1', '--json')
-        if ($null -ne $version -and $version.Commit -and $version.ManifestSha256) {
-            $preArgs = @('preflight', '--groups', '1', '--expect-commit', $version.Commit,
-                '--expect-manifest-sha256', $version.ManifestSha256, '--json')
-        }
+        if ($backend.Status -eq 'mismatch') { Write-BackendProblem $backend }
+        $preArgs = @('preflight', '--groups', '1') + (Get-ExpectArgs -Commit $backend.ExpectCommit) + @('--json')
         $pre = ConvertFrom-PilotJson (Invoke-GeoPilot -Backend $backend -Arguments $preArgs).Stdout
         if ($null -eq $pre) {
             Write-GeoErr (Get-PilotMessage 3)

@@ -67,7 +67,7 @@ try {
     Assert-True (Test-Throws { New-WslArgv -Distro 'Ubuntu' -Exec 'python3' -Arguments @('ok', '') }) 'argv: empty argument rejected'
 
     # ---- exit code messages
-    foreach ($code in @(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20, 21, 22, 23, 24, 30, 31, 32, 33, 34, 40, 41)) {
+    foreach ($code in @(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 30, 31, 32, 33, 34, 40, 41, 42)) {
         $message = Get-PilotMessage -Code $code
         Assert-True ($message.Length -gt 0 -and $message -notlike 'Bilinmeyen cikis kodu*') ('message: code ' + $code + ' mapped')
         Assert-True ($message -cmatch '^[\x20-\x7E]+$') ('message: code ' + $code + ' is printable ASCII')
@@ -75,6 +75,9 @@ try {
     Assert-True ((Get-PilotMessage -Code 99) -like 'Bilinmeyen cikis kodu: 99*') 'message: unknown code'
     Assert-True ((Get-PilotMessage -Code 3 -Action 'stop-pilot') -ne (Get-PilotMessage -Code 3 -Action 'pilot')) 'message: code 3 depends on action'
     Assert-True ((Get-PilotMessage -Code 0 -Action 'pilot') -like '*benchmark degildir*') 'message: pilot is not a benchmark'
+    Assert-True ((Get-PilotMessage -Code 17) -like '*apt-get install -y git*') 'message: 17 names the git package'
+    Assert-True ((Get-PilotMessage -Code 25) -like '*Git*') 'message: 25 explains the Git requirement'
+    Assert-True ((Get-PilotMessage -Code 18) -ne (Get-PilotMessage -Code 10)) 'message: 18 differs from 10'
 
     # ---- VERSION.json
     $pkg = Join-Path $TempRoot ('paket ' + $sCedilla)
@@ -82,12 +85,22 @@ try {
     Assert-True ($null -eq (Read-PackageVersion -Root $pkg)) 'version: missing file'
     $commit = 'a' * 40
     $digest = 'b' * 64
-    $json = '{"version": "0.1.0-win.7", "commit": "' + $commit + '", "source_manifest_sha256": "' + $digest + '"}'
+    Assert-True (-not (Test-PackageVersionFile -Root $pkg)) 'version: file absent'
+    $bundleDigest = 'c' * 64
+    $json = '{"version": "0.1.0-win.7", "commit": "' + $commit + '", "source_manifest_sha256": "' + $digest +
+        '", "source_bundle": "geo-source.bundle", "source_bundle_sha256": "' + $bundleDigest + '", "source_bundle_head": "' + $commit + '"}'
     [System.IO.File]::WriteAllText((Join-Path $pkg 'VERSION.json'), $json, (New-Object System.Text.UTF8Encoding($false)))
     $version = Read-PackageVersion -Root $pkg
+    Assert-True (Test-PackageVersionFile -Root $pkg) 'version: file present'
     Assert-Equal $commit $version.Commit 'version: commit'
     Assert-Equal $digest $version.ManifestSha256 'version: manifest digest'
     Assert-Equal '0.1.0-win.7' $version.Version 'version: version'
+    Assert-Equal 'geo-source.bundle' $version.SourceBundle 'version: bundle name'
+    Assert-Equal $bundleDigest $version.SourceBundleSha256 'version: bundle digest'
+    Assert-Equal $commit $version.SourceBundleHead 'version: bundle head'
+    [System.IO.File]::WriteAllText((Join-Path $pkg 'VERSION.json'), ('{"commit": "' + $commit.ToUpper() + '", "source_bundle": "../x"}'), (New-Object System.Text.UTF8Encoding($false)))
+    $version = Read-PackageVersion -Root $pkg
+    Assert-True ($null -eq $version.Commit -and $null -eq $version.SourceBundle) 'version: upper-case commit and path-like bundle refused'
     [System.IO.File]::WriteAllText((Join-Path $pkg 'VERSION.json'), '{"version": "x", "commit": "not-a-sha"}', (New-Object System.Text.UTF8Encoding($false)))
     $version = Read-PackageVersion -Root $pkg
     Assert-True ($null -eq $version.Commit -and $null -eq $version.ManifestSha256) 'version: invalid fields are null'
@@ -113,6 +126,17 @@ try {
     $distros = @(ConvertFrom-WslListText -Text $localized)
     Assert-Equal 1 $distros.Count 'wsl list: localized header'
     Assert-Equal 'Ubuntu' $distros[0].Name 'wsl list: localized name'
+    $multi = "  NAME            STATE                   VERSION`r`n* Ubuntu-24.04    Wird ausgefuehrt        2`r`n  Debian          En cours d'execution    1`r`n  Alpine          Stopped                 2`r`n"
+    $distros = @(ConvertFrom-WslListText -Text $multi)
+    Assert-Equal 3 $distros.Count 'wsl list: multi-word states count'
+    Assert-Equal 'Ubuntu-24.04' $distros[0].Name 'wsl list: name before a multi-word state'
+    Assert-Equal 'Wird ausgefuehrt' $distros[0].State 'wsl list: multi-word state joined'
+    Assert-Equal 2 $distros[0].Version 'wsl list: version after a multi-word state'
+    Assert-True ($distros[0].Default) 'wsl list: default marker with a multi-word state'
+    Assert-Equal 'Debian' $distros[1].Name 'wsl list: second multi-word name'
+    Assert-Equal "En cours d'execution" $distros[1].State 'wsl list: three-word state'
+    Assert-Equal 1 $distros[1].Version 'wsl list: version 1 after a three-word state'
+    Assert-Equal 'Stopped' $distros[2].State 'wsl list: one-word state still parsed'
     $none = "Windows Subsystem for Linux has no installed distributions.`r`nYou can resolve this by installing a distribution with the instructions below:`r`n`r`nUse 'wsl.exe --list --online' to list available distributions`r`nand 'wsl.exe --install <Distro>' to install.`r`n"
     Assert-Equal 0 (@(ConvertFrom-WslListText -Text $none)).Count 'wsl list: no distributions message'
     Assert-Equal 0 (@(ConvertFrom-WslListText -Text '')).Count 'wsl list: empty text'
@@ -125,6 +149,29 @@ try {
     Assert-True ($null -eq (ConvertFrom-PilotJson '{broken')) 'pilot json: broken JSON'
     Assert-True ($null -eq (ConvertFrom-PilotJson '')) 'pilot json: empty'
 
+    # ---- package / WSL copy expectation
+    $other = 'd' * 40
+    $e = Resolve-BackendExpectation -StateCommit $commit -HasVersionFile $true -PackageCommit $commit
+    Assert-True ($e.Match) 'expect: package commit equals state commit'
+    Assert-Equal $commit $e.Commit 'expect: package commit expected'
+    $e = Resolve-BackendExpectation -StateCommit $commit -HasVersionFile $true -PackageCommit $other
+    Assert-True (-not $e.Match) 'expect: package commit differs -> mismatch'
+    Assert-Equal $other $e.Commit 'expect: the package commit stays the expectation'
+    Assert-Equal $other $e.PackageCommit 'expect: package commit reported'
+    $e = Resolve-BackendExpectation -StateCommit $commit -HasVersionFile $true -PackageCommit ''
+    Assert-True (-not $e.Match) 'expect: unreadable VERSION.json never matches'
+    Assert-True (-not $e.Commit) 'expect: unreadable VERSION.json pins nothing'
+    $e = Resolve-BackendExpectation -StateCommit $commit -HasVersionFile $false -PackageCommit ''
+    Assert-True ($e.Match) 'expect: developer mode accepts the state commit'
+    Assert-Equal $commit $e.Commit 'expect: developer mode expects the state commit'
+    Assert-Equal 'developer' $e.Mode 'expect: developer mode named'
+    $e = Resolve-BackendExpectation -StateCommit $commit.ToUpper() -HasVersionFile $true -PackageCommit $commit
+    Assert-True (-not $e.Match) 'expect: comparison is case-sensitive'
+    Assert-Equal ('--expect-commit|' + $commit) ((Get-ExpectArgs -Commit $commit) -join '|') 'expect args: commit'
+    $noArgs = Get-ExpectArgs -Commit ''
+    Assert-Equal 0 $noArgs.Count 'expect args: none without a commit'
+    Assert-Equal ('preflight|--expect-commit|' + $commit + '|--json') ((@('preflight') + (Get-ExpectArgs -Commit $commit) + @('--json')) -join '|') 'expect args: concatenation'
+
     # ---- backend state round trip
     $statePath = Join-Path (Join-Path $TempRoot ('state ' + $IDot)) 'wsl_backend.json'
     Assert-True ($null -eq (Read-BackendState -Path $statePath)) 'state: missing file'
@@ -134,7 +181,10 @@ try {
         src             = '/home/user/geo-workbench-src'
         python          = '/home/user/geo-workbench-src/.venv/bin/python'
         commit          = $commit
+        source_mode     = 'git'
         manifest_sha256 = $digest
+        linux_user      = 'user'
+        uid             = [long]1000
         package_root    = $nonAscii
         configured_at   = '2026-11-05T00:00:00Z'
     }
@@ -144,6 +194,15 @@ try {
     Assert-Equal 'Ubuntu-24.04' $back.distro 'state: distro'
     Assert-Equal '/home/user/geo-workbench-src' $back.src 'state: src'
     Assert-Equal $nonAscii $back.package_root 'state: non-ASCII package root'
+    Assert-Equal 'user' $back.linux_user 'state: linux user'
+    Assert-Equal 1000 $back.uid 'state: uid'
+    foreach ($case in @(@('uid', 0), @('uid', $null), @('linux_user', 'root'), @('linux_user', ''), @('linux_user', 'a b'))) {
+        $bad = [ordered]@{}
+        foreach ($k in $state.Keys) { $bad[$k] = $state[$k] }
+        $bad[$case[0]] = $case[1]
+        Write-BackendState -State $bad -Path $statePath
+        Assert-True ($null -eq (Read-BackendState -Path $statePath)) ('state: refused ' + $case[0] + '=[' + $case[1] + ']')
+    }
     Write-BackendState -State $state -Path $statePath
     Assert-True ($null -ne (Read-BackendState -Path $statePath)) 'state: overwrite'
     $bad = [ordered]@{}
@@ -183,23 +242,29 @@ try {
     Assert-True ([System.IO.File]::Exists($script:GeoLogPathOverride)) 'log: written'
 
     # ---- Unicode shortcuts (Turkish shortcut names; non-ASCII user-profile path)
-    . (Join-Path (Split-Path -Parent $PSScriptRoot) 'geo_shortcut.ps1')
-    $oUml = [char]0x00D6; $sC = [char]0x015F; $iDot = [char]0x0130
-    $profileLike = Join-Path $TempRoot ($oUml + 'mer ' + $sC + 'ahin ' + $iDot + 'pek')
-    [void][System.IO.Directory]::CreateDirectory($profileLike)
-    $target = Join-Path $profileLike 'GEO_Pilot_Baslat.bat'
-    [System.IO.File]::WriteAllText($target, "@echo off`r`n")
-    $lnkName = 'GEO Pilot Ba' + $sC + 'lat.lnk'
-    $lnk = Join-Path $profileLike $lnkName
-    New-GeoShortcut -LnkPath $lnk -Target $target -WorkingDirectory $profileLike -Description 'test'
-    $names = @([System.IO.Directory]::GetFiles($profileLike, '*.lnk') | ForEach-Object { [System.IO.Path]::GetFileName($_) })
-    Assert-Equal $lnkName ($names -join '|') 'shortcut: Turkish file name kept exactly (no ANSI best-fit)'
-    $readBack = Read-GeoShortcut -LnkPath $lnk
-    Assert-Equal $target $readBack.Target 'shortcut: non-ASCII target path round-trips'
-    Assert-Equal $profileLike $readBack.WorkingDirectory 'shortcut: non-ASCII working directory round-trips'
-    $lnk2 = Join-Path $profileLike ('GEO ' + $iDot + $sC + 'lem Durdur.lnk')
-    New-GeoShortcut -LnkPath $lnk2 -Target $target -WorkingDirectory $profileLike -Description 'test'
-    Assert-True ([System.IO.File]::Exists($lnk2)) 'shortcut: I-dot name created'
+    # IShellLinkW is a Windows COM interface; pwsh on Linux/macOS (e.g. the readiness CI runner) has no COM.
+    $onWindows = ($PSVersionTable.PSEdition -eq 'Desktop') -or [bool](Get-Variable -Name IsWindows -ValueOnly -ErrorAction SilentlyContinue)
+    if ($onWindows) {
+        . (Join-Path (Split-Path -Parent $PSScriptRoot) 'geo_shortcut.ps1')
+        $oUml = [char]0x00D6; $sC = [char]0x015F; $iDot = [char]0x0130
+        $profileLike = Join-Path $TempRoot ($oUml + 'mer ' + $sC + 'ahin ' + $iDot + 'pek')
+        [void][System.IO.Directory]::CreateDirectory($profileLike)
+        $target = Join-Path $profileLike 'GEO_Pilot_Baslat.bat'
+        [System.IO.File]::WriteAllText($target, "@echo off`r`n")
+        $lnkName = 'GEO Pilot Ba' + $sC + 'lat.lnk'
+        $lnk = Join-Path $profileLike $lnkName
+        New-GeoShortcut -LnkPath $lnk -Target $target -WorkingDirectory $profileLike -Description 'test'
+        $names = @([System.IO.Directory]::GetFiles($profileLike, '*.lnk') | ForEach-Object { [System.IO.Path]::GetFileName($_) })
+        Assert-Equal $lnkName ($names -join '|') 'shortcut: Turkish file name kept exactly (no ANSI best-fit)'
+        $readBack = Read-GeoShortcut -LnkPath $lnk
+        Assert-Equal $target $readBack.Target 'shortcut: non-ASCII target path round-trips'
+        Assert-Equal $profileLike $readBack.WorkingDirectory 'shortcut: non-ASCII working directory round-trips'
+        $lnk2 = Join-Path $profileLike ('GEO ' + $iDot + $sC + 'lem Durdur.lnk')
+        New-GeoShortcut -LnkPath $lnk2 -Target $target -WorkingDirectory $profileLike -Description 'test'
+        Assert-True ([System.IO.File]::Exists($lnk2)) 'shortcut: I-dot name created'
+    } else {
+        Write-Host 'skip: Unicode shortcut round trip needs Windows COM'
+    }
 } catch {
     $script:Failed++
     Write-Host ('FAIL: unexpected exception: ' + $_.Exception.Message)

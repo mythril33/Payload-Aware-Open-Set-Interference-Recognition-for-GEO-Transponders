@@ -5,12 +5,13 @@
 # --exec <program> <args...>` (no shell string is ever built). The governed pilot itself is
 # dashboard/geo_pilot.py inside the WSL copy; these helpers only call it and map its exit codes.
 #
-# Windows-side exit codes (geo_workbench.ps1, setup_wsl_backend.ps1); 10-41 come from geo_pilot.py
-# and 13-16/20 from windows/wsl/geo_wsl_setup.py:
+# Windows-side exit codes (geo_workbench.ps1, setup_wsl_backend.ps1); 10-42 come from geo_pilot.py
+# and 13-17/20 from windows/wsl/geo_wsl_setup.py:
 #   0 OK, 1 unexpected error, 2 WSL backend not set up, 3 WSL/distribution missing (or: no running
 #   pilot), 4 dashboard did not become healthy, 5 declined by the user, 6 pilot job id not seen in
 #   60 s, 7 WSL/Ubuntu installation started (finish it, then rerun setup), 8 distribution unsuitable
-#   (WSL1 or python3 < 3.10), 9 package files missing.
+#   (WSL1, python3 < 3.10 or the default Linux user is root), 9 package files missing,
+#   20 also: the WSL copy recorded in wsl_backend.json is not this package's commit.
 
 $script:GeoWindowsDir = $PSScriptRoot
 $script:GeoLogPathOverride = $null
@@ -108,14 +109,59 @@ function Read-PackageVersion {
     if ($null -eq $data) { return $null }
     $commit = $null
     $manifest = $null
-    if ("$($data.commit)" -match '^[0-9a-f]{40}$') { $commit = "$($data.commit)" }
-    if ("$($data.source_manifest_sha256)" -match '^[0-9a-f]{64}$') { $manifest = "$($data.source_manifest_sha256)" }
+    $bundle = $null
+    $bundleSha = $null
+    $bundleHead = $null
+    if ("$($data.commit)" -cmatch '^[0-9a-f]{40}$') { $commit = "$($data.commit)" }
+    if ("$($data.source_manifest_sha256)" -cmatch '^[0-9a-f]{64}$') { $manifest = "$($data.source_manifest_sha256)" }
+    if ("$($data.source_bundle)" -cmatch '^[A-Za-z0-9._-]+\.bundle$') { $bundle = "$($data.source_bundle)" }
+    if ("$($data.source_bundle_sha256)" -cmatch '^[0-9a-f]{64}$') { $bundleSha = "$($data.source_bundle_sha256)" }
+    if ("$($data.source_bundle_head)" -cmatch '^[0-9a-f]{40}$') { $bundleHead = "$($data.source_bundle_head)" }
     return [pscustomobject]@{
-        Version        = "$($data.version)"
-        Commit         = $commit
-        ManifestSha256 = $manifest
-        Path           = $path
+        Version            = "$($data.version)"
+        Commit             = $commit
+        ManifestSha256     = $manifest
+        SourceBundle       = $bundle
+        SourceBundleSha256 = $bundleSha
+        SourceBundleHead   = $bundleHead
+        Path               = $path
     }
+}
+
+function Test-PackageVersionFile {
+    param([string]$Root = '')
+    if (-not $Root) { $Root = Get-RepoRoot }
+    return (Test-Path -LiteralPath (Join-Path $Root 'VERSION.json') -PathType Leaf)
+}
+
+function Resolve-BackendExpectation {
+    # A package pins its own VERSION.json commit (unreadable -> never matches); without VERSION.json
+    # (developer checkout) the commit recorded by setup is expected.
+    param(
+        [AllowEmptyString()][string]$StateCommit,
+        [bool]$HasVersionFile,
+        [AllowEmptyString()][string]$PackageCommit
+    )
+    if (-not $HasVersionFile) {
+        return [pscustomobject]@{ Match = [bool]$StateCommit; Commit = $StateCommit; PackageCommit = $null; Mode = 'developer' }
+    }
+    if (-not $PackageCommit) {
+        return [pscustomobject]@{ Match = $false; Commit = $null; PackageCommit = $null; Mode = 'package' }
+    }
+    return [pscustomobject]@{
+        Match         = ($StateCommit -ceq $PackageCommit)
+        Commit        = $PackageCommit
+        PackageCommit = $PackageCommit
+        Mode          = 'package'
+    }
+}
+
+function Get-ExpectArgs {
+    # The WSL source is a Git checkout: geo_pilot.py refuses a manifest expectation there.
+    param([AllowEmptyString()][string]$Commit = '')
+    $out = New-Object System.Collections.Generic.List[string]
+    if ($Commit) { $out.Add('--expect-commit'); $out.Add($Commit) }
+    return ,$out.ToArray()
 }
 
 function Get-StatePath {
@@ -132,7 +178,10 @@ function Test-BackendState {
     $src = "$($State.src)"
     if ($src -notmatch '^/[^"]+$' -or $src -match '^/mnt(/|$)') { return $false }
     if ("$($State.python)" -ne ($src + '/.venv/bin/python')) { return $false }
-    if ("$($State.commit)" -notmatch '^[0-9a-f]{40}$') { return $false }
+    if ("$($State.commit)" -cnotmatch '^[0-9a-f]{40}$') { return $false }
+    $user = "$($State.linux_user)"
+    if ($user -notmatch '^[A-Za-z_][A-Za-z0-9._-]{0,31}$' -or $user -eq 'root') { return $false }
+    if ("$($State.uid)" -notmatch '^[1-9][0-9]{0,9}$') { return $false }
     return $true
 }
 
@@ -260,10 +309,10 @@ function ConvertFrom-WslListText {
         if ($tokens.Count -lt 3) { continue }
         $version = $tokens[$tokens.Count - 1]
         if ($version -notmatch '^\d+$') { continue }
-        $name = ($tokens[0..($tokens.Count - 3)]) -join ' '
+        # Distribution names cannot contain whitespace; the localized STATE can be several words.
         [void]$found.Add([pscustomobject]@{
-            Name    = $name
-            State   = $tokens[$tokens.Count - 2]
+            Name    = $tokens[0]
+            State   = ($tokens[1..($tokens.Count - 2)]) -join ' '
             Version = [int]$version
             Default = $isDefault
         })
@@ -441,8 +490,8 @@ function Get-PilotMessage {
         5 { return 'Islem onaylanmadi; hicbir sey degistirilmedi.' }
         6 { return 'Pilot denetcisi baslatildi ancak is kimligi 60 saniye icinde gorulmedi. Durumu panodan veya "GEO Workbench" ile kontrol edin; ikinci kez baslatmayin.' }
         7 { return 'WSL/Ubuntu kurulumu baslatildi. Kurulum bitince (Windows isterse bilgisayari yeniden baslatip) "GEO WSL Kurulumu" kisayolunu tekrar calistirin.' }
-        8 { return 'WSL dagitimi uygun degil: WSL2 ve python3 >= 3.10 gerekir.' }
-        9 { return 'Paket dosyalari eksik (VERSION.json, SOURCE_MANIFEST.json veya windows\wsl\geo_wsl_setup.py). WSL kurulumu yalniz CI tarafindan uretilen ZIP paketinden yapilabilir.' }
+        8 { return 'WSL dagitimi uygun degil: WSL2, python3 >= 3.10 ve root olmayan bir varsayilan Linux kullanicisi gerekir.' }
+        9 { return 'Paket dosyalari eksik veya tutarsiz (VERSION.json, geo-source.bundle veya windows\wsl\geo_wsl_setup.py). WSL kurulumu yalniz CI tarafindan uretilen ZIP paketinden yapilabilir.' }
         10 { return 'Bir GEO pilotu zaten calisiyor; ikinci pilot baslatilmadi. Mevcut is kimligi asagidadir.' }
         11 { return 'Pano zaten calisiyor; mevcut kopya kullaniliyor.' }
         12 { return 'Pano portu dolu (8531-8540). Bu portlari kullanan uygulamalari kapatip yeniden deneyin.' }
@@ -450,11 +499,15 @@ function Get-PilotMessage {
         14 { return 'Hedef klasor bir Windows surucusu (/mnt/...) altinda olamaz; kurulum WSL ext4 ev dizinine yapilir.' }
         15 { return 'WSL icinde python3-venv paketi eksik (sudo apt-get install -y python3-venv).' }
         16 { return 'pip paket kurulumu basarisiz oldu. Internet/proxy baglantisini kontrol edip "GEO WSL Kurulumu" kisayolunu yeniden calistirin.' }
-        20 { return 'Kaynak kimligi dogrulanamadi: WSL icindeki kopya bu paketin commit/manifest degerleriyle eslesmiyor veya degistirilmis. "GEO WSL Kurulumu" kisayolunu yeniden calistirin.' }
+        17 { return 'WSL icinde git kurulu degil (sudo apt-get install -y git). Kaynak kopyasi paketteki Git paketinden (geo-source.bundle) olusturulur.' }
+        18 { return 'WSL icinde baska bir GEO isi (pilot degil) calisiyor; yeni pilot baslatilmadi. Is bitince veya panodan iptal edildikten sonra yeniden deneyin.' }
+        19 { return 'Bir is kaydi (job.json) okunamiyor; yeni is baslatilmaz. Asagida adi verilen klasoru inceleyip kenara tasiyin (silmeyin), sonra yeniden deneyin.' }
+        20 { return 'Kaynak kimligi dogrulanamadi: WSL icindeki kopya bu paketin commit degeriyle eslesmiyor veya degistirilmis. "GEO WSL Kurulumu" kisayolunu yeniden calistirin.' }
         21 { return 'Bu ortam gercek RF pilotunu calistiramaz; WSL2 Ubuntu (veya Linux) gerekir.' }
         22 { return 'Gerekli Python paketleri (torch, numpy, scipy) WSL ortaminda eksik. "GEO WSL Kurulumu" kisayolunu yeniden calistirin.' }
         23 { return 'Yetersiz disk alani: WSL cikti klasorunde en az 5 GiB bos alan gerekir.' }
         24 { return 'Grup sayisi reddedildi; yalniz 1 veya 2 grup kabul edilir.' }
+        25 { return 'WSL icindeki kaynak bir Git kopyasi degil. Egitim, kontrol noktasi kaynagi olarak Git commit kimligini kaydettigi icin pilot calisamaz. "GEO WSL Kurulumu" kisayolunu yeniden calistirin.' }
         30 { return 'Pilot BASARISIZ bitti. Gunluk ve kismi ciktilar korundu.' }
         31 { return 'Pilot iptal edildi. Kismi ciktilar ve gunluk korundu; sonuc basarili sayilmaz.' }
         32 { return 'Pilot zaman asimina ugradi. Ciktilar korundu; sonuc basarili sayilmaz.' }
@@ -462,6 +515,7 @@ function Get-PilotMessage {
         34 { return 'Pilot kaydi (job.json) okunamiyor (record_unreadable); basari varsayilmaz, kayit degistirilmedi.' }
         40 { return 'Komut, guvenlik katmani tarafindan reddedildi.' }
         41 { return 'Sahiplik dogrulanamadi: kayitli PID artik baska bir surece ait. Hicbir surec sonlandirilmadi.' }
+        42 { return 'Pano arayuzu 30 saniye icinde kapanmadi (STOP_TIMEOUT); hala calisiyor olabilir. Biraz sonra "GEO Workbench Kapat" kisayolunu yeniden deneyin.' }
     }
     return ('Bilinmeyen cikis kodu: ' + $Code + '. Ayrintilar: windows\logs\geo_workbench.log')
 }

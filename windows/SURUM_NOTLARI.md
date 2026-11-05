@@ -28,11 +28,48 @@
 - Pilot bir **geliştirme pilotudur, benchmark değildir**: 21.350 gözlemlik
   benchmark, GPU, LOKO ve held-out kapıları kapalı kalır,
   `benchmark_complete=false`.
+- **WSL kaynağı artık gerçek bir Git kopyasıdır.** Paket kökünde
+  `geo-source.bundle` bulunur: paketlenen commit'in `git bundle create ...
+  HEAD` ile üretilmiş **tam Git geçmişi** (sığ depodan paket üretilmez).
+  Bu yüzden ZIP, deponun tüm commit geçmişini taşır ve **depo kadar gizlidir**.
+  `VERSION.json` buna `source_bundle`, `source_bundle_sha256` ve
+  `source_bundle_head` alanlarını ekler. **GEO WSL Kurulumu** paketi
+  `geo_wsl_setup.py install-git` ile `~/geo-workbench-src` içine klonlar ve
+  `HEAD`, sığ olmama, `git fsck` ve temiz çalışma ağacını doğrular. Gerekçe:
+  eğitim, kontrol noktası kaynağı olarak `git rev-parse HEAD` kaydeder; bir
+  anlık görüntü kopyası bunu sağlayamaz (pilot böyle bir kaynakta kod 25 ile
+  durur).
+- WSL içinde `git` gerekir; yoksa kurulum onayınızla görünür bir pencerede
+  `sudo apt-get install -y git` çalıştırır ve bir kez yeniden dener (kod 17).
+- Kurulum, varsayılan Linux kullanıcısı root (uid 0) ise durur: Ubuntu'nun ilk
+  açılışında Linux kullanıcısını oluşturun. `wsl_backend.json` artık
+  `linux_user`, `uid` ve `source_mode: git` alanlarını kaydeder (eski kayıtlar
+  geçersiz sayılır; kurulumu yeniden çalıştırın). `wsl --install` yalnız 0 veya
+  3010 koduyla biterse "başlatıldı" sayılır; Ubuntu penceresi hesap
+  oluşturulduktan sonra kapatılmalı (`exit`).
+- Eski kopya kenara taşınmadan önce, o kopyadan çalışan bir WSL pano arayüzü
+  onayınızla kapatılır (onay yoksa kopya değiştirilmez).
+- **Eşleşmezlik:** `wsl_backend.json` commit'i paketin `VERSION.json` commit'iyle
+  eşleşmezse **GEO Workbench** yerel inceleme moduna düşer ve **GEO Pilot
+  Başlat** başlamaz (ikisi de kod 20); durdurma ve kapatma yine çalışır.
+  `VERSION.json` yoksa (geliştirici modu) kurulumda kaydedilen commit beklenir.
+  Pano `serve --expect-commit` ile başlatılır; panodaki pilot düğmesi ve
+  denetçi aynı beklentiyi denetler; başka bir commit için çalışan arayüz yeniden
+  kullanılmaz.
+- Yeni çıkış kodları: 17 (git yok), 18 (pilot olmayan başka bir iş çalışıyor),
+  19 (okunamayan iş kaydı yeni işleri engeller), 25 (kaynak Git kopyası değil),
+  42 (arayüz 30 sn içinde kapanmadı); 8 artık root kullanıcıyı da kapsar.
+  Bir iş çalışırken ön kontrol her zaman `JOB_ID` gösterir.
+- `wsl -l -v` ayrıştırması birden çok kelimeli yerelleştirilmiş durumları
+  (ör. "Wird ausgefuehrt") doğru okur; PID kayıt dosyası yazılamazsa yalnız
+  uyarı verilir, başlatılmış pilot veya arayüzün sonucu değişmez.
 
 Nerede test edildi: betikler Linux'ta statik testlerle
 (`tests/test_windows_oneclick_scripts.py`) ve Windows CI'de PowerShell 5.1 /
-7 ayrıştırıcısı, yardımcı testleri ve WSL'siz (güvenli reddetme) yol ile
-denetlenir. GitHub `windows-latest` gerçek WSL2 sanallaştırmasını doğrulayamaz;
+7 ayrıştırıcısı, yardımcı testleri, WSL'siz (güvenli reddetme) yol ve sahte
+bir `wsl.exe` (`windows/tests/fake_wsl.cmd`, `tests/test_windows_oneclick_fakewsl.py`:
+ön kontrol 10/20/23, tek `run` çağrısı, iptal 41, kapatma reddi 5, commit
+eşleşmezliği 20) ile denetlenir. GitHub `windows-latest` gerçek WSL2 sanallaştırmasını doğrulayamaz;
 gerçek WSL2 uçtan uca pilot doğrulaması fiziksel bir Windows bilgisayarda ayrıca
 yapılmalı ve kaydedilmelidir.
 
@@ -115,11 +152,47 @@ iki **ayrı** yerel Streamlit uygulamasını kurar ve başlatır:
 - The pilot is a **development pilot, not the benchmark**: the
   21,350-observation benchmark, GPU, LOKO and held-out gates stay closed,
   `benchmark_complete=false`.
+- **The WSL source is now a genuine Git checkout.** The package root carries
+  `geo-source.bundle`, the packaged commit's **full Git history** made with
+  `git bundle create ... HEAD` (a shallow repository is refused). The ZIP
+  therefore contains the repository's whole commit history and is **as private
+  as the repository itself**. `VERSION.json` adds `source_bundle`,
+  `source_bundle_sha256` and `source_bundle_head`. **GEO WSL Kurulumu** clones
+  it into `~/geo-workbench-src` with `geo_wsl_setup.py install-git` and checks
+  `HEAD`, non-shallowness, `git fsck` and a clean work tree. Reason: training
+  records `git rev-parse HEAD` as checkpoint provenance, which a snapshot copy
+  cannot provide (the pilot stops on such a source with code 25).
+- `git` is required inside WSL; when it is missing, setup runs
+  `sudo apt-get install -y git` in a visible window with consent and retries
+  once (code 17).
+- Setup refuses a root (uid 0) default Linux user: create the Linux user on
+  Ubuntu's first launch. `wsl_backend.json` now records `linux_user`, `uid` and
+  `source_mode: git` (older records are treated as invalid; rerun setup).
+  `wsl --install` counts as started only on exit code 0 or 3010; close the
+  Ubuntu window (`exit`) after creating the account.
+- Before an old copy is moved aside, a WSL dashboard served from it is stopped
+  with consent (without consent the copy is left unchanged).
+- **Mismatch:** when the `wsl_backend.json` commit differs from the package's
+  `VERSION.json` commit, **GEO Workbench** falls back to native inspection and
+  **GEO Pilot Başlat** does not start (both code 20); stop and close still
+  work. Without `VERSION.json` (developer mode) the commit recorded by setup is
+  expected. The dashboard is served with `serve --expect-commit`; the in-app
+  pilot button and the supervisor check the same expectation, and a UI served
+  for another commit is not reused.
+- New exit codes: 17 (git missing), 18 (another, non-pilot job is running),
+  19 (an unreadable job record blocks new jobs), 25 (source is not a Git
+  checkout), 42 (the UI did not stop within 30 s); 8 now also covers a root
+  user. Preflight always prints `JOB_ID` while a job runs.
+- `wsl -l -v` parsing handles multi-word localized states (e.g. "Wird
+  ausgefuehrt"); a pid file that cannot be written only warns and never
+  changes the outcome of a pilot or UI that already started.
 
 Where it was tested: the scripts are checked statically on Linux
 (`tests/test_windows_oneclick_scripts.py`) and, in Windows CI, by the
-PowerShell 5.1 / 7 parsers, the helper tests and the WSL-absent fail-closed
-path. GitHub `windows-latest` cannot validate real WSL2 virtualization; a true
+PowerShell 5.1 / 7 parsers, the helper tests, the WSL-absent fail-closed path
+and a scripted `wsl.exe` (`windows/tests/fake_wsl.cmd`,
+`tests/test_windows_oneclick_fakewsl.py`: preflight 10/20/23, exactly one `run`
+call, cancel 41, declined close 5, commit mismatch 20). GitHub `windows-latest` cannot validate real WSL2 virtualization; a true
 WSL2 end-to-end pilot validation must be done and recorded separately on a
 physical Windows PC.
 
