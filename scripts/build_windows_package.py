@@ -21,11 +21,25 @@ Exclusions (both modes): ``deliverables/``, root-level ``*.docx``/``*.pdf``/
 Outputs (under ``--out``):
 * ``Payload-Aware-GEO-Workbench-Windows.zip`` — root folder
   ``Payload-Aware-GEO-Workbench/``, forward-slash arcnames, sorted order,
-  plus ``VERSION.json`` and ``SOURCE_MANIFEST.json`` at the zip root folder.
+  plus ``VERSION.json``, ``SOURCE_MANIFEST.json`` and ``geo-source.bundle`` at
+  the zip root folder.
 * ``Payload-Aware-GEO-Workbench-Windows.zip.sha256`` — lowercase hex, two
   spaces, filename.
 * ``RELEASE_NOTES.md`` — ``windows/SURUM_NOTLARI.md`` with a
   version/commit/date header prepended.
+
+Source bundle
+-------------
+``geo-source.bundle`` is ``git bundle create <file> HEAD``: the full Git
+history of the packaged commit, as private as the repository itself. The WSL
+setup (``geo_wsl_setup.py install-git``) clones it, so the WSL source is a
+genuine Git checkout whose ``git rev-parse HEAD`` is the packaged commit
+(training records Git provenance). A bundle made in a shallow repository
+clones into a repository with missing parents, so a shallow checkout is
+refused (exit 3; CI must check out with ``fetch-depth: 0``). ``VERSION.json``
+records ``source_bundle``, ``source_bundle_sha256`` and ``source_bundle_head``;
+the bundle is listed in ``SOURCE_MANIFEST.json`` like any other file. The same
+rule applies in ``--worktree`` mode (the bundle is still HEAD).
 
 Source manifest
 ---------------
@@ -42,8 +56,10 @@ Self-verification: the zip must contain
 ``Payload-Aware-GEO-Workbench/windows/KURULUM.bat`` (with CRLF line endings
 inside the zip) and no excluded path; every manifest hash must match the zip
 bytes, the manifest must list exactly the packaged files, and
-``VERSION.json`` must carry the manifest's sha256. The script exits nonzero
-otherwise.
+``VERSION.json`` must carry the manifest's sha256. The bundle must be present,
+match ``source_bundle_sha256``, have no prerequisite commits and list
+``<commit> HEAD`` (``git bundle list-heads``). Exit codes: 0 ok, 1 build
+error, 2 self-verification failed, 3 shallow repository.
 """
 from __future__ import annotations
 
@@ -67,6 +83,9 @@ MANIFEST_SCHEMA = "GEO-workbench-source-manifest/1"
 SOURCE_HEAD = "git archive HEAD"
 SOURCE_WORKTREE = "worktree-overlay"
 GENERATED_NAMES = frozenset({VERSION_NAME, MANIFEST_NAME})
+BUNDLE_NAME = "geo-source.bundle"
+SHALLOW_MESSAGE = "full Git history is required to build geo-source.bundle (use fetch-depth: 0)"
+EXIT_SHALLOW = 3
 
 EXCLUDED_PREFIXES = ("deliverables/", "data/", "runs/", "dist/", "windows/logs/")
 ROOT_EXCLUDED_SUFFIXES = (".docx", ".pdf", ".xlsx")
@@ -93,6 +112,62 @@ def run_git(repo: Path, *args: str) -> bytes:
         ["git", "-C", str(repo), *args], check=True, capture_output=True
     )
     return proc.stdout
+
+
+def is_shallow(repo: Path) -> bool:
+    return run_git(repo, "rev-parse", "--is-shallow-repository").decode().strip() == "true"
+
+
+def create_bundle(repo: Path) -> bytes:
+    """``git bundle create <tmp> HEAD`` bytes: every object reachable from HEAD."""
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / BUNDLE_NAME
+        run_git(repo, "bundle", "create", str(path), "HEAD")
+        return path.read_bytes()
+
+
+def bundle_prerequisites(bundle: bytes) -> list[str]:
+    """Prerequisite (``-<sha>``) lines of a v2/v3 bundle header; ValueError if it is not one."""
+    end = bundle.find(b"\n\n")
+    if end < 0:
+        raise ValueError("no bundle header terminator")
+    lines = bundle[:end].decode("ascii").split("\n")
+    if lines[0] not in ("# v2 git bundle", "# v3 git bundle"):
+        raise ValueError(f"unknown bundle signature {lines[0]!r}")
+    return [line for line in lines[1:] if line.startswith("-")]
+
+
+def bundle_problems(bundle: bytes | None, commit: str, version: dict) -> list[str]:
+    """Check ``geo-source.bundle`` against ``VERSION.json`` and ``git bundle list-heads``."""
+    if bundle is None:
+        return [f"missing {BUNDLE_NAME}"]
+    problems: list[str] = []
+    if version.get("source_bundle") != BUNDLE_NAME:
+        problems.append(f"{VERSION_NAME} source_bundle is {version.get('source_bundle')!r}")
+    if version.get("source_bundle_sha256") != hashlib.sha256(bundle).hexdigest():
+        problems.append(f"{VERSION_NAME} source_bundle_sha256 does not match {BUNDLE_NAME}")
+    if version.get("source_bundle_head") != commit:
+        problems.append(f"{VERSION_NAME} source_bundle_head is {version.get('source_bundle_head')!r}, "
+                        f"expected the packaged commit {commit!r}")
+    try:
+        prerequisites = bundle_prerequisites(bundle)
+    except (UnicodeDecodeError, ValueError) as exc:
+        return problems + [f"{BUNDLE_NAME} is not a git bundle: {exc}"]
+    if prerequisites:
+        problems.append(f"{BUNDLE_NAME} is incomplete (prerequisite commits: {len(prerequisites)})")
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / BUNDLE_NAME
+        path.write_bytes(bundle)
+        try:
+            proc = subprocess.run(["git", "bundle", "list-heads", str(path)], capture_output=True)
+        except OSError as exc:
+            return problems + [f"git bundle list-heads could not run: {exc}"]
+    heads = proc.stdout.decode("utf-8", "replace").splitlines()
+    if proc.returncode != 0:
+        problems.append(f"git bundle list-heads failed (exit {proc.returncode})")
+    elif f"{commit} HEAD" not in heads:
+        problems.append(f"git bundle list-heads does not contain '{commit} HEAD'")
+    return problems
 
 
 def collect_head_files(repo: Path) -> dict[str, bytes]:
@@ -147,17 +222,21 @@ def build_source_manifest(files: dict[str, bytes], commit: str, source: str) -> 
 
 
 def build_version_json(version: str, commit: str, built_utc: str, source: str,
-                       manifest_bytes: bytes) -> bytes:
-    return (json.dumps(
-        {
-            "version": version,
-            "commit": commit,
-            "built_utc": built_utc,
-            "source": source,
-            "source_manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
-        },
-        indent=2,
-    ) + "\n").encode("utf-8")
+                       manifest_bytes: bytes, bundle: bytes | None = None) -> bytes:
+    record = {
+        "version": version,
+        "commit": commit,
+        "built_utc": built_utc,
+        "source": source,
+        "source_manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
+    }
+    if bundle is not None:
+        record.update({
+            "source_bundle": BUNDLE_NAME,
+            "source_bundle_sha256": hashlib.sha256(bundle).hexdigest(),
+            "source_bundle_head": commit,
+        })
+    return (json.dumps(record, indent=2) + "\n").encode("utf-8")
 
 
 def manifest_problems(payload: dict[str, bytes], manifest_bytes: bytes | None,
@@ -216,7 +295,10 @@ def build_release_notes(files: dict[str, bytes], repo: Path, version: str,
         "# Payload-Aware GEO Workbench — Windows package\n\n"
         f"- Version: {version}\n"
         f"- Commit: {commit}\n"
-        f"- Built (UTC): {built_utc}\n\n"
+        f"- Built (UTC): {built_utc}\n"
+        f"- Source bundle: `{BUNDLE_NAME}` carries the repository's full Git history up to this "
+        "commit (as private as the repository itself); the WSL setup clones it so the WSL source "
+        "is a genuine Git checkout of this commit.\n\n"
         "---\n\n"
     )
     return header + body
@@ -261,8 +343,20 @@ def verify_zip(zip_path: Path) -> list[str]:
             arcname = prefix + rel
             return zf.read(arcname) if arcname in names else None
 
-        problems.extend(manifest_problems(
-            payload, _root_member(MANIFEST_NAME), _root_member(VERSION_NAME)))
+        version_bytes = _root_member(VERSION_NAME)
+        problems.extend(manifest_problems(payload, _root_member(MANIFEST_NAME), version_bytes))
+        try:
+            version = json.loads(version_bytes.decode("utf-8")) if version_bytes is not None else {}
+        except (UnicodeDecodeError, ValueError):
+            version = {}
+        if not isinstance(version, dict):
+            version = {}
+        commit = version.get("commit")
+        if not isinstance(commit, str) or not commit:
+            if version_bytes is not None:
+                problems.append(f"{VERSION_NAME} has no commit")
+        else:
+            problems.extend(bundle_problems(payload.get(BUNDLE_NAME), commit, version))
     return problems
 
 
@@ -278,7 +372,15 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     repo = Path(__file__).resolve().parents[1]
-    commit = args.commit or run_git(repo, "rev-parse", "HEAD").decode().strip()
+    if is_shallow(repo):
+        print(f"error: {SHALLOW_MESSAGE}", file=sys.stderr)
+        return EXIT_SHALLOW
+    head = run_git(repo, "rev-parse", "HEAD").decode().strip()
+    commit = args.commit or head
+    if commit != head:
+        print(f"error: --commit {commit} is not HEAD {head}; {BUNDLE_NAME} carries HEAD",
+              file=sys.stderr)
+        return 1
     built_utc = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     if args.worktree:
@@ -292,13 +394,16 @@ def main(argv: list[str] | None = None) -> int:
     if not files:
         print("error: no files collected", file=sys.stderr)
         return 1
-    clashing = sorted(GENERATED_NAMES & set(files))
+    clashing = sorted((GENERATED_NAMES | {BUNDLE_NAME}) & set(files))
     if clashing:
         print(f"error: repository root contains generated package names: {clashing}", file=sys.stderr)
         return 1
+    bundle = create_bundle(repo)
+    files[BUNDLE_NAME] = bundle
 
     manifest_bytes = build_source_manifest(files, commit, manifest_source)
-    version_json = build_version_json(args.version, commit, built_utc, source, manifest_bytes)
+    version_json = build_version_json(args.version, commit, built_utc, source, manifest_bytes,
+                                      bundle)
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -328,6 +433,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"size:   {size} bytes ({size / 1e6:.1f} MB)")
     print(f"sha256: {digest}")
     print(f"files:  {len(files)} (+ VERSION.json, SOURCE_MANIFEST.json), source: {source}")
+    print(f"bundle: {BUNDLE_NAME} {len(bundle)} bytes, sha256 {hashlib.sha256(bundle).hexdigest()}, "
+          f"head {commit}")
     print(f"manifest sha256: {hashlib.sha256(manifest_bytes).hexdigest()} ({manifest_source})")
     print(f"notes:  {notes_path}")
     if problems:
@@ -335,7 +442,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"self-verify FAILED: {p}", file=sys.stderr)
         return 2
     print("self-verify: OK (KURULUM.bat present with CRLF, no excluded paths, "
-          "source manifest matches the zip bytes and VERSION.json)")
+          "source manifest matches the zip bytes and VERSION.json, "
+          f"{BUNDLE_NAME} matches VERSION.json and lists '{commit} HEAD')")
     return 0
 
 

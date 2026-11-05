@@ -1,8 +1,9 @@
-"""WSL bootstrap (windows/wsl/geo_wsl_setup.py): verify / install / venv.
+"""WSL bootstrap (windows/wsl/geo_wsl_setup.py): verify / install / install-git / venv.
 
 Most tests run on synthetic package trees whose SOURCE_MANIFEST.json and VERSION.json are written
-by the package builder's own functions; one end-to-end test extracts a package built from the
-committed HEAD. The venv tests inject the subprocess runner, so nothing is installed.
+by the package builder's own functions. The install-git tests clone real bundles of a small
+temporary repository. One end-to-end test extracts a package built from the committed HEAD
+(full-history checkouts only). The venv tests inject the pip runner, so nothing is installed.
 """
 import hashlib
 import importlib.util
@@ -275,6 +276,204 @@ def test_install_refuses_overlapping_package_and_dest(pkg):
     assert W.install(pkg, pkg.parent, replace=True)["exit_code"] == 14
 
 
+# ---- install-git (real git on a small temporary repository) -----------------------------------------
+
+needs_git = pytest.mark.skipif(shutil.which("git") is None, reason="needs git")
+
+
+def _git(repo: Path, *args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True)
+
+
+def _git_out(repo: Path, *args: str) -> str:
+    proc = _git(repo, *args)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    return proc.stdout.strip()
+
+
+REPO_COMMITS = [
+    {".gitignore": b"__pycache__/\n*.egg-info/\n.venv*/\n", "pyproject.toml": b"[project]\n",
+     "README.md": b"readme\n", "dashboard/requirements.txt": b"streamlit==1.65.0\n"},
+    {"src/geosim/x.py": b"X = 1\n", "scripts/run.py": b"print('run')\n"},
+    {"src/geosim/x.py": b"X = 2\n", "configs/c.json": b"{}\n"},
+]
+
+
+@pytest.fixture(scope="module")
+def source_repo(tmp_path_factory):
+    """(repo, commit ids, path of ``git bundle create <file> HEAD``) of a small full-history repo."""
+    if shutil.which("git") is None:
+        pytest.skip("needs git")
+    base = tmp_path_factory.mktemp("srcrepo")
+    repo = base / "repo"
+    repo.mkdir()
+    _git_out(repo, "init", "-q")
+    ids = []
+    for n, files in enumerate(REPO_COMMITS):
+        for rel, data in files.items():
+            (repo / rel).parent.mkdir(parents=True, exist_ok=True)
+            (repo / rel).write_bytes(data)
+        _git_out(repo, "add", "-A")
+        _git_out(repo, "-c", "user.name=t", "-c", "user.email=t@example.invalid",
+                 "-c", "commit.gpgsign=false", "commit", "-q", "-m", f"commit {n}")
+        ids.append(_git_out(repo, "rev-parse", "HEAD"))
+    bundle = base / "pkg" / "geo-source.bundle"
+    bundle.parent.mkdir()
+    bundle.write_bytes(BW.create_bundle(repo))
+    return repo, ids, bundle
+
+
+def _assert_genuine_checkout(dest: Path, commit: str):
+    assert _git_out(dest, "rev-parse", "HEAD") == commit
+    assert _git_out(dest, "rev-parse", "--is-shallow-repository") == "false"
+    assert _git(dest, "fsck", "--connectivity-only").returncode == 0
+    assert _git_out(dest, "status", "--porcelain", "--untracked-files=all") == ""
+    assert _git_out(dest, "remote") == ""
+
+
+def _staging_dirs(parent: Path) -> list:
+    return sorted(p.name for p in parent.glob(".*.installing-*"))
+
+
+def test_install_git_clones_a_genuine_checkout_of_the_commit(source_repo, tmp_path, capsys):
+    repo, ids, bundle = source_repo
+    dest = tmp_path / "home" / "geo-workbench-src"
+    assert W.main(["install-git", "--bundle", str(bundle), "--commit", ids[-1], "--to", str(dest),
+                   "--json"]) == 0
+    out = _json_line(capsys)
+    assert out["code"] == "OK" and out["commit"] == ids[-1] and out["previous"] is None
+    _assert_genuine_checkout(dest, ids[-1])
+    assert _git_out(dest, "rev-list", "--count", "HEAD") == str(len(ids))
+    assert (dest / "src" / "geosim" / "x.py").read_bytes() == b"X = 2\n"
+    assert _staging_dirs(dest.parent) == []
+    assert all("--no-checkout" in s["argv"] or "-C" in s["argv"] for s in out["steps"])
+
+
+def test_install_git_checks_out_an_older_commit_detached(source_repo, tmp_path):
+    repo, ids, bundle = source_repo
+    dest = tmp_path / "dest"
+    assert W.install_git(bundle, ids[1], dest)["exit_code"] == 0
+    _assert_genuine_checkout(dest, ids[1])
+    assert (dest / "src" / "geosim" / "x.py").read_bytes() == b"X = 1\n"
+    assert _git(dest, "symbolic-ref", "-q", "HEAD").returncode != 0
+
+
+def test_install_git_refuses_a_commit_absent_from_the_bundle_and_keeps_staging(source_repo, tmp_path,
+                                                                                capsys):
+    repo, ids, bundle = source_repo
+    dest = tmp_path / "dest"
+    assert W.main(["install-git", "--bundle", str(bundle), "--commit", "f" * 40, "--to", str(dest),
+                   "--json"]) == 20
+    out = _json_line(capsys)
+    assert out["code"] == "NOT_VERIFIED" and "could not be checked out" in out["message"]
+    assert not dest.exists()
+    staging = Path(out["staging"])
+    assert staging.is_dir() and (staging / ".git").is_dir()
+    assert _staging_dirs(tmp_path) == [staging.name]
+
+
+@pytest.mark.parametrize("commit", ["abc123", "A" * 40, "g" * 40, ""])
+def test_install_git_refuses_a_malformed_commit(source_repo, tmp_path, commit):
+    _, _, bundle = source_repo
+    result = W.install_git(bundle, commit, tmp_path / "dest")
+    assert result["exit_code"] == 20 and not (tmp_path / "dest").exists()
+    assert _staging_dirs(tmp_path) == []
+
+
+def test_install_git_refuses_a_corrupt_or_missing_bundle(source_repo, tmp_path):
+    _, ids, bundle = source_repo
+    raw = bundle.read_bytes()
+    corrupt = tmp_path / "corrupt.bundle"
+    corrupt.write_bytes(raw[: len(raw) // 2])
+    result = W.install_git(corrupt, ids[-1], tmp_path / "dest")
+    assert result["exit_code"] == 20 and result["code"] == "NOT_VERIFIED"
+    assert not (tmp_path / "dest").exists()
+    flipped = bytearray(raw)
+    flipped[-30] ^= 0xFF
+    (tmp_path / "flipped.bundle").write_bytes(bytes(flipped))
+    assert W.install_git(tmp_path / "flipped.bundle", ids[-1], tmp_path / "dest2")["exit_code"] == 20
+    assert not (tmp_path / "dest2").exists()
+    assert W.install_git(tmp_path / "absent.bundle", ids[-1], tmp_path / "dest3")["exit_code"] == 20
+
+
+def test_install_git_refuses_a_bundle_made_in_a_shallow_clone(source_repo, tmp_path):
+    repo, ids, _ = source_repo
+    shallow = tmp_path / "shallow"
+    assert subprocess.run(["git", "clone", "-q", "--depth", "1", repo.as_uri(), str(shallow)],
+                          capture_output=True).returncode == 0
+    broken = tmp_path / "broken.bundle"
+    assert _git(shallow, "bundle", "create", str(broken), "HEAD").returncode == 0
+    result = W.install_git(broken, ids[-1], tmp_path / "dest")
+    assert result["exit_code"] == 20
+    assert any("fsck" in p for p in result["problems"])
+    assert not (tmp_path / "dest").exists() and Path(result["staging"]).is_dir()
+
+
+def test_install_git_without_git_exits_17(source_repo, tmp_path, monkeypatch, capsys):
+    _, ids, bundle = source_repo
+    monkeypatch.setenv("PATH", str(tmp_path / "empty-bin"))
+    calls = []
+    assert W.main(["install-git", "--bundle", str(bundle), "--commit", ids[-1],
+                   "--to", str(tmp_path / "dest"), "--json"]) == 17
+    out = _json_line(capsys)
+    assert out["code"] == "GIT_MISSING" and "sudo apt-get install -y git" in out["message"]
+    result = W.install_git(bundle, ids[-1], tmp_path / "dest", runner=calls.append)
+    assert result["exit_code"] == 17 and calls == []
+    assert not (tmp_path / "dest").exists()
+
+
+def test_install_git_never_overwrites_without_replace(source_repo, tmp_path):
+    _, ids, bundle = source_repo
+    dest = tmp_path / "dest"
+    assert W.install_git(bundle, ids[1], dest)["exit_code"] == 0
+    result = W.install_git(bundle, ids[-1], dest)
+    assert result["exit_code"] == 13 and result["code"] == "EXISTS"
+    assert result["existing_commit"] == ids[1]
+    assert _git_out(dest, "rev-parse", "HEAD") == ids[1]
+    assert _staging_dirs(tmp_path) == []
+
+
+def test_install_git_replace_moves_the_old_checkout_aside(source_repo, tmp_path):
+    _, ids, bundle = source_repo
+    dest = tmp_path / "dest"
+    assert W.install_git(bundle, ids[1], dest)["exit_code"] == 0
+    (dest / "local-note.txt").write_bytes(b"kept\n")
+    result = W.install_git(bundle, ids[-1], dest, replace=True, now=_fixed_now)
+    assert result["exit_code"] == 0
+    previous = tmp_path / "dest.previous-20261105T120000Z"
+    assert result["previous"] == str(previous)
+    assert (previous / "local-note.txt").read_bytes() == b"kept\n"
+    assert _git_out(previous, "rev-parse", "HEAD") == ids[1]
+    _assert_genuine_checkout(dest, ids[-1])
+
+    again = W.install_git(bundle, ids[-1], dest, replace=True, now=_fixed_now)
+    assert again["exit_code"] == 0 and again["previous"] == str(previous) + "-1"
+    assert previous.is_dir()
+
+
+def test_install_git_refuses_dest_under_mnt_or_containing_the_bundle(source_repo, tmp_path,
+                                                                      monkeypatch):
+    _, ids, bundle = source_repo
+    fake_mnt = tmp_path / "mnt"
+    (fake_mnt / "c").mkdir(parents=True)
+    monkeypatch.setattr(W, "MNT_ROOT", fake_mnt)
+    assert W.install_git(bundle, ids[-1], fake_mnt / "c" / "geo")["exit_code"] == 14
+    assert W.install_git(bundle, ids[-1], bundle.parent, replace=True)["exit_code"] == 14
+    assert not (fake_mnt / "c" / "geo").exists() and bundle.is_file()
+
+
+def test_install_git_reports_a_failed_clone_with_the_injected_runner(source_repo, tmp_path):
+    _, ids, bundle = source_repo
+    calls = []
+
+    def runner(argv):
+        calls.append(argv)
+        return W.RunResult(128, "fatal: simulated\n")
+    result = W.install_git(bundle, ids[-1], tmp_path / "dest", runner=runner)
+    assert result["exit_code"] == 20 and result["output"] == ["fatal: simulated"]
+    assert len(calls) == 1 and calls[0][1:3] == ["clone", "--no-checkout"]
+
+
 # ---- venv (injected runner; nothing is installed) ----------------------------------------------------
 
 class FakeRunner:
@@ -358,6 +557,46 @@ def test_venv_refuses_an_unverified_tree(pkg):
     assert runner.calls == []
 
 
+def test_venv_accepts_a_clean_git_checkout(source_repo, tmp_path):
+    _, ids, bundle = source_repo
+    dest = tmp_path / "geo-workbench-src"
+    assert W.install_git(bundle, ids[-1], dest)["exit_code"] == 0
+    # By-products of use that .gitignore covers, and a change outside the governed paths.
+    (dest / "src" / "geosim.egg-info").mkdir()
+    (dest / "src" / "geosim.egg-info" / "PKG-INFO").write_bytes(b"Name: geosim\n")
+    (dest / "README.md").write_bytes(b"edited\n")
+    runner = FakeRunner()
+    result = W.setup_venv(dest, runner=runner, python="py3")
+    assert result["exit_code"] == 0, result
+    assert result["warnings"] == [] and runner.calls == _expected(dest, "py3")
+
+
+@pytest.mark.parametrize("dirty", ["src/geosim/x.py", "scripts/new.py", "configs/c.json",
+                                   "dashboard/requirements.txt", "pyproject.toml"])
+def test_venv_refuses_a_git_checkout_with_governed_changes(source_repo, tmp_path, dirty):
+    _, ids, bundle = source_repo
+    dest = tmp_path / "geo-workbench-src"
+    assert W.install_git(bundle, ids[-1], dest)["exit_code"] == 0
+    (dest / dirty).parent.mkdir(parents=True, exist_ok=True)
+    (dest / dirty).write_bytes(b"changed\n")
+    runner = FakeRunner()
+    result = W.setup_venv(dest, runner=runner)
+    assert result["exit_code"] == 20 and runner.calls == []
+    assert any("not clean" in p for p in result["tree"]["git_problems"])
+
+
+def test_venv_refuses_a_git_checkout_without_a_resolvable_head(tmp_path):
+    if shutil.which("git") is None:
+        pytest.skip("needs git")
+    dest = tmp_path / "empty-repo"
+    dest.mkdir()
+    _git_out(dest, "init", "-q")
+    runner = FakeRunner()
+    result = W.setup_venv(dest, runner=runner)
+    assert result["exit_code"] == 20 and runner.calls == []
+    assert result["tree"]["git_problems"] == ["HEAD does not resolve to a commit"]
+
+
 def test_venv_cli_prints_one_json_line(pkg, monkeypatch, capsys):
     runner = FakeRunner()
     monkeypatch.setattr(W, "run_streaming", runner)
@@ -385,6 +624,9 @@ def _in_git_checkout() -> bool:
 def head_tree(tmp_path_factory):
     if not _in_git_checkout():
         pytest.skip("needs git and a git checkout")
+    if subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--is-shallow-repository"],
+                      capture_output=True, text=True).stdout.strip() == "true":
+        pytest.skip("needs a full-history checkout (the builder refuses a shallow one)")
     out = tmp_path_factory.mktemp("pkg-head")
     proc = subprocess.run([sys.executable, str(ROOT / "scripts" / "build_windows_package.py"),
                            "--out", str(out), "--version", "pytest"],
@@ -406,6 +648,15 @@ def test_the_head_package_verifies_installs_and_reverifies(head_tree, tmp_path):
     assert result["exit_code"] == 0, result
     assert W.verify_tree(dest, expect_commit=head,
                          expect_manifest_sha256=check["manifest_sha256"])["verified"]
+
+
+def test_the_head_package_bundle_installs_a_genuine_checkout(head_tree, tmp_path):
+    version = json.loads((head_tree / W.VERSION_NAME).read_text())
+    dest = tmp_path / "geo-workbench-src"
+    result = W.install_git(head_tree / version["source_bundle"], version["commit"], dest)
+    assert result["exit_code"] == 0, result
+    _assert_genuine_checkout(dest, version["commit"])
+    assert W.source_tree_check(dest)["kind"] == "git"
 
 
 # ---- agreement with geodash.pilot.source_identity (package-snapshot mode) ----------------------------

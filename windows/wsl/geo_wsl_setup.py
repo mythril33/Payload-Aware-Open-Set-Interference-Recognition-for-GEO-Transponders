@@ -19,12 +19,26 @@ Subcommands
     re-verify it. An existing DEST is never deleted: without ``--replace`` the
     command exits 13; with it DEST is moved to ``DEST.previous-<UTC ts>``.
     DEST under ``/mnt/`` (a Windows drive, not WSL ext4) is refused with 14.
+    Kept for package integrity checks; the WSL setup uses ``install-git``.
+``install-git --bundle FILE --commit SHA [--to DEST] [--replace] [--json]``
+    Clone the package's full-history ``geo-source.bundle`` into a staging
+    directory next to DEST, check out SHA detached and verify the clone:
+    ``HEAD`` is SHA, not shallow, ``git fsck --connectivity-only`` passes and
+    the work tree is clean; then remove the ``origin`` remote (the bundle path)
+    and move the clone into place with the ``install`` replace rules (13, 14).
+    Training records ``git rev-parse HEAD`` as checkpoint provenance, so the
+    WSL source must be a genuine checkout of the packaged commit. ``git``
+    missing from PATH exits 17 (this script never installs it); any clone or
+    verification failure exits 20 and leaves the staging directory in place.
 ``venv [--src DEST] [--json]``
-    Create ``DEST/.venv`` with ``python3 -m venv`` (exit 15 when that fails,
-    e.g. ensurepip missing: install ``python3-venv``; nothing is downloaded to
-    replace it), then pip-install CPU torch (PyTorch CPU index first, PyPI
-    ``torch>=2.2`` only as a warned fallback), ``-e DEST[dev,ml]`` and
-    ``dashboard/requirements.txt``. Exit 0, or 16 when pip fails.
+    Accept DEST when it is a Git checkout (HEAD resolves, no change under
+    ``src``, ``scripts``, ``configs``, ``dashboard`` or ``pyproject.toml``) or
+    a manifest-verified tree; otherwise exit 20. Create ``DEST/.venv`` with
+    ``python3 -m venv`` (exit 15 when that fails, e.g. ensurepip missing:
+    install ``python3-venv``; nothing is downloaded to replace it), then
+    pip-install CPU torch (PyTorch CPU index first, PyPI ``torch>=2.2`` only as
+    a warned fallback), ``-e DEST[dev,ml]`` and ``dashboard/requirements.txt``.
+    Exit 0, or 16 when pip fails.
 
 ``--json`` prints exactly one ASCII JSON line on stdout; subprocess output goes
 to stderr. No command runs through a shell.
@@ -47,6 +61,7 @@ VERSION_NAME = "VERSION.json"
 MANIFEST_SCHEMA = "GEO-workbench-source-manifest/1"
 REQUIRED_SOURCE = "git archive HEAD"
 SCANNED_DIRS = ("src", "scripts", "configs", "dashboard")
+GIT_GOVERNED_PATHS = SCANNED_DIRS + ("pyproject.toml",)
 DEFAULT_DEST = "~/geo-workbench-src"
 MNT_ROOT = Path("/mnt")
 LIMITATIONS = (
@@ -54,6 +69,7 @@ LIMITATIONS = (
     "a package snapshot has no Git history; this is not a production lock."
 )
 
+GIT_PACKAGE_HINT = "sudo apt-get install -y git"
 TORCH_CPU_SPEC = "torch==2.14.1+cpu"
 TORCH_CPU_INDEX = "https://download.pytorch.org/whl/cpu"
 TORCH_FALLBACK_SPEC = "torch>=2.2"
@@ -64,6 +80,7 @@ EXIT_EXISTS = 13
 EXIT_DEST_REFUSED = 14
 EXIT_VENV_UNAVAILABLE = 15
 EXIT_PIP_FAILED = 16
+EXIT_GIT_MISSING = 17
 EXIT_NOT_VERIFIED = 20
 EXIT_PYTHON_TOO_OLD = 2
 CODE_NAMES = {
@@ -72,6 +89,7 @@ CODE_NAMES = {
     EXIT_DEST_REFUSED: "DEST_REFUSED",
     EXIT_VENV_UNAVAILABLE: "VENV_UNAVAILABLE",
     EXIT_PIP_FAILED: "PIP_FAILED",
+    EXIT_GIT_MISSING: "GIT_MISSING",
     EXIT_NOT_VERIFIED: "NOT_VERIFIED",
 }
 
@@ -310,6 +328,128 @@ def install(pkg: Path | str, dest: Path | str = DEFAULT_DEST, *, replace: bool =
                     files=final["files"])
 
 
+# ---- install-git -------------------------------------------------------------------------------------
+
+def run_captured(argv: list[str]) -> RunResult:
+    """Run ``argv`` (no shell) and return its exit code and combined output."""
+    try:
+        proc = subprocess.run(argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT, text=True, encoding="utf-8",
+                              errors="replace", env={**os.environ, "GIT_TERMINAL_PROMPT": "0"})
+    except OSError as exc:
+        return RunResult(127, f"could not start {argv[0]}: {exc}")
+    return RunResult(proc.returncode, proc.stdout)
+
+
+def _is_commit_id(value: str) -> bool:
+    return len(value) in (40, 64) and all(c in "0123456789abcdef" for c in value)
+
+
+def git_checkout_problems(tree: Path, git: str, runner, expect_commit: str | None = None,
+                          paths: tuple[str, ...] = ()) -> list[str]:
+    """Problems that keep ``tree`` from counting as a clean checkout of ``paths`` (all when empty)."""
+    head = runner([git, "-C", str(tree), "rev-parse", "--verify", "HEAD^{commit}"])
+    if head.returncode != 0:
+        return ["HEAD does not resolve to a commit"]
+    problems: list[str] = []
+    commit = head.output.strip()
+    if expect_commit is not None and commit != expect_commit:
+        problems.append(f"HEAD is {commit}, expected {expect_commit}")
+    status = runner([git, "-C", str(tree), "status", "--porcelain", "--untracked-files=all",
+                     "--", *paths])
+    if status.returncode != 0:
+        problems.append(f"git status failed (exit {status.returncode})")
+    elif status.output.strip():
+        changed = status.output.strip().splitlines()
+        problems.append(f"work tree is not clean ({len(changed)} changes): "
+                        + "; ".join(changed[:5]))
+    return problems
+
+
+def install_git(bundle: Path | str, commit: str, dest: Path | str = DEFAULT_DEST, *,
+                replace: bool = False, runner=None, now=None) -> dict:
+    bundle = Path(os.path.abspath(Path(bundle).expanduser()))
+    dest = Path(os.path.abspath(Path(dest).expanduser()))
+    runner = runner or run_captured
+    base = {"dest": str(dest), "bundle": str(bundle), "commit": commit}
+    git = shutil.which("git")
+    if git is None:
+        return _outcome("install-git", EXIT_GIT_MISSING,
+                        f"git is not on PATH; install it in the distro and retry: {GIT_PACKAGE_HINT}",
+                        install_hint=GIT_PACKAGE_HINT, **base)
+    if under_mnt(dest):
+        return _outcome("install-git", EXIT_DEST_REFUSED,
+                        f"DEST {dest} is under {MNT_ROOT}/ (a Windows drive); install into the WSL "
+                        f"ext4 home instead, e.g. {DEFAULT_DEST}", **base)
+    if _within(bundle.resolve(), dest.resolve()):
+        return _outcome("install-git", EXIT_DEST_REFUSED,
+                        "the bundle must not be inside DEST", **base)
+    if not _is_commit_id(commit):
+        return _outcome("install-git", EXIT_NOT_VERIFIED,
+                        f"--commit must be a full lowercase commit id, got {commit!r}", **base)
+    if bundle.is_symlink() or not bundle.is_file():
+        return _outcome("install-git", EXIT_NOT_VERIFIED, f"bundle {bundle} is not a file", **base)
+    if os.path.lexists(dest) and not replace:
+        existing = (runner([git, "-C", str(dest), "rev-parse", "--verify", "HEAD^{commit}"])
+                    if (dest / ".git").exists() else None)
+        return _outcome("install-git", EXIT_EXISTS,
+                        f"DEST {dest} already exists; rerun with --replace to move it aside",
+                        existing_commit=(existing.output.strip()
+                                         if existing is not None and existing.returncode == 0
+                                         else verify_tree(dest)["commit"]),
+                        **base)
+
+    stamp = _utc_stamp(now)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    staging = _unused(dest.with_name(f".{dest.name}.installing-{stamp}"))
+    steps: list[dict] = []
+
+    def step(*args: str) -> RunResult:
+        res = runner([git, *args])
+        steps.append({"argv": [git, *args], "returncode": res.returncode})
+        return res
+
+    def failed(message: str, output: str = "") -> dict:
+        tail = output.strip().splitlines()[-20:]
+        return _outcome("install-git", EXIT_NOT_VERIFIED,
+                        f"{message}; the staging clone is kept for inspection at {staging}",
+                        staging=str(staging), steps=steps, output=tail, **base)
+
+    cloned = step("clone", "--no-checkout", str(bundle), str(staging))
+    if cloned.returncode != 0:
+        return failed("git clone of the bundle failed", cloned.output)
+    checkout = step("-C", str(staging), "checkout", "--detach", commit)
+    if checkout.returncode != 0:
+        return failed(f"commit {commit} could not be checked out from the bundle", checkout.output)
+    problems = git_checkout_problems(staging, git, runner, expect_commit=commit)
+    shallow = step("-C", str(staging), "rev-parse", "--is-shallow-repository")
+    if shallow.returncode != 0 or shallow.output.strip() != "false":
+        problems.append("the clone is shallow (the bundle lacks full history)")
+    fsck = step("-C", str(staging), "fsck", "--connectivity-only")
+    if fsck.returncode != 0:
+        problems.append(f"git fsck --connectivity-only failed (exit {fsck.returncode})")
+    if problems:
+        return _outcome("install-git", EXIT_NOT_VERIFIED,
+                        f"the staging clone did not verify; it is kept for inspection at {staging}",
+                        staging=str(staging), problems=problems, steps=steps, **base)
+    removed = step("-C", str(staging), "remote", "remove", "origin")
+    if removed.returncode != 0:
+        return failed("git remote remove origin failed", removed.output)
+
+    previous = None
+    if os.path.lexists(dest):
+        previous = _unused(dest.with_name(f"{dest.name}.previous-{stamp}"))
+        os.rename(dest, previous)
+    os.rename(staging, dest)
+    problems = git_checkout_problems(dest, git, runner, expect_commit=commit)
+    if problems:
+        return _outcome("install-git", EXIT_NOT_VERIFIED, f"installed checkout {dest} did not re-verify",
+                        previous=str(previous) if previous else None, problems=problems,
+                        steps=steps, **base)
+    return _outcome("install-git", EXIT_OK, f"installed a Git checkout of {commit} into {dest}",
+                    previous=str(previous) if previous else None, problems=[], steps=steps, **base)
+
+
 # ---- venv --------------------------------------------------------------------------------------------
 
 def run_streaming(argv: list[str]) -> RunResult:
@@ -335,7 +475,27 @@ def venv_python(venv_dir: Path) -> Path:
     return venv_dir / "bin" / "python"
 
 
-def setup_venv(src: Path | str = DEFAULT_DEST, *, runner=None, python: str | None = None) -> dict:
+def source_tree_check(src: Path, git_runner=None) -> dict:
+    """Accept a clean Git checkout or, failing that, a manifest-verified tree."""
+    git_problems: list[str] = []
+    if os.path.lexists(src / ".git"):
+        git = shutil.which("git")
+        if git is None:
+            git_problems.append("DEST has .git but git is not on PATH")
+        else:
+            git_problems = git_checkout_problems(src, git, git_runner or run_captured,
+                                                 paths=GIT_GOVERNED_PATHS)
+            if not git_problems:
+                return {"kind": "git", "verified": True, "problems": []}
+    manifest = verify_tree(src)
+    if manifest["verified"]:
+        return {"kind": "manifest", **manifest}
+    return {**manifest, "kind": None, "git_problems": git_problems,
+            "problems": git_problems + manifest["problems"]}
+
+
+def setup_venv(src: Path | str = DEFAULT_DEST, *, runner=None, python: str | None = None,
+               git_runner=None) -> dict:
     src = Path(os.path.abspath(Path(src).expanduser()))
     runner = runner or run_streaming
     python = python or sys.executable
@@ -347,9 +507,10 @@ def setup_venv(src: Path | str = DEFAULT_DEST, *, runner=None, python: str | Non
         steps.append({"argv": argv, "returncode": res.returncode})
         return res
 
-    check = verify_tree(src)
+    check = source_tree_check(src, git_runner)
     if not check["verified"]:
-        return _outcome("venv", EXIT_NOT_VERIFIED, f"source tree {src} is not verified",
+        return _outcome("venv", EXIT_NOT_VERIFIED,
+                        f"source tree {src} is neither a clean Git checkout nor manifest-verified",
                         tree=check, steps=steps)
 
     venv_dir = src / ".venv"
@@ -396,7 +557,7 @@ def _emit(result: dict, as_json: bool) -> int:
         return result["exit_code"]
     status = "OK" if result["exit_code"] == EXIT_OK else f"ERROR [{result['code']}]"
     print(f"{status}: {result['message']}")
-    nested = result if result["command"] == "verify" else (
+    nested = result if result["command"] in ("verify", "install-git") else (
         result.get("installed") or result.get("package") or result.get("tree") or {})
     for problem in nested.get("problems", []):
         print(f"  - {problem}")
@@ -422,6 +583,13 @@ def main(argv: list[str] | None = None) -> int:
     p_install.add_argument("--replace", action="store_true")
     p_install.add_argument("--json", action="store_true")
 
+    p_git = sub.add_parser("install-git", help="clone the package's Git bundle into WSL ext4")
+    p_git.add_argument("--bundle", required=True)
+    p_git.add_argument("--commit", required=True)
+    p_git.add_argument("--to", dest="dest", default=DEFAULT_DEST)
+    p_git.add_argument("--replace", action="store_true")
+    p_git.add_argument("--json", action="store_true")
+
     p_venv = sub.add_parser("venv", help="create DEST/.venv and install the CPU dependencies")
     p_venv.add_argument("--src", default=DEFAULT_DEST)
     p_venv.add_argument("--json", action="store_true")
@@ -435,6 +603,8 @@ def main(argv: list[str] | None = None) -> int:
         result = _outcome("verify", code, message, **check)
     elif args.command == "install":
         result = install(args.pkg, args.dest, replace=args.replace)
+    elif args.command == "install-git":
+        result = install_git(args.bundle, args.commit, args.dest, replace=args.replace)
     else:
         result = setup_venv(args.src)
     return _emit(result, args.json)
