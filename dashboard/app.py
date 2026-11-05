@@ -23,7 +23,7 @@ import streamlit as st  # noqa: E402
 
 from ui import diagnostics, experiments, home, models, rf_explorer, runner, setup_guide  # noqa: E402
 
-st.set_page_config(page_title="GEO research dashboard", layout="wide")
+st.set_page_config(page_title="GEO Workbench", layout="wide")
 
 PAGES = [
     st.Page(home.render, title="Dashboard", url_path="dashboard", icon=":material/dashboard:", default=True),
