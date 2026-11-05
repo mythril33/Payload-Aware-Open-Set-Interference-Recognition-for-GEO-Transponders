@@ -21,15 +21,29 @@ Exclusions (both modes): ``deliverables/``, root-level ``*.docx``/``*.pdf``/
 Outputs (under ``--out``):
 * ``Payload-Aware-GEO-Workbench-Windows.zip`` — root folder
   ``Payload-Aware-GEO-Workbench/``, forward-slash arcnames, sorted order,
-  plus a ``VERSION.json`` at the zip root folder.
+  plus ``VERSION.json`` and ``SOURCE_MANIFEST.json`` at the zip root folder.
 * ``Payload-Aware-GEO-Workbench-Windows.zip.sha256`` — lowercase hex, two
   spaces, filename.
 * ``RELEASE_NOTES.md`` — ``windows/SURUM_NOTLARI.md`` with a
   version/commit/date header prepended.
 
+Source manifest
+---------------
+``SOURCE_MANIFEST.json`` (schema ``GEO-workbench-source-manifest/1``) lists the
+sha256 of every packaged file except ``VERSION.json`` and itself, with the
+commit and the source (``git archive HEAD`` by default, ``worktree-overlay``
+with ``--worktree``). ``VERSION.json`` records ``source_manifest_sha256``, the
+sha256 of the manifest file bytes. The WSL bootstrap
+(``windows/wsl/geo_wsl_setup.py``) and ``geodash.pilot.source_identity`` verify
+an extracted tree against this manifest; only a ``git archive HEAD`` manifest
+counts as verified, so a ``--worktree`` package is for local testing only.
+
 Self-verification: the zip must contain
 ``Payload-Aware-GEO-Workbench/windows/KURULUM.bat`` (with CRLF line endings
-inside the zip) and no excluded path; the script exits nonzero otherwise.
+inside the zip) and no excluded path; every manifest hash must match the zip
+bytes, the manifest must list exactly the packaged files, and
+``VERSION.json`` must carry the manifest's sha256. The script exits nonzero
+otherwise.
 """
 from __future__ import annotations
 
@@ -47,6 +61,12 @@ ZIP_ROOT = "Payload-Aware-GEO-Workbench"
 ZIP_NAME = "Payload-Aware-GEO-Workbench-Windows.zip"
 RELEASE_NOTES_SOURCE = "windows/SURUM_NOTLARI.md"
 KURULUM_ARCNAME = f"{ZIP_ROOT}/windows/KURULUM.bat"
+VERSION_NAME = "VERSION.json"
+MANIFEST_NAME = "SOURCE_MANIFEST.json"
+MANIFEST_SCHEMA = "GEO-workbench-source-manifest/1"
+SOURCE_HEAD = "git archive HEAD"
+SOURCE_WORKTREE = "worktree-overlay"
+GENERATED_NAMES = frozenset({VERSION_NAME, MANIFEST_NAME})
 
 EXCLUDED_PREFIXES = ("deliverables/", "data/", "runs/", "dist/", "windows/logs/")
 ROOT_EXCLUDED_SUFFIXES = (".docx", ".pdf", ".xlsx")
@@ -115,6 +135,72 @@ def collect_worktree_files(repo: Path) -> dict[str, bytes]:
     return files
 
 
+def build_source_manifest(files: dict[str, bytes], commit: str, source: str) -> bytes:
+    """Canonical SOURCE_MANIFEST.json bytes for the packaged ``files``."""
+    manifest = {
+        "schema": MANIFEST_SCHEMA,
+        "commit": commit,
+        "source": source,
+        "files": {rel: hashlib.sha256(files[rel]).hexdigest() for rel in sorted(files)},
+    }
+    return (json.dumps(manifest, indent=2, sort_keys=True, ensure_ascii=True) + "\n").encode("ascii")
+
+
+def build_version_json(version: str, commit: str, built_utc: str, source: str,
+                       manifest_bytes: bytes) -> bytes:
+    return (json.dumps(
+        {
+            "version": version,
+            "commit": commit,
+            "built_utc": built_utc,
+            "source": source,
+            "source_manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
+        },
+        indent=2,
+    ) + "\n").encode("utf-8")
+
+
+def manifest_problems(payload: dict[str, bytes], manifest_bytes: bytes | None,
+                      version_bytes: bytes | None) -> list[str]:
+    """Check the manifest against the packaged bytes (``payload`` excludes the two generated files)."""
+    if manifest_bytes is None:
+        return [f"missing {MANIFEST_NAME}"]
+    try:
+        manifest = json.loads(manifest_bytes.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError) as exc:
+        return [f"{MANIFEST_NAME} is not readable JSON: {exc}"]
+    if not isinstance(manifest, dict):
+        return [f"{MANIFEST_NAME} is not a JSON object"]
+    problems: list[str] = []
+    if manifest.get("schema") != MANIFEST_SCHEMA:
+        problems.append(f"{MANIFEST_NAME} schema is {manifest.get('schema')!r}, expected {MANIFEST_SCHEMA!r}")
+    if manifest.get("source") not in (SOURCE_HEAD, SOURCE_WORKTREE):
+        problems.append(f"{MANIFEST_NAME} source is {manifest.get('source')!r}")
+    if not isinstance(manifest.get("commit"), str) or not manifest.get("commit"):
+        problems.append(f"{MANIFEST_NAME} has no commit")
+    listed = manifest.get("files")
+    if not isinstance(listed, dict):
+        problems.append(f"{MANIFEST_NAME} has no files mapping")
+        listed = {}
+    for rel in sorted(set(listed) - set(payload)):
+        problems.append(f"manifest lists a file absent from the zip: {rel}")
+    for rel in sorted(set(payload) - set(listed)):
+        problems.append(f"zip file not listed in the manifest: {rel}")
+    for rel in sorted(set(listed) & set(payload)):
+        if listed[rel] != hashlib.sha256(payload[rel]).hexdigest():
+            problems.append(f"manifest hash mismatch: {rel}")
+    if version_bytes is None:
+        problems.append(f"missing {VERSION_NAME}")
+    else:
+        try:
+            recorded = json.loads(version_bytes.decode("utf-8")).get("source_manifest_sha256")
+        except (UnicodeDecodeError, ValueError, AttributeError):
+            recorded = None
+        if recorded != hashlib.sha256(manifest_bytes).hexdigest():
+            problems.append(f"{VERSION_NAME} source_manifest_sha256 does not match {MANIFEST_NAME}")
+    return problems
+
+
 def build_release_notes(files: dict[str, bytes], repo: Path, version: str,
                         commit: str, built_utc: str) -> str:
     if RELEASE_NOTES_SOURCE in files:
@@ -144,6 +230,8 @@ def verify_zip(zip_path: Path) -> list[str]:
     prefix = ZIP_ROOT + "/"
     with zipfile.ZipFile(zip_path) as zf:
         names = zf.namelist()
+        if len(names) != len(set(names)):
+            problems.append("duplicate arcnames in the zip")
         if KURULUM_ARCNAME not in names:
             problems.append(f"missing {KURULUM_ARCNAME}")
         else:
@@ -155,17 +243,26 @@ def verify_zip(zip_path: Path) -> list[str]:
         notes_arcname = f"{ZIP_ROOT}/windows/SURUM_NOTLARI.md"
         if notes_arcname in names and b"CI_RUN_URL_PLACEHOLDER" in zf.read(notes_arcname):
             problems.append("windows/SURUM_NOTLARI.md still contains CI_RUN_URL_PLACEHOLDER")
+        payload: dict[str, bytes] = {}
         for name in names:
             if not name.startswith(prefix):
                 problems.append(f"arcname outside root folder: {name}")
                 continue
             rel = name[len(prefix):]
-            if not rel or rel == "VERSION.json":
+            if not rel or rel in GENERATED_NAMES:
                 continue
             if "\\" in rel:
                 problems.append(f"backslash in arcname: {name}")
             if is_excluded(rel):
                 problems.append(f"excluded path present in zip: {rel}")
+            payload[rel] = zf.read(name)
+
+        def _root_member(rel: str) -> bytes | None:
+            arcname = prefix + rel
+            return zf.read(arcname) if arcname in names else None
+
+        problems.extend(manifest_problems(
+            payload, _root_member(MANIFEST_NAME), _root_member(VERSION_NAME)))
     return problems
 
 
@@ -187,22 +284,21 @@ def main(argv: list[str] | None = None) -> int:
     if args.worktree:
         files = collect_worktree_files(repo)
         source = "worktree overlay (git ls-files --cached --others --exclude-standard)"
+        manifest_source = SOURCE_WORKTREE
     else:
         files = collect_head_files(repo)
-        source = "git archive HEAD"
+        source = SOURCE_HEAD
+        manifest_source = SOURCE_HEAD
     if not files:
         print("error: no files collected", file=sys.stderr)
         return 1
+    clashing = sorted(GENERATED_NAMES & set(files))
+    if clashing:
+        print(f"error: repository root contains generated package names: {clashing}", file=sys.stderr)
+        return 1
 
-    version_json = json.dumps(
-        {
-            "version": args.version,
-            "commit": commit,
-            "built_utc": built_utc,
-            "source": source,
-        },
-        indent=2,
-    ) + "\n"
+    manifest_bytes = build_source_manifest(files, commit, manifest_source)
+    version_json = build_version_json(args.version, commit, built_utc, source, manifest_bytes)
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -211,7 +307,8 @@ def main(argv: list[str] | None = None) -> int:
     import zipfile
 
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-        zf.writestr(f"{ZIP_ROOT}/VERSION.json", version_json)
+        zf.writestr(f"{ZIP_ROOT}/{VERSION_NAME}", version_json)
+        zf.writestr(f"{ZIP_ROOT}/{MANIFEST_NAME}", manifest_bytes)
         for rel in sorted(files):
             zf.writestr(f"{ZIP_ROOT}/{rel}", files[rel])
 
@@ -230,13 +327,15 @@ def main(argv: list[str] | None = None) -> int:
     print(f"zip:    {zip_path}")
     print(f"size:   {size} bytes ({size / 1e6:.1f} MB)")
     print(f"sha256: {digest}")
-    print(f"files:  {len(files)} (+ VERSION.json), source: {source}")
+    print(f"files:  {len(files)} (+ VERSION.json, SOURCE_MANIFEST.json), source: {source}")
+    print(f"manifest sha256: {hashlib.sha256(manifest_bytes).hexdigest()} ({manifest_source})")
     print(f"notes:  {notes_path}")
     if problems:
         for p in problems:
             print(f"self-verify FAILED: {p}", file=sys.stderr)
         return 2
-    print("self-verify: OK (KURULUM.bat present with CRLF, no excluded paths)")
+    print("self-verify: OK (KURULUM.bat present with CRLF, no excluded paths, "
+          "source manifest matches the zip bytes and VERSION.json)")
     return 0
 
 
