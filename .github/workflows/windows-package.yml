@@ -18,6 +18,10 @@ on:
       - "pyproject.toml"
       - "src/**"
       - "tests/test_dashboard_*.py"
+      - "tests/test_geo_pilot.py"
+      - "tests/test_wsl_setup.py"
+      - "tests/test_build_windows_package.py"
+      - "tests/test_windows_oneclick_*.py"
   workflow_dispatch:
 
 permissions:
@@ -76,7 +80,7 @@ jobs:
 
       - name: Run dashboard tests on real Windows
         run: |
-          python -m pytest -q tests/test_dashboard_commands.py tests/test_dashboard_jobs.py tests/test_dashboard_portable.py tests/test_dashboard_results.py tests/test_dashboard_evidence.py tests/test_dashboard_rf.py tests/test_dashboard_diagnostics.py tests/test_dashboard_app.py
+          python -m pytest -q tests/test_dashboard_commands.py tests/test_dashboard_jobs.py tests/test_dashboard_portable.py tests/test_dashboard_results.py tests/test_dashboard_evidence.py tests/test_dashboard_rf.py tests/test_dashboard_diagnostics.py tests/test_dashboard_app.py tests/test_geo_pilot.py tests/test_wsl_setup.py tests/test_build_windows_package.py tests/test_windows_oneclick_scripts.py
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
       - name: Smoke-start Track A dashboard on 127.0.0.1:8501
@@ -254,3 +258,250 @@ jobs:
             dist/Payload-Aware-GEO-Workbench-Windows.zip.sha256
             dist/RELEASE_NOTES.md
           if-no-files-found: error
+
+  # GitHub-hosted windows-latest runners cannot validate real WSL2 virtualization:
+  # this job only proves the WSL-absent, fail-closed native path. True WSL2/Ubuntu
+  # end-to-end validation of the bounded pilot happens externally on a physical
+  # Windows PC or qualified VM and is recorded separately.
+  oneclick:
+    name: "Windows one-click workbench: installer, launchers, WSL-absent fail-closed"
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      PYTHONHASHSEED: "0"
+      MPLBACKEND: Agg
+      CUDA_VISIBLE_DEVICES: ""
+      OMP_NUM_THREADS: "2"
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Parse every Windows script with the PowerShell 7 parser
+        run: |
+          $files = @(Get-ChildItem -Path windows\*.ps1, windows\tests\*.ps1 -File -ErrorAction SilentlyContinue)
+          if ($files.Count -eq 0) { Write-Host "No PowerShell scripts found"; exit 1 }
+          $bad = 0
+          foreach ($f in $files) {
+            $tokens = $null; $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) {
+              $bad++
+              foreach ($e in $errors) { Write-Host ("ParseError {0}:{1}: {2}" -f $f.Name, $e.Extent.StartLineNumber, $e.Message) }
+            } else {
+              Write-Host ("parsed OK (pwsh {0}): {1}" -f $PSVersionTable.PSVersion, $f.Name)
+            }
+          }
+          if ($bad -ne 0) { exit 1 }
+          exit 0
+
+      - name: Parse every Windows script with the Windows PowerShell 5.1 parser
+        shell: powershell
+        run: |
+          $files = @(Get-ChildItem -Path windows\*.ps1, windows\tests\*.ps1 -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer })
+          if ($files.Count -eq 0) { Write-Host "No PowerShell scripts found"; exit 1 }
+          $bad = 0
+          foreach ($f in $files) {
+            $tokens = $null; $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) {
+              $bad++
+              foreach ($e in $errors) { Write-Host ("ParseError {0}:{1}: {2}" -f $f.Name, $e.Extent.StartLineNumber, $e.Message) }
+            } else {
+              Write-Host ("parsed OK (Windows PowerShell {0}): {1}" -f $PSVersionTable.PSVersion, $f.Name)
+            }
+          }
+          if ($bad -ne 0) { exit 1 }
+          exit 0
+
+      - name: geo_common helper tests under PowerShell 7
+        run: |
+          pwsh -NoProfile -NonInteractive -File windows\tests\geo_common_tests.ps1
+          if ($LASTEXITCODE -ne 0) { Write-Host "geo_common_tests.ps1 failed under pwsh (exit $LASTEXITCODE)"; exit 1 }
+          exit 0
+
+      - name: geo_common helper tests under Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File windows\tests\geo_common_tests.ps1
+          if ($LASTEXITCODE -ne 0) { Write-Host "geo_common_tests.ps1 failed under Windows PowerShell (exit $LASTEXITCODE)"; exit 1 }
+          exit 0
+
+      - name: "W-01: non-interactive installer, two venvs, shortcut names"
+        run: |
+          $desktop = [Environment]::GetFolderPath('Desktop')
+          $before = @(Get-ChildItem -Path $desktop -Filter *.lnk -ErrorAction SilentlyContinue | ForEach-Object { $_.Name })
+          powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File windows\install.ps1
+          if ($LASTEXITCODE -ne 0) { Write-Host "install.ps1 failed (exit $LASTEXITCODE)"; exit 1 }
+          foreach ($venvPy in @(".venv-dashboard\Scripts\python.exe", ".venv-rfml\Scripts\python.exe")) {
+            if (-not (Test-Path -LiteralPath $venvPy)) { Write-Host "Missing $venvPy"; exit 1 }
+            Write-Host "found $venvPy"
+          }
+          $expected = @(
+            ('GEO Pilot Ba' + [char]0x015F + 'lat.lnk'),
+            ('GEO ' + [char]0x0130 + [char]0x015F + 'lem Durdur.lnk'),
+            'GEO Workbench.lnk',
+            'GEO Workbench Kapat.lnk',
+            'GEO WSL Kurulumu.lnk',
+            'RF-ML Ogrenme Uygulamasi.lnk'
+          ) | Sort-Object
+          $after = @(Get-ChildItem -Path $desktop -Filter *.lnk -ErrorAction SilentlyContinue | ForEach-Object { $_.Name })
+          $new = @($after | Where-Object { $before -notcontains $_ } | Sort-Object)
+          Write-Host "Desktop shortcuts created by install.ps1:"
+          $new | ForEach-Object { Write-Host "  $_" }
+          if (($expected -join '|') -cne ($new -join '|')) {
+            Write-Host "Desktop shortcut set differs from the expected set:"
+            $expected | ForEach-Object { Write-Host "  expected: $_" }
+            exit 1
+          }
+          if ($after -contains 'GEO Arastirma Panosu.lnk') { Write-Host "Superseded 'GEO Arastirma Panosu.lnk' is still on the Desktop"; exit 1 }
+          exit 0
+
+      - name: "W-02/W-06: pilot without a WSL backend fails closed and opens native inspection"
+        run: |
+          $ErrorActionPreference = "Continue"
+          $out = Join-Path $env:RUNNER_TEMP "pilot_nowsl.out.log"
+          $proc = Start-Process -FilePath "powershell.exe" `
+            -ArgumentList "-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File","windows\geo_workbench.ps1","-Action","pilot","-NoBrowser" `
+            -PassThru -NoNewWindow -RedirectStandardOutput $out -RedirectStandardError "$out.err"
+          $null = $proc.Handle
+          if (-not $proc.WaitForExit(300000)) { Write-Host "geo_workbench.ps1 -Action pilot did not exit within 300 s"; exit 1 }
+          $code = $proc.ExitCode
+          $text = (Get-Content $out -Raw -ErrorAction SilentlyContinue) + (Get-Content "$out.err" -Raw -ErrorAction SilentlyContinue)
+          Write-Host $text
+          Write-Host "geo_workbench.ps1 -Action pilot exit code: $code"
+          # 2 = no WSL backend state, 3 = wsl.exe/distro missing (documented fail-closed codes).
+          if ($code -ne 2 -and $code -ne 3) { Write-Host "Expected fail-closed exit code 2 or 3"; exit 1 }
+          if ($text -notmatch 'GEO WSL Kurulumu') { Write-Host "Output does not point to 'GEO WSL Kurulumu'"; exit 1 }
+          $env:WSL_UTF8 = "1"
+          try {
+            $wslStatus = & "$env:SystemRoot\System32\wsl.exe" --status 2>&1 | Out-String
+            Write-Host "wsl.exe --status (record only; not a WSL2 validation):"
+            Write-Host $wslStatus
+          } catch {
+            Write-Host "wsl.exe --status unavailable: $($_.Exception.Message)"
+          }
+          $healthy = $false
+          $deadline = (Get-Date).AddSeconds(150)
+          while ((Get-Date) -lt $deadline) {
+            try {
+              $resp = Invoke-WebRequest -Uri "http://127.0.0.1:8501/_stcore/health" -UseBasicParsing -TimeoutSec 3
+              if ($resp.Content.Trim() -eq "ok") { $healthy = $true; break }
+            } catch {
+              # not up yet (connection refused); keep polling
+            }
+            Start-Sleep -Seconds 3
+          }
+          if (-not $healthy) { Write-Host "Native inspection dashboard never became healthy on 8501"; exit 1 }
+          Write-Host "Native inspection dashboard healthy on 127.0.0.1:8501"
+          exit 0
+
+      - name: "Open is idempotent: two opens, one dashboard listener"
+        run: |
+          $ErrorActionPreference = "Continue"
+          foreach ($i in 1, 2) {
+            $out = Join-Path $env:RUNNER_TEMP "open_$i.out.log"
+            $proc = Start-Process -FilePath "powershell.exe" `
+              -ArgumentList "-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File","windows\geo_workbench.ps1","-Action","open","-NoBrowser" `
+              -PassThru -NoNewWindow -RedirectStandardOutput $out -RedirectStandardError "$out.err"
+            $null = $proc.Handle
+            if (-not $proc.WaitForExit(300000)) { Write-Host "open #$i did not exit within 300 s"; exit 1 }
+            Get-Content $out -ErrorAction SilentlyContinue
+            Get-Content "$out.err" -ErrorAction SilentlyContinue
+            Write-Host "open #$i exit code: $($proc.ExitCode)"
+            if ($proc.ExitCode -ne 0) { exit 1 }
+          }
+          $listeners = @(Get-NetTCPConnection -State Listen -LocalPort 8501 -ErrorAction SilentlyContinue)
+          Write-Host "Listeners on 8501: $($listeners.Count)"
+          $listeners | ForEach-Object { Write-Host ("  {0}:{1} pid {2}" -f $_.LocalAddress, $_.LocalPort, $_.OwningProcess) }
+          if ($listeners.Count -ne 1) { Write-Host "Expected exactly one dashboard listener on 8501"; exit 1 }
+          exit 0
+
+      - name: "Close stops the native dashboard"
+        run: |
+          $ErrorActionPreference = "Continue"
+          $out = Join-Path $env:RUNNER_TEMP "close.out.log"
+          $proc = Start-Process -FilePath "powershell.exe" `
+            -ArgumentList "-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File","windows\geo_workbench.ps1","-Action","close","-Force" `
+            -PassThru -NoNewWindow -RedirectStandardOutput $out -RedirectStandardError "$out.err"
+          $null = $proc.Handle
+          if (-not $proc.WaitForExit(300000)) { Write-Host "close did not exit within 300 s"; exit 1 }
+          Get-Content $out -ErrorAction SilentlyContinue
+          Get-Content "$out.err" -ErrorAction SilentlyContinue
+          Write-Host "close exit code: $($proc.ExitCode)"
+          if ($proc.ExitCode -ne 0) { exit 1 }
+          $stopped = $false
+          $deadline = (Get-Date).AddSeconds(30)
+          while ((Get-Date) -lt $deadline) {
+            try {
+              Invoke-WebRequest -Uri "http://127.0.0.1:8501/_stcore/health" -UseBasicParsing -TimeoutSec 2 | Out-Null
+            } catch {
+              $stopped = $true; break
+            }
+            Start-Sleep -Seconds 2
+          }
+          if (-not $stopped) { Write-Host "Dashboard health endpoint still answers after close"; exit 1 }
+          Write-Host "Dashboard stopped"
+          exit 0
+
+      - name: "W-10: Track B launcher and stop_apps"
+        run: |
+          $ErrorActionPreference = "Continue"
+          $out = Join-Path $env:RUNNER_TEMP "rfml_launch.out.log"
+          $proc = Start-Process -FilePath "powershell.exe" `
+            -ArgumentList "-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File","windows\launch_app.ps1","-App","rfml","-NoBrowser" `
+            -PassThru -NoNewWindow -RedirectStandardOutput $out -RedirectStandardError "$out.err"
+          $null = $proc.Handle
+          if (-not $proc.WaitForExit(300000)) { Write-Host "launch_app.ps1 -App rfml did not exit within 300 s"; exit 1 }
+          Get-Content $out -ErrorAction SilentlyContinue
+          Get-Content "$out.err" -ErrorAction SilentlyContinue
+          Write-Host "launch_app.ps1 -App rfml exit code: $($proc.ExitCode)"
+          if ($proc.ExitCode -ne 0) { exit 1 }
+          $healthy = $false
+          $deadline = (Get-Date).AddSeconds(150)
+          while ((Get-Date) -lt $deadline) {
+            try {
+              $resp = Invoke-WebRequest -Uri "http://127.0.0.1:8511/_stcore/health" -UseBasicParsing -TimeoutSec 3
+              if ($resp.Content.Trim() -eq "ok") { $healthy = $true; break }
+            } catch {
+              # not up yet (connection refused); keep polling
+            }
+            Start-Sleep -Seconds 3
+          }
+          if (-not $healthy) { Write-Host "Track B app never became healthy on 8511"; exit 1 }
+          Write-Host "Track B app healthy on 127.0.0.1:8511"
+          powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File windows\stop_apps.ps1
+          if ($LASTEXITCODE -ne 0) { Write-Host "stop_apps.ps1 failed (exit $LASTEXITCODE)"; exit 1 }
+          $stopped = $false
+          $deadline = (Get-Date).AddSeconds(30)
+          while ((Get-Date) -lt $deadline) {
+            try {
+              Invoke-WebRequest -Uri "http://127.0.0.1:8511/_stcore/health" -UseBasicParsing -TimeoutSec 2 | Out-Null
+            } catch {
+              $stopped = $true; break
+            }
+            Start-Sleep -Seconds 2
+          }
+          if (-not $stopped) { Write-Host "Track B health endpoint still answers after stop_apps.ps1"; exit 1 }
+          Write-Host "Track B app stopped"
+          exit 0
+
+      - name: Launcher log tails
+        if: always()
+        run: |
+          $logs = @(Get-ChildItem -Path windows\logs\*.log -File -ErrorAction SilentlyContinue)
+          if ($logs.Count -eq 0) { Write-Host "No windows\logs\*.log files" }
+          foreach ($l in $logs) {
+            Write-Host "===== $($l.Name) (last 80 lines) ====="
+            Get-Content -LiteralPath $l.FullName -Tail 80 -ErrorAction SilentlyContinue
+          }
+          exit 0
