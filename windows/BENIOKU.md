@@ -1,8 +1,9 @@
 # Payload-Aware GEO Workbench — Windows Kurulum ve Kullanım Kılavuzu
 
 Bu paket, GEO transponder girişim tanıma araştırma deposunun **yerel Windows
-çalışma ortamıdır**. Yönetici hakkı gerektirmez; her şey kullanıcı hesabınız
-altında kurulur. Paket **tek başına çalışan bir .exe içermez** — buradaki
+çalışma ortamıdır**. Temel kurulum yönetici hakkı gerektirmez; her şey kullanıcı
+hesabınız altında kurulur (yalnız isteğe bağlı WSL2 özelliğini ilk kez
+etkinleştirmek, sizin onayınızla, bir kez yönetici onayı ister). Paket **tek başına çalışan bir .exe içermez** — buradaki
 başlatıcılar komut dosyalarıdır (.bat + PowerShell) ve uygulamalar yerel
 Python sanal ortamlarında, tarayıcınızda çalışır.
 
@@ -14,28 +15,33 @@ sanal ortamları, ayrı başlatıcıları ve ayrı belgeleri vardır; aralarınd
 
 | İz | Uygulama | Ne yapar |
 |---|---|---|
-| **İz A** | GEO Araştırma Panosu (`dashboard/app.py`) | Deponun **yönetişimli araştırma panosu**. Yalnızca simülasyon/pilot verisi gösterir; üretim, GPU ve ayrılmış (held-out) değerlendirme kapıları **kapalıdır**, kıyaslama (benchmark) **tamamlanmamıştır**. Pano hiçbir onay üretmez. |
+| **İz A** | GEO Workbench / GEO Araştırma Panosu (`dashboard/app.py`) | Deponun **yönetişimli araştırma panosu**. Yalnızca simülasyon/pilot verisi gösterir; üretim, GPU ve ayrılmış (held-out) değerlendirme kapıları **kapalıdır**, kıyaslama (benchmark) **tamamlanmamıştır**. Pano hiçbir onay üretmez. |
 | **İz B** | RF-ML Öğrenme Uygulaması (`learning/rfml-basics/app.py`) | Kendi içinde kapalı, **sentetik** RF makine öğrenmesi **öğrenme/alıştırma** uygulaması. Araştırma verisiyle veya İz A'nın sonuçlarıyla hiçbir bağı yoktur. |
 
 ## Sistem gereksinimleri (yerel yol)
 
 - Windows 10 veya 11
-- **Yönetici hakkı gerekmez** (her şey kullanıcı kapsamında kurulur)
+- **Yönetici hakkı gerekmez** (her şey kullanıcı kapsamında kurulur; isteğe
+  bağlı WSL2 kurulumu hariç)
 - **GPU gerekmez** (her şey CPU üzerinde çalışır)
 - **API anahtarı veya bulut hesabı gerekmez**
 - Python 3.10–3.13 (3.12 tercih edilir; yoksa kurulum size yol gösterir)
 - En az 5 GB boş disk (10 GB önerilir — PyTorch indirmesi büyüktür)
 - 8 GB RAM önerilir
 - Kurulum sırasında internet (pip paketleri için); çalıştırmak için gerekmez
+- Gerçek RF pilotu için ayrıca: WSL2 + Ubuntu (Windows 10 sürüm 2004 / derleme
+  19041 veya üzeri, ya da Windows 11), WSL içinde yaklaşık 5 GB boş alan
 
 İsteğe bağlı `xgb` ekstrası **kurulmaz**; iki uygulamanın da ona ihtiyacı yoktur.
 
 ## Kurulum
 
-1. Paketi, **boşluk içermeyen ve OneDrive dışındaki** bir klasöre açın
-   (ör. `C:\calisma\Payload-Aware-GEO-Workbench`).
+1. Paketi tercihen **OneDrive dışındaki** kısa bir klasöre açın
+   (ör. `C:\calisma\Payload-Aware-GEO-Workbench`). Boşluklu veya Türkçe
+   karakterli yollar desteklenir.
 2. `windows\KURULUM.bat` dosyasına **çift tıklayın**.
-3. Ekrandaki `[OK] / [UYARI] / [HATA]` mesajlarını izleyin. Kurulum:
+3. Ekrandaki `[OK] / [UYARI] / [HATA]` mesajlarını izleyin. Python zaten
+   kuruluysa kurulum hiç soru sormadan çalışır. Kurulum:
    - Python'u arar (yoksa python.org bağlantısı ve winget komutu önerir;
      winget ile kurulum **yalnızca siz açıkça onaylarsanız** yapılır),
    - depo kökünde `.venv-dashboard` ve `.venv-rfml` sanal ortamlarını kurar,
@@ -43,29 +49,126 @@ sanal ortamları, ayrı başlatıcıları ve ayrı belgeleri vardır; aralarınd
    - içe aktarma testleri yapar,
    - Masaüstü ve Başlat menüsü kısayollarını oluşturur.
 4. Kurulum günlüğü: `windows\logs\install-<zaman>.log`.
+5. Gerçek RF pilotunu da kullanacaksanız ayrıca bir kez **GEO WSL Kurulumu**
+   kısayolunu çalıştırın (aşağıya bakın). Bu adım isteğe bağlıdır; atlanırsa
+   pano yerel Windows inceleme modunda çalışır.
 
 Tanı için kurulumdan bağımsız olarak `windows\preflight.ps1` çalıştırılabilir
 (PowerShell'de: `powershell -NoProfile -ExecutionPolicy Bypass -File windows\preflight.ps1`).
 
-## Uygulamaları başlatma
+## Kısayollar
 
-- **GEO Araştırma Panosu**: Masaüstündeki "GEO Arastirma Panosu" kısayolu
-  (veya `windows\launch_dashboard.bat`). Port 8501 (doluysa 8502–8510).
-- **RF-ML Öğrenme Uygulaması**: "RF-ML Ogrenme Uygulamasi" kısayolu
-  (veya `windows\launch_rfml.bat`). Port 8511 (doluysa 8512–8520).
+Kurulum, Masaüstüne ve Başlat menüsüne (`Payload-Aware GEO Workbench` klasörü)
+aşağıdaki kısayolları koyar. Hepsi `windows\` klasöründeki küçük `.bat`
+dosyalarını çalıştırır; `.bat` dosyaları PowerShell'i yalnızca o işlem için
+`-ExecutionPolicy Bypass` ile çağırır (sistem ayarı değiştirilmez).
 
-Başlatıcı boş bir port seçer, Streamlit'i yalnızca `127.0.0.1` üzerinde
-(bilgisayarınızın dışına kapalı) başlatır, sağlık kontrolünü bekler ve
-tarayıcınızı açar. Uygulama zaten çalışıyorsa yeni kopya açılmaz; mevcut
-adres tarayıcıda açılır.
+| Kısayol | Dosya | Ne yapar |
+|---|---|---|
+| **GEO Workbench** | `GEO_Workbench.bat` | İz A panosunu açar veya zaten açıksa aynı kopyayı yeniden kullanır. WSL2 arka ucu kuruluysa pano **WSL2 Ubuntu içinde** çalışır; kurulu değilse **yerel Windows inceleme modu** açılır. |
+| **GEO Pilot Başlat** | `GEO_Pilot_Baslat.bat` | Ön kontrolden sonra **sınırlı geliştirme pilotunu** (`real-exercise`, rol başına 1 grup, yalnız train/val-select/val-calib, CPU) WSL2 içinde başlatır ve panoyu açar. Bir pilot zaten çalışıyorsa ikinci pilot başlatılmaz; mevcut iş kimliği (JOB_ID) gösterilir. |
+| **GEO İşlem Durdur** | `GEO_Islem_Durdur.bat` | Çalışan pilotu güvenli biçimde iptal eder: yalnız workbench'in kendi işini, sahiplik (PID + başlangıç belirteci) doğrulandıktan sonra durdurur. Kısmi çıktılar ve günlük korunur; iptal edilen iş **başarılı sayılmaz**. |
+| **GEO Workbench Kapat** | `GEO_Workbench_Kapat.bat` | Pano arayüzünü kapatır. Bir pilot çalışıyorsa önce uyarır ve onay ister; arayüz kapansa bile pilot WSL içinde sürer ve sonucu kaydedilir. Hiçbir kayıt veya çıktı silinmez. |
+| **GEO WSL Kurulumu** | `GEO_WSL_Kurulumu.bat` | Gerçek RF pilotu için **tek seferlik, onaylı** WSL2 kurulumu (aşağıya bakın). |
+| **RF-ML Ogrenme Uygulamasi** | `launch_rfml.bat` | İz B öğrenme uygulaması (port 8511, doluysa 8512–8520). Değişmedi; İz A'dan tamamen bağımsızdır. |
+| **Uygulamalari Durdur** (yalnız Başlat menüsü) | `stop_apps.bat` | Yerel olarak başlatılmış iki uygulamayı (yerel pano ve İz B) durdurur. WSL2 içindeki pilota dokunmaz. |
+
+Eski "GEO Arastirma Panosu" kısayolu artık **GEO Workbench** ile değiştirilmiştir;
+kurulum, bu pakete ait eski kısayolu kendiliğinden kaldırır.
+`windows\launch_dashboard.bat` yerel panoyu doğrudan açmak için hâlâ kullanılabilir.
+
+## Pilot, benchmark değildir
+
+**GEO Pilot Başlat**, sınırlı bir geliştirme alıştırmasıdır: gerçek fizik
+zincirini (RF üretimi → eğitim → val-calib → dondurma → rapor) küçük ölçekte
+uçtan uca çalıştırır ve `exercise.json` ile **işlevsel akışın** çalıştığını
+kanıtlar. Bu pilot **benchmark değildir**: tanıma performansı sonucu üretmez,
+21.350 gözlemlik benchmark'ı çalıştırmaz, held-out (ayrılmış test) verisine
+erişmez, GPU kullanmaz ve hiçbir üretim kapısını açmaz
+(`benchmark_complete=false`). Panodaki geçen süre / zaman aşımı çubuğu yalnız
+**zamanı** ölçer, işin tamamlanma yüzdesi değildir.
+
+## Gerçek RF pilotu için WSL2 kurulumu (GEO WSL Kurulumu)
+
+Pilotun yönetişimli betik zinciri yalnızca POSIX sistemlerde bulunan `fcntl`
+kilitlerini kullanır; bu yüzden pilot **yerel Windows'ta çalışmaz** ve **WSL2
+Ubuntu** gerektirir. Kurulum bir kez yapılır ve her adımda ne yapılacağını
+anlatır; hiçbir şey sizin `[E/H]` onayınız olmadan kurulmaz.
+
+1. Paketi açtığınız klasörde **GEO WSL Kurulumu** kısayoluna çift tıklayın ve
+   açıklamayı okuyup `E` ile onaylayın.
+2. Paket denetlenir: kurulum yalnız CI tarafından üretilen ZIP paketinden
+   yapılabilir (`VERSION.json` + `SOURCE_MANIFEST.json`). Bir Git klonu bu yol
+   için kullanılamaz.
+3. `wsl.exe` ve bir Ubuntu dağıtımı aranır. Yoksa `wsl --install -d Ubuntu-24.04`
+   **ayrıca onayınızla** başlatılır. WSL özelliği henüz etkin değilse Windows bir
+   **yönetici onayı (UAC)** penceresi gösterir ve bilgisayarı yeniden başlatmanız
+   gerekebilir. Ubuntu ilk açılışta sizden bir Linux kullanıcı adı ve parola
+   oluşturmanızı ister. Bu bittikten sonra **GEO WSL Kurulumu** kısayolunu
+   yeniden çalıştırın.
+4. Dağıtımın WSL2 olduğu (WSL1 ise `wsl --set-version <dağıtım> 2` önerilir) ve
+   `python3 >= 3.10` bulunduğu denetlenir.
+5. Paketin doğrulanmış kaynak kopyası WSL ext4 ev dizinine,
+   `~/geo-workbench-src` klasörüne kopyalanır (`/mnt/c` altına değil) ve
+   manifest ile yeniden doğrulanır. Farklı bir commit'e ait eski bir kopya varsa
+   **ikinci bir onayla** `~/geo-workbench-src.previous-<zaman>` adıyla kenara
+   taşınır; **asla silinmez**.
+6. `~/geo-workbench-src/.venv` sanal ortamı kurulur (PyTorch CPU dahil; birkaç
+   GB indirme, uzun sürebilir). Ubuntu'da `python3-venv` eksikse, onayınızla
+   görünür bir pencerede `sudo apt-get install -y python3-venv` çalıştırılır
+   (Ubuntu kendi parolanızı sorabilir).
+7. Pilot ön kontrolü bu paketin commit ve manifest özetiyle çalıştırılır.
+   Yalnızca başarılı olursa kurulum kaydı yazılır:
+   `%LOCALAPPDATA%\GEO-Workbench\wsl_backend.json`.
+
+Kaynak kimliği ile ilgili sınır: doğrulama, CI'nin ürettiği paket manifestine
+(`SOURCE_MANIFEST.json`) görelidir; WSL kopyasında Git geçmişi yoktur ve bu
+denetim bir üretim kilidi değildir. Pilot her başlatılışta WSL kopyasının bu
+paketin `VERSION.json` değerleriyle eşleştiğini yeniden denetler; eşleşmezse
+(ör. yeni bir ZIP açtıysanız) pilot başlamaz ve **GEO WSL Kurulumu** kısayolunu
+yeniden çalıştırmanız istenir. Güncelleme her zaman bu ayrı, açık adımdır;
+pilot öncesinde örtük bir güncelleme yapılmaz.
+
+## Yerel Windows inceleme modu (WSL2 yoksa)
+
+WSL2 kurulmamışsa **GEO Workbench** panoyu yerel Windows'ta
+(`.venv-dashboard`, port 8501, doluysa 8502–8510) **inceleme modunda** açar:
+tüm sayfalar ve salt-okur komutlar (`preflight-gates`, `host-inventory`,
+`test-dashboard`, `test-cpu-execution`) çalışır, ancak gerçek RF pilotu açık bir
+gerekçeyle devre dışıdır ve **GEO WSL Kurulumu** kısayoluna yönlendirir.
+**GEO Pilot Başlat** bu durumda pilotu başlatmaz, açıklamayı gösterir ve
+inceleme modundaki panoyu açar. Bu bir güvenli geri dönüştür; gizli bir üretim
+yolu değildir.
+
+## WSL2 ile kullanım
+
+- WSL2 panosu `127.0.0.1` üzerinde 8531 portunda (doluysa 8532–8540) çalışır;
+  WSL2'nin localhost yönlendirmesi sayesinde Windows tarayıcınızdan açılır.
+  Dışarıya açık bir dinleyici veya güvenlik duvarı kuralı eklenmez.
+- **GEO Workbench** ikinci kez tıklandığında yeni kopya açılmaz; çalışan
+  kopyanın adresi tarayıcıda açılır.
+- Pano içinde de **GEO PİLOT BAŞLAT / DURUMU YENİLE / GÜVENLİ İPTAL**
+  düğmeleri, aşama zinciri, geçen süre, çıktı klasörü, `exercise.json` ve
+  `pilot.json` indirmeleri ile günlük bulunur.
+- Tarayıcı sekmesini kapatmak pilotu durdurmaz; durum panodan veya
+  **GEO Workbench** ile yeniden görülebilir.
 
 ## Çıktılar ve günlükler nerede?
 
-- **Başlatıcı günlükleri ve PID dosyaları**: `windows\logs\`
-  (`dashboard.log`, `rfml.log`, `*.err.log`, `*.pid`, `install-*.log`).
-- **Panonun iş çıktıları ve arayüz durumu** depo **dışında** tutulur
-  (`dashboard/geodash/paths.py` içindeki `run_home()` bunu zorlar). Yerel
-  Windows'ta varsayılan yol:
+- **Windows tarafı günlükleri**: `windows\logs\` klasörü.
+  - `geo_workbench.log`: tüm GEO kısayollarının (açma, pilot, durdurma, kapatma,
+    WSL kurulumu) ayrıntılı günlüğü.
+  - `geo_ui.pid` (WSL2 panosu), `geo_pilot.pid` (son başlatılan pilot
+    denetçisi; yalnız bilgi amaçlıdır, hiçbir süreç bu dosyaya bakılarak
+    sonlandırılmaz).
+  - `dashboard.log`, `rfml.log`, `*.err.log`, `*.pid`, `install-*.log`
+    (yerel uygulamalar ve kurulum).
+- **WSL2 pilotu çıktıları** depo kopyasının **dışında**, WSL içinde:
+  `~/.local/share/geo-dashboard` (`jobs/<JOB_ID>/` altında `job.json`,
+  `log.txt`, `pilot.json`, `exercise/exercise.json`; pano ve denetçi günlükleri
+  `workbench/` altında). Windows Gezgini'nden `\\wsl$\<dağıtım>\home\<kullanıcı>\.local\share\geo-dashboard`
+  yoluyla da açılabilir.
+- **Yerel pano çıktıları**, yine depo **dışında**:
 
   ```
   C:\Users\<kullanıcı_adınız>\.local\share\geo-dashboard
@@ -78,36 +181,64 @@ adres tarayıcıda açılır.
 - RF-ML öğrenme uygulaması kendi klasörü (`learning/rfml-basics/`) içinde
   ders/deney dosyalarıyla çalışır.
 
+## Çıkış kodları
+
+Kısayol penceresi yalnızca bir sorun olduğunda açık kalır ve Türkçe açıklamayı
+gösterir. En sık kodlar:
+
+| Kod | Anlamı |
+|---|---|
+| 0 | Başarılı (pilot için: pilot başlatıldı) |
+| 2 | WSL2 arka ucu kurulmamış; **GEO WSL Kurulumu** çalıştırın (pano inceleme modunda açılır) |
+| 3 | WSL/Ubuntu veya WSL içindeki kopya bulunamadı; durdurma için: çalışan pilot yok |
+| 4 | Pano 90 saniyede sağlık kontrolüne yanıt vermedi |
+| 5 | İşlem onaylanmadı (ör. pilot çalışırken kapatma reddedildi) |
+| 6 | Pilot denetçisi başladı ama iş kimliği 60 saniyede görülmedi |
+| 7 | WSL/Ubuntu kurulumu başlatıldı; bitince (gerekirse yeniden başlatıp) kurulumu tekrar çalıştırın |
+| 8 | Dağıtım uygun değil (WSL1 veya python3 < 3.10) |
+| 9 | Paket dosyaları eksik (yalnız CI ZIP paketi kullanılabilir) |
+| 10 | Bir pilot zaten çalışıyor; mevcut JOB_ID gösterilir |
+| 11 / 12 | Pano zaten çalışıyor / port dolu |
+| 13 / 14 / 15 / 16 | WSL kopyası zaten var / hedef `/mnt` altında / `python3-venv` eksik / pip hatası |
+| 20 | Kaynak kimliği doğrulanamadı (WSL kopyası paketle eşleşmiyor veya değiştirilmiş) |
+| 21 / 22 / 23 / 24 | Platform POSIX değil / bağımlılık eksik / disk yetersiz (en az 5 GiB) / grup sayısı reddedildi (yalnız 1 veya 2) |
+| 30 / 31 / 32 | Pilot başarısız / iptal edildi / zaman aşımı (hiçbiri başarılı sayılmaz) |
+| 33 / 34 | Pilot sonucu kaydedilmeden bitti / iş kaydı okunamıyor (başarı varsayılmaz) |
+| 40 / 41 | Komut güvenlik katmanınca reddedildi / sahiplik doğrulanamadı (hiçbir süreç sonlandırılmadı) |
+
 ## Durdurma
 
-Başlat menüsündeki **"Uygulamalari Durdur"** kısayolu veya
-`windows\stop_apps.bat`. PID dosyalarındaki süreç ağaçlarını kapatır ve eski
-kayıtları temizler. Alternatif: uygulamanın tarayıcı sekmesini kapatmak
-uygulamayı durdurmaz; durdurma için bu kısayolu kullanın.
+- **GEO İşlem Durdur**: çalışan pilotu güvenli iptal eder (yukarıya bakın).
+- **GEO Workbench Kapat**: pano arayüzünü kapatır (WSL2 panosu ve/veya yerel
+  inceleme modu panosu); pilotu durdurmaz, kayıt silmez.
+- **Uygulamalari Durdur** (Başlat menüsü) veya `windows\stop_apps.bat`: yerel
+  olarak başlatılmış uygulamaların (yerel pano, İz B) süreç ağaçlarını kapatır
+  ve eski kayıtları temizler. WSL2 içindeki pilota dokunmaz.
+
+Tarayıcı sekmesini kapatmak uygulamayı durdurmaz; durdurma için bu kısayolları
+kullanın.
 
 ## Sorun giderme
 
 | Belirti | Çözüm |
 |---|---|
-| "Bos port yok" hatası | `stop_apps.bat` çalıştırın; ayrıca 8501–8520 portlarını kullanan başka uygulamaları kapatın. |
+| "Bos port yok" hatası | `stop_apps.bat` / **GEO Workbench Kapat** çalıştırın; ayrıca 8501–8540 portlarını kullanan başka uygulamaları kapatın. |
 | "Uygun Python bulunamadi" | python.org'dan 3.12 kurun ("Add python.exe to PATH" işaretli) veya `winget install --id Python.Python.3.12 --scope user`; sonra `KURULUM.bat`'ı yeniden çalıştırın. |
 | pip SSL/proxy hataları | Kurumsal ağdaysanız proxy/SSL denetimi pip'i engelleyebilir. BT biriminizden pip için proxy ayarlarını (`HTTPS_PROXY` ortam değişkeni, gerekirse kurum kök sertifikası) isteyin; ev ağında yeniden deneyin. |
 | İlk açılış çok yavaş | Antivirüs, binlerce yeni Python dosyasını ilk açılışta tarar. Birkaç dakika bekleyin; mümkünse depo klasörünü antivirüs istisnalarına ekletin. |
 | `UnicodeEncodeError: 'charmap' codec ...` (örn. Track B derslerini komut satırından çalıştırırken) | Windows'un eski cp1252 konsol kodlaması Türkçe karakterleri yazamıyor. Komuttan önce `set PYTHONUTF8=1` çalıştırın (PowerShell'de `$env:PYTHONUTF8='1'`). Kısayollardan başlatılan uygulamalar bunu zaten otomatik ayarlar. |
-| torch indirmesi çok büyük/yarıda kesildi | PyTorch CPU paketi yüzlerce MB'dir. Kararlı bağlantıda `KURULUM.bat`'ı yeniden çalıştırın; pip kaldığı önbellekten devam eder. |
-| Sağlık kontrolü zaman aşımı (90 sn) | `windows\logs\<uygulama>.log` ve `.err.log` dosyalarının son satırlarına bakın; çoğu zaman uygulama sadece yavaş açılıyordur — tarayıcıda adresi elle deneyin. |
-| OneDrive / boşluklu yol sorunları | Depoyu OneDrive eşitlemesi dışında, boşluk içermeyen kısa bir yola taşıyın (ör. `C:\calisma\...`) ve kurulumu yeniden çalıştırın. OneDrive, sanal ortam dosyalarını kilitleyip bozabilir. |
+| torch indirmesi çok büyük/yarıda kesildi | PyTorch CPU paketi yüzlerce MB'dir. Kararlı bağlantıda `KURULUM.bat`'ı (WSL için **GEO WSL Kurulumu**'nu) yeniden çalıştırın; pip kaldığı önbellekten devam eder. |
+| Sağlık kontrolü zaman aşımı (90 sn) | `windows\logs\geo_workbench.log`, `windows\logs\<uygulama>.log` ve WSL içinde `~/.local/share/geo-dashboard/workbench/ui.log` dosyalarının son satırlarına bakın; çoğu zaman uygulama sadece yavaş açılıyordur — tarayıcıda adresi elle deneyin. |
+| Pilot "kaynak kimliği doğrulanamadı" (kod 20) diyor | Yeni bir ZIP açtıysanız veya WSL kopyası değiştiyse **GEO WSL Kurulumu**'nu yeniden çalıştırın; eski kopya silinmez, kenara taşınır. |
+| WSL kurulumu yönetici onayı istiyor | WSL özelliğini ilk kez etkinleştirmek Windows'ta yönetici onayı gerektirir; bu yalnız sizin onayınızla ve bir kez istenir. Onaylamak istemezseniz pano inceleme modunda çalışmaya devam eder. |
+| OneDrive / boşluklu yol sorunları | Betikler boşluklu ve Türkçe karakterli yolları destekler; yine de depoyu OneDrive eşitlemesi dışında kısa bir yola (ör. `C:\calisma\...`) koymanız önerilir. OneDrive, sanal ortam dosyalarını kilitleyip bozabilir. |
 
-## Önemli sınır: `real-exercise` komutu Windows'ta çalışmaz
+## Bilimsel yönetişim sınırı
 
-Panonun `real-exercise` (gerçek-fizik tatbikat) çalıştırma komutu **yerel
-Windows'ta çalışmaz ve açık bir mesajla reddedilir**. Komutun kullandığı
-betik zinciri yalnızca POSIX sistemlerde bulunan `fcntl` kilit modülünü
-kullanır (`scripts/b2_real_generation.py`, `b2_e16_ledger.py`,
-`b2_e18_lifecycle.py`, `b2_production_supervisor.py`). Bu akışı kullanmak
-istiyorsanız **WSL2 (Ubuntu)** gerekir; adımlar için `dashboard/README.md`
-dosyasına bakın. Bu sınır bilimsel yönetişimin parçasıdır: üretim/GPU/LOKO
-ve ayrılmış değerlendirme kapıları kapalıdır ve bu paket hiçbirini açmaz.
+Üretim (21.350 gözlem), GPU, LOKO ve held-out değerlendirme kapıları
+**kapalıdır**; bu paketteki hiçbir kısayol, düğme veya ayar bunları açmaz ve
+`benchmark_complete=false` kalır. Pilot sonuçları "YALNIZ PİLOT" olarak
+gösterilir ve makale sonuçlarına girmez.
 
 ## Sürüm ve destek
 

@@ -2,6 +2,40 @@
 
 ## Türkçe
 
+### Tek tıkla GEO Workbench (bu sürüm)
+
+- Yeni kısayollar: **GEO Workbench**, **GEO Pilot Başlat**, **GEO İşlem
+  Durdur**, **GEO Workbench Kapat**, **GEO WSL Kurulumu** (Masaüstü ve Başlat
+  menüsü). Eski "GEO Arastirma Panosu" kısayolu **GEO Workbench** ile
+  değiştirildi ve kurulumca kaldırılır. **RF-ML Ogrenme Uygulamasi** ve
+  **Uygulamalari Durdur** değişmedi.
+- Yeni dosyalar: `windows/geo_workbench.ps1` (open / pilot / stop-pilot /
+  close / status), `windows/geo_common.ps1` (ortak yardımcılar),
+  `windows/setup_wsl_backend.ps1` (onaylı, tek seferlik WSL2 kurulumu),
+  `windows/GEO_*.bat` sarmalayıcıları, `windows/tests/geo_common_tests.ps1`
+  (bağımlılıksız PowerShell yardımcı testleri).
+- **GEO Pilot Başlat**, mevcut izinli `real-exercise` komutunu (rol başına 1
+  grup, yalnız train/val-select/val-calib, CPU) WSL2 Ubuntu içinde, kalıcı bir
+  denetçi süreciyle ve aynı JobManager üzerinden başlatır. İkinci tıklama ikinci
+  pilot başlatmaz; mevcut iş kimliğini gösterir. İptal, sahiplik doğrulandıktan
+  sonra yalnız workbench'in kendi işini durdurur; kayıtlar ve kısmi çıktılar
+  korunur.
+- WSL2 yoksa pano **yerel Windows inceleme modunda** açılır ve pilot açık bir
+  Türkçe açıklamayla engellenir (çıkış kodu 2).
+- `install.ps1`, Python zaten kuruluysa tamamen soru sormadan çalışır (CI bunu
+  doğrular); `launch_app.ps1` ve `geo_workbench.ps1` CI için `-NoBrowser`
+  anahtarı alır (varsayılan davranış değişmedi).
+- Pilot bir **geliştirme pilotudur, benchmark değildir**: 21.350 gözlemlik
+  benchmark, GPU, LOKO ve held-out kapıları kapalı kalır,
+  `benchmark_complete=false`.
+
+Nerede test edildi: betikler Linux'ta statik testlerle
+(`tests/test_windows_oneclick_scripts.py`) ve Windows CI'de PowerShell 5.1 /
+7 ayrıştırıcısı, yardımcı testleri ve WSL'siz (güvenli reddetme) yol ile
+denetlenir. GitHub `windows-latest` gerçek WSL2 sanallaştırmasını doğrulayamaz;
+gerçek WSL2 uçtan uca pilot doğrulaması fiziksel bir Windows bilgisayarda ayrıca
+yapılmalı ve kaydedilmelidir.
+
 ### İlk Windows paketi
 
 Bu, deponun ilk Windows kurulum paketidir. Paket, yönetici hakkı gerektirmeden
@@ -54,6 +88,40 @@ iki **ayrı** yerel Streamlit uygulamasını kurar ve başlatır:
 ---
 
 ## English
+
+### One-click GEO Workbench (this release)
+
+- New shortcuts: **GEO Workbench**, **GEO Pilot Başlat**, **GEO İşlem
+  Durdur**, **GEO Workbench Kapat**, **GEO WSL Kurulumu** (Desktop and Start
+  menu). The old "GEO Arastirma Panosu" shortcut is superseded by **GEO
+  Workbench** and removed by the installer. **RF-ML Ogrenme Uygulamasi** and
+  **Uygulamalari Durdur** are unchanged.
+- New files: `windows/geo_workbench.ps1` (open / pilot / stop-pilot / close /
+  status), `windows/geo_common.ps1` (shared helpers),
+  `windows/setup_wsl_backend.ps1` (consent-gated one-time WSL2 setup), the
+  `windows/GEO_*.bat` wrappers and `windows/tests/geo_common_tests.ps1`
+  (dependency-free PowerShell helper tests).
+- **GEO Pilot Başlat** starts the existing allowlisted `real-exercise` command
+  (one group per role, train/val-select/val-calib only, CPU) inside WSL2 Ubuntu
+  under a persistent supervisor through the same JobManager. A second click
+  never starts a second pilot; it shows the running job id. Cancellation stops
+  only the workbench-owned job after an ownership check; records and partial
+  outputs are kept.
+- Without WSL2 the dashboard opens in **native Windows inspection mode** and
+  the pilot is refused with a clear Turkish explanation (exit code 2).
+- `install.ps1` runs fully non-interactively when Python is already present
+  (CI checks this); `launch_app.ps1` and `geo_workbench.ps1` take a
+  `-NoBrowser` switch for CI (default behaviour unchanged).
+- The pilot is a **development pilot, not the benchmark**: the
+  21,350-observation benchmark, GPU, LOKO and held-out gates stay closed,
+  `benchmark_complete=false`.
+
+Where it was tested: the scripts are checked statically on Linux
+(`tests/test_windows_oneclick_scripts.py`) and, in Windows CI, by the
+PowerShell 5.1 / 7 parsers, the helper tests and the WSL-absent fail-closed
+path. GitHub `windows-latest` cannot validate real WSL2 virtualization; a true
+WSL2 end-to-end pilot validation must be done and recorded separately on a
+physical Windows PC.
 
 ### First Windows package
 

@@ -5,6 +5,10 @@
 # dependencies, runs import smoke tests and creates Desktop / Start Menu
 # shortcuts. Console output is ASCII-transliterated Turkish so it survives any
 # Windows codepage. Exit code: 0 on success, nonzero on hard failure.
+# When a suitable Python is already present the whole run is non-interactive
+# (the only prompt is the winget offer when Python is missing), so CI can run it.
+# The optional WSL2 backend for the bounded GEO pilot is NOT set up here; that is
+# the separate, consent-gated "GEO WSL Kurulumu" shortcut (setup_wsl_backend.ps1).
 
 $ErrorActionPreference = 'Continue'
 # Python UTF-8 modu: betikler Turkce metin yazar; eski cp1252 konsol kodlamasi bunu temsil edemez
@@ -35,7 +39,7 @@ function Fail ($m) {
 Write-Host '====================================================='
 Write-Host ' Payload-Aware GEO Workbench - Windows kurulumu'
 Write-Host ' Iki AYRI uygulama kurulur (asla birlestirilmez):'
-Write-Host '   Iz A: GEO Arastirma Panosu   (.venv-dashboard)'
+Write-Host '   Iz A: GEO Workbench          (.venv-dashboard)'
 Write-Host '   Iz B: RF-ML Ogrenme Uygulamasi (.venv-rfml)'
 Write-Host '====================================================='
 Write-Bilgi ("Depo koku      : " + $RepoRoot)
@@ -192,7 +196,7 @@ function Install-TorchCpu {
 
 # --------------------------------------------- Track A: dashboard environment
 Write-Host ''
-Write-Host '--- Iz A: GEO Arastirma Panosu ortami (.venv-dashboard) ---'
+Write-Host '--- Iz A: GEO Workbench ortami (.venv-dashboard) ---'
 $DashVenv = Join-Path $RepoRoot '.venv-dashboard'
 $DashPy   = New-Venv -Path $DashVenv -Ad '.venv-dashboard'
 Install-TorchCpu -VenvPython $DashPy -Ad '.venv-dashboard'
@@ -238,26 +242,59 @@ function New-Shortcut {
     $sc.Description = $Aciklama
     $sc.Save()
 }
+# Our own older Track A shortcut, superseded by "GEO Workbench"; removed only when it points at a
+# windows\launch_dashboard.bat (Track B shortcuts are never touched).
+function Remove-OldGeoShortcut {
+    param([string]$LnkPath)
+    if (-not (Test-Path -LiteralPath $LnkPath -PathType Leaf)) { return }
+    try {
+        $shell = New-Object -ComObject WScript.Shell
+        $target = $shell.CreateShortcut($LnkPath).TargetPath
+        if ("$target" -like '*\windows\launch_dashboard.bat') {
+            Remove-Item -LiteralPath $LnkPath -Force
+            Write-Bilgi ('Eski kisayol kaldirildi: ' + $LnkPath)
+        }
+    } catch {
+        Write-Uyari ('Eski kisayol kaldirilamadi: ' + $LnkPath)
+    }
+}
+
+$sCedilla = [char]0x015F
+$IDot = [char]0x0130
+$GeoShortcuts = @(
+    @{ Name = 'GEO Workbench';                  Bat = 'GEO_Workbench.bat';       Aciklama = 'Iz A: GEO Workbench (WSL2 varsa WSL2 motoru, yoksa yerel inceleme modu)' },
+    @{ Name = "GEO Pilot Ba$($sCedilla)lat";       Bat = 'GEO_Pilot_Baslat.bat';    Aciklama = 'Iz A: sinirli gelistirme pilotu (1 grup, CPU, WSL2); benchmark degildir' },
+    @{ Name = "GEO $($IDot)$($sCedilla)lem Durdur"; Bat = 'GEO_Islem_Durdur.bat';    Aciklama = 'Iz A: calisan GEO pilotunu guvenli bicimde iptal eder' },
+    @{ Name = 'GEO Workbench Kapat';            Bat = 'GEO_Workbench_Kapat.bat'; Aciklama = 'Iz A: GEO Workbench arayuzunu kapatir (calisan pilotu durdurmaz)' },
+    @{ Name = 'GEO WSL Kurulumu';               Bat = 'GEO_WSL_Kurulumu.bat';    Aciklama = 'Iz A: gercek RF pilotu icin tek seferlik, onayli WSL2 kurulumu' }
+)
 try {
     $desktop = [Environment]::GetFolderPath('Desktop')
-    New-Shortcut -LnkPath (Join-Path $desktop 'GEO Arastirma Panosu.lnk') -Target (Join-Path $ScriptDir 'launch_dashboard.bat') -Aciklama 'Iz A: GEO arastirma panosu (Streamlit, yerel)'
-    New-Shortcut -LnkPath (Join-Path $desktop 'RF-ML Ogrenme Uygulamasi.lnk') -Target (Join-Path $ScriptDir 'launch_rfml.bat') -Aciklama 'Iz B: RF-ML ogrenme uygulamasi (Streamlit, yerel)'
     $startMenu = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Payload-Aware GEO Workbench'
     if (-not (Test-Path $startMenu)) { New-Item -ItemType Directory -Path $startMenu -Force | Out-Null }
-    New-Shortcut -LnkPath (Join-Path $startMenu 'GEO Arastirma Panosu.lnk') -Target (Join-Path $ScriptDir 'launch_dashboard.bat') -Aciklama 'Iz A: GEO arastirma panosu (Streamlit, yerel)'
+    foreach ($folder in @($desktop, $startMenu)) {
+        Remove-OldGeoShortcut -LnkPath (Join-Path $folder 'GEO Arastirma Panosu.lnk')
+        foreach ($sc in $GeoShortcuts) {
+            New-Shortcut -LnkPath (Join-Path $folder ($sc.Name + '.lnk')) -Target (Join-Path $ScriptDir $sc.Bat) -Aciklama $sc.Aciklama
+        }
+    }
+    New-Shortcut -LnkPath (Join-Path $desktop 'RF-ML Ogrenme Uygulamasi.lnk') -Target (Join-Path $ScriptDir 'launch_rfml.bat') -Aciklama 'Iz B: RF-ML ogrenme uygulamasi (Streamlit, yerel)'
     New-Shortcut -LnkPath (Join-Path $startMenu 'RF-ML Ogrenme Uygulamasi.lnk') -Target (Join-Path $ScriptDir 'launch_rfml.bat') -Aciklama 'Iz B: RF-ML ogrenme uygulamasi (Streamlit, yerel)'
     New-Shortcut -LnkPath (Join-Path $startMenu 'Uygulamalari Durdur.lnk') -Target (Join-Path $ScriptDir 'stop_apps.bat') -Aciklama 'Calisan Workbench uygulamalarini durdurur'
     Write-Ok 'Masaustu ve Baslat menusu kisayollari olusturuldu.'
 } catch {
     Write-Uyari ('Kisayollar olusturulamadi: ' + $_.Exception.Message)
-    Write-Uyari 'Uygulamalari windows klasorundeki launch_dashboard.bat / launch_rfml.bat ile baslatabilirsiniz.'
+    Write-Uyari 'Uygulamalari windows klasorundeki GEO_Workbench.bat / launch_rfml.bat ile baslatabilirsiniz.'
 }
 
 # ------------------------------------------------------------------- Summary
 Write-Host ''
 Write-Host '====================================================='
 Write-Ok 'Kurulum tamamlandi.'
-Write-Bilgi 'Baslatma: Masaustunde "GEO Arastirma Panosu" ve "RF-ML Ogrenme Uygulamasi" kisayollari.'
+Write-Bilgi 'Baslatma: Masaustunde "GEO Workbench" ve "RF-ML Ogrenme Uygulamasi" kisayollari.'
+Write-Bilgi 'GEO Workbench WSL2 kurulmadan yerel inceleme modunda acilir. Gercek RF pilotu icin bir kez'
+Write-Bilgi '"GEO WSL Kurulumu" kisayolunu calistirin; sonra "GEO Pilot Baslat" sinirli pilotu baslatir.'
+Write-Bilgi 'Kapatma: "GEO Workbench Kapat"; pilot iptali: "GEO Islem Durdur".'
 Write-Bilgi 'Durdurma: Baslat menusunde "Uygulamalari Durdur" (veya windows\stop_apps.bat).'
 Write-Bilgi 'Iki uygulama birbirinden tamamen ayridir; veri, model veya sonuc paylasmazlar.'
 Write-Bilgi ("Kurulum gunlugu: " + $LogPath)
