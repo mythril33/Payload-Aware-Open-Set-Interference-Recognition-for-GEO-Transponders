@@ -165,6 +165,22 @@
       },
       "rationale": "title: # E9-Preflight — concurrent-merge integration recovery"
     },
+    "docs/results/B2_K17D_M14_DRIFT_TABLE.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 35,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # B2 K17d / M-14 — co-feed missing-carrier level-drift disclosure"
+    },
+    "docs/results/B2_P1_RESOURCE_ERRATA.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "title: # P1 / M-11 — resource-arithmetic clarification (non-authoritative estimate)"
+    },
     "docs/results/B2_SCIENTIFIC_RESULTS_ATLAS.md": {
       "class": "DERIVED_DOCUMENTATION",
       "heldout_raw_matches": {
