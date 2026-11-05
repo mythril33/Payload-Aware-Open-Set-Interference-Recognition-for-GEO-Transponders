@@ -22,6 +22,7 @@ on:
       - "tests/test_wsl_setup.py"
       - "tests/test_build_windows_package.py"
       - "tests/test_windows_oneclick_*.py"
+      - "tests/test_windows_oneclick_fakewsl.py"
   workflow_dispatch:
 
 permissions:
@@ -53,6 +54,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # Both jobs build the package, whose geo-source.bundle needs the full
+          # Git history (the builder refuses a shallow checkout with exit 3).
+          fetch-depth: 0
           persist-credentials: false
 
       - uses: actions/setup-python@v5
@@ -80,7 +84,7 @@ jobs:
 
       - name: Run dashboard tests on real Windows
         run: |
-          python -m pytest -q tests/test_dashboard_commands.py tests/test_dashboard_jobs.py tests/test_dashboard_portable.py tests/test_dashboard_results.py tests/test_dashboard_evidence.py tests/test_dashboard_rf.py tests/test_dashboard_diagnostics.py tests/test_dashboard_app.py tests/test_geo_pilot.py tests/test_wsl_setup.py tests/test_build_windows_package.py tests/test_windows_oneclick_scripts.py
+          python -m pytest -q tests/test_dashboard_commands.py tests/test_dashboard_jobs.py tests/test_dashboard_portable.py tests/test_dashboard_results.py tests/test_dashboard_evidence.py tests/test_dashboard_rf.py tests/test_dashboard_diagnostics.py tests/test_dashboard_app.py tests/test_geo_pilot.py tests/test_wsl_setup.py tests/test_build_windows_package.py tests/test_windows_oneclick_scripts.py tests/test_windows_oneclick_fakewsl.py
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
       - name: Smoke-start Track A dashboard on 127.0.0.1:8501
@@ -262,7 +266,8 @@ jobs:
   # GitHub-hosted windows-latest runners cannot validate real WSL2 virtualization:
   # this job only proves the WSL-absent, fail-closed native path. True WSL2/Ubuntu
   # end-to-end validation of the bounded pilot happens externally on a physical
-  # Windows PC or qualified VM and is recorded separately.
+  # Windows PC or qualified VM and is recorded separately. The launcher steps run
+  # from the extracted package (no .git), which is the user's install scenario.
   oneclick:
     name: "Windows one-click workbench: installer, launchers, WSL-absent fail-closed"
     runs-on: windows-latest
@@ -279,6 +284,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # Both jobs build the package, whose geo-source.bundle needs the full
+          # Git history (the builder refuses a shallow checkout with exit 3).
+          fetch-depth: 0
           persist-credentials: false
 
       - uses: actions/setup-python@v5
@@ -336,15 +344,46 @@ jobs:
           if ($LASTEXITCODE -ne 0) { Write-Host "geo_common_tests.ps1 failed under Windows PowerShell (exit $LASTEXITCODE)"; exit 1 }
           exit 0
 
-      - name: "W-01: non-interactive installer, two venvs, shortcut names"
+      - name: Build the package, verify its .sha256 and extract it under a non-ASCII path with spaces
         run: |
+          $pkgOut = Join-Path $env:RUNNER_TEMP "pkg"
+          python scripts/build_windows_package.py --out $pkgOut --version "0.1.0-win.${{ github.run_number }}-oneclick"
+          if ($LASTEXITCODE -ne 0) { Write-Host "build_windows_package.py failed (exit $LASTEXITCODE)"; exit 1 }
+          $zip = Join-Path $pkgOut "Payload-Aware-GEO-Workbench-Windows.zip"
+          $shaFile = "$zip.sha256"
+          if (-not (Test-Path -LiteralPath $zip) -or -not (Test-Path -LiteralPath $shaFile)) { Write-Host "Package zip or .sha256 missing"; exit 1 }
+          $line = (Get-Content -LiteralPath $shaFile -Raw).Trim()
+          Write-Host ".sha256: $line"
+          $parts = $line -split '\s+'
+          if ($parts.Count -ne 2 -or $parts[1] -cne "Payload-Aware-GEO-Workbench-Windows.zip") { Write-Host "Unexpected .sha256 format"; exit 1 }
+          $actual = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -cne $parts[0]) { Write-Host "SHA-256 mismatch: file $actual, .sha256 $($parts[0])"; exit 1 }
+          Write-Host "Get-FileHash SHA-256 matches the .sha256 file"
+          # Turkish letters from [char] codes keep this file ASCII while the path is not.
+          $extract = Join-Path $env:RUNNER_TEMP ("GEO paket " + [char]0x015F + [char]0x0131 + "k " + [char]0x0130 + [char]0x00E7)
+          Expand-Archive -LiteralPath $zip -DestinationPath $extract -Force
+          $pkgRoot = Join-Path $extract "Payload-Aware-GEO-Workbench"
+          foreach ($rel in @("VERSION.json", "SOURCE_MANIFEST.json", "geo-source.bundle", "windows\install.ps1", "windows\geo_workbench.ps1", "windows\launch_app.ps1", "windows\stop_apps.ps1")) {
+            if (-not (Test-Path -LiteralPath (Join-Path $pkgRoot $rel))) { Write-Host "Extracted package lacks $rel"; exit 1 }
+          }
+          if (Test-Path -LiteralPath (Join-Path $pkgRoot ".git")) { Write-Host "Extracted package unexpectedly contains .git"; exit 1 }
+          Write-Host "Package root: $pkgRoot"
+          # pwsh 7 utf8 is BOM-less UTF-8, which the runner expects for GITHUB_ENV.
+          "GEO_PKG_ROOT=$pkgRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          exit 0
+
+      - name: "W-01: non-interactive installer from the extracted package, two venvs, shortcut names"
+        run: |
+          $pkgRoot = $env:GEO_PKG_ROOT
+          if (-not $pkgRoot -or -not (Test-Path -LiteralPath (Join-Path $pkgRoot "VERSION.json"))) { Write-Host "GEO_PKG_ROOT is not the extracted package: '$pkgRoot'"; exit 1 }
+          Set-Location -LiteralPath $pkgRoot
           $desktop = [Environment]::GetFolderPath('Desktop')
           $before = @(Get-ChildItem -Path $desktop -Filter *.lnk -ErrorAction SilentlyContinue | ForEach-Object { $_.Name })
-          powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File windows\install.ps1
+          powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $pkgRoot "windows\install.ps1")
           if ($LASTEXITCODE -ne 0) { Write-Host "install.ps1 failed (exit $LASTEXITCODE)"; exit 1 }
           foreach ($venvPy in @(".venv-dashboard\Scripts\python.exe", ".venv-rfml\Scripts\python.exe")) {
-            if (-not (Test-Path -LiteralPath $venvPy)) { Write-Host "Missing $venvPy"; exit 1 }
-            Write-Host "found $venvPy"
+            if (-not (Test-Path -LiteralPath (Join-Path $pkgRoot $venvPy))) { Write-Host "Missing $venvPy in the package root"; exit 1 }
+            Write-Host "found $venvPy in the package root"
           }
           $expected = @(
             ('GEO Pilot Ba' + [char]0x015F + 'lat.lnk'),
@@ -369,9 +408,11 @@ jobs:
       - name: "W-02/W-06: pilot without a WSL backend fails closed and opens native inspection"
         run: |
           $ErrorActionPreference = "Continue"
+          $pkgRoot = $env:GEO_PKG_ROOT
           $out = Join-Path $env:RUNNER_TEMP "pilot_nowsl.out.log"
           $proc = Start-Process -FilePath "powershell.exe" `
             -ArgumentList "-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File","windows\geo_workbench.ps1","-Action","pilot","-NoBrowser" `
+            -WorkingDirectory $pkgRoot `
             -PassThru -NoNewWindow -RedirectStandardOutput $out -RedirectStandardError "$out.err"
           $null = $proc.Handle
           if (-not $proc.WaitForExit(300000)) { Write-Host "geo_workbench.ps1 -Action pilot did not exit within 300 s"; exit 1 }
@@ -408,10 +449,12 @@ jobs:
       - name: "Open is idempotent: two opens, one dashboard listener"
         run: |
           $ErrorActionPreference = "Continue"
+          $pkgRoot = $env:GEO_PKG_ROOT
           foreach ($i in 1, 2) {
             $out = Join-Path $env:RUNNER_TEMP "open_$i.out.log"
             $proc = Start-Process -FilePath "powershell.exe" `
               -ArgumentList "-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File","windows\geo_workbench.ps1","-Action","open","-NoBrowser" `
+              -WorkingDirectory $pkgRoot `
               -PassThru -NoNewWindow -RedirectStandardOutput $out -RedirectStandardError "$out.err"
             $null = $proc.Handle
             if (-not $proc.WaitForExit(300000)) { Write-Host "open #$i did not exit within 300 s"; exit 1 }
@@ -429,9 +472,11 @@ jobs:
       - name: "Close stops the native dashboard"
         run: |
           $ErrorActionPreference = "Continue"
+          $pkgRoot = $env:GEO_PKG_ROOT
           $out = Join-Path $env:RUNNER_TEMP "close.out.log"
           $proc = Start-Process -FilePath "powershell.exe" `
             -ArgumentList "-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File","windows\geo_workbench.ps1","-Action","close","-Force" `
+            -WorkingDirectory $pkgRoot `
             -PassThru -NoNewWindow -RedirectStandardOutput $out -RedirectStandardError "$out.err"
           $null = $proc.Handle
           if (-not $proc.WaitForExit(300000)) { Write-Host "close did not exit within 300 s"; exit 1 }
@@ -453,12 +498,14 @@ jobs:
           Write-Host "Dashboard stopped"
           exit 0
 
-      - name: "W-10: Track B launcher and stop_apps"
+      - name: "W-10: Track B launcher and stop_apps from the extracted package"
         run: |
           $ErrorActionPreference = "Continue"
+          $pkgRoot = $env:GEO_PKG_ROOT
           $out = Join-Path $env:RUNNER_TEMP "rfml_launch.out.log"
           $proc = Start-Process -FilePath "powershell.exe" `
             -ArgumentList "-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File","windows\launch_app.ps1","-App","rfml","-NoBrowser" `
+            -WorkingDirectory $pkgRoot `
             -PassThru -NoNewWindow -RedirectStandardOutput $out -RedirectStandardError "$out.err"
           $null = $proc.Handle
           if (-not $proc.WaitForExit(300000)) { Write-Host "launch_app.ps1 -App rfml did not exit within 300 s"; exit 1 }
@@ -479,7 +526,7 @@ jobs:
           }
           if (-not $healthy) { Write-Host "Track B app never became healthy on 8511"; exit 1 }
           Write-Host "Track B app healthy on 127.0.0.1:8511"
-          powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File windows\stop_apps.ps1
+          powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $pkgRoot "windows\stop_apps.ps1")
           if ($LASTEXITCODE -ne 0) { Write-Host "stop_apps.ps1 failed (exit $LASTEXITCODE)"; exit 1 }
           $stopped = $false
           $deadline = (Get-Date).AddSeconds(30)
@@ -495,13 +542,23 @@ jobs:
           Write-Host "Track B app stopped"
           exit 0
 
+      - name: Fake-WSL geo_workbench.ps1 tests from the checkout
+        run: |
+          python -m pip install "pytest>=7"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          python -m pytest -q -p no:cacheprovider tests/test_windows_oneclick_fakewsl.py
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          exit 0
+
       - name: Launcher log tails
         if: always()
         run: |
-          $logs = @(Get-ChildItem -Path windows\logs\*.log -File -ErrorAction SilentlyContinue)
+          $dirs = @("windows\logs")
+          if ($env:GEO_PKG_ROOT) { $dirs += (Join-Path $env:GEO_PKG_ROOT "windows\logs") }
+          $logs = @(foreach ($d in $dirs) { Get-ChildItem -LiteralPath $d -Filter *.log -File -ErrorAction SilentlyContinue })
           if ($logs.Count -eq 0) { Write-Host "No windows\logs\*.log files" }
           foreach ($l in $logs) {
-            Write-Host "===== $($l.Name) (last 80 lines) ====="
+            Write-Host "===== $($l.FullName) (last 80 lines) ====="
             Get-Content -LiteralPath $l.FullName -Tail 80 -ErrorAction SilentlyContinue
           }
           exit 0
