@@ -8,9 +8,10 @@ GPU, LOKO or held-out work, and no state is ever upgraded: pilot.json copies the
 
 Exit codes are stable; the Windows scripts map them to messages:
 0 OK, 3 nothing running/found, 10 pilot already running, 11 UI already running, 12 port busy,
-20 source not verified, 21 platform not POSIX, 22 dependencies missing, 23 disk insufficient,
-24 groups refused, 30 failed, 31 cancelled, 32 timed out, 33 finished unrecorded, 34 record unreadable,
-40 command refused, 41 ownership unverified.
+18 another job running, 19 a job record is unreadable, 20 source not verified, 21 platform not POSIX,
+22 dependencies missing, 23 disk insufficient, 24 groups refused, 25 source not a Git checkout,
+30 failed, 31 cancelled, 32 timed out, 33 finished unrecorded, 34 record unreadable,
+40 command refused, 41 ownership unverified, 42 the UI still serves after the stop wait.
 """
 from __future__ import annotations
 
@@ -19,6 +20,7 @@ import hashlib
 import json
 import os
 import platform
+import re
 import shutil
 import signal
 import socket
@@ -49,6 +51,12 @@ PILOT_NOTE = ("Bounded development pilot: proves the functional RF->train->calib
               "recognition-performance result and not the 21,350-observation benchmark.")
 BOUNDARY = {"scope": C.SCOPE_DEVELOPMENT, "cpu_only": True, "heldout_reads": 0, "production_authorized": False,
             "benchmark_complete": False}
+# The exercise.json fields copied into pilot.json's observed_boundary, as the run reported them.
+OBSERVED_BOUNDARY_FIELDS = ("schema", "scope", "gpu_exercised", "heldout_reads", "production_authorized",
+                            "benchmark_complete")
+HEX_IDENTITY = re.compile(r"[0-9a-fA-F]{7,64}")
+ENV_EXPECT_COMMIT = "GEO_EXPECT_COMMIT"
+ENV_EXPECT_MANIFEST = "GEO_EXPECT_MANIFEST_SHA256"
 PILOT_OUTPUTS = ("exercise/exercise.json", "exercise/freeze.json")
 GIT_TIMEOUT_S = 30
 
@@ -57,21 +65,28 @@ EXIT_NONE = 3
 EXIT_PILOT_RUNNING = 10
 EXIT_UI_RUNNING = 11
 EXIT_PORT_BUSY = 12
+EXIT_OTHER_JOB = 18
+EXIT_JOB_RECORD = 19
 EXIT_SOURCE = 20
 EXIT_PLATFORM = 21
 EXIT_DEPENDENCIES = 22
 EXIT_DISK = 23
 EXIT_GROUPS = 24
+EXIT_NOT_GIT = 25
 EXIT_REFUSED = 40
 EXIT_OWNERSHIP = 41
+EXIT_STOP_TIMEOUT = 42
 
 PREFLIGHT_CODES = {
+    "PILOT_ALREADY_RUNNING": EXIT_PILOT_RUNNING,
+    "OTHER_JOB_RUNNING": EXIT_OTHER_JOB,
     "PLATFORM_NOT_POSIX": EXIT_PLATFORM,
     "GROUPS_REFUSED": EXIT_GROUPS,
     "DEPENDENCIES_MISSING": EXIT_DEPENDENCIES,
     "SOURCE_NOT_VERIFIED": EXIT_SOURCE,
+    "SOURCE_NOT_GIT": EXIT_NOT_GIT,
+    "JOB_RECORD_UNREADABLE": EXIT_JOB_RECORD,
     "DISK_INSUFFICIENT": EXIT_DISK,
-    "PILOT_ALREADY_RUNNING": EXIT_PILOT_RUNNING,
 }
 # Reporting precedence when several apply; the first one is the exit code.
 PREFLIGHT_PRECEDENCE = tuple(PREFLIGHT_CODES)
@@ -135,9 +150,12 @@ def _default_manager() -> J.JobManager:
 # ---- engine and source identity ------------------------------------------------------------------------
 
 def engine(osrelease: str | None = None, os_name: str | None = None, environ=None) -> dict:
-    """Which engine this process runs on. Only Linux and WSL2 can run the governed pilot."""
+    """Which engine this process runs on. Only Linux and WSL2 can run the governed pilot.
+
+    WSL2 is recognised from the kernel release alone ("microsoft-standard" or "wsl2"). WSL1 also exports
+    WSL_INTEROP, so environ is accepted for callers but never upgrades a WSL1 kernel to WSL2.
+    """
     os_name = os.name if os_name is None else os_name
-    environ = os.environ if environ is None else environ
     if os_name == "nt":
         key = "native-windows"
     elif os_name != "posix":
@@ -149,8 +167,10 @@ def engine(osrelease: str | None = None, os_name: str | None = None, environ=Non
             except OSError:
                 osrelease = ""
         release = osrelease.lower()
-        if "microsoft" in release:
-            key = "wsl2" if ("wsl2" in release or "WSL_INTEROP" in environ) else "wsl1"
+        if "microsoft-standard" in release or "wsl2" in release:
+            key = "wsl2"
+        elif "microsoft" in release:
+            key = "wsl1"
         else:
             key = "linux"
     label, label_tr, capable = ENGINES[key]
@@ -280,6 +300,17 @@ def _running_pilot(manager: J.JobManager) -> J.JobStatus | None:
     return next((job for job in manager.list_jobs() if job.key == PILOT_KEY and job.state == J.RUNNING), None)
 
 
+def _running_job(manager: J.JobManager) -> J.JobStatus | None:
+    """Any running job: JobManager.start refuses while one runs, whatever its key."""
+    return next((job for job in manager.list_jobs() if job.state == J.RUNNING), None)
+
+
+def expected_identity(environ=None) -> tuple[str | None, str | None]:
+    """The package identity that serve exported to the UI process (commit, manifest sha256), or None."""
+    environ = os.environ if environ is None else environ
+    return (environ.get(ENV_EXPECT_COMMIT) or None, environ.get(ENV_EXPECT_MANIFEST) or None)
+
+
 def preflight(groups=1, expect_commit: str | None = None, expect_manifest_sha256: str | None = None, *,
               manager: J.JobManager | None = None, min_free_gib: float = 5.0) -> dict:
     """Every check the pilot needs, all reported; exit_code is the first by PREFLIGHT_PRECEDENCE."""
@@ -288,6 +319,11 @@ def preflight(groups=1, expect_commit: str | None = None, expect_manifest_sha256
     eng = engine()
     source = source_identity(REPO_ROOT, expect_commit, expect_manifest_sha256)
     found: dict[str, str] = {}
+    jobs = manager.list_jobs()
+    running = next((job for job in jobs if job.state == J.RUNNING), None)
+    if running is not None:
+        code = "PILOT_ALREADY_RUNNING" if running.key == PILOT_KEY else "OTHER_JOB_RUNNING"
+        found[code] = f"job {running.job_id} ({running.key}) is running"
     spec = registry.get(PILOT_KEY)
     if spec is None:
         found["PLATFORM_NOT_POSIX"] = f"{PILOT_KEY} is not in the command registry"
@@ -305,12 +341,16 @@ def preflight(groups=1, expect_commit: str | None = None, expect_manifest_sha256
         found["DEPENDENCIES_MISSING"] = "not importable: " + ", ".join(missing)
     if not source["verified"]:
         found["SOURCE_NOT_VERIFIED"] = "; ".join(source["problems"])
+    elif source["mode"] != "git":
+        found["SOURCE_NOT_GIT"] = (f"the source is a verified {source['mode']}, not a Git checkout; training "
+                                   "records the Git commit as checkpoint provenance, so the pilot cannot run here")
+    unreadable = [job for job in jobs if job.state == J.RECORD_UNREADABLE]
+    if unreadable:
+        found["JOB_RECORD_UNREADABLE"] = "; ".join(
+            f"{job.job_dir / 'job.json'} cannot be read; move the folder {job.job_dir} aside" for job in unreadable)
     free = _disk_free_gib(manager.home)
     if free < min_free_gib:
         found["DISK_INSUFFICIENT"] = f"{free} GiB free at {manager.home}; at least {min_free_gib} GiB required"
-    running = _running_pilot(manager)
-    if running is not None:
-        found["PILOT_ALREADY_RUNNING"] = f"job {running.job_id} is running"
     codes = [code for code in PREFLIGHT_PRECEDENCE if code in found]
     return {
         "ok": not codes,
@@ -320,6 +360,8 @@ def preflight(groups=1, expect_commit: str | None = None, expect_manifest_sha256
         "engine": eng,
         "source": source,
         "running_job": running.job_id if running is not None else None,
+        "running_job_key": running.key if running is not None else None,
+        "unreadable_job_dirs": [str(job.job_dir) for job in unreadable],
         "disk_free_gib": free,
         "runner_ready": not missing,
         "groups": groups,
@@ -354,9 +396,26 @@ def _outputs(job_dir: Path) -> dict:
     return {rel: (_sha256_file(job_dir / rel) if (job_dir / rel).is_file() else None) for rel in PILOT_OUTPUTS}
 
 
+def _scalar(value):
+    """A strict-JSON scalar as reported, else None (pilot.json is written with allow_nan=False)."""
+    if value is None or isinstance(value, (str, bool, int)):
+        return value
+    if isinstance(value, float) and value == value and abs(value) != float("inf"):
+        return value
+    return None
+
+
+def _observed_boundary(job_dir: Path) -> dict:
+    """The boundary fields exercise.json actually reports; every field null when it is missing or unreadable."""
+    report = _read_record(job_dir / "exercise" / "exercise.json")
+    report = report if report is not None else {}
+    return {name: _scalar(report.get(name)) for name in OBSERVED_BOUNDARY_FIELDS}
+
+
 def write_pilot_record(status: J.JobStatus, *, groups, source: dict, eng: dict, returncode=None) -> Path:
     """pilot.json beside job.json. Its state is the JobManager's, copied, never upgraded."""
     final = status.state in J.FINAL_STATES
+    boundary_ok, boundary_reason = C._exercise_success(status.job_dir)
     record = {
         "schema": PILOT_SCHEMA,
         "job_id": status.job_id,
@@ -373,8 +432,10 @@ def write_pilot_record(status: J.JobStatus, *, groups, source: dict, eng: dict, 
         "python": _python_identity(),
         "dependencies": _dependency_versions(),
         "outputs": _outputs(status.job_dir),
-        "verified": status.state == J.SUCCEEDED and C._exercise_success(status.job_dir)[0],
-        "boundary": dict(BOUNDARY),
+        "verified": status.state == J.SUCCEEDED and boundary_ok,
+        "requested_boundary": dict(BOUNDARY),
+        "observed_boundary": _observed_boundary(status.job_dir),
+        "boundary_check": {"ok": boundary_ok, "reason": boundary_reason},
         "note": PILOT_NOTE,
     }
     path = status.job_dir / "pilot.json"
@@ -419,11 +480,20 @@ class _StopFlag:
 
 
 def _emit(out, line: str) -> None:
-    out(line)
+    # After SIGHUP the relaying wsl.exe is gone and writing to its pty or pipe raises; output is best effort.
     try:
+        out(line)
         sys.stdout.flush()
     except (OSError, ValueError):
         pass
+
+
+def _refused_by_running_job(manager: J.JobManager, out, error: Exception) -> int:
+    running = _running_job(manager)
+    if running is not None:
+        _emit(out, f"JOB_ID={running.job_id}")
+    _emit(out, f"ACTIVE_JOB {error}")
+    return EXIT_OTHER_JOB if running is not None and running.key != PILOT_KEY else EXIT_PILOT_RUNNING
 
 
 def run_pilot(groups=1, expect_commit: str | None = None, expect_manifest_sha256: str | None = None, *,
@@ -432,35 +502,44 @@ def run_pilot(groups=1, expect_commit: str | None = None, expect_manifest_sha256
     manager = _default_manager() if manager is None else manager
     pre = preflight(groups, expect_commit, expect_manifest_sha256, manager=manager)
     if not pre["ok"]:
-        if pre["exit_code"] == EXIT_PILOT_RUNNING:
+        if pre["running_job"] is not None:
             _emit(out, f"JOB_ID={pre['running_job']}")
         _emit(out, f"PREFLIGHT_REFUSED exit={pre['exit_code']} codes={','.join(pre['codes'])}")
         return pre["exit_code"]
     with _StopFlag() as stop:
         try:
             job_id = manager.start(PILOT_KEY, {"groups": groups})
+        except J.RecordUnreadable as error:
+            _emit(out, f"JOB_RECORD_UNREADABLE {error}")
+            return EXIT_JOB_RECORD
         except J.ActiveJobError as error:
-            running = _running_pilot(manager)
-            if running is not None:
-                _emit(out, f"JOB_ID={running.job_id}")
-            _emit(out, f"ACTIVE_JOB {error}")
-            return EXIT_PILOT_RUNNING
+            return _refused_by_running_job(manager, out, error)
         except C.CommandRefused as error:
             _emit(out, f"REFUSED {error}")
             return EXIT_REFUSED
         _emit(out, f"JOB_ID={job_id}")
         status = manager.status(job_id)
+        # The deadline outlives job.json: if the record becomes unreadable or vanishes, this supervisor still
+        # enforces the command's timeout on the process it owns.
+        deadline = time.time() - status.elapsed_s + status.timeout_s
         write_pilot_record(status, groups=groups, source=pre["source"], eng=pre["engine"])
         cancelled = False
         unreadable = 0
         while True:
             if stop.set and not cancelled:
                 cancelled = True
-                _emit(out, f"SIGNAL {stop.signum}: cancelling job {job_id}")
-                manager.cancel(job_id)
+                try:
+                    manager.cancel(job_id)
+                except J.UnknownJobError:
+                    pass  # job.json vanished; the next status() hands the owned process to _wait_owned_process
+                _emit(out, f"SIGNAL {stop.signum}: cancelled job {job_id}")
             try:
                 status = manager.status(job_id)
             except J.UnknownJobError:
+                status = dataclasses.replace(status, state=J.RECORD_UNREADABLE,
+                                             reason=f"job.json of {job_id} disappeared; the record cannot be read")
+                returncode = _wait_owned_process(manager, job_id, stop, deadline, out)
+                _write_pilot_record_if_possible(status, groups, pre, returncode)
                 _emit(out, f"STATE {J.RECORD_UNREADABLE}: job.json of {job_id} disappeared")
                 return FINAL_EXIT[J.RECORD_UNREADABLE]
             if status.state == J.RECORD_UNREADABLE:
@@ -474,20 +553,34 @@ def run_pilot(groups=1, expect_commit: str | None = None, expect_manifest_sha256
             stop.sleep(poll_s)
         returncode = None
         if status.state == J.RECORD_UNREADABLE:
-            returncode = _wait_owned_process(manager, job_id, stop)
+            returncode = _wait_owned_process(manager, job_id, stop, deadline, out)
         write_pilot_record(status, groups=groups, source=pre["source"], eng=pre["engine"], returncode=returncode)
         _emit(out, f"STATE {status.state}: {status.reason}")
         return FINAL_EXIT[status.state]
 
 
-def _wait_owned_process(manager: J.JobManager, job_id: str, stop: _StopFlag) -> int | None:
-    """job.json became unreadable: still wait for the owned process, so it is not left unsupervised."""
+def _write_pilot_record_if_possible(status: J.JobStatus, groups, pre: dict, returncode) -> None:
+    if status.job_dir.is_dir():
+        try:
+            write_pilot_record(status, groups=groups, source=pre["source"], eng=pre["engine"], returncode=returncode)
+        except OSError:
+            pass
+
+
+def _wait_owned_process(manager: J.JobManager, job_id: str, stop: _StopFlag, deadline: float,
+                        out=print) -> int | None:
+    """job.json is unreadable or gone: still wait for the owned process, so it is not left unsupervised, and
+    stop its tree on a signal or once the command's timeout (started_epoch + timeout_s) has passed."""
     proc = manager.owned_process(job_id)
     if proc is None:
         return None
     while proc.poll() is None:
         if stop.set:
             terminate_tree(proc.pid, proc, J.TERMINATE_GRACE_S)
+            break
+        if time.time() > deadline:
+            terminate_tree(proc.pid, proc, J.TERMINATE_GRACE_S)
+            _emit(out, f"TIMEOUT job {job_id} exceeded its timeout with an unreadable record; process tree stopped")
             break
         stop.sleep(0.5)
     return proc.poll()
@@ -561,15 +654,29 @@ def cancel_pilot(job_id: str | None = None, *, manager: J.JobManager | None = No
     return EXIT_NONE
 
 
-def spawn_supervisor(groups, *, python: str = sys.executable) -> subprocess.Popen:
-    """Start ``geo_pilot.py run`` detached (own session), logging to the workbench folder. For the UI button."""
+def _identity_argv(expect_commit: str | None, expect_manifest_sha256: str | None) -> list[str]:
+    argv = []
+    for flag, value in (("--expect-commit", expect_commit), ("--expect-manifest-sha256", expect_manifest_sha256)):
+        if value is None:
+            continue
+        if not isinstance(value, str) or not HEX_IDENTITY.fullmatch(value):
+            raise C.CommandRefused(f"{flag} must be a hexadecimal digest, got {value!r}")
+        argv += [flag, value]
+    return argv
+
+
+def spawn_supervisor(groups, *, python: str = sys.executable, expect_commit: str | None = None,
+                     expect_manifest_sha256: str | None = None) -> subprocess.Popen:
+    """Start ``geo_pilot.py run`` detached (own session), logging to the workbench folder. For the UI button.
+    The package identity the UI was served with is forwarded, so the supervisor's preflight checks it too."""
     eng = engine()
     if not eng["pilot_capable"]:
         raise C.CommandRefused(f"the pilot cannot run on {eng['label']}; WSL2 or Linux is needed")
     C.validate(PILOT_KEY, {"groups": groups})
+    identity = _identity_argv(expect_commit, expect_manifest_sha256)
     folder = run_home() / "workbench"
     folder.mkdir(parents=True, exist_ok=True)
-    argv = [python, str(REPO_ROOT / "dashboard" / "geo_pilot.py"), "run", "--groups", str(groups)]
+    argv = [python, str(REPO_ROOT / "dashboard" / "geo_pilot.py"), "run", "--groups", str(groups), *identity]
     with (folder / f"supervisor-{_stamp()}.log").open("ab") as log:
         return subprocess.Popen(argv, cwd=str(REPO_ROOT), env={**os.environ, "PYTHONUTF8": "1"},
                                 stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT, shell=False,
@@ -605,7 +712,8 @@ def ui_status() -> dict:
     record = _read_record(path) if path.is_file() else None
     if record is None:
         return {"running": False, "state": "none" if not path.is_file() else "unreadable", "pid": None,
-                "port": None, "engine": None, "started_at": None, "ui_record": str(path)}
+                "port": None, "engine": None, "started_at": None, "expect_commit": None,
+                "expect_manifest_sha256": None, "ui_record": str(path)}
     pid = record.get("pid")
     if not pid_alive(pid):
         state = "stale"
@@ -614,14 +722,36 @@ def ui_status() -> dict:
     else:
         state = record.get("state", "serving")
     return {"running": state == "serving", "state": state, "pid": pid, "port": record.get("port"),
-            "engine": record.get("engine"), "started_at": record.get("started_at"), "ui_record": str(path)}
+            "engine": record.get("engine"), "started_at": record.get("started_at"),
+            "expect_commit": record.get("expect_commit"),
+            "expect_manifest_sha256": record.get("expect_manifest_sha256"), "ui_record": str(path)}
+
+
+def _ui_environment(expect_commit: str | None, expect_manifest_sha256: str | None) -> dict:
+    """The Streamlit child's environment: the package identity it was served for, and nothing inherited."""
+    env = {**os.environ, "PYTHONUTF8": "1"}
+    for name, value in ((ENV_EXPECT_COMMIT, expect_commit), (ENV_EXPECT_MANIFEST, expect_manifest_sha256)):
+        env.pop(name, None)
+        if value:
+            env[name] = value
+    return env
 
 
 def serve(port, *, python: str = sys.executable, manager: J.JobManager | None = None,
-          keepalive_poll_s: float = 5.0, out=print) -> int:
+          keepalive_poll_s: float = 5.0, out=print, expect_commit: str | None = None,
+          expect_manifest_sha256: str | None = None) -> int:
     """Run the Streamlit UI on 127.0.0.1:port until a signal; then keep the process (and so the WSL instance)
-    alive while a pilot still runs. Exit 0 after a signal, 1 when Streamlit exited by itself."""
+    alive while a pilot still runs. Exit 0 after a signal, 1 when Streamlit exited by itself.
+
+    The expected package identity is exported to the UI as GEO_EXPECT_COMMIT / GEO_EXPECT_MANIFEST_SHA256 and
+    recorded in ui.json; the UI's preflight and supervisor check it before any pilot starts.
+    """
     port = int(port)
+    try:
+        _identity_argv(expect_commit, expect_manifest_sha256)
+    except C.CommandRefused as error:
+        _emit(out, f"REFUSED {error}")
+        return EXIT_REFUSED
     current = ui_status()
     if current["state"] == "serving":
         _emit(out, f"ALREADY_RUNNING port={current['port']}")
@@ -633,12 +763,14 @@ def serve(port, *, python: str = sys.executable, manager: J.JobManager | None = 
     folder.mkdir(parents=True, exist_ok=True)
     path = _ui_record_path()
     record = {"pid": os.getpid(), "start_token": process_start_token(os.getpid()), "port": port,
-              "engine": engine()["id"], "started_at": _now_iso(), "state": "serving", "child_pid": None}
+              "engine": engine()["id"], "started_at": _now_iso(), "state": "serving", "child_pid": None,
+              "expect_commit": expect_commit, "expect_manifest_sha256": expect_manifest_sha256}
     with _StopFlag() as stop:
         with (folder / "ui.log").open("ab") as log:
             child = subprocess.Popen(_streamlit_argv(port, python), cwd=str(REPO_ROOT),
-                                     env={**os.environ, "PYTHONUTF8": "1"}, stdin=subprocess.DEVNULL, stdout=log,
-                                     stderr=subprocess.STDOUT, shell=False, **popen_kwargs())
+                                     env=_ui_environment(expect_commit, expect_manifest_sha256),
+                                     stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT, shell=False,
+                                     **popen_kwargs())
         record["child_pid"] = child.pid
         _write_json_atomic(path, record)
         _emit(out, f"SERVING port={port} pid={os.getpid()}")
@@ -665,7 +797,8 @@ def serve(port, *, python: str = sys.executable, manager: J.JobManager | None = 
 
 
 def ui_stop(*, wait_s: float = 30.0, out=print) -> int:
-    """Signal the recorded serve process. 0 stopped, 3 none running, 41 its pid belongs to another process."""
+    """Signal the recorded serve process. 0 stopped, 3 none running, 41 its pid belongs to another process,
+    42 it still serves once the wait is over."""
     status = ui_status()
     path = _ui_record_path()
     if status["state"] in ("none", "unreadable"):
@@ -683,12 +816,19 @@ def ui_stop(*, wait_s: float = 30.0, out=print) -> int:
         return EXIT_OK
     pid = status["pid"]
     if IS_POSIX:
-        os.kill(pid, signal.SIGTERM)
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except ProcessLookupError:
+            _emit(out, "NO_UI_RUNNING the serve process ended before it was signalled")
+            return EXIT_NONE
     else:
         terminate_tree(pid, None, J.TERMINATE_GRACE_S)
     deadline = time.monotonic() + wait_s
     while time.monotonic() < deadline and ui_status()["state"] == "serving":
         time.sleep(0.2)
+    if ui_status()["state"] == "serving":
+        _emit(out, f"STOP_TIMEOUT pid {pid} still serves after {wait_s:g} s")
+        return EXIT_STOP_TIMEOUT
     _emit(out, "STOPPED")
     return EXIT_OK
 
@@ -717,12 +857,12 @@ def workbench_states(*, engine: dict, source: dict, latest, gate_rows: list, gpu
         states.add("PILOT_COMPLETE" if verified else "PILOT_FAILED")
     if not gate_rows or any(not _is_authorization(row.get("value")) for row in gate_rows):
         states.add("COMPUTE_GATES_CLOSED")
-    if not engine.get("pilot_capable") or not source.get("verified"):
+    if not engine.get("pilot_capable") or not source.get("verified") or source.get("mode") == "package-snapshot":
         states.add("PILOT_UNAVAILABLE")
     return [name for name in WORKBENCH_STATES if name in states]
 
 
 __all__ = ["PILOT_KEY", "PILOT_SCHEMA", "DEVELOPMENT_ROLES", "GOVERNED_PATHS", "PREFLIGHT_CODES", "FINAL_EXIT",
-           "WORKBENCH_STATES", "engine", "source_identity", "preflight", "run_pilot", "latest_pilot",
-           "pilot_status_dict", "cancel_pilot", "spawn_supervisor", "serve", "ui_stop", "ui_status",
+           "WORKBENCH_STATES", "engine", "source_identity", "expected_identity", "preflight", "run_pilot",
+           "latest_pilot", "pilot_status_dict", "cancel_pilot", "spawn_supervisor", "serve", "ui_stop", "ui_status",
            "workbench_states", "write_pilot_record", "dumps"]

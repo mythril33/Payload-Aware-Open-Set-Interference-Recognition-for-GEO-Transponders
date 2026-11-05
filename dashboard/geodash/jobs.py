@@ -7,7 +7,8 @@ repository. Progress is inferred from the files a command writes, and the report
 terminates the whole process tree. All platform-specific mechanics live in geodash.portable.
 
 A recorded pid counts as the job only while its process start token still matches, so a recycled pid is
-never signalled. job.json that cannot be read is reported as record_unreadable and left untouched.
+never signalled. job.json that cannot be read is reported as record_unreadable and left untouched, and no
+new job starts until that folder is moved aside: whether its process still runs cannot be known.
 """
 from __future__ import annotations
 
@@ -44,6 +45,16 @@ LOG_TAIL_LINES = 120
 
 class ActiveJobError(RuntimeError):
     """Another job is still running. Only one bounded job runs at a time."""
+
+
+class RecordUnreadable(ActiveJobError):
+    """A job.json cannot be read, so whether its job still runs is unknown. Nothing starts until the
+    researcher moves that job folder aside; the record itself is never rewritten."""
+
+    def __init__(self, job_dir: Path, why: str = ""):
+        self.job_dir = Path(job_dir)
+        super().__init__(f"{self.job_dir / 'job.json'} cannot be read ({why or 'record unreadable'}); no new job "
+                         f"starts until the folder {self.job_dir} is moved out of {self.job_dir.parent}")
 
 
 class UnknownJobError(KeyError):
@@ -111,14 +122,14 @@ def _parse_record(path: Path) -> tuple[dict | None, str]:
 
 
 def process_alive(pid: int | None, recorded_token: str | None) -> bool:
-    """A recorded process is alive only if its pid is alive and, when both start tokens are known, the
-    process holding that pid now is the one that was recorded. A recycled pid is not the job."""
+    """A recorded process is alive only if its pid is alive and the process holding that pid now is the one
+    that was recorded. When a token was recorded but the current one cannot be read (access denied), the pid
+    is not this process and is never signalled. Legacy records without a token keep the pid-only check."""
     if not pid_alive(pid):
         return False
     if recorded_token is None:
         return True
-    current = process_start_token(pid)
-    return current is None or current == recorded_token
+    return process_start_token(pid) == recorded_token
 
 
 def pid_recycled(pid: int | None, recorded_token: str | None) -> bool:
@@ -206,9 +217,13 @@ class JobManager:
 
     def start(self, key: str, values: Mapping | None = None) -> str:
         with self._exclusive():
-            for job in self.list_jobs():
+            jobs = self.list_jobs()
+            for job in jobs:
                 if job.state == RUNNING:
                     raise ActiveJobError(f"job {job.job_id} is still running; wait for it or cancel it")
+            for job in jobs:
+                if job.state == RECORD_UNREADABLE:
+                    raise RecordUnreadable(job.job_dir, job.reason)
             spec, resolved = C.validate(key, values, self.registry)
             job_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S") + "-" + secrets.token_hex(3)
             job_dir = self.jobs_dir / job_id
@@ -240,7 +255,9 @@ class JobManager:
 
         The first final state written wins: a supervisor and a cancelling process may both settle the same
         job. A cancellation requested before the process ended is recorded as such, never as a failure or
-        a success. An unreadable record is left untouched.
+        a success. The one later change allowed: the manager that owns the reaped process fills in the exit
+        status a non-owning canceller could not know, keeping the CANCELLED state. An unreadable record is
+        left untouched.
         """
         path = self.jobs_dir / job_id / "job.json"
         with self._exclusive():
@@ -249,6 +266,11 @@ class JobManager:
                 return {**record, "state": RECORD_UNREADABLE, "returncode": None,
                         "reason": f"job.json could not be read: {why}; the record is left unchanged"}
             if current["state"] in FINAL_STATES:
+                proc = self._procs.get(job_id)
+                if current["state"] == CANCELLED == state and current.get("returncode") is None \
+                        and returncode is not None and proc is not None and proc.returncode == returncode:
+                    current["returncode"] = returncode
+                    _write_json(path, current)
                 return current
             if current.get("cancel_requested_at") and state != CANCELLED:
                 state, reason = CANCELLED, CANCEL_REASON
@@ -312,6 +334,11 @@ class JobManager:
                     reason = why if (state == SUCCEEDED and returncode == 0) else f"exit status {returncode}; {why}"
                 record = self._finish(job_id, record, state, returncode, reason)
                 state, returncode, reason = record["state"], record.get("returncode"), record.get("reason", "")
+        elif state == CANCELLED and returncode is None:
+            proc = self._procs.get(job_id)
+            if proc is not None and proc.poll() is not None:
+                record = self._finish(job_id, record, CANCELLED, proc.returncode, reason)
+                returncode = record.get("returncode")
         stage, detail = infer_stage(record["key"], job_dir)
         return JobStatus(
             job_id=job_id, key=record["key"], title=record["title"], scope=record["scope"], state=state,
@@ -348,7 +375,8 @@ class JobManager:
                 proc = self._procs.get(job_id)
                 if proc is not None:
                     proc.poll()
-                self._finish(job_id, record, CANCELLED, None, CANCEL_REASON)
+                self._finish(job_id, record, CANCELLED, proc.returncode if proc is not None else None,
+                             CANCEL_REASON)
         return self.status(job_id)
 
     def list_jobs(self) -> list[JobStatus]:
@@ -364,6 +392,6 @@ def read_host_report(job_dir: Path) -> dict | None:
     return _read_json(path) if path.is_file() else None
 
 
-__all__ = ["JobManager", "JobStatus", "ActiveJobError", "UnknownJobError", "infer_stage", "tail", "process_alive",
-           "pid_recycled", "RUNNING", "SUCCEEDED", "FAILED", "CANCELLED", "TIMED_OUT", "FINISHED_UNRECORDED",
+__all__ = ["JobManager", "JobStatus", "ActiveJobError", "RecordUnreadable", "UnknownJobError", "infer_stage", "tail",
+           "process_alive", "pid_recycled", "RUNNING", "SUCCEEDED", "FAILED", "CANCELLED", "TIMED_OUT", "FINISHED_UNRECORDED",
            "RECORD_UNREADABLE", "FINAL_STATES"]

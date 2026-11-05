@@ -236,6 +236,46 @@ def test_process_start_token_no_longer_matches_once_the_child_is_gone():
     assert not P.pid_alive(proc.pid) or P.process_start_token(proc.pid) != token
 
 
+def _fake_kernel32(exit_code, opened=True, times_ok=True):
+    """kernel32 stand-in for the Windows branch of process_start_token; runs on every platform."""
+    import ctypes
+    import ctypes.wintypes  # noqa: F401  (the Windows branch uses ctypes.wintypes)
+    from types import SimpleNamespace
+
+    def open_process(access, inherit, pid):
+        return 7 if opened else 0
+
+    def get_exit_code(handle, ref):
+        ref._obj.value = exit_code
+        return 1
+
+    def get_times(handle, creation, exited, kernel, user):
+        creation._obj.dwHighDateTime, creation._obj.dwLowDateTime = 1, 2
+        return 1 if times_ok else 0
+
+    closed = []
+    fake = SimpleNamespace(OpenProcess=open_process, GetExitCodeProcess=get_exit_code, GetProcessTimes=get_times,
+                           CloseHandle=lambda handle: closed.append(handle))
+    return fake, closed, ctypes
+
+
+@pytest.mark.parametrize("exit_code,opened,times_ok,expected", [
+    (259, True, True, str((1 << 32) | 2)),   # STILL_ACTIVE: the creation time identifies the process
+    (0, True, True, None),                    # exited, though an open handle keeps its process object
+    (1, True, True, None),
+    (259, False, True, None),                 # OpenProcess failed (gone or access denied)
+    (259, True, False, None),
+])
+def test_the_windows_start_token_exists_only_while_the_process_is_still_active(monkeypatch, exit_code, opened,
+                                                                               times_ok, expected):
+    fake, closed, ctypes = _fake_kernel32(exit_code, opened, times_ok)
+    monkeypatch.setattr(P, "IS_POSIX", False)
+    monkeypatch.setattr(P, "ctypes", ctypes, raising=False)
+    monkeypatch.setattr(P, "_kernel32", lambda: fake)
+    assert P.process_start_token(4242) == expected
+    assert closed == ([7] if opened else [])
+
+
 @posix_only
 def test_process_start_token_reads_field_22_of_proc_stat():
     stat = Path(f"/proc/{os.getpid()}/stat")

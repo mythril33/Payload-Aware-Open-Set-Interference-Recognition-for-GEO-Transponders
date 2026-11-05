@@ -26,6 +26,8 @@ from geodash import jobs as J  # noqa: E402
 from geodash import pilot as P  # noqa: E402
 from geodash import repo_status  # noqa: E402
 
+ORIGINAL_SOURCE_IDENTITY = P.source_identity
+
 posix_only = pytest.mark.skipif(os.name != "posix", reason="POSIX signals and sessions")
 needs_git = pytest.mark.skipif(shutil.which("git") is None, reason="git is not installed")
 
@@ -42,23 +44,29 @@ if mode == "corrupt-record":
     time.sleep(0.3)
     with open(os.path.join(os.path.dirname(out), "job.json"), "w") as handle:
         handle.write("{corrupt")
+if mode == "delete-record":
+    time.sleep(0.3)
+    os.remove(os.path.join(os.path.dirname(out), "job.json"))
 time.sleep(seconds)
 if mode == "fail":
     sys.exit(5)
+report = %s
+if mode == "breach":
+    report.update({"heldout_reads": 3, "gpu_exercised": float("nan")})
 with open(os.path.join(out, "freeze.json"), "w") as handle:
     handle.write("{}")
 with open(os.path.join(out, "exercise.json"), "w") as handle:
-    handle.write("{truncated" if mode == "corrupt" else json.dumps(%s))
+    handle.write("{truncated" if mode == "corrupt" else json.dumps(report))
 print("finished", flush=True)
 """ % repr(REPORT)
 
 
-def _pilot_spec(seconds=0.3, mode="ok"):
+def _pilot_spec(seconds=0.3, mode="ok", timeout_s=60):
     def builder(values, job_dir, python):
         return [sys.executable, "-c", PROGRAM, str(job_dir / "exercise"), str(seconds), mode]
     return C.CommandSpec(key=P.PILOT_KEY, title="injected pilot", scope=C.SCOPE_DEVELOPMENT,
                          description="injected test program", params=(C._groups_choice(),), builder=builder,
-                         timeout_s=60, success=C._exercise_success, outputs=P.PILOT_OUTPUTS)
+                         timeout_s=timeout_s, success=C._exercise_success, outputs=P.PILOT_OUTPUTS)
 
 
 def _quick_spec(key, seconds):
@@ -131,6 +139,9 @@ def _dead_pid():
     ("5.15.167.4-microsoft-standard-WSL2\n", "posix", {}, "wsl2", True),
     ("4.4.0-19041-Microsoft", "posix", {}, "wsl1", False),
     ("5.10.16.3-microsoft-standard", "posix", {"WSL_INTEROP": "/run/WSL/1_interop"}, "wsl2", True),
+    ("4.4.0-19041-Microsoft", "posix", {"WSL_INTEROP": "/run/WSL/1_interop"}, "wsl1", False),
+    ("5.4.72-microsoft-custom", "posix", {"WSL_INTEROP": "/run/WSL/1_interop"}, "wsl1", False),
+    ("6.6.36.6-custom-WSL2+", "posix", {}, "wsl2", True),
     ("6.8.0-45-generic", "posix", {}, "linux", True),
     ("", "nt", {}, "native-windows", False),
     ("", "java", {}, "other", False),
@@ -149,9 +160,19 @@ def test_engine_labels_are_proper_turkish_and_never_claim_more_than_inspection_o
 
 def test_engine_of_this_process_matches_the_platform():
     eng = P.engine()
-    assert eng["id"] == ("native-windows" if os.name == "nt" else eng["id"])
     if os.name == "nt":
-        assert eng["pilot_capable"] is False
+        assert eng["id"] == "native-windows" and eng["pilot_capable"] is False
+        return
+    assert os.name == "posix"
+    try:
+        release = Path("/proc/sys/kernel/osrelease").read_text(encoding="utf-8").lower()
+    except OSError:
+        release = ""
+    if "microsoft" in release:
+        wsl2 = "microsoft-standard" in release or "wsl2" in release
+        assert eng["id"] == ("wsl2" if wsl2 else "wsl1") and eng["pilot_capable"] is wsl2
+    else:
+        assert eng["id"] == "linux" and eng["pilot_capable"] is True
 
 
 # ---- source identity: git checkout -----------------------------------------------------------------------
@@ -320,54 +341,98 @@ def test_preflight_passes_when_every_check_passes(tmp_path, ready):
     _strict_loads(P.dumps(report))
 
 
+def _corrupt_job(manager, name="20260101T000000-bad000"):
+    folder = manager.jobs_dir / name
+    folder.mkdir()
+    (folder / "job.json").write_text("{corrupt", encoding="utf-8")
+    return folder
+
+
+def test_the_preflight_precedence_is_the_stable_windows_order():
+    assert [P.PREFLIGHT_CODES[code] for code in P.PREFLIGHT_PRECEDENCE] == [10, 18, 21, 24, 22, 20, 25, 19, 23]
+
+
 def test_preflight_reports_every_code_and_exits_with_the_first_by_precedence(tmp_path, monkeypatch, ready):
     manager = _manager(tmp_path, _pilot_spec(30))
     running = manager.start(P.PILOT_KEY, {"groups": 1})
+    bad = _corrupt_job(manager)
+    snapshot = {**_verified_source(), "mode": "package-snapshot", "manifest_sha256": "0" * 64}
+    monkeypatch.setattr(P, "engine", lambda **k: {**_capable_engine(), "id": "native-windows",
+                                                  "pilot_capable": False})
+    monkeypatch.setattr(P, "find_spec", lambda name: None)
+    monkeypatch.setattr(P, "source_identity", lambda *a, **k: {**_verified_source(), "verified": False,
+                                                                "problems": ["governed files modified: x"]})
+    monkeypatch.setattr(P, "_disk_free_gib", lambda path: 0.5)
+    state = {"groups": 3}
+    steps = [
+        (10, None),
+        (21, lambda: manager.cancel(running)),
+        (24, lambda: monkeypatch.setattr(P, "engine", _capable_engine)),
+        (22, lambda: state.update(groups=1)),
+        (20, lambda: monkeypatch.setattr(P, "find_spec", lambda name: object())),
+        (25, lambda: monkeypatch.setattr(P, "source_identity", lambda *a, **k: dict(snapshot))),
+        (19, lambda: monkeypatch.setattr(P, "source_identity", _verified_source)),
+        (23, lambda: bad.rename(tmp_path / "moved-aside")),
+        (0, lambda: monkeypatch.setattr(P, "_disk_free_gib", lambda path: 100.0)),
+    ]
     try:
-        monkeypatch.setattr(P, "engine", lambda **k: {**_capable_engine(), "id": "native-windows",
-                                                      "pilot_capable": False})
-        monkeypatch.setattr(P, "find_spec", lambda name: None)
-        monkeypatch.setattr(P, "source_identity", lambda *a, **k: {**_verified_source(), "verified": False,
-                                                                    "problems": ["governed files modified: x"]})
-        monkeypatch.setattr(P, "_disk_free_gib", lambda path: 0.5)
-        steps = [
-            (21, None),
-            (24, lambda: monkeypatch.setattr(P, "engine", _capable_engine)),
-            (22, None),
-            (20, lambda: monkeypatch.setattr(P, "find_spec", lambda name: object())),
-            (23, lambda: monkeypatch.setattr(P, "source_identity", _verified_source)),
-            (10, lambda: monkeypatch.setattr(P, "_disk_free_gib", lambda path: 100.0)),
-        ]
-        groups = 3
         for expected, fix in steps:
             if fix is not None:
                 fix()
-            if expected == 22:
-                groups = 1
-            report = P.preflight(groups, manager=manager)
-            assert report["exit_code"] == expected and report["ok"] is False, report["codes"]
+            report = P.preflight(state["groups"], manager=manager)
+            assert report["exit_code"] == expected and report["ok"] is (expected == 0), report["codes"]
             assert report["codes"] == [c for c in P.PREFLIGHT_PRECEDENCE if c in report["codes"]]
             assert len(report["reasons"]) == len(report["codes"])
-        assert report["codes"] == ["PILOT_ALREADY_RUNNING"] and report["running_job"] == running
+            if expected == 10:
+                assert report["codes"] == ["PILOT_ALREADY_RUNNING", "PLATFORM_NOT_POSIX", "GROUPS_REFUSED",
+                                           "DEPENDENCIES_MISSING", "SOURCE_NOT_VERIFIED", "JOB_RECORD_UNREADABLE",
+                                           "DISK_INSUFFICIENT"]
+                assert report["running_job"] == running and report["running_job_key"] == P.PILOT_KEY
+                assert report["unreadable_job_dirs"] == [str(bad)]
+            else:
+                assert report["running_job"] is None and report["running_job_key"] is None
     finally:
         manager.cancel(running)
-    assert P.preflight(1, manager=manager)["exit_code"] == 0
 
 
-def test_preflight_with_every_failure_lists_all_six_codes_in_order(tmp_path, monkeypatch):
-    manager = _manager(tmp_path, _pilot_spec(30))
-    monkeypatch.setattr(P, "find_spec", lambda name: object())
-    running = manager.start(P.PILOT_KEY, {"groups": 1})
+def test_another_running_job_is_reported_as_18_with_its_id_and_key(tmp_path, ready):
+    manager = _manager(tmp_path, _pilot_spec(), _quick_spec("other", 30))
+    other = manager.start("other")
     try:
-        monkeypatch.setattr(P, "engine", lambda **k: {**_capable_engine(), "pilot_capable": False})
-        monkeypatch.setattr(P, "find_spec", lambda name: None if name == "torch" else object())
-        monkeypatch.setattr(P, "source_identity", lambda *a, **k: {**_verified_source(), "verified": False})
-        monkeypatch.setattr(P, "_disk_free_gib", lambda path: 0.0)
-        report = P.preflight(3, manager=manager)
-        assert report["codes"] == list(P.PREFLIGHT_PRECEDENCE) and report["exit_code"] == 21
-        assert report["runner_ready"] is False and "torch" in report["reasons"][2]
+        report = P.preflight(1, manager=manager)
+        assert report["exit_code"] == 18 and report["codes"] == ["OTHER_JOB_RUNNING"]
+        assert report["running_job"] == other and report["running_job_key"] == "other"
+        assert other in report["reasons"][0]
     finally:
-        manager.cancel(running)
+        manager.cancel(other)
+
+
+def test_a_verified_snapshot_source_is_refused_as_not_git(tmp_path, monkeypatch, ready):
+    monkeypatch.setattr(P, "source_identity", lambda *a, **k: {**_verified_source(), "mode": "package-snapshot"})
+    report = P.preflight(1, manager=_manager(tmp_path, _pilot_spec()))
+    assert report["exit_code"] == 25 and report["codes"] == ["SOURCE_NOT_GIT"] and report["source"]["verified"]
+    assert "Git" in report["reasons"][0]
+
+
+def test_a_real_verified_snapshot_tree_is_refused_as_not_git(tmp_path, monkeypatch, snapshot, ready):
+    root, digest = snapshot
+    monkeypatch.setattr(P, "REPO_ROOT", root)
+    monkeypatch.setattr(P, "source_identity", ORIGINAL_SOURCE_IDENTITY)
+    report = P.preflight(1, COMMIT, digest, manager=_manager(tmp_path, _pilot_spec()))
+    assert report["source"]["mode"] == "package-snapshot" and report["source"]["verified"] is True
+    assert report["exit_code"] == 25 and report["codes"] == ["SOURCE_NOT_GIT"]
+
+
+def test_an_unreadable_job_record_blocks_preflight_with_19_and_names_the_folder(tmp_path, ready):
+    manager = _manager(tmp_path, _pilot_spec())
+    bad = _corrupt_job(manager)
+    report = P.preflight(1, manager=manager)
+    assert report["exit_code"] == 19 and report["codes"] == ["JOB_RECORD_UNREADABLE"]
+    assert str(bad) in report["reasons"][0] and report["unreadable_job_dirs"] == [str(bad)]
+    lines = []
+    assert P.run_pilot(1, manager=manager, out=lines.append) == 19
+    assert [p.name for p in manager.jobs_dir.iterdir()] == [bad.name]
+    assert (bad / "job.json").read_text(encoding="utf-8") == "{corrupt"
 
 
 def test_the_real_registry_on_a_non_posix_platform_is_refused_as_platform_not_groups(tmp_path, monkeypatch, ready):
@@ -421,8 +486,13 @@ def test_a_successful_pilot_exits_0_and_writes_a_complete_pilot_record(tmp_path,
     job_dir = manager.jobs_dir / job_id
     assert record["outputs"] == {"exercise/exercise.json": _sha256(job_dir / "exercise" / "exercise.json"),
                                  "exercise/freeze.json": _sha256(job_dir / "exercise" / "freeze.json")}
-    assert record["boundary"] == {"scope": "BOUNDED_DEVELOPMENT", "cpu_only": True, "heldout_reads": 0,
-                                  "production_authorized": False, "benchmark_complete": False}
+    assert "boundary" not in record
+    assert record["requested_boundary"] == {"scope": "BOUNDED_DEVELOPMENT", "cpu_only": True, "heldout_reads": 0,
+                                            "production_authorized": False, "benchmark_complete": False}
+    assert record["observed_boundary"] == {"schema": C.EXERCISE_SCHEMA, "scope": "BOUNDED_DEVELOPMENT",
+                                           "gpu_exercised": False, "heldout_reads": 0,
+                                           "production_authorized": False, "benchmark_complete": False}
+    assert record["boundary_check"] == {"ok": True, "reason": "exercise.json matches the bounded-development boundary"}
     assert "not a recognition-performance result" in record["note"]
     assert "not the 21,350-observation benchmark" in record["note"]
     assert record["verified"] is True
@@ -451,6 +521,30 @@ def test_a_failing_pilot_exits_30_and_records_failed(tmp_path, ready):
     assert record["outputs"]["exercise/exercise.json"] is None
 
 
+def test_the_pilot_record_reports_the_observed_boundary_not_the_requested_one(tmp_path, ready):
+    manager = _manager(tmp_path, _pilot_spec(0.1, mode="breach"))
+    lines = []
+    assert P.run_pilot(1, manager=manager, poll_s=0.1, out=lines.append) == 30
+    record = _pilot_record(manager, _job_id(lines))
+    assert record["state"] == J.FAILED and record["verified"] is False
+    assert record["requested_boundary"]["heldout_reads"] == 0
+    assert record["observed_boundary"]["heldout_reads"] == 3
+    assert record["observed_boundary"]["gpu_exercised"] is None  # NaN in the report is not strict JSON
+    assert record["boundary_check"]["ok"] is False
+    reason = record["boundary_check"]["reason"]
+    assert "gpu_exercised" in reason and "heldout_reads" in reason
+
+
+def test_the_observed_boundary_is_null_when_the_report_is_missing_or_unreadable(tmp_path, ready):
+    for mode, why in (("fail", "was not written"), ("corrupt", "not readable JSON")):
+        manager = _manager(tmp_path / mode, _pilot_spec(0.1, mode=mode))
+        lines = []
+        assert P.run_pilot(1, manager=manager, poll_s=0.1, out=lines.append) == 30
+        record = _pilot_record(manager, _job_id(lines))
+        assert record["observed_boundary"] == {name: None for name in P.OBSERVED_BOUNDARY_FIELDS}, mode
+        assert record["boundary_check"]["ok"] is False and why in record["boundary_check"]["reason"]
+
+
 def test_a_corrupt_exercise_report_is_not_success_even_with_exit_status_0(tmp_path, ready):
     manager = _manager(tmp_path, _pilot_spec(0.1, mode="corrupt"))
     lines = []
@@ -473,6 +567,40 @@ def test_a_job_record_that_becomes_unreadable_exits_34_and_is_not_rewritten(tmp_
     assert manager.owned_process(job_id).poll() is not None, "the supervisor waited for its process"
 
 
+def test_an_unreadable_record_does_not_lift_the_timeout_of_the_owned_process(tmp_path, ready):
+    manager = _manager(tmp_path, _pilot_spec(120, mode="corrupt-record", timeout_s=3))
+    lines = []
+    began = time.monotonic()
+    assert P.run_pilot(1, manager=manager, poll_s=0.1, out=lines.append) == 34
+    assert time.monotonic() - began < 60
+    job_id = _job_id(lines)
+    assert manager.owned_process(job_id).poll() is not None, "the tree was stopped at the deadline"
+    assert any(line.startswith("TIMEOUT") for line in lines)
+    assert (manager.jobs_dir / job_id / "job.json").read_text() == "{corrupt"
+    assert _pilot_record(manager, job_id)["returncode"] is not None
+
+
+def test_a_job_record_that_disappears_still_waits_for_the_owned_process_until_its_deadline(tmp_path, ready):
+    manager = _manager(tmp_path, _pilot_spec(120, mode="delete-record", timeout_s=3))
+    lines = []
+    began = time.monotonic()
+    assert P.run_pilot(1, manager=manager, poll_s=0.1, out=lines.append) == 34
+    assert time.monotonic() - began < 60
+    job_id = _job_id(lines)
+    assert manager.owned_process(job_id).poll() is not None, "the supervisor did not abandon its process"
+    assert any("disappeared" in line for line in lines)
+    record = _pilot_record(manager, job_id)
+    assert record["state"] == J.RECORD_UNREADABLE and record["verified"] is False
+
+
+def test_a_job_record_that_disappears_is_waited_for_until_the_process_exits(tmp_path, ready):
+    manager = _manager(tmp_path, _pilot_spec(1.0, mode="delete-record"))
+    lines = []
+    assert P.run_pilot(1, manager=manager, poll_s=0.1, out=lines.append) == 34
+    proc = manager.owned_process(_job_id(lines))
+    assert proc.poll() == 0 and not any(line.startswith("TIMEOUT") for line in lines)
+
+
 def test_a_second_run_while_a_pilot_runs_exits_10_and_names_the_existing_job(tmp_path, ready):
     """W-04: no second job; the existing job id is printed."""
     manager = _manager(tmp_path, _pilot_spec(30))
@@ -486,16 +614,77 @@ def test_a_second_run_while_a_pilot_runs_exits_10_and_names_the_existing_job(tmp
         manager.cancel(first)
 
 
-def test_a_run_while_another_command_runs_exits_10_without_a_second_job(tmp_path, ready):
+def test_a_run_while_another_command_runs_exits_18_names_that_job_and_starts_nothing(tmp_path, ready):
     manager = _manager(tmp_path, _pilot_spec(), _quick_spec("other", 30))
     other = manager.start("other")
     try:
         lines = []
-        assert P.run_pilot(1, manager=manager, poll_s=0.1, out=lines.append) == 10
-        assert any(line.startswith("ACTIVE_JOB") for line in lines)
+        assert P.run_pilot(1, manager=manager, poll_s=0.1, out=lines.append) == 18
+        assert f"JOB_ID={other}" in lines and any("OTHER_JOB_RUNNING" in line for line in lines)
         assert [p.name for p in manager.jobs_dir.iterdir()] == [other]
     finally:
         manager.cancel(other)
+
+
+def _passing_preflight(*args, **kwargs):
+    return {"ok": True, "exit_code": 0, "codes": [], "reasons": [], "running_job": None, "running_job_key": None,
+            "source": _verified_source(), "engine": _capable_engine()}
+
+
+@pytest.mark.parametrize("key,expected", [("other", 18), (P.PILOT_KEY, 10)])
+def test_a_job_started_between_preflight_and_start_is_named_with_its_own_code(tmp_path, monkeypatch, ready,
+                                                                               key, expected):
+    spec = _pilot_spec(30) if key == P.PILOT_KEY else _quick_spec(key, 30)
+    manager = _manager(tmp_path, spec) if key == P.PILOT_KEY else _manager(tmp_path, _pilot_spec(), spec)
+    first = manager.start(key, {"groups": 1} if key == P.PILOT_KEY else None)
+    monkeypatch.setattr(P, "preflight", _passing_preflight)
+    try:
+        lines = []
+        assert P.run_pilot(1, manager=manager, poll_s=0.1, out=lines.append) == expected
+        assert f"JOB_ID={first}" in lines and any(line.startswith("ACTIVE_JOB") for line in lines)
+        assert [p.name for p in manager.jobs_dir.iterdir()] == [first]
+    finally:
+        manager.cancel(first)
+
+
+def test_an_unreadable_record_found_by_start_exits_19(tmp_path, monkeypatch, ready):
+    manager = _manager(tmp_path, _pilot_spec())
+    bad = _corrupt_job(manager)
+    monkeypatch.setattr(P, "preflight", _passing_preflight)
+    lines = []
+    assert P.run_pilot(1, manager=manager, out=lines.append) == 19
+    assert any(line.startswith("JOB_RECORD_UNREADABLE") and str(bad) in line for line in lines)
+    assert [p.name for p in manager.jobs_dir.iterdir()] == [bad.name]
+
+
+@posix_only
+def test_sighup_with_a_dead_output_still_cancels_the_owned_job(tmp_path, ready):
+    """The hidden wsl.exe relay dies: SIGHUP arrives and every later write raises. The job must be cancelled."""
+    manager = _manager(tmp_path, _pilot_spec(30))
+    lines, hung_up = [], []
+
+    def out(line):
+        if hung_up:
+            raise OSError(5, "Input/output error")
+        lines.append(line)
+        if line.startswith("JOB_ID="):
+            hung_up.append(True)
+            signal.raise_signal(signal.SIGHUP)
+
+    before = signal.getsignal(signal.SIGHUP)
+    assert P.run_pilot(1, manager=manager, poll_s=0.1, out=out) == 31
+    assert signal.getsignal(signal.SIGHUP) == before
+    job_id = _job_id(lines)
+    assert _job_record(manager, job_id)["state"] == J.CANCELLED
+    assert _pilot_record(manager, job_id)["state"] == J.CANCELLED
+    assert manager.owned_process(job_id).poll() is not None
+
+
+def test_emit_swallows_output_errors():
+    for error in (OSError(5, "EIO"), BrokenPipeError(), ValueError("I/O operation on closed file")):
+        def broken(line, error=error):
+            raise error
+        P._emit(broken, "line")
 
 
 def test_a_refused_preflight_starts_nothing(tmp_path, monkeypatch, ready):
@@ -529,6 +718,19 @@ def test_cancel_pilot_with_nothing_running_exits_3(tmp_path):
     assert P.cancel_pilot(manager=_manager(tmp_path, _pilot_spec()), out=lambda line: None) == 3
     assert P.cancel_pilot("20260101T000000-000000", manager=_manager(tmp_path, _pilot_spec()),
                           out=lambda line: None) == 3
+
+
+def test_a_cancelled_pilot_records_the_real_exit_status_of_its_process(tmp_path):
+    manager = _manager(tmp_path, _pilot_spec(30))
+    job_id = manager.start(P.PILOT_KEY, {"groups": 1})
+    assert _wait(lambda: _log_has(manager.jobs_dir / job_id, "generator started"))
+    # A non-owning canceller (the CLI) cannot know the exit status; the owner fills it in later.
+    assert P.cancel_pilot(manager=_manager(tmp_path, _pilot_spec(30)), out=lambda line: None) == 0
+    assert _job_record(manager, job_id)["returncode"] is None
+    status = manager.status(job_id)
+    assert status.state == J.CANCELLED and status.returncode is not None and status.returncode != 0
+    assert _job_record(manager, job_id)["state"] == J.CANCELLED
+    assert _job_record(manager, job_id)["returncode"] == manager.owned_process(job_id).returncode
 
 
 def test_cancel_pilot_refuses_to_signal_a_pid_whose_start_token_differs(tmp_path):
@@ -710,6 +912,22 @@ def test_spawn_supervisor_starts_the_fixed_cli_detached_without_a_shell(tmp_path
         P.spawn_supervisor(3)
 
 
+def test_spawn_supervisor_forwards_the_expected_package_identity(tmp_path, monkeypatch):
+    monkeypatch.setenv("GEO_DASHBOARD_HOME", str(tmp_path / "home"))
+    monkeypatch.setattr(P, "engine", _capable_engine)
+    monkeypatch.setattr(C, "current_platform_is_posix", lambda: True)
+    seen = []
+    monkeypatch.setattr(P.subprocess, "Popen", lambda argv, **kwargs: seen.append(argv) or "proc")
+    P.spawn_supervisor(1, python="py", expect_commit=COMMIT, expect_manifest_sha256="b" * 64)
+    assert seen[-1][2:] == ["run", "--groups", "1", "--expect-commit", COMMIT, "--expect-manifest-sha256", "b" * 64]
+    P.spawn_supervisor(1, python="py", expect_commit=COMMIT)
+    assert seen[-1][-2:] == ["--expect-commit", COMMIT] and "--expect-manifest-sha256" not in seen[-1]
+    for bad in ("--production", "a" * 65, "xyz", ""):
+        with pytest.raises(C.CommandRefused):
+            P.spawn_supervisor(1, python="py", expect_commit=bad)
+    assert len(seen) == 2
+
+
 # ---- the UI service --------------------------------------------------------------------------------------
 
 def _free_port():
@@ -792,6 +1010,111 @@ def test_serve_refuses_a_busy_port(tmp_path, monkeypatch):
     assert not (tmp_path / "home" / "workbench" / "ui.json").exists()
 
 
+class _FakeChild:
+    """Stands for the Streamlit child; it exits at its first poll, after capturing ui.json."""
+    pid = 999999
+    returncode = 0
+
+    def __init__(self, argv, **kwargs):
+        self.argv, self.kwargs = argv, kwargs
+        self.ui_record = None
+        _FakeChild.last = self
+
+    def poll(self):
+        if self.ui_record is None:
+            self.ui_record = json.loads(P._ui_record_path().read_text(encoding="utf-8"))
+        return 0
+
+
+def test_serve_exports_the_expected_identity_to_the_ui_and_records_it(tmp_path, monkeypatch):
+    monkeypatch.setenv("GEO_DASHBOARD_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv(P.ENV_EXPECT_MANIFEST, "stale-from-the-parent")
+    monkeypatch.setattr(P.subprocess, "Popen", _FakeChild)
+    lines = []
+    code = P.serve(_free_port(), manager=_manager(tmp_path, _pilot_spec()), out=lines.append, expect_commit=COMMIT)
+    assert code == 1 and lines[-1] == "STOPPED"
+    child = _FakeChild.last
+    assert child.kwargs["env"][P.ENV_EXPECT_COMMIT] == COMMIT
+    assert P.ENV_EXPECT_MANIFEST not in child.kwargs["env"], "an inherited expectation must not leak into the UI"
+    assert child.kwargs["shell"] is False and child.kwargs["env"]["PYTHONUTF8"] == "1"
+    assert child.ui_record["expect_commit"] == COMMIT and child.ui_record["expect_manifest_sha256"] is None
+    P.serve(_free_port(), manager=_manager(tmp_path, _pilot_spec()), out=lines.append, expect_commit=COMMIT,
+            expect_manifest_sha256="c" * 64)
+    assert _FakeChild.last.kwargs["env"][P.ENV_EXPECT_MANIFEST] == "c" * 64
+    assert _FakeChild.last.ui_record["expect_manifest_sha256"] == "c" * 64
+
+
+def test_serve_refuses_a_malformed_expected_identity(tmp_path, monkeypatch):
+    monkeypatch.setenv("GEO_DASHBOARD_HOME", str(tmp_path / "home"))
+    monkeypatch.setattr(P.subprocess, "Popen", lambda *a, **k: pytest.fail("must not start the UI"))
+    lines = []
+    assert P.serve(_free_port(), out=lines.append, expect_commit="--server.address=0.0.0.0") == 40
+    assert lines[0].startswith("REFUSED")
+
+
+def test_the_ui_reads_the_expected_identity_from_its_environment():
+    assert P.expected_identity({}) == (None, None)
+    assert P.expected_identity({P.ENV_EXPECT_COMMIT: COMMIT, P.ENV_EXPECT_MANIFEST: ""}) == (COMMIT, None)
+    assert P.expected_identity({P.ENV_EXPECT_COMMIT: COMMIT, P.ENV_EXPECT_MANIFEST: "d" * 64}) == (COMMIT, "d" * 64)
+
+
+def _serving_record(tmp_path, pid):
+    folder = tmp_path / "home" / "workbench"
+    folder.mkdir(parents=True)
+    (folder / "ui.json").write_text(json.dumps({"pid": pid, "start_token": J.process_start_token(pid), "port": 8531,
+                                                "engine": "wsl2", "started_at": "", "state": "serving"}))
+
+
+def test_ui_stop_reports_42_when_the_ui_still_serves_after_the_wait(tmp_path, monkeypatch):
+    monkeypatch.setenv("GEO_DASHBOARD_HOME", str(tmp_path / "home"))
+    stranger = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
+    try:
+        _serving_record(tmp_path, stranger.pid)
+        assert P.ui_status()["state"] == "serving"
+        signalled, real_kill = [], os.kill
+
+        def record_stop(pid, sig):
+            if sig == 0:
+                return real_kill(pid, sig)
+            signalled.append(pid)
+
+        monkeypatch.setattr(P.os, "kill", record_stop)
+        monkeypatch.setattr(P, "terminate_tree", lambda pid, proc, grace: signalled.append(pid))
+        lines = []
+        assert P.ui_stop(wait_s=0.3, out=lines.append) == 42
+        assert signalled == [stranger.pid] and lines[-1].startswith("STOP_TIMEOUT")
+        assert (tmp_path / "home" / "workbench" / "ui.json").is_file()
+    finally:
+        monkeypatch.undo()
+        stranger.kill()
+        stranger.wait(timeout=30)
+
+
+def test_ui_stop_reports_3_when_the_serve_process_ends_before_the_signal(tmp_path, monkeypatch):
+    monkeypatch.setenv("GEO_DASHBOARD_HOME", str(tmp_path / "home"))
+    stranger = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
+    try:
+        _serving_record(tmp_path, stranger.pid)
+        assert P.ui_status()["state"] == "serving"
+        real_kill = os.kill
+        monkeypatch.setattr(P, "ui_status", lambda: {"state": "serving", "pid": stranger.pid, "running": True})
+        monkeypatch.setattr(P, "IS_POSIX", True)
+
+        def gone(pid, sig):
+            if sig == 0:
+                return real_kill(pid, sig)
+            raise ProcessLookupError(pid)
+
+        monkeypatch.setattr(P.os, "kill", gone)
+        lines = []
+        assert P.ui_stop(wait_s=0.3, out=lines.append) == 3
+        assert lines[-1].startswith("NO_UI_RUNNING") and "ended before" in lines[-1]
+    finally:
+        monkeypatch.undo()
+        stranger.kill()
+        stranger.wait(timeout=30)
+
+
 def test_ui_stop_refuses_to_signal_a_recorded_pid_with_another_start_token(tmp_path, monkeypatch):
     monkeypatch.setenv("GEO_DASHBOARD_HOME", str(tmp_path / "home"))
     stranger = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
@@ -845,6 +1168,14 @@ def test_the_pilot_is_unavailable_on_native_windows_or_with_an_unverified_source
     assert "PILOT_UNAVAILABLE" in _states(verified=False)
 
 
+def test_the_pilot_is_unavailable_from_a_verified_package_snapshot():
+    states = P.workbench_states(engine=LINUX, source={"verified": True, "mode": "package-snapshot"}, latest=None,
+                                gate_rows=repo_status.gate_rows(), gpu_present=False)
+    assert "PILOT_UNAVAILABLE" in states
+    assert "PILOT_UNAVAILABLE" not in P.workbench_states(engine=LINUX, source={"verified": True, "mode": "git"},
+                                                         latest=None, gate_rows=[], gpu_present=False)
+
+
 def test_pilot_states_follow_the_job_and_only_a_verified_success_is_complete(tmp_path):
     job_dir = tmp_path / "job"
     (job_dir / "exercise").mkdir(parents=True)
@@ -888,7 +1219,7 @@ def _one_json_line(done):
 def test_cli_preflight_json_prints_one_strict_ascii_line(tmp_path):
     done = _cli(tmp_path, "preflight", "--json")
     report = _one_json_line(done)
-    assert done.returncode == report["exit_code"] and done.returncode in (0, 10, 20, 21, 22, 23)
+    assert done.returncode == report["exit_code"] and done.returncode in (0, 10, 18, 19, 20, 21, 22, 23, 25)
     assert set(report) >= {"ok", "exit_code", "codes", "engine", "source", "running_job", "disk_free_gib",
                            "runner_ready", "groups"}
     if os.name == "nt":
@@ -898,7 +1229,7 @@ def test_cli_preflight_json_prints_one_strict_ascii_line(tmp_path):
 def test_cli_preflight_refuses_three_groups(tmp_path):
     done = _cli(tmp_path, "preflight", "--groups", "3", "--json")
     report = _one_json_line(done)
-    assert "GROUPS_REFUSED" in report["codes"] and done.returncode in (21, 24)
+    assert "GROUPS_REFUSED" in report["codes"] and done.returncode in (10, 18, 21, 24)
 
 
 def test_cli_status_cancel_and_ui_commands_exit_3_with_an_empty_run_home(tmp_path):
@@ -909,6 +1240,33 @@ def test_cli_status_cancel_and_ui_commands_exit_3_with_an_empty_run_home(tmp_pat
     done = _cli(tmp_path, "ui-status", "--json")
     assert done.returncode == 3 and _one_json_line(done)["running"] is False
     assert _cli(tmp_path, "ui-stop").returncode == 3
+
+
+def _geo_pilot_module():
+    import geo_pilot
+    return geo_pilot
+
+
+def test_cli_serve_passes_the_expected_identity(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(P, "serve", lambda port, **kwargs: seen.update(kwargs, port=port) or 0)
+    cli = _geo_pilot_module()
+    assert cli.main(["serve", "--port", "8531", "--expect-commit", COMMIT, "--expect-manifest-sha256", "e" * 64]) == 0
+    assert seen["port"] == 8531 and seen["expect_commit"] == COMMIT and seen["expect_manifest_sha256"] == "e" * 64
+    assert cli.main(["serve", "--port", "8532"]) == 0
+    assert seen["expect_commit"] is None and seen["expect_manifest_sha256"] is None
+
+
+def test_cli_preflight_text_names_the_running_job(monkeypatch, capsys):
+    report = {"ok": False, "exit_code": 23, "codes": ["DISK_INSUFFICIENT"], "reasons": ["0.1 GiB free"],
+              "running_job": "20261105T000000-abc123", "running_job_key": "other", "source": _verified_source(),
+              "engine": _capable_engine()}
+    monkeypatch.setattr(P, "preflight", lambda *a, **k: report)
+    cli = _geo_pilot_module()
+    assert cli.main(["preflight"]) == 23
+    assert "JOB_ID=20261105T000000-abc123" in capsys.readouterr().out.splitlines()
+    assert cli.main(["preflight", "--json"]) == 23
+    assert len(capsys.readouterr().out.splitlines()) == 1
 
 
 def test_cli_rejects_unknown_subcommands(tmp_path):

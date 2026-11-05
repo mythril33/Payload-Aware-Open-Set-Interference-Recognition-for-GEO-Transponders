@@ -4,11 +4,12 @@
     python dashboard/geo_pilot.py run [--groups N] [--expect-commit SHA] [--expect-manifest-sha256 HEX]
     python dashboard/geo_pilot.py status [--job ID] [--json]
     python dashboard/geo_pilot.py cancel [--job ID]
-    python dashboard/geo_pilot.py serve --port P
+    python dashboard/geo_pilot.py serve --port P [--expect-commit SHA] [--expect-manifest-sha256 HEX]
     python dashboard/geo_pilot.py ui-stop
     python dashboard/geo_pilot.py ui-status [--json]
 
-JSON goes to stdout as one strict ASCII line. Exit codes are listed in geodash/pilot.py.
+JSON goes to stdout as one strict ASCII line. Exit codes are listed in geodash/pilot.py. Whenever a job is
+running, the text output of preflight and run names it as ``JOB_ID=<id>``.
 """
 from __future__ import annotations
 
@@ -29,10 +30,14 @@ def _print(line: str) -> None:
     print(line, flush=True)
 
 
-def _identity_args(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--groups", type=int, default=1)
+def _expect_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--expect-commit", default=None)
     parser.add_argument("--expect-manifest-sha256", default=None)
+
+
+def _identity_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--groups", type=int, default=1)
+    _expect_args(parser)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -50,6 +55,7 @@ def _parser() -> argparse.ArgumentParser:
     cancel.add_argument("--job", default=None)
     serve = sub.add_parser("serve", help="serve the dashboard on 127.0.0.1")
     serve.add_argument("--port", type=int, required=True)
+    _expect_args(serve)
     sub.add_parser("ui-stop", help="stop the dashboard started by serve")
     ui_status = sub.add_parser("ui-status", help="whether serve is running")
     ui_status.add_argument("--json", action="store_true")
@@ -62,6 +68,8 @@ def _preflight(args) -> int:
         _print(P.dumps(report))
     else:
         source = report["source"]
+        if report["running_job"] is not None:
+            _print(f"JOB_ID={report['running_job']}")
         _print(f"engine: {report['engine']['label']}")
         _print(f"source: {source['mode']} {source['commit'] or '-'} verified={source['verified']}")
         for code, reason in zip(report["codes"], report["reasons"]):
@@ -116,7 +124,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "cancel":
         return P.cancel_pilot(args.job, out=_print)
     if args.command == "serve":
-        return P.serve(args.port, out=_print)
+        return P.serve(args.port, out=_print, expect_commit=args.expect_commit,
+                       expect_manifest_sha256=args.expect_manifest_sha256)
     if args.command == "ui-stop":
         return P.ui_stop(out=_print)
     return _ui_status(args)

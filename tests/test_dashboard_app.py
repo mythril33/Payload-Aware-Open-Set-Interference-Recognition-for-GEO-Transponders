@@ -238,6 +238,61 @@ def test_the_start_button_runs_preflight_then_spawns_the_supervisor_with_the_cho
     assert any("4242" in text for text in _texts(at, "success"))
 
 
+def test_the_start_button_forwards_the_package_identity_that_serve_exported(tmp_path, workbench):
+    seen = {}
+
+    class FakeProc:
+        pid = 4243
+
+    def fake_preflight(groups, expect_commit=None, expect_manifest_sha256=None, **kwargs):
+        seen["preflight"] = (groups, expect_commit, expect_manifest_sha256)
+        return {"ok": True, "exit_code": 0, "codes": [], "reasons": [], "running_job": None}
+
+    def fake_spawn(groups, **kwargs):
+        seen["spawn"] = (groups, kwargs)
+        return FakeProc()
+
+    def fake_source(*args, **kwargs):
+        seen["source"] = kwargs
+        return dict(VERIFIED)
+
+    workbench.setenv(P.ENV_EXPECT_COMMIT, "a" * 40)
+    workbench.setenv(P.ENV_EXPECT_MANIFEST, "f" * 64)
+    workbench.setattr(P, "preflight", fake_preflight)
+    workbench.setattr(P, "spawn_supervisor", fake_spawn)
+    workbench.setattr(P, "source_identity", fake_source)
+    at = _run_page("home", tmp_path, workbench)
+    at.button(key="pilot-start").click().run()
+    assert [str(e.value) for e in at.exception] == []
+    assert seen["source"] == {"expect_commit": "a" * 40, "expect_manifest_sha256": "f" * 64}
+    assert seen["preflight"] == (1, "a" * 40, "f" * 64)
+    assert seen["spawn"] == (1, {"expect_commit": "a" * 40, "expect_manifest_sha256": "f" * 64})
+    assert any("4243" in text for text in _texts(at, "success"))
+
+
+def test_a_verified_package_snapshot_disables_the_start_because_training_needs_git(tmp_path, workbench):
+    workbench.setattr(P, "source_identity", lambda *a, **k: {**VERIFIED, "mode": "package-snapshot"})
+    at = _run_page("home", tmp_path, workbench)
+    assert [str(e.value) for e in at.exception] == []
+    assert at.button(key="pilot-start").disabled
+    assert any("Git deposu değil" in text for text in _texts(at, "warning"))
+    assert any("`PILOT_UNAVAILABLE`" in text for text in _texts(at, "markdown"))
+
+
+def test_another_running_job_is_named_when_preflight_refuses_with_18(tmp_path, workbench):
+    def refused(groups, *args, **kwargs):
+        return {"ok": False, "exit_code": 18, "codes": ["OTHER_JOB_RUNNING"],
+                "reasons": ["job 20261105T000000-oth001 (test-dashboard) is running"],
+                "running_job": "20261105T000000-oth001", "running_job_key": "test-dashboard"}
+
+    workbench.setattr(P, "preflight", refused)
+    at = _run_page("home", tmp_path, workbench)
+    at.button(key="pilot-start").click().run()
+    errors = _texts(at, "error")
+    assert any("Başka bir iş çalışıyor" in text and "20261105T000000-oth001" in text and "18" in text
+               and "test-dashboard" in text for text in errors)
+
+
 def test_a_refused_preflight_starts_nothing_and_explains_in_turkish(tmp_path, workbench):
     def refused(groups, *args, **kwargs):
         return {"ok": False, "exit_code": 22, "codes": ["DEPENDENCIES_MISSING"], "reasons": ["not importable: torch"],

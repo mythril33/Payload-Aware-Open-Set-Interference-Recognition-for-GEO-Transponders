@@ -29,13 +29,18 @@ STATIC_NOTES = (
     "Üretim 21.350 / GPU / LOKO / held-out: KİLİTLİ",
     "exercise.json işlevsel akışı kanıtlar, tanıma performansını değil",
 )
+NOT_GIT_GUIDANCE = ("Kaynak bir Git deposu değil: eğitim Git commit kimliğini kaydeder, bu yüzden pilot bu "
+                    "kopyadan çalışamaz; 'GEO WSL Kurulumu' kısayolunu yeniden çalıştırın")
 PREFLIGHT_TR = {
+    "PILOT_ALREADY_RUNNING": "Bir pilot zaten çalışıyor",
+    "OTHER_JOB_RUNNING": "Başka bir iş çalışıyor; bitmesini bekleyin veya iptal edin",
     "PLATFORM_NOT_POSIX": "Bu platform pilotu çalıştıramaz (WSL2 Ubuntu veya Linux gerekir)",
     "GROUPS_REFUSED": "Grup sayısı reddedildi (yalnız 1 veya 2)",
     "DEPENDENCIES_MISSING": "Gerekli paketler eksik (torch, numpy, scipy)",
     "SOURCE_NOT_VERIFIED": "Kaynak doğrulanamadı",
+    "SOURCE_NOT_GIT": "Kaynak bir Git deposu değil",
+    "JOB_RECORD_UNREADABLE": "Bir iş kaydı (job.json) okunamıyor; klasörü kenara taşıyın",
     "DISK_INSUFFICIENT": "Çıktı klasöründe disk alanı yetersiz",
-    "PILOT_ALREADY_RUNNING": "Bir pilot zaten çalışıyor",
 }
 CANCEL_TR = {
     pilot.EXIT_OK: "İptal edildi: yalnız bu pilotun süreç ağacı durduruldu; günlük ve çıktılar korundu.",
@@ -66,6 +71,8 @@ def _disabled_reasons(eng: dict, source: dict) -> list[str]:
     if not source.get("verified"):
         problems = source.get("problems") or ["kaynak tanımlanamadı"]
         reasons.append("Kaynak doğrulanmadı: " + "; ".join(str(p) for p in problems))
+    elif source.get("mode") != "git":
+        reasons.append(NOT_GIT_GUIDANCE)
     return reasons
 
 
@@ -140,16 +147,19 @@ def _job_details(status: J.JobStatus) -> None:
 
 
 def _start(groups: int, manager: J.JobManager) -> None:
-    pre = pilot.preflight(groups, manager=manager)
+    # serve exported the Windows package identity; the click and the supervisor both check it.
+    commit, manifest = pilot.expected_identity()
+    pre = pilot.preflight(groups, commit, manifest, manager=manager)
     if not pre["ok"]:
         lines = [f"- {PREFLIGHT_TR.get(code, code)} (`{code}`): {reason}"
                  for code, reason in zip(pre["codes"], pre["reasons"])]
         if pre.get("running_job"):
-            lines.append(f"- Çalışan iş: `{pre['running_job']}`")
+            key = pre.get("running_job_key")
+            lines.append(f"- Çalışan iş: `{pre['running_job']}`" + (f" (`{key}`)" if key else ""))
         st.error(f"Ön kontrol pilotu başlatmadı (çıkış kodu {pre['exit_code']}):\n\n" + "\n".join(lines))
         return
     try:
-        proc = pilot.spawn_supervisor(groups)
+        proc = pilot.spawn_supervisor(groups, expect_commit=commit, expect_manifest_sha256=manifest)
     except (C.CommandRefused, LocationError, OSError) as error:
         st.error(f"Pilot başlatılamadı: {error}")
         return
@@ -169,13 +179,16 @@ def _cancel(job_id: str, manager: J.JobManager) -> None:
 def _workbench() -> None:
     manager = job_manager()
     eng = pilot.engine()
-    source = pilot.source_identity()
+    commit, manifest = pilot.expected_identity()
+    source = pilot.source_identity(expect_commit=commit, expect_manifest_sha256=manifest)
     latest = pilot.latest_pilot(manager)
     gpu_present = "device_nodes" in diagnostics.gpu_facts()
     states = pilot.workbench_states(engine=eng, source=source, latest=latest,
                                     gate_rows=repo_status.gate_rows(), gpu_present=gpu_present)
 
     st.markdown(_status_line(eng, source))
+    if commit or manifest:
+        st.caption(f"Beklenen paket kimliği: commit `{(commit or '-')[:12]}`, manifest `{(manifest or '-')[:12]}`")
     st.markdown("**Research gates: CLOSED / NO PRODUCTION AUTHORITY**")
     st.markdown("  ".join(f"`{state}`" for state in states))
 

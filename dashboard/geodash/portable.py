@@ -123,7 +123,8 @@ def process_start_token(pid: int | None) -> str | None:
     """An identity for the process that holds pid now, so a recorded pid can be told from a recycled one.
 
     POSIX: the starttime field (22) of /proc/<pid>/stat, in clock ticks since boot.
-    Windows: the creation FILETIME from GetProcessTimes, as a decimal string.
+    Windows: the creation FILETIME from GetProcessTimes, as a decimal string, only while GetExitCodeProcess
+    reports STILL_ACTIVE: an open handle (Popen keeps one) preserves an exited process object and its times.
     None when the process is gone or its identity cannot be read (no /proc, access denied).
     """
     if not pid:
@@ -140,11 +141,15 @@ def process_start_token(pid: int | None) -> str | None:
     kernel32.OpenProcess.restype = ctypes.wintypes.HANDLE
     kernel32.OpenProcess.argtypes = (ctypes.wintypes.DWORD, ctypes.wintypes.BOOL, ctypes.wintypes.DWORD)
     kernel32.GetProcessTimes.argtypes = (ctypes.wintypes.HANDLE,) + (ctypes.POINTER(ctypes.wintypes.FILETIME),) * 4
+    kernel32.GetExitCodeProcess.argtypes = (ctypes.wintypes.HANDLE, ctypes.POINTER(ctypes.wintypes.DWORD))
     kernel32.CloseHandle.argtypes = (ctypes.wintypes.HANDLE,)
     handle = kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, int(pid))
     if not handle:
         return None
     try:
+        code = ctypes.wintypes.DWORD()
+        if not kernel32.GetExitCodeProcess(handle, ctypes.byref(code)) or code.value != STILL_ACTIVE:
+            return None
         creation, exited, kernel, user = (ctypes.wintypes.FILETIME() for _ in range(4))
         if not kernel32.GetProcessTimes(handle, ctypes.byref(creation), ctypes.byref(exited),
                                         ctypes.byref(kernel), ctypes.byref(user)):
