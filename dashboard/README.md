@@ -145,5 +145,25 @@ Each job has its own folder with `log.txt`, `job.json` and its outputs. Nothing 
 The dashboard has its own tests (`tests/test_dashboard_*.py`). They use synthetic fixtures and the simulator, and they never open held-out values. Run them from the dashboard's **System diagnostics** page, or from the repository folder with:
 
 ```bash
-python -m pytest -q tests/test_dashboard_commands.py tests/test_dashboard_jobs.py tests/test_dashboard_portable.py tests/test_dashboard_results.py tests/test_dashboard_evidence.py tests/test_dashboard_rf.py tests/test_dashboard_diagnostics.py tests/test_dashboard_app.py
+python -m pytest -q tests/test_dashboard_commands.py tests/test_dashboard_jobs.py tests/test_dashboard_portable.py tests/test_dashboard_results.py tests/test_dashboard_evidence.py tests/test_dashboard_rf.py tests/test_dashboard_diagnostics.py tests/test_dashboard_app.py tests/test_geo_pilot.py
 ```
+
+## 11. One-click pilot backend (geo_pilot.py)
+
+`dashboard/geo_pilot.py` is the command-line backend that the Windows one-click shortcuts call inside WSL2 (it also runs on plain Linux). It starts nothing new: the pilot is the allowlisted `real-exercise` command with 1 or 2 groups per development role (`train`, `val-select`, `val-calib`), CPU only, started through the same job manager and argv guard as the Development runner.
+
+```bash
+python dashboard/geo_pilot.py preflight --groups 1 --json   # engine, source identity, dependencies, disk, running job
+python dashboard/geo_pilot.py run --groups 1                # start the pilot and supervise it until it ends
+python dashboard/geo_pilot.py status --json                 # latest pilot (exit 3 when there is none)
+python dashboard/geo_pilot.py cancel                        # cancel the running pilot
+python dashboard/geo_pilot.py serve --port 8531             # serve this dashboard on 127.0.0.1
+python dashboard/geo_pilot.py ui-stop
+python dashboard/geo_pilot.py ui-status --json
+```
+
+- `run` stays alive until the job's process exits, so the exit status is recorded rather than inferred. It writes `pilot.json` (schema `GEO-workbench-pilot-record/1`) next to `job.json`: job id, state, exit status, groups, roles, argv, engine, source identity, Python identity and the SHA-256 of `exercise.json` and `freeze.json`. Its state is copied from the job manager and is never upgraded; `benchmark_complete` is always `false`.
+- The source must be verified before a pilot starts: a Git checkout whose tracked `src`, `scripts`, `configs`, `dashboard` and `pyproject.toml` match `HEAD`, or a package snapshot whose files match its `SOURCE_MANIFEST.json`. The snapshot check is relative to the CI-built manifest; it is not a Git history and not a production lock.
+- A recorded process is identified by its pid and its start time, so a recycled pid is never signalled (`cancel` and `ui-stop` exit 41 instead).
+- Exit codes: 0 OK, 3 nothing running or found, 10 a pilot is already running (its `JOB_ID=` is printed), 11 the UI is already running, 12 port busy, 20 source not verified, 21 platform cannot run the pilot (native Windows, WSL1), 22 `torch`, `numpy` or `scipy` missing, 23 less than 5 GiB free in the run folder, 24 groups refused, 30 failed, 31 cancelled, 32 timed out, 33 finished without a recorded exit status, 34 job record unreadable, 40 command refused, 41 process ownership could not be verified.
+- A successful pilot proves the functional RF to train to calibrate to freeze flow. It is not a recognition-performance result and not the 21,350-observation benchmark.

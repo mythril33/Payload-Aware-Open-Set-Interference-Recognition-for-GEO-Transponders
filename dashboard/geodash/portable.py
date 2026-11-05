@@ -119,6 +119,41 @@ def pid_alive(pid: int | None) -> bool:
         kernel32.CloseHandle(handle)
 
 
+def process_start_token(pid: int | None) -> str | None:
+    """An identity for the process that holds pid now, so a recorded pid can be told from a recycled one.
+
+    POSIX: the starttime field (22) of /proc/<pid>/stat, in clock ticks since boot.
+    Windows: the creation FILETIME from GetProcessTimes, as a decimal string.
+    None when the process is gone or its identity cannot be read (no /proc, access denied).
+    """
+    if not pid:
+        return None
+    if IS_POSIX:
+        try:
+            text = Path(f"/proc/{int(pid)}/stat").read_text(encoding="utf-8", errors="replace")
+        except (OSError, ValueError):
+            return None
+        # Fields after the parenthesised command name start at field 3 (state); starttime is field 22.
+        fields = text.rsplit(")", 1)[-1].split()
+        return fields[19] if len(fields) > 19 else None
+    kernel32 = _kernel32()
+    kernel32.OpenProcess.restype = ctypes.wintypes.HANDLE
+    kernel32.OpenProcess.argtypes = (ctypes.wintypes.DWORD, ctypes.wintypes.BOOL, ctypes.wintypes.DWORD)
+    kernel32.GetProcessTimes.argtypes = (ctypes.wintypes.HANDLE,) + (ctypes.POINTER(ctypes.wintypes.FILETIME),) * 4
+    kernel32.CloseHandle.argtypes = (ctypes.wintypes.HANDLE,)
+    handle = kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, int(pid))
+    if not handle:
+        return None
+    try:
+        creation, exited, kernel, user = (ctypes.wintypes.FILETIME() for _ in range(4))
+        if not kernel32.GetProcessTimes(handle, ctypes.byref(creation), ctypes.byref(exited),
+                                        ctypes.byref(kernel), ctypes.byref(user)):
+            return None
+        return str((creation.dwHighDateTime << 32) | creation.dwLowDateTime)
+    finally:
+        kernel32.CloseHandle(handle)
+
+
 def terminate_tree(pid: int, proc: subprocess.Popen | None, grace_s: float,
                    clock: Callable[[], float] = time.time) -> None:
     """Terminate the process tree rooted at pid, then reap the child when a handle exists.
@@ -177,4 +212,4 @@ def _signal_group(pid: int, sig: int) -> None:
         pass
 
 
-__all__ = ["IS_POSIX", "exclusive_lock", "popen_kwargs", "pid_alive", "terminate_tree"]
+__all__ = ["IS_POSIX", "exclusive_lock", "popen_kwargs", "pid_alive", "process_start_token", "terminate_tree"]

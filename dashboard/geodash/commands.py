@@ -30,6 +30,7 @@ DASHBOARD_TESTS = (
     "tests/test_dashboard_rf.py",
     "tests/test_dashboard_diagnostics.py",
     "tests/test_dashboard_app.py",
+    "tests/test_geo_pilot.py",
 )
 CPU_EXECUTION_TESTS = (
     "tests/test_b2_execution.py",
@@ -138,7 +139,12 @@ def _exercise_success(job_dir: Path) -> tuple[bool, str]:
     path = job_dir / "exercise" / "exercise.json"
     if not path.is_file():
         return False, "exercise.json was not written"
-    report = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        report = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False, "exercise.json is not readable JSON"
+    if not isinstance(report, dict):
+        return False, "exercise.json is not a JSON object"
     checks = {
         "schema": report.get("schema") == EXERCISE_SCHEMA,
         "scope": report.get("scope") == SCOPE_DEVELOPMENT,

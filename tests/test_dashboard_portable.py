@@ -204,3 +204,40 @@ def test_real_exercise_is_available_when_the_platform_check_says_posix(monkeypat
 
 def test_only_real_exercise_requires_posix():
     assert [key for key, spec in C.REGISTRY.items() if spec.requires_posix] == ["real-exercise"]
+
+
+# ---- process start tokens ---------------------------------------------------------------------------------
+
+def test_process_start_token_identifies_a_live_process_and_is_stable():
+    proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
+    try:
+        token = P.process_start_token(proc.pid)
+        assert isinstance(token, str) and token.isdigit()
+        assert P.process_start_token(proc.pid) == token
+        assert P.process_start_token(os.getpid()) is not None
+    finally:
+        proc.terminate()
+        proc.wait(timeout=30)
+
+
+def test_process_start_token_is_none_for_missing_pids():
+    assert P.process_start_token(None) is None
+    assert P.process_start_token(0) is None
+
+
+def test_process_start_token_no_longer_matches_once_the_child_is_gone():
+    proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
+    token = P.process_start_token(proc.pid)
+    proc.terminate()
+    proc.wait(timeout=30)
+    # Gone, or (rarely) recycled by an unrelated process with a different start time.
+    assert P.process_start_token(proc.pid) != token
+
+
+@posix_only
+def test_process_start_token_reads_field_22_of_proc_stat():
+    stat = Path(f"/proc/{os.getpid()}/stat")
+    if not stat.is_file():
+        pytest.skip("no /proc on this POSIX system")
+    expected = stat.read_text(encoding="utf-8").rsplit(")", 1)[1].split()[19]
+    assert P.process_start_token(os.getpid()) == expected
