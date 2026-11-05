@@ -111,6 +111,9 @@ def _no_spawn(*args, **kwargs):
 def workbench(monkeypatch):
     """A capable engine with a verified source; no supervisor or preflight can reach a real process."""
     monkeypatch.setattr(P, "engine", lambda *a, **k: dict(LINUX))
+    # The command layer checks the platform independently of engine(); pin it to the same POSIX engine so
+    # the enabled-button tests also hold on a native-Windows test runner.
+    monkeypatch.setattr(C, "current_platform_is_posix", lambda: True)
     monkeypatch.setattr(P, "source_identity", lambda *a, **k: dict(VERIFIED))
     monkeypatch.setattr(P, "spawn_supervisor", _no_spawn)
     monkeypatch.setattr(P, "preflight", lambda *a, **k: pytest.fail("preflight must not run without a click"))

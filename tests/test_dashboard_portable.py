@@ -230,8 +230,10 @@ def test_process_start_token_no_longer_matches_once_the_child_is_gone():
     token = P.process_start_token(proc.pid)
     proc.terminate()
     proc.wait(timeout=30)
-    # Gone, or (rarely) recycled by an unrelated process with a different start time.
-    assert P.process_start_token(proc.pid) != token
+    # The job manager treats a recorded pid as its process only while it is alive AND the token matches.
+    # POSIX: the reaped pid is gone (or recycled with another start time). Windows: while the Popen handle
+    # is open the exited process object keeps its creation time, but it is no longer alive.
+    assert not P.pid_alive(proc.pid) or P.process_start_token(proc.pid) != token
 
 
 @posix_only
