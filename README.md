@@ -48,6 +48,18 @@ production, GPU, LOKO and held-out evaluation remain unauthorized). See
 [windows/BENIOKU.md](windows/BENIOKU.md) (Turkish quick start) and
 [dashboard/README.md](dashboard/README.md) (including its Native Windows section).
 
+**One-click bounded pilot (WSL2).** The desktop shortcuts *GEO Workbench*, *GEO Pilot
+Başlat*, *GEO İşlem Durdur* and *GEO Workbench Kapat* open the workbench, start the
+existing allowlisted `real-exercise` (one group per development role, CPU only,
+train/val-select/val-calib only), cancel it safely and close the services. The genuine RF
+pipeline needs POSIX, so it runs in WSL2 Ubuntu: the one-time, consent-gated *GEO WSL
+Kurulumu* clones the package's full-history Git bundle (`geo-source.bundle`, the exact
+packaged commit) into WSL and creates its virtual environment. Without WSL2 the
+workbench opens natively in inspection mode and the pilot is refused with setup
+guidance. A pilot proves the functional generate → train → calibrate → freeze flow; it is
+not a recognition-performance result and not the 21,350-observation benchmark. Test
+evidence: [docs/engineering/WINDOWS_ONECLICK_TEST_REPORT.md](docs/engineering/WINDOWS_ONECLICK_TEST_REPORT.md).
+
 GEO bent-pipe transponderindeki girişimi, operatörün downlink spektrum izlemesinden tanıyan derin öğrenme çalışması. Ders projesi; makaleye genişletilecek.
 
 - Plan ve kararlar: `docs/plan/` (`00_ana_plan.md` ile başlayın)
