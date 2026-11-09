@@ -125,6 +125,61 @@ sign-test p-values remains in the source, and that citations and
 bibliography entries match one to one. The Markdown draft `paper.md` is
 superseded and removed.
 
+## 2e. Independent audit of the submission paper (2026-11-09)
+
+A separate auditor recomputed, from the per-seed files only, 530 of the 553
+values the paper then printed (means, sample sds, minima, maxima and every
+hypothesis field): **0 mismatches** at three decimals; the remaining 23
+(design counts, wall times, commits) were checked directly. From the raw
+per-frame scores it recomputed AUROC (brute-force Mann-Whitney), rejection
+and acceptance at the stored thresholds, per-class and per-SNR AUROC, the
+SNR bands and the OSCR area: **4170 checks, 0 failures**. All design facts in
+the paper matched the code. Verdict: pass with fixes. The fixes applied:
+
+- **The embedding-distance result is a 4PAM result (high severity,
+  interpretation).** Per unknown class over ten seeds, the Euclidean score has
+  AUROC 0.990 on 4PAM and 0.569 on 64QAM; logit scores are inverted on 4PAM
+  (energy 0.123) and no score detects 64QAM (0.335 to 0.569). The pooled
+  0.779 is the mean of a detected and an undetected class. The paper now
+  reports per-class AUROC and rejection for every variant (its Table III,
+  generated from the per-seed files) and its abstract, results, discussion
+  and conclusion are rewritten around the split. Per-class reporting had
+  been listed in the campaign-2 plan and was missing from the first version.
+- **Campaign-1 record stated precisely.** The plan was committed 4.4 minutes
+  after the run began (3.5 minutes after the first output file), when all
+  seed-0 stages had finished, and pushed after the run ended; one seed per
+  stage (2, 3, 4) had been run as a pilot before the plan was written. The
+  paper and `experiments/README.md` say so. `PREREGISTRATION_V3.md` keeps its
+  original "about 3.5 minutes" wording because committed plans are not
+  edited.
+- **Loss named honestly.** The outlier-training loss penalises the logit norm
+  and scores with MSP; the cited Objectosphere method uses the deep-feature
+  magnitude. The paper calls it Objectosphere-style and states the
+  difference.
+- **Overclaims weakened.** "Transfer from 8PAM to 4PAM" became "the gain
+  appeared only with 8PAM in the pool and almost only on 4PAM", with the
+  statement that one outlier pair and one unknown pair cannot separate
+  similarity from other properties; the explanation of why the logits fail
+  is marked as an untested conjecture; an unverifiable literature claim was
+  removed.
+- Smaller items: the labels "refuted" and "inconsistent" are defined and
+  marked as not pre-registered; H3's second clause (ideal accuracy within
+  three binomial standard errors of chance, 10/10 seeds) is reported;
+  missing design facts added (unit-power normalisation, MLP dropout, ResNet
+  width, closed-set selection); per-SNR cell sizes stated (17 to 49 known,
+  3 to 27 unknown frames); the O'Shea and West dataset paper is no longer
+  cited for a classification result.
+- **Provenance timing.** In every aggregate written before this audit,
+  `provenance.git_commit` and (for campaigns 1 and 2) `started_utc` were
+  taken at the end of the run. No commit in between touched `rfml/` or the
+  runners, so the results are unaffected; the runners now record both at the
+  start. Committed aggregates were not altered.
+
+What could not be checked: bibliographic records against arxiv.org, doi.org
+and dblp.org, which this environment cannot reach. Six entries were confirmed
+by web search on 2026-11-09 and 2026-10-28; the ORACLE DOI remains
+unconfirmed and is not printed.
+
 ### Reading rules
 
 - AUROC positive class = unknown; larger score = more unknown-like. Known

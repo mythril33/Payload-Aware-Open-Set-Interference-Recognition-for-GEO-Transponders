@@ -10,9 +10,11 @@ read the plans first.
 | [PREREGISTRATION_V2.md](PREREGISTRATION_V2.md) | campaign 2: five post-hoc scores on one network, three outlier pools (H5–H8) | 0–4 |
 | [PREREGISTRATION_V3.md](PREREGISTRATION_V3.md) | replication of H1–H8 on fresh seeds; campaign 3: shared-seed outlier pools (H7s), seen-device counterfactual (H9, H10), shrinkage sweep (exploratory) | 5–9; 0–9 |
 
-The plans of campaigns 2 and 3 and of the replication were committed before
-their runs. Campaign 1's plan was written before its run but committed about
-3.5 minutes after the run began.
+The plans of campaigns 2 and 3 and of the replication were committed and
+pushed before their runs. Campaign 1's plan was written before its run but
+committed about 4.5 minutes after the run began (when the first seed had
+finished) and pushed after the run ended; one seed per stage (2, 3, 4) had
+also been run as a pilot, as that plan states.
 
 ## Reproduce everything
 

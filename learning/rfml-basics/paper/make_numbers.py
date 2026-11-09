@@ -23,6 +23,8 @@ import json
 import sys
 from pathlib import Path
 
+import numpy as np
+
 ROOT = Path(__file__).resolve().parents[1]
 EXP = ROOT / "experiments"
 OUT = ROOT / "paper" / "generated"
@@ -146,6 +148,49 @@ def main() -> int:
     if failed:
         sys.exit(f"cross-checks failed: {failed}")
     print("cross-checks passed:", ", ".join(checks))
+
+    # --- per-unknown-class results of campaign 2, from the ten per-seed files ----
+    variants = ("CE+MSP", "CE+maxlogit", "CE+energy", "CE+distance", "CE+mahalanobis",
+                "OS-full+MSP", "OS-16PSK+MSP", "OS-8PAM+MSP")
+    bench = [
+        load(EXP / ("campaign2" if seed < 5 else "campaign2_rep") / f"scorer_bench_seed{seed}.json")
+        for seed in range(10)
+    ]
+    src = "experiments/campaign2{,_rep}/scorer_bench_seed*.json per_unknown_class"
+    for variant in variants:
+        for cls in ("64QAM", "4PAM"):
+            for field, short in (("auroc", "auroc"), ("reject_rate", "reject")):
+                values = np.array([r["variants"][variant]["per_unknown_class"][cls][field] for r in bench])
+                n.summary(
+                    f"pc:{variant}:{cls}:{short}",
+                    {"mean": values.mean(), "sd": values.std(ddof=1), "min": values.min(), "max": values.max()},
+                    src,
+                )
+            aurocs = [r["variants"][variant]["per_unknown_class"][cls]["auroc"] for r in bench]
+            n.put(f"pc:{variant}:{cls}:n_auroc_ge_half", f"{sum(a >= 0.5 for a in aurocs)}/10", src)
+    n.put("design:n_per_unknown_class", str(bench[0]["variants"]["CE+MSP"]["per_unknown_class"]["64QAM"]["n"]), src)
+    cells = [row for r in bench for row in r["variants"]["CE+MSP"]["per_snr_auroc"]]
+    src = "experiments/campaign2{,_rep}/scorer_bench_seed*.json per_snr_auroc"
+    n.put("design:snr_cell:known_min", str(min(c["n_known"] for c in cells)), src)
+    n.put("design:snr_cell:known_max", str(max(c["n_known"] for c in cells)), src)
+    n.put("design:snr_cell:unknown_min", str(min(c["n_unknown"] for c in cells)), src)
+    n.put("design:snr_cell:unknown_max", str(max(c["n_unknown"] for c in cells)), src)
+
+    # H3's second pre-registered clause: the ideal-device accuracy within 3 binomial SE of chance.
+    fp_n, chance = 600, 0.10
+    se = (chance * (1 - chance) / fp_n) ** 0.5
+    ideal = p1["fingerprint_ideal"]["test_acc"]["per_seed"]
+    n.put("h:H3:band_lo", f3(chance - 3 * se), "0.10 - 3*sqrt(0.1*0.9/600)")
+    n.put("h:H3:band_hi", f3(chance + 3 * se), "0.10 + 3*sqrt(0.1*0.9/600)")
+    n.put("h:H3:n_ideal_in_band", f"{sum(chance - 3 * se <= v <= chance + 3 * se for v in ideal)}/{len(ideal)}",
+          "experiments/pooled/campaign1/aggregate.json fingerprint_ideal.test_acc.per_seed")
+    # The opposite-sign count, for the label "refuted" (opposite sign in at least 8 of 10 seeds).
+    pooled2 = load(EXP / "pooled" / "campaign2" / "aggregate.json")["hypotheses"]
+    for name, h in pooled2.items():
+        short = name.split("_")[0]
+        if short in ("H5", "H6"):
+            n.put(f"h:{short}:opposite", f"{sum(d < 0 for d in h['per_seed_diff'])}/{len(h['per_seed_diff'])}",
+                  f"experiments/pooled/campaign2/aggregate.json hypotheses.{name}")
 
     # --- design counts, read back from a per-seed file as a check --------------
     seed0 = load(EXP / "campaign2" / "scorer_bench_seed0.json")

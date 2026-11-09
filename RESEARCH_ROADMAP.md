@@ -59,7 +59,9 @@ The repository holds two tracks:
   `VALIDATION_REPORT.md`. Outcome over ten seeds: H1, H2, H3 and H7
   replicated; the negative results H5 and H6 replicated; H7s and H10
   supported; H8 not replicated; H4 inconsistent; H9 not supported (the MLP
-  memorises frames, not devices, which corrected an earlier reading).
+  memorises frames, not devices, which corrected an earlier reading). Per
+  unknown class the picture splits: embedding distance detects 4PAM almost
+  perfectly (AUROC 0.990) and no score detects 64QAM (0.335 to 0.569).
 - Submission-format paper (`learning/rfml-basics/paper/paper.pdf`, IEEEtran,
   anonymised): every printed number is generated from the aggregates by
   `make_numbers.py`, and `build.sh` refuses a build with a missing number,

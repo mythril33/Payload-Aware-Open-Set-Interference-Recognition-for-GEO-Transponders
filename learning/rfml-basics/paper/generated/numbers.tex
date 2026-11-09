@@ -128,12 +128,17 @@
 \@namedef{num@design:frames:val_calib}{200}
 \@namedef{num@design:frames:val_select}{200}
 \@namedef{num@design:n_known_test}{400}
+\@namedef{num@design:n_per_unknown_class}{100}
 \@namedef{num@design:n_seen_test}{6720}
 \@namedef{num@design:n_unknown_test}{200}
 \@namedef{num@design:n_unseen_test}{5600}
 \@namedef{num@design:outliers:OS-16PSK+MSP}{400}
 \@namedef{num@design:outliers:OS-8PAM+MSP}{400}
 \@namedef{num@design:outliers:OS-full+MSP}{800}
+\@namedef{num@design:snr_cell:known_max}{49}
+\@namedef{num@design:snr_cell:known_min}{17}
+\@namedef{num@design:snr_cell:unknown_max}{27}
+\@namedef{num@design:snr_cell:unknown_min}{3}
 \@namedef{num@h:H10:diff}{$+$0.012}
 \@namedef{num@h:H10:hi}{$+$0.040}
 \@namedef{num@h:H10:lo}{$-$0.000}
@@ -158,9 +163,12 @@
 \@namedef{num@h:H2:rep}{5/5}
 \@namedef{num@h:H2:replicated}{yes}
 \@namedef{num@h:H2:sd}{0.064}
+\@namedef{num@h:H3:band_hi}{0.137}
+\@namedef{num@h:H3:band_lo}{0.063}
 \@namedef{num@h:H3:diff}{$+$0.122}
 \@namedef{num@h:H3:hi}{$+$0.197}
 \@namedef{num@h:H3:lo}{$+$0.040}
+\@namedef{num@h:H3:n_ideal_in_band}{10/10}
 \@namedef{num@h:H3:orig}{5/5}
 \@namedef{num@h:H3:pool}{10/10}
 \@namedef{num@h:H3:poolsupported}{yes}
@@ -179,6 +187,7 @@
 \@namedef{num@h:H5:diff}{$-$0.031}
 \@namedef{num@h:H5:hi}{$-$0.018}
 \@namedef{num@h:H5:lo}{$-$0.056}
+\@namedef{num@h:H5:opposite}{10/10}
 \@namedef{num@h:H5:orig}{0/5}
 \@namedef{num@h:H5:pool}{0/10}
 \@namedef{num@h:H5:poolsupported}{no}
@@ -188,6 +197,7 @@
 \@namedef{num@h:H6:diff}{$-$0.067}
 \@namedef{num@h:H6:hi}{$+$0.035}
 \@namedef{num@h:H6:lo}{$-$0.159}
+\@namedef{num@h:H6:opposite}{8/10}
 \@namedef{num@h:H6:orig}{2/5}
 \@namedef{num@h:H6:pool}{2/10}
 \@namedef{num@h:H6:poolsupported}{no}
@@ -544,6 +554,182 @@
 \@namedef{num@p2:OS-full+MSP:unk_reject:min}{0.055}
 \@namedef{num@p2:OS-full+MSP:unk_reject:pm}{0.194 \pm 0.067}
 \@namedef{num@p2:OS-full+MSP:unk_reject:sd}{0.067}
+\@namedef{num@pc:CE+MSP:4PAM:auroc:max}{0.598}
+\@namedef{num@pc:CE+MSP:4PAM:auroc:mean}{0.370}
+\@namedef{num@pc:CE+MSP:4PAM:auroc:min}{0.189}
+\@namedef{num@pc:CE+MSP:4PAM:auroc:pm}{0.370 \pm 0.116}
+\@namedef{num@pc:CE+MSP:4PAM:auroc:sd}{0.116}
+\@namedef{num@pc:CE+MSP:4PAM:n_auroc_ge_half}{1/10}
+\@namedef{num@pc:CE+MSP:4PAM:reject:max}{0.030}
+\@namedef{num@pc:CE+MSP:4PAM:reject:mean}{0.009}
+\@namedef{num@pc:CE+MSP:4PAM:reject:min}{0.000}
+\@namedef{num@pc:CE+MSP:4PAM:reject:pm}{0.009 \pm 0.012}
+\@namedef{num@pc:CE+MSP:4PAM:reject:sd}{0.012}
+\@namedef{num@pc:CE+MSP:64QAM:auroc:max}{0.435}
+\@namedef{num@pc:CE+MSP:64QAM:auroc:mean}{0.335}
+\@namedef{num@pc:CE+MSP:64QAM:auroc:min}{0.206}
+\@namedef{num@pc:CE+MSP:64QAM:auroc:pm}{0.335 \pm 0.076}
+\@namedef{num@pc:CE+MSP:64QAM:auroc:sd}{0.076}
+\@namedef{num@pc:CE+MSP:64QAM:n_auroc_ge_half}{0/10}
+\@namedef{num@pc:CE+MSP:64QAM:reject:max}{0.080}
+\@namedef{num@pc:CE+MSP:64QAM:reject:mean}{0.046}
+\@namedef{num@pc:CE+MSP:64QAM:reject:min}{0.000}
+\@namedef{num@pc:CE+MSP:64QAM:reject:pm}{0.046 \pm 0.028}
+\@namedef{num@pc:CE+MSP:64QAM:reject:sd}{0.028}
+\@namedef{num@pc:CE+distance:4PAM:auroc:max}{0.998}
+\@namedef{num@pc:CE+distance:4PAM:auroc:mean}{0.990}
+\@namedef{num@pc:CE+distance:4PAM:auroc:min}{0.968}
+\@namedef{num@pc:CE+distance:4PAM:auroc:pm}{0.990 \pm 0.010}
+\@namedef{num@pc:CE+distance:4PAM:auroc:sd}{0.010}
+\@namedef{num@pc:CE+distance:4PAM:n_auroc_ge_half}{10/10}
+\@namedef{num@pc:CE+distance:4PAM:reject:max}{0.990}
+\@namedef{num@pc:CE+distance:4PAM:reject:mean}{0.938}
+\@namedef{num@pc:CE+distance:4PAM:reject:min}{0.830}
+\@namedef{num@pc:CE+distance:4PAM:reject:pm}{0.938 \pm 0.051}
+\@namedef{num@pc:CE+distance:4PAM:reject:sd}{0.051}
+\@namedef{num@pc:CE+distance:64QAM:auroc:max}{0.634}
+\@namedef{num@pc:CE+distance:64QAM:auroc:mean}{0.569}
+\@namedef{num@pc:CE+distance:64QAM:auroc:min}{0.492}
+\@namedef{num@pc:CE+distance:64QAM:auroc:pm}{0.569 \pm 0.039}
+\@namedef{num@pc:CE+distance:64QAM:auroc:sd}{0.039}
+\@namedef{num@pc:CE+distance:64QAM:n_auroc_ge_half}{9/10}
+\@namedef{num@pc:CE+distance:64QAM:reject:max}{0.170}
+\@namedef{num@pc:CE+distance:64QAM:reject:mean}{0.087}
+\@namedef{num@pc:CE+distance:64QAM:reject:min}{0.000}
+\@namedef{num@pc:CE+distance:64QAM:reject:pm}{0.087 \pm 0.051}
+\@namedef{num@pc:CE+distance:64QAM:reject:sd}{0.051}
+\@namedef{num@pc:CE+energy:4PAM:auroc:max}{0.175}
+\@namedef{num@pc:CE+energy:4PAM:auroc:mean}{0.123}
+\@namedef{num@pc:CE+energy:4PAM:auroc:min}{0.073}
+\@namedef{num@pc:CE+energy:4PAM:auroc:pm}{0.123 \pm 0.038}
+\@namedef{num@pc:CE+energy:4PAM:auroc:sd}{0.038}
+\@namedef{num@pc:CE+energy:4PAM:n_auroc_ge_half}{0/10}
+\@namedef{num@pc:CE+energy:4PAM:reject:max}{0.060}
+\@namedef{num@pc:CE+energy:4PAM:reject:mean}{0.015}
+\@namedef{num@pc:CE+energy:4PAM:reject:min}{0.000}
+\@namedef{num@pc:CE+energy:4PAM:reject:pm}{0.015 \pm 0.020}
+\@namedef{num@pc:CE+energy:4PAM:reject:sd}{0.020}
+\@namedef{num@pc:CE+energy:64QAM:auroc:max}{0.610}
+\@namedef{num@pc:CE+energy:64QAM:auroc:mean}{0.449}
+\@namedef{num@pc:CE+energy:64QAM:auroc:min}{0.296}
+\@namedef{num@pc:CE+energy:64QAM:auroc:pm}{0.449 \pm 0.111}
+\@namedef{num@pc:CE+energy:64QAM:auroc:sd}{0.111}
+\@namedef{num@pc:CE+energy:64QAM:n_auroc_ge_half}{3/10}
+\@namedef{num@pc:CE+energy:64QAM:reject:max}{0.090}
+\@namedef{num@pc:CE+energy:64QAM:reject:mean}{0.053}
+\@namedef{num@pc:CE+energy:64QAM:reject:min}{0.020}
+\@namedef{num@pc:CE+energy:64QAM:reject:pm}{0.053 \pm 0.021}
+\@namedef{num@pc:CE+energy:64QAM:reject:sd}{0.021}
+\@namedef{num@pc:CE+mahalanobis:4PAM:auroc:max}{0.992}
+\@namedef{num@pc:CE+mahalanobis:4PAM:auroc:mean}{0.983}
+\@namedef{num@pc:CE+mahalanobis:4PAM:auroc:min}{0.975}
+\@namedef{num@pc:CE+mahalanobis:4PAM:auroc:pm}{0.983 \pm 0.006}
+\@namedef{num@pc:CE+mahalanobis:4PAM:auroc:sd}{0.006}
+\@namedef{num@pc:CE+mahalanobis:4PAM:n_auroc_ge_half}{10/10}
+\@namedef{num@pc:CE+mahalanobis:4PAM:reject:max}{0.970}
+\@namedef{num@pc:CE+mahalanobis:4PAM:reject:mean}{0.910}
+\@namedef{num@pc:CE+mahalanobis:4PAM:reject:min}{0.860}
+\@namedef{num@pc:CE+mahalanobis:4PAM:reject:pm}{0.910 \pm 0.030}
+\@namedef{num@pc:CE+mahalanobis:4PAM:reject:sd}{0.030}
+\@namedef{num@pc:CE+mahalanobis:64QAM:auroc:max}{0.587}
+\@namedef{num@pc:CE+mahalanobis:64QAM:auroc:mean}{0.513}
+\@namedef{num@pc:CE+mahalanobis:64QAM:auroc:min}{0.431}
+\@namedef{num@pc:CE+mahalanobis:64QAM:auroc:pm}{0.513 \pm 0.048}
+\@namedef{num@pc:CE+mahalanobis:64QAM:auroc:sd}{0.048}
+\@namedef{num@pc:CE+mahalanobis:64QAM:n_auroc_ge_half}{6/10}
+\@namedef{num@pc:CE+mahalanobis:64QAM:reject:max}{0.080}
+\@namedef{num@pc:CE+mahalanobis:64QAM:reject:mean}{0.035}
+\@namedef{num@pc:CE+mahalanobis:64QAM:reject:min}{0.010}
+\@namedef{num@pc:CE+mahalanobis:64QAM:reject:pm}{0.035 \pm 0.021}
+\@namedef{num@pc:CE+mahalanobis:64QAM:reject:sd}{0.021}
+\@namedef{num@pc:CE+maxlogit:4PAM:auroc:max}{0.170}
+\@namedef{num@pc:CE+maxlogit:4PAM:auroc:mean}{0.127}
+\@namedef{num@pc:CE+maxlogit:4PAM:auroc:min}{0.074}
+\@namedef{num@pc:CE+maxlogit:4PAM:auroc:pm}{0.127 \pm 0.036}
+\@namedef{num@pc:CE+maxlogit:4PAM:auroc:sd}{0.036}
+\@namedef{num@pc:CE+maxlogit:4PAM:n_auroc_ge_half}{0/10}
+\@namedef{num@pc:CE+maxlogit:4PAM:reject:max}{0.050}
+\@namedef{num@pc:CE+maxlogit:4PAM:reject:mean}{0.013}
+\@namedef{num@pc:CE+maxlogit:4PAM:reject:min}{0.000}
+\@namedef{num@pc:CE+maxlogit:4PAM:reject:pm}{0.013 \pm 0.018}
+\@namedef{num@pc:CE+maxlogit:4PAM:reject:sd}{0.018}
+\@namedef{num@pc:CE+maxlogit:64QAM:auroc:max}{0.574}
+\@namedef{num@pc:CE+maxlogit:64QAM:auroc:mean}{0.428}
+\@namedef{num@pc:CE+maxlogit:64QAM:auroc:min}{0.287}
+\@namedef{num@pc:CE+maxlogit:64QAM:auroc:pm}{0.428 \pm 0.103}
+\@namedef{num@pc:CE+maxlogit:64QAM:auroc:sd}{0.103}
+\@namedef{num@pc:CE+maxlogit:64QAM:n_auroc_ge_half}{3/10}
+\@namedef{num@pc:CE+maxlogit:64QAM:reject:max}{0.110}
+\@namedef{num@pc:CE+maxlogit:64QAM:reject:mean}{0.053}
+\@namedef{num@pc:CE+maxlogit:64QAM:reject:min}{0.010}
+\@namedef{num@pc:CE+maxlogit:64QAM:reject:pm}{0.053 \pm 0.030}
+\@namedef{num@pc:CE+maxlogit:64QAM:reject:sd}{0.030}
+\@namedef{num@pc:OS-16PSK+MSP:4PAM:auroc:max}{0.390}
+\@namedef{num@pc:OS-16PSK+MSP:4PAM:auroc:mean}{0.237}
+\@namedef{num@pc:OS-16PSK+MSP:4PAM:auroc:min}{0.125}
+\@namedef{num@pc:OS-16PSK+MSP:4PAM:auroc:pm}{0.237 \pm 0.087}
+\@namedef{num@pc:OS-16PSK+MSP:4PAM:auroc:sd}{0.087}
+\@namedef{num@pc:OS-16PSK+MSP:4PAM:n_auroc_ge_half}{0/10}
+\@namedef{num@pc:OS-16PSK+MSP:4PAM:reject:max}{0.010}
+\@namedef{num@pc:OS-16PSK+MSP:4PAM:reject:mean}{0.004}
+\@namedef{num@pc:OS-16PSK+MSP:4PAM:reject:min}{0.000}
+\@namedef{num@pc:OS-16PSK+MSP:4PAM:reject:pm}{0.004 \pm 0.005}
+\@namedef{num@pc:OS-16PSK+MSP:4PAM:reject:sd}{0.005}
+\@namedef{num@pc:OS-16PSK+MSP:64QAM:auroc:max}{0.536}
+\@namedef{num@pc:OS-16PSK+MSP:64QAM:auroc:mean}{0.387}
+\@namedef{num@pc:OS-16PSK+MSP:64QAM:auroc:min}{0.287}
+\@namedef{num@pc:OS-16PSK+MSP:64QAM:auroc:pm}{0.387 \pm 0.082}
+\@namedef{num@pc:OS-16PSK+MSP:64QAM:auroc:sd}{0.082}
+\@namedef{num@pc:OS-16PSK+MSP:64QAM:n_auroc_ge_half}{1/10}
+\@namedef{num@pc:OS-16PSK+MSP:64QAM:reject:max}{0.170}
+\@namedef{num@pc:OS-16PSK+MSP:64QAM:reject:mean}{0.062}
+\@namedef{num@pc:OS-16PSK+MSP:64QAM:reject:min}{0.020}
+\@namedef{num@pc:OS-16PSK+MSP:64QAM:reject:pm}{0.062 \pm 0.050}
+\@namedef{num@pc:OS-16PSK+MSP:64QAM:reject:sd}{0.050}
+\@namedef{num@pc:OS-8PAM+MSP:4PAM:auroc:max}{0.952}
+\@namedef{num@pc:OS-8PAM+MSP:4PAM:auroc:mean}{0.726}
+\@namedef{num@pc:OS-8PAM+MSP:4PAM:auroc:min}{0.540}
+\@namedef{num@pc:OS-8PAM+MSP:4PAM:auroc:pm}{0.726 \pm 0.124}
+\@namedef{num@pc:OS-8PAM+MSP:4PAM:auroc:sd}{0.124}
+\@namedef{num@pc:OS-8PAM+MSP:4PAM:n_auroc_ge_half}{10/10}
+\@namedef{num@pc:OS-8PAM+MSP:4PAM:reject:max}{0.840}
+\@namedef{num@pc:OS-8PAM+MSP:4PAM:reject:mean}{0.348}
+\@namedef{num@pc:OS-8PAM+MSP:4PAM:reject:min}{0.050}
+\@namedef{num@pc:OS-8PAM+MSP:4PAM:reject:pm}{0.348 \pm 0.225}
+\@namedef{num@pc:OS-8PAM+MSP:4PAM:reject:sd}{0.225}
+\@namedef{num@pc:OS-8PAM+MSP:64QAM:auroc:max}{0.510}
+\@namedef{num@pc:OS-8PAM+MSP:64QAM:auroc:mean}{0.436}
+\@namedef{num@pc:OS-8PAM+MSP:64QAM:auroc:min}{0.343}
+\@namedef{num@pc:OS-8PAM+MSP:64QAM:auroc:pm}{0.436 \pm 0.057}
+\@namedef{num@pc:OS-8PAM+MSP:64QAM:auroc:sd}{0.057}
+\@namedef{num@pc:OS-8PAM+MSP:64QAM:n_auroc_ge_half}{1/10}
+\@namedef{num@pc:OS-8PAM+MSP:64QAM:reject:max}{0.160}
+\@namedef{num@pc:OS-8PAM+MSP:64QAM:reject:mean}{0.064}
+\@namedef{num@pc:OS-8PAM+MSP:64QAM:reject:min}{0.010}
+\@namedef{num@pc:OS-8PAM+MSP:64QAM:reject:pm}{0.064 \pm 0.050}
+\@namedef{num@pc:OS-8PAM+MSP:64QAM:reject:sd}{0.050}
+\@namedef{num@pc:OS-full+MSP:4PAM:auroc:max}{0.793}
+\@namedef{num@pc:OS-full+MSP:4PAM:auroc:mean}{0.665}
+\@namedef{num@pc:OS-full+MSP:4PAM:auroc:min}{0.390}
+\@namedef{num@pc:OS-full+MSP:4PAM:auroc:pm}{0.665 \pm 0.112}
+\@namedef{num@pc:OS-full+MSP:4PAM:auroc:sd}{0.112}
+\@namedef{num@pc:OS-full+MSP:4PAM:n_auroc_ge_half}{9/10}
+\@namedef{num@pc:OS-full+MSP:4PAM:reject:max}{0.510}
+\@namedef{num@pc:OS-full+MSP:4PAM:reject:mean}{0.331}
+\@namedef{num@pc:OS-full+MSP:4PAM:reject:min}{0.090}
+\@namedef{num@pc:OS-full+MSP:4PAM:reject:pm}{0.331 \pm 0.117}
+\@namedef{num@pc:OS-full+MSP:4PAM:reject:sd}{0.117}
+\@namedef{num@pc:OS-full+MSP:64QAM:auroc:max}{0.497}
+\@namedef{num@pc:OS-full+MSP:64QAM:auroc:mean}{0.408}
+\@namedef{num@pc:OS-full+MSP:64QAM:auroc:min}{0.334}
+\@namedef{num@pc:OS-full+MSP:64QAM:auroc:pm}{0.408 \pm 0.045}
+\@namedef{num@pc:OS-full+MSP:64QAM:auroc:sd}{0.045}
+\@namedef{num@pc:OS-full+MSP:64QAM:n_auroc_ge_half}{0/10}
+\@namedef{num@pc:OS-full+MSP:64QAM:reject:max}{0.170}
+\@namedef{num@pc:OS-full+MSP:64QAM:reject:mean}{0.058}
+\@namedef{num@pc:OS-full+MSP:64QAM:reject:min}{0.020}
+\@namedef{num@pc:OS-full+MSP:64QAM:reject:pm}{0.058 \pm 0.045}
+\@namedef{num@pc:OS-full+MSP:64QAM:reject:sd}{0.045}
 \@namedef{num@prov:c1:wall}{1045}
 \@namedef{num@prov:c1rep:wall}{749}
 \@namedef{num@prov:c2:wall}{1093}

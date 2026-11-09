@@ -99,7 +99,7 @@ def fig_auroc() -> None:
     order = ["CE+MSP", "CE+maxlogit", "CE+energy", "CE+distance", "CE+mahalanobis",
              "OS-full+MSP", "OS-16PSK+MSP", "OS-8PAM+MSP"]
     labels = ["MSP", "max-logit", "energy", "Euclidean\ndistance", "Mahalanobis",
-              "Objectosph.\nfull aux", "Objectosph.\n16PSK aux", "Objectosph.\n8PAM aux"]
+              "outlier tr.\n16PSK+8PAM", "outlier tr.\n16PSK", "outlier tr.\n8PAM"]
     runs = [seed_file("campaign2", "campaign2_rep", "scorer_bench", s) for s in ALL_SEEDS]
     fig, ax = plt.subplots(figsize=(WIDE, 2.3))
     for i, v in enumerate(order):
