@@ -160,3 +160,9 @@ bash setup.sh --test                 # venv + deps + full test suite
 .venv/bin/python experiments/run_campaign.py --scale full --seeds 0 1 2 3 4
 .venv/bin/streamlit run app.py       # interactive UI
 ```
+
+Windows (PowerShell, no Linux/WSL): `setup.ps1 -Test`, then
+`.venv\Scripts\python experiments\run_campaign.py ...` and
+`.venv\Scripts\python -m streamlit run app.py`. The PowerShell script was
+not exercised on a real Windows machine here; the manual commands in the
+project README are the fallback.
