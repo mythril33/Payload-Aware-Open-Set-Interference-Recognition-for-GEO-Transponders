@@ -11,7 +11,11 @@ Bu proje, PyTorch ile radyo sinyalleri üzerinde makine öğrenmesini dört aşa
 
 ## Quick start
 
-Run everything from this folder (`learning/rfml-basics`).
+Run everything from this folder (`learning/rfml-basics`). The code is pure
+Python (CPU only) and runs on Windows, Linux and macOS alike; only the setup
+script differs per platform.
+
+**Linux / macOS:**
 
 ```bash
 bash setup.sh          # creates .venv/, installs requirements.txt, prints a smoke check
@@ -27,7 +31,36 @@ bash setup.sh --test   # the same, then runs pytest -q
 .venv/bin/python lessons/04_open_set.py --quick
 ```
 
-For the interactive UI, run `.venv/bin/streamlit run app.py` from this folder. It opens in the browser and has four stages, each with its own controls and a run button. The UI and the lessons share the stage functions in `rfml/experiments.py`. The UI screens themselves are not covered by the tests.
+**Windows (no Linux or WSL needed):** install Python 3.11+ from python.org
+(tick "Add python.exe to PATH" in the installer), open PowerShell in this
+folder, then:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File setup.ps1          # create .venv, install, smoke check
+powershell -ExecutionPolicy Bypass -File setup.ps1 -Test    # the same, then pytest -q
+```
+
+or do the same by hand (works in cmd.exe too):
+
+```powershell
+py -3 -m venv .venv
+.venv\Scripts\python -m pip install -r requirements.txt
+.venv\Scripts\python -m pytest -q
+.venv\Scripts\python lessons\01_tensors_autograd.py
+.venv\Scripts\python lessons\02_modulation_classification.py --quick
+```
+
+On Windows, `pip install torch` fetches the CPU-only wheel, which is what
+this project uses everywhere. `setup.ps1` was written alongside `setup.sh`
+but has not been exercised on a real Windows machine by this repository's
+CI; if a step fails, the manual commands above are the fallback.
+
+For the interactive UI, run `.venv/bin/streamlit run app.py` (Windows:
+`.venv\Scripts\python -m streamlit run app.py`) from this folder. It opens
+in the browser and has four stages, each with its own controls and a run
+button. The UI and the lessons share the stage functions in
+`rfml/experiments.py`. The UI screens themselves are not covered by the
+tests.
 
 `--quick` is a smoke run: 2 epochs and very few devices. It checks that the code runs and nothing more. In the checks made for this README, each quick run took from a few seconds to about 15 seconds. Drop the flag for the full run. Full runs train several networks for up to 25 epochs, so expect minutes rather than seconds on a CPU. The scripts set PyTorch to 4 threads.
 
@@ -179,6 +212,7 @@ Each exercise fits in about an hour. A full run takes minutes, and every run ove
 learning/rfml-basics/
   README.md              this file
   setup.sh               creates .venv/, installs requirements.txt, smoke check; --test also runs pytest
+  setup.ps1              the same for Windows PowerShell; -Test also runs pytest
   requirements.txt       numpy, torch, matplotlib, pytest, streamlit (versions not pinned)
   app.py                 Streamlit UI for the four stages (run with streamlit run app.py)
   pytest.ini             testpaths = tests, pythonpath = .

@@ -12,6 +12,9 @@ bash setup.sh                       # once: creates .venv, installs requirements
 .venv/bin/python experiments/run_campaign.py --scale full --seeds 0 1 2 3 4
 ```
 
+On Windows, run `setup.ps1` instead (see the project README's Windows
+section) and call `.venv\Scripts\python experiments\run_campaign.py ...`.
+
 Wall time is roughly 20–40 minutes on a 4-core CPU (exact time is recorded in
 `campaign/aggregate.json` → `wall_time_s`). A fast smoke run:
 

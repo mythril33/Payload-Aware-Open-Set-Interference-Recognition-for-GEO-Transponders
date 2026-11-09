@@ -3,3 +3,4 @@ __pycache__/
 .venv/
 results/*.png
 experiments/campaign*/raw/
+!experiments/campaign2/raw/scorer_bench_seed0.json

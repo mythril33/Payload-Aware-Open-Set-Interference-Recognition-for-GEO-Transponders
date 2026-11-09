@@ -128,6 +128,92 @@ def objectosphere_loss(
     return total / n_batch
 
 
+def _check_logits_2d(logits: np.ndarray) -> np.ndarray:
+    z = np.asarray(logits, dtype=np.float64)
+    if z.ndim != 2:
+        raise ValueError(f"logits must be (N, C), got shape {z.shape}")
+    return z
+
+
+def energy_unknown_score(logits: np.ndarray) -> np.ndarray:
+    """Negative log-sum-exp of the logits, shape (N,). Larger = more unknown-like.
+
+    E(z) = -log sum_c exp(z_c), computed stably by factoring out the row max,
+    so it is exact for logits far beyond exp()'s overflow point. Unlike MSP,
+    the energy is NOT shift invariant: adding a constant c to every logit of a
+    row changes the score by exactly -c. That is intended — the score keeps the
+    logit-magnitude information that the softmax normalises away.
+    """
+    z = _check_logits_2d(logits)
+    m = z.max(axis=1, keepdims=True)
+    return -(m[:, 0] + np.log(np.exp(z - m).sum(axis=1)))
+
+
+def maxlogit_unknown_score(logits: np.ndarray) -> np.ndarray:
+    """Negative maximum logit, shape (N,). Larger = more unknown-like."""
+    return -_check_logits_2d(logits).max(axis=1)
+
+
+def fit_shared_covariance(
+    embeddings: np.ndarray,
+    labels: np.ndarray,
+    n_classes: int,
+    shrinkage: float = 0.1,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Class means and the shared (pooled within-class) precision matrix.
+
+    Fit on KNOWN TRAINING embeddings only: samples with label -1 (outliers)
+    are excluded, exactly as in class_centroids. Returns (means (C, D),
+    precision (D, D)). The pooled within-class covariance over the N known
+    samples uses the unbiased denominator (N - C):
+
+        Sigma = sum_c sum_{i in c} (x_i - mu_c)(x_i - mu_c)^T / (N - C)
+
+    and is shrunk toward the scaled identity before inversion:
+
+        Sigma_s   = (1 - shrinkage) * Sigma + shrinkage * (trace(Sigma)/D) * I
+        precision = inv(Sigma_s)
+
+    Raises ValueError if any class in range(n_classes) has no sample, or if
+    N <= C (the pooled estimate would be undefined).
+    """
+    if not (0.0 <= float(shrinkage) <= 1.0):
+        raise ValueError(f"shrinkage must lie in [0, 1], got {shrinkage!r}")
+    means = class_centroids(embeddings, labels, n_classes)  # raises on a missing class
+    emb = np.asarray(embeddings, dtype=np.float64)
+    lab = np.asarray(labels, dtype=np.int64).ravel()
+    known = lab >= 0
+    x = emb[known]
+    y = lab[known]
+    n, d = x.shape
+    if n <= n_classes:
+        raise ValueError(f"pooled covariance needs N > C, got N={n}, C={n_classes}")
+    centered = x - means[y]
+    sigma = centered.T @ centered / (n - n_classes)
+    sigma_s = (1.0 - shrinkage) * sigma + shrinkage * (np.trace(sigma) / d) * np.eye(d)
+    precision = np.linalg.inv(sigma_s)
+    return means, precision
+
+
+def mahalanobis_unknown_score(
+    embeddings: np.ndarray,
+    means: np.ndarray,
+    precision: np.ndarray,
+) -> np.ndarray:
+    """Min Mahalanobis distance to any class mean, shape (N,). Larger = more unknown.
+
+    sqrt of min_c (x - mu_c)^T P (x - mu_c). The quadratic form can come out a
+    tiny negative through float cancellation when x sits at a mean, so it is
+    clamped to 0 before the sqrt.
+    """
+    emb = np.asarray(embeddings, dtype=np.float64)
+    mu = np.asarray(means, dtype=np.float64)
+    p = np.asarray(precision, dtype=np.float64)
+    diff = emb[:, None, :] - mu[None, :, :]  # (N, C, D)
+    quad = np.einsum("ncd,de,nce->nc", diff, p, diff, optimize=True)
+    return np.sqrt(np.clip(quad.min(axis=1), 0.0, None))
+
+
 def calibrate_threshold(known_scores: np.ndarray, target_known_accept: float = 0.95) -> float:
     """Smallest t such that at least `target_known_accept` of known scores are <= t.
 
