@@ -1,0 +1,380 @@
+{
+  "stage": "split_counterfactual",
+  "scale": {
+    "name": "full",
+    "description": "lesson defaults",
+    "tx_train": 40,
+    "tx_val": 10,
+    "tx_test": 10,
+    "tx_aux": 20,
+    "tx_unknown": 10,
+    "frames_train": 20,
+    "frames_val": 10,
+    "frames_test": 10,
+    "fp_devices": 10,
+    "fp_frames": 300,
+    "epochs": 25,
+    "patience": 5
+  },
+  "seed": 3,
+  "split": "trained and selected as campaign 1 (device-level); scored on unseen devices and on new frames of the training devices",
+  "classes": [
+    "BPSK",
+    "QPSK",
+    "8PSK",
+    "16QAM"
+  ],
+  "chance_level": 0.25,
+  "test_snr_db": [
+    -6.0,
+    -4.0,
+    -2.0,
+    0.0,
+    2.0,
+    4.0,
+    6.0,
+    8.0,
+    10.0,
+    12.0,
+    14.0,
+    16.0,
+    18.0,
+    20.0
+  ],
+  "devices_per_class": {
+    "train": 40,
+    "val_select": 10,
+    "test": 10
+  },
+  "seen_frames_per_device_per_snr": 3,
+  "rate_definitions": {
+    "accuracy": "positive = predicted class equals the true class; denominator = the frames of that row"
+  },
+  "models": {
+    "MLP": {
+      "epochs_run": 14,
+      "best_epoch": 8,
+      "train_accuracy": 0.9940625,
+      "unseen_devices": {
+        "per_snr": [
+          {
+            "snr_db": -6.0,
+            "n": 400,
+            "accuracy": 0.225
+          },
+          {
+            "snr_db": -4.0,
+            "n": 400,
+            "accuracy": 0.225
+          },
+          {
+            "snr_db": -2.0,
+            "n": 400,
+            "accuracy": 0.2525
+          },
+          {
+            "snr_db": 0.0,
+            "n": 400,
+            "accuracy": 0.2425
+          },
+          {
+            "snr_db": 2.0,
+            "n": 400,
+            "accuracy": 0.2675
+          },
+          {
+            "snr_db": 4.0,
+            "n": 400,
+            "accuracy": 0.265
+          },
+          {
+            "snr_db": 6.0,
+            "n": 400,
+            "accuracy": 0.28
+          },
+          {
+            "snr_db": 8.0,
+            "n": 400,
+            "accuracy": 0.2425
+          },
+          {
+            "snr_db": 10.0,
+            "n": 400,
+            "accuracy": 0.2525
+          },
+          {
+            "snr_db": 12.0,
+            "n": 400,
+            "accuracy": 0.2725
+          },
+          {
+            "snr_db": 14.0,
+            "n": 400,
+            "accuracy": 0.2575
+          },
+          {
+            "snr_db": 16.0,
+            "n": 400,
+            "accuracy": 0.25
+          },
+          {
+            "snr_db": 18.0,
+            "n": 400,
+            "accuracy": 0.2425
+          },
+          {
+            "snr_db": 20.0,
+            "n": 400,
+            "accuracy": 0.25
+          }
+        ],
+        "overall": {
+          "n": 5600,
+          "accuracy": 0.2517857142857143
+        }
+      },
+      "seen_devices_new_frames": {
+        "per_snr": [
+          {
+            "snr_db": -6.0,
+            "n": 480,
+            "accuracy": 0.25416666666666665
+          },
+          {
+            "snr_db": -4.0,
+            "n": 480,
+            "accuracy": 0.23125
+          },
+          {
+            "snr_db": -2.0,
+            "n": 480,
+            "accuracy": 0.26875
+          },
+          {
+            "snr_db": 0.0,
+            "n": 480,
+            "accuracy": 0.23958333333333334
+          },
+          {
+            "snr_db": 2.0,
+            "n": 480,
+            "accuracy": 0.25625
+          },
+          {
+            "snr_db": 4.0,
+            "n": 480,
+            "accuracy": 0.27291666666666664
+          },
+          {
+            "snr_db": 6.0,
+            "n": 480,
+            "accuracy": 0.29375
+          },
+          {
+            "snr_db": 8.0,
+            "n": 480,
+            "accuracy": 0.275
+          },
+          {
+            "snr_db": 10.0,
+            "n": 480,
+            "accuracy": 0.24583333333333332
+          },
+          {
+            "snr_db": 12.0,
+            "n": 480,
+            "accuracy": 0.22083333333333333
+          },
+          {
+            "snr_db": 14.0,
+            "n": 480,
+            "accuracy": 0.25833333333333336
+          },
+          {
+            "snr_db": 16.0,
+            "n": 480,
+            "accuracy": 0.24583333333333332
+          },
+          {
+            "snr_db": 18.0,
+            "n": 480,
+            "accuracy": 0.2520833333333333
+          },
+          {
+            "snr_db": 20.0,
+            "n": 480,
+            "accuracy": 0.24791666666666667
+          }
+        ],
+        "overall": {
+          "n": 6720,
+          "accuracy": 0.2544642857142857
+        }
+      }
+    },
+    "CNN1D": {
+      "epochs_run": 13,
+      "best_epoch": 7,
+      "train_accuracy": 0.8025,
+      "unseen_devices": {
+        "per_snr": [
+          {
+            "snr_db": -6.0,
+            "n": 400,
+            "accuracy": 0.43
+          },
+          {
+            "snr_db": -4.0,
+            "n": 400,
+            "accuracy": 0.525
+          },
+          {
+            "snr_db": -2.0,
+            "n": 400,
+            "accuracy": 0.6
+          },
+          {
+            "snr_db": 0.0,
+            "n": 400,
+            "accuracy": 0.64
+          },
+          {
+            "snr_db": 2.0,
+            "n": 400,
+            "accuracy": 0.7
+          },
+          {
+            "snr_db": 4.0,
+            "n": 400,
+            "accuracy": 0.7575
+          },
+          {
+            "snr_db": 6.0,
+            "n": 400,
+            "accuracy": 0.7925
+          },
+          {
+            "snr_db": 8.0,
+            "n": 400,
+            "accuracy": 0.8375
+          },
+          {
+            "snr_db": 10.0,
+            "n": 400,
+            "accuracy": 0.825
+          },
+          {
+            "snr_db": 12.0,
+            "n": 400,
+            "accuracy": 0.865
+          },
+          {
+            "snr_db": 14.0,
+            "n": 400,
+            "accuracy": 0.84
+          },
+          {
+            "snr_db": 16.0,
+            "n": 400,
+            "accuracy": 0.8675
+          },
+          {
+            "snr_db": 18.0,
+            "n": 400,
+            "accuracy": 0.8325
+          },
+          {
+            "snr_db": 20.0,
+            "n": 400,
+            "accuracy": 0.83
+          }
+        ],
+        "overall": {
+          "n": 5600,
+          "accuracy": 0.73875
+        }
+      },
+      "seen_devices_new_frames": {
+        "per_snr": [
+          {
+            "snr_db": -6.0,
+            "n": 480,
+            "accuracy": 0.42916666666666664
+          },
+          {
+            "snr_db": -4.0,
+            "n": 480,
+            "accuracy": 0.5270833333333333
+          },
+          {
+            "snr_db": -2.0,
+            "n": 480,
+            "accuracy": 0.59375
+          },
+          {
+            "snr_db": 0.0,
+            "n": 480,
+            "accuracy": 0.6541666666666667
+          },
+          {
+            "snr_db": 2.0,
+            "n": 480,
+            "accuracy": 0.7125
+          },
+          {
+            "snr_db": 4.0,
+            "n": 480,
+            "accuracy": 0.7604166666666666
+          },
+          {
+            "snr_db": 6.0,
+            "n": 480,
+            "accuracy": 0.80625
+          },
+          {
+            "snr_db": 8.0,
+            "n": 480,
+            "accuracy": 0.83125
+          },
+          {
+            "snr_db": 10.0,
+            "n": 480,
+            "accuracy": 0.85
+          },
+          {
+            "snr_db": 12.0,
+            "n": 480,
+            "accuracy": 0.8458333333333333
+          },
+          {
+            "snr_db": 14.0,
+            "n": 480,
+            "accuracy": 0.86875
+          },
+          {
+            "snr_db": 16.0,
+            "n": 480,
+            "accuracy": 0.8625
+          },
+          {
+            "snr_db": 18.0,
+            "n": 480,
+            "accuracy": 0.8583333333333333
+          },
+          {
+            "snr_db": 20.0,
+            "n": 480,
+            "accuracy": 0.8666666666666667
+          }
+        ],
+        "overall": {
+          "n": 6720,
+          "accuracy": 0.7476190476190476
+        }
+      }
+    }
+  },
+  "campaign": {
+    "stage_wall_time_s": 25.2
+  }
+}
