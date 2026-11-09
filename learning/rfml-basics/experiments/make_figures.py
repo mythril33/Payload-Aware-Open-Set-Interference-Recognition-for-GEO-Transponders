@@ -40,6 +40,8 @@ COL, WIDE = 3.45, 7.1  # IEEE column and page widths in inches
 
 plt.rcParams.update(
     {
+        # DejaVu Sans ships with matplotlib (TrueType): the same glyphs on every machine.
+        "font.family": "DejaVu Sans",
         "font.size": 8,
         "axes.titlesize": 8,
         "axes.labelsize": 8,
@@ -103,7 +105,7 @@ def fig_auroc() -> None:
     for i, v in enumerate(order):
         seed_dots(ax, i, [r["variants"][v]["report"]["auroc"] for r in runs])
     ax.axhline(0.5, color=MUTED, lw=0.8, ls="--")
-    ax.text(len(order) - 0.55, 0.51, "chance", color=MUTED, fontsize=7, va="bottom", ha="right")
+    ax.text(4.42, 0.515, "chance", color=MUTED, fontsize=7, va="bottom", ha="right")
     ax.axvline(4.5, color=GRID, lw=0.8)
     ax.text(2.0, 0.965, "post-hoc scores on one CE model", fontsize=7, color=MUTED, ha="center")
     ax.text(6.0, 0.965, "separately trained", fontsize=7, color=MUTED, ha="center")
@@ -131,9 +133,9 @@ def fig_hists(raw0: dict) -> None:
         ax.hist(unknown, bins=bins, color=ORANGE, alpha=0.7, label="unknown")
         ax.axvline(v["threshold"], color=INK, lw=1.0, ls="--")
         ax.set_title(title)
-        ax.set_xlabel("score (larger = more unknown)")
     axes[0].set_ylabel("frames")
-    axes[0].legend(loc="upper right")
+    axes[1].legend(loc="upper right")
+    fig.supxlabel("score (larger = more unknown-like)", fontsize=8, y=0.04)
     fig.tight_layout(w_pad=0.6)
     save(fig, "fig_hists")
 
@@ -170,10 +172,10 @@ def fig_snr_auroc() -> None:
     series: dict[str, dict[float, list[float]]] = {"CE+MSP": {}, "CE+distance": {}}
     for seed in ALL_SEEDS:
         r = seed_file("campaign2", "campaign2_rep", "scorer_bench", seed)
-        for name in series:
+        for name, by_snr in series.items():
             for row in r["variants"][name]["per_snr_auroc"]:
                 if row["auroc"] is not None:
-                    series[name].setdefault(row["snr_db"], []).append(row["auroc"])
+                    by_snr.setdefault(row["snr_db"], []).append(row["auroc"])
     fig, ax = plt.subplots(figsize=(COL, 2.1))
     _mean_sd_curve(ax, series["CE+distance"], ORANGE, "Euclidean distance")
     _mean_sd_curve(ax, series["CE+MSP"], BLUE, "MSP")
@@ -181,7 +183,7 @@ def fig_snr_auroc() -> None:
     ax.set_xlabel("SNR (dB)")
     ax.set_ylabel("AUROC (unknown = positive)")
     ax.set_ylim(0, 1)
-    ax.legend(loc="center right")
+    ax.legend(loc="lower center", ncols=2)
     save(fig, "fig_snr_auroc")
 
 
@@ -227,11 +229,11 @@ def fig_seen_unseen() -> None:
             ax.bar(x, float(np.mean(vals)), width=width - 0.03, color=color, label=label if i == 0 else None, zorder=2)
             ax.scatter([x] * len(vals), vals, s=5, color=INK, alpha=0.55, zorder=3, linewidths=0)
     ax.axhline(0.25, color=MUTED, lw=0.8, ls="--")
-    ax.text(1.42, 0.265, "chance", color=MUTED, fontsize=7, ha="right")
+    ax.text(0.5, 0.265, "chance", color=MUTED, fontsize=7, ha="center")
     ax.set_xticks([0, 1])
     ax.set_xticklabels(["MLP", "CNN1D"])
     ax.set_ylabel("accuracy")
-    ax.set_ylim(0, 1.18)
+    ax.set_ylim(0, 1.27)
     ax.set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
     ax.legend(loc="upper center", ncols=3, columnspacing=0.8, handlelength=1.2)
     save(fig, "fig_seen_unseen")
@@ -264,14 +266,14 @@ def fig_modulation() -> None:
     series: dict[str, dict[float, list[float]]] = {"CNN1D": {}, "MLP": {}}
     for seed in ALL_SEEDS:
         r = seed_file("campaign", "campaign_rep", "modulation", seed)
-        for name in series:
+        for name, by_snr in series.items():
             for row in r["models"][name]["per_snr"]:
-                series[name].setdefault(row["snr_db"], []).append(row["accuracy"])
+                by_snr.setdefault(row["snr_db"], []).append(row["accuracy"])
     fig, ax = plt.subplots(figsize=(COL, 2.1))
     _mean_sd_curve(ax, series["CNN1D"], BLUE, "CNN1D")
     _mean_sd_curve(ax, series["MLP"], ORANGE, "MLP")
     ax.axhline(0.25, color=MUTED, lw=0.8, ls="--")
-    ax.text(19.5, 0.265, "chance", color=MUTED, fontsize=7, ha="right")
+    ax.text(19.5, 0.215, "chance", color=MUTED, fontsize=7, ha="right", va="top")
     ax.set_xlabel("test SNR (dB)")
     ax.set_ylabel("accuracy, unseen devices")
     ax.set_ylim(0, 1)

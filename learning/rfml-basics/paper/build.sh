@@ -41,9 +41,11 @@ if grep -iE "warning--" bibtex.log; then
     exit 1
 fi
 
-pdftotext -layout paper.pdf paper.txt
-for required in "Abstract" "Introduction" "Related Work" "System Model" "Experimental Setup" \
-    "Results" "Limitations" "Conclusion" "References"; do
+# IEEEtran sets section titles in spaced small capitals ("I NTRODUCTION"), so the
+# check compares lower-case text with the spaces removed.
+pdftotext -layout paper.pdf - | tr -d ' ' | tr '[:upper:]' '[:lower:]' > paper.txt
+for required in abstract introduction relatedwork systemmodel experimentalsetup \
+    results limitations conclusion references; do
     grep -Fq "$required" paper.txt || { echo "Missing section: $required"; exit 1; }
 done
 pages=$(pdfinfo paper.pdf | awk '/^Pages:/ {print $2}')

@@ -1,0 +1,2214 @@
+{
+ "c3:arm_control:CE+distance:auroc:max": {
+  "value": "0.814",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+distance:auroc"
+ },
+ "c3:arm_control:CE+distance:auroc:mean": {
+  "value": "0.779",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+distance:auroc"
+ },
+ "c3:arm_control:CE+distance:auroc:min": {
+  "value": "0.742",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+distance:auroc"
+ },
+ "c3:arm_control:CE+distance:auroc:pm": {
+  "value": "0.779 \\pm 0.020",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+distance:auroc"
+ },
+ "c3:arm_control:CE+distance:auroc:sd": {
+  "value": "0.020",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+distance:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.01:auroc:max": {
+  "value": "0.805",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.01:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.01:auroc:mean": {
+  "value": "0.764",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.01:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.01:auroc:min": {
+  "value": "0.729",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.01:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.01:auroc:pm": {
+  "value": "0.764 \\pm 0.025",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.01:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.01:auroc:sd": {
+  "value": "0.025",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.01:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.1:auroc:max": {
+  "value": "0.788",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.1:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.1:auroc:mean": {
+  "value": "0.748",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.1:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.1:auroc:min": {
+  "value": "0.705",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.1:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.1:auroc:pm": {
+  "value": "0.748 \\pm 0.024",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.1:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.1:auroc:sd": {
+  "value": "0.024",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.1:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.5:auroc:max": {
+  "value": "0.796",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.5:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.5:auroc:mean": {
+  "value": "0.753",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.5:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.5:auroc:min": {
+  "value": "0.708",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.5:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.5:auroc:pm": {
+  "value": "0.753 \\pm 0.024",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.5:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.5:auroc:sd": {
+  "value": "0.024",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.5:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.9:auroc:max": {
+  "value": "0.809",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.9:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.9:auroc:mean": {
+  "value": "0.769",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.9:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.9:auroc:min": {
+  "value": "0.728",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.9:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.9:auroc:pm": {
+  "value": "0.769 \\pm 0.023",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.9:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@0.9:auroc:sd": {
+  "value": "0.023",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@0.9:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@1:auroc:max": {
+  "value": "0.814",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@1:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@1:auroc:mean": {
+  "value": "0.779",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@1:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@1:auroc:min": {
+  "value": "0.742",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@1:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@1:auroc:pm": {
+  "value": "0.779 \\pm 0.020",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@1:auroc"
+ },
+ "c3:arm_control:CE+mahalanobis@1:auroc:sd": {
+  "value": "0.020",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.CE+mahalanobis@1:auroc"
+ },
+ "c3:arm_control:OS-16PSK+MSP:auroc:max": {
+  "value": "0.379",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:auroc"
+ },
+ "c3:arm_control:OS-16PSK+MSP:auroc:mean": {
+  "value": "0.273",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:auroc"
+ },
+ "c3:arm_control:OS-16PSK+MSP:auroc:min": {
+  "value": "0.132",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:auroc"
+ },
+ "c3:arm_control:OS-16PSK+MSP:auroc:pm": {
+  "value": "0.273 \\pm 0.073",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:auroc"
+ },
+ "c3:arm_control:OS-16PSK+MSP:auroc:sd": {
+  "value": "0.073",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:auroc"
+ },
+ "c3:arm_control:OS-16PSK+MSP:reject_4PAM:max": {
+  "value": "0.040",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:reject_4PAM"
+ },
+ "c3:arm_control:OS-16PSK+MSP:reject_4PAM:mean": {
+  "value": "0.009",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:reject_4PAM"
+ },
+ "c3:arm_control:OS-16PSK+MSP:reject_4PAM:min": {
+  "value": "0.000",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:reject_4PAM"
+ },
+ "c3:arm_control:OS-16PSK+MSP:reject_4PAM:pm": {
+  "value": "0.009 \\pm 0.014",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:reject_4PAM"
+ },
+ "c3:arm_control:OS-16PSK+MSP:reject_4PAM:sd": {
+  "value": "0.014",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:reject_4PAM"
+ },
+ "c3:arm_control:OS-16PSK+MSP:reject_64QAM:max": {
+  "value": "0.100",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:reject_64QAM"
+ },
+ "c3:arm_control:OS-16PSK+MSP:reject_64QAM:mean": {
+  "value": "0.037",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:reject_64QAM"
+ },
+ "c3:arm_control:OS-16PSK+MSP:reject_64QAM:min": {
+  "value": "0.010",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:reject_64QAM"
+ },
+ "c3:arm_control:OS-16PSK+MSP:reject_64QAM:pm": {
+  "value": "0.037 \\pm 0.026",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:reject_64QAM"
+ },
+ "c3:arm_control:OS-16PSK+MSP:reject_64QAM:sd": {
+  "value": "0.026",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:reject_64QAM"
+ },
+ "c3:arm_control:OS-16PSK+MSP:unk_reject:max": {
+  "value": "0.055",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:unk_reject"
+ },
+ "c3:arm_control:OS-16PSK+MSP:unk_reject:mean": {
+  "value": "0.023",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:unk_reject"
+ },
+ "c3:arm_control:OS-16PSK+MSP:unk_reject:min": {
+  "value": "0.005",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:unk_reject"
+ },
+ "c3:arm_control:OS-16PSK+MSP:unk_reject:pm": {
+  "value": "0.023 \\pm 0.015",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:unk_reject"
+ },
+ "c3:arm_control:OS-16PSK+MSP:unk_reject:sd": {
+  "value": "0.015",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-16PSK+MSP:unk_reject"
+ },
+ "c3:arm_control:OS-8PAM+MSP:auroc:max": {
+  "value": "0.676",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:auroc"
+ },
+ "c3:arm_control:OS-8PAM+MSP:auroc:mean": {
+  "value": "0.619",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:auroc"
+ },
+ "c3:arm_control:OS-8PAM+MSP:auroc:min": {
+  "value": "0.579",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:auroc"
+ },
+ "c3:arm_control:OS-8PAM+MSP:auroc:pm": {
+  "value": "0.619 \\pm 0.036",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:auroc"
+ },
+ "c3:arm_control:OS-8PAM+MSP:auroc:sd": {
+  "value": "0.036",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:auroc"
+ },
+ "c3:arm_control:OS-8PAM+MSP:reject_4PAM:max": {
+  "value": "0.680",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:reject_4PAM"
+ },
+ "c3:arm_control:OS-8PAM+MSP:reject_4PAM:mean": {
+  "value": "0.423",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:reject_4PAM"
+ },
+ "c3:arm_control:OS-8PAM+MSP:reject_4PAM:min": {
+  "value": "0.050",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:reject_4PAM"
+ },
+ "c3:arm_control:OS-8PAM+MSP:reject_4PAM:pm": {
+  "value": "0.423 \\pm 0.189",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:reject_4PAM"
+ },
+ "c3:arm_control:OS-8PAM+MSP:reject_4PAM:sd": {
+  "value": "0.189",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:reject_4PAM"
+ },
+ "c3:arm_control:OS-8PAM+MSP:reject_64QAM:max": {
+  "value": "0.180",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:reject_64QAM"
+ },
+ "c3:arm_control:OS-8PAM+MSP:reject_64QAM:mean": {
+  "value": "0.088",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:reject_64QAM"
+ },
+ "c3:arm_control:OS-8PAM+MSP:reject_64QAM:min": {
+  "value": "0.010",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:reject_64QAM"
+ },
+ "c3:arm_control:OS-8PAM+MSP:reject_64QAM:pm": {
+  "value": "0.088 \\pm 0.054",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:reject_64QAM"
+ },
+ "c3:arm_control:OS-8PAM+MSP:reject_64QAM:sd": {
+  "value": "0.054",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:reject_64QAM"
+ },
+ "c3:arm_control:OS-8PAM+MSP:unk_reject:max": {
+  "value": "0.400",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:unk_reject"
+ },
+ "c3:arm_control:OS-8PAM+MSP:unk_reject:mean": {
+  "value": "0.256",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:unk_reject"
+ },
+ "c3:arm_control:OS-8PAM+MSP:unk_reject:min": {
+  "value": "0.065",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:unk_reject"
+ },
+ "c3:arm_control:OS-8PAM+MSP:unk_reject:pm": {
+  "value": "0.256 \\pm 0.102",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:unk_reject"
+ },
+ "c3:arm_control:OS-8PAM+MSP:unk_reject:sd": {
+  "value": "0.102",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-8PAM+MSP:unk_reject"
+ },
+ "c3:arm_control:OS-full+MSP:auroc:max": {
+  "value": "0.595",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:auroc"
+ },
+ "c3:arm_control:OS-full+MSP:auroc:mean": {
+  "value": "0.536",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:auroc"
+ },
+ "c3:arm_control:OS-full+MSP:auroc:min": {
+  "value": "0.383",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:auroc"
+ },
+ "c3:arm_control:OS-full+MSP:auroc:pm": {
+  "value": "0.536 \\pm 0.061",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:auroc"
+ },
+ "c3:arm_control:OS-full+MSP:auroc:sd": {
+  "value": "0.061",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:auroc"
+ },
+ "c3:arm_control:OS-full+MSP:reject_4PAM:max": {
+  "value": "0.510",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:reject_4PAM"
+ },
+ "c3:arm_control:OS-full+MSP:reject_4PAM:mean": {
+  "value": "0.331",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:reject_4PAM"
+ },
+ "c3:arm_control:OS-full+MSP:reject_4PAM:min": {
+  "value": "0.090",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:reject_4PAM"
+ },
+ "c3:arm_control:OS-full+MSP:reject_4PAM:pm": {
+  "value": "0.331 \\pm 0.117",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:reject_4PAM"
+ },
+ "c3:arm_control:OS-full+MSP:reject_4PAM:sd": {
+  "value": "0.117",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:reject_4PAM"
+ },
+ "c3:arm_control:OS-full+MSP:reject_64QAM:max": {
+  "value": "0.170",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:reject_64QAM"
+ },
+ "c3:arm_control:OS-full+MSP:reject_64QAM:mean": {
+  "value": "0.058",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:reject_64QAM"
+ },
+ "c3:arm_control:OS-full+MSP:reject_64QAM:min": {
+  "value": "0.020",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:reject_64QAM"
+ },
+ "c3:arm_control:OS-full+MSP:reject_64QAM:pm": {
+  "value": "0.058 \\pm 0.045",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:reject_64QAM"
+ },
+ "c3:arm_control:OS-full+MSP:reject_64QAM:sd": {
+  "value": "0.045",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:reject_64QAM"
+ },
+ "c3:arm_control:OS-full+MSP:unk_reject:max": {
+  "value": "0.295",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:unk_reject"
+ },
+ "c3:arm_control:OS-full+MSP:unk_reject:mean": {
+  "value": "0.194",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:unk_reject"
+ },
+ "c3:arm_control:OS-full+MSP:unk_reject:min": {
+  "value": "0.055",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:unk_reject"
+ },
+ "c3:arm_control:OS-full+MSP:unk_reject:pm": {
+  "value": "0.194 \\pm 0.067",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:unk_reject"
+ },
+ "c3:arm_control:OS-full+MSP:unk_reject:sd": {
+  "value": "0.067",
+  "source": "experiments/campaign3/aggregate.json metrics.arm_control.OS-full+MSP:unk_reject"
+ },
+ "c3:split_counterfactual:CNN1D:seen_acc:max": {
+  "value": "0.813",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.CNN1D:seen_acc"
+ },
+ "c3:split_counterfactual:CNN1D:seen_acc:mean": {
+  "value": "0.761",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.CNN1D:seen_acc"
+ },
+ "c3:split_counterfactual:CNN1D:seen_acc:min": {
+  "value": "0.712",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.CNN1D:seen_acc"
+ },
+ "c3:split_counterfactual:CNN1D:seen_acc:pm": {
+  "value": "0.761 \\pm 0.033",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.CNN1D:seen_acc"
+ },
+ "c3:split_counterfactual:CNN1D:seen_acc:sd": {
+  "value": "0.033",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.CNN1D:seen_acc"
+ },
+ "c3:split_counterfactual:CNN1D:train_acc:max": {
+  "value": "0.937",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.CNN1D:train_acc"
+ },
+ "c3:split_counterfactual:CNN1D:train_acc:mean": {
+  "value": "0.832",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.CNN1D:train_acc"
+ },
+ "c3:split_counterfactual:CNN1D:train_acc:min": {
+  "value": "0.777",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.CNN1D:train_acc"
+ },
+ "c3:split_counterfactual:CNN1D:train_acc:pm": {
+  "value": "0.832 \\pm 0.050",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.CNN1D:train_acc"
+ },
+ "c3:split_counterfactual:CNN1D:train_acc:sd": {
+  "value": "0.050",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.CNN1D:train_acc"
+ },
+ "c3:split_counterfactual:CNN1D:unseen_acc:max": {
+  "value": "0.798",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.CNN1D:unseen_acc"
+ },
+ "c3:split_counterfactual:CNN1D:unseen_acc:mean": {
+  "value": "0.749",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.CNN1D:unseen_acc"
+ },
+ "c3:split_counterfactual:CNN1D:unseen_acc:min": {
+  "value": "0.705",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.CNN1D:unseen_acc"
+ },
+ "c3:split_counterfactual:CNN1D:unseen_acc:pm": {
+  "value": "0.749 \\pm 0.032",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.CNN1D:unseen_acc"
+ },
+ "c3:split_counterfactual:CNN1D:unseen_acc:sd": {
+  "value": "0.032",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.CNN1D:unseen_acc"
+ },
+ "c3:split_counterfactual:MLP:seen_acc:max": {
+  "value": "0.263",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.MLP:seen_acc"
+ },
+ "c3:split_counterfactual:MLP:seen_acc:mean": {
+  "value": "0.252",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.MLP:seen_acc"
+ },
+ "c3:split_counterfactual:MLP:seen_acc:min": {
+  "value": "0.242",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.MLP:seen_acc"
+ },
+ "c3:split_counterfactual:MLP:seen_acc:pm": {
+  "value": "0.252 \\pm 0.006",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.MLP:seen_acc"
+ },
+ "c3:split_counterfactual:MLP:seen_acc:sd": {
+  "value": "0.006",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.MLP:seen_acc"
+ },
+ "c3:split_counterfactual:MLP:train_acc:max": {
+  "value": "0.997",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.MLP:train_acc"
+ },
+ "c3:split_counterfactual:MLP:train_acc:mean": {
+  "value": "0.868",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.MLP:train_acc"
+ },
+ "c3:split_counterfactual:MLP:train_acc:min": {
+  "value": "0.659",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.MLP:train_acc"
+ },
+ "c3:split_counterfactual:MLP:train_acc:pm": {
+  "value": "0.868 \\pm 0.129",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.MLP:train_acc"
+ },
+ "c3:split_counterfactual:MLP:train_acc:sd": {
+  "value": "0.129",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.MLP:train_acc"
+ },
+ "c3:split_counterfactual:MLP:unseen_acc:max": {
+  "value": "0.260",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.MLP:unseen_acc"
+ },
+ "c3:split_counterfactual:MLP:unseen_acc:mean": {
+  "value": "0.251",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.MLP:unseen_acc"
+ },
+ "c3:split_counterfactual:MLP:unseen_acc:min": {
+  "value": "0.240",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.MLP:unseen_acc"
+ },
+ "c3:split_counterfactual:MLP:unseen_acc:pm": {
+  "value": "0.251 \\pm 0.007",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.MLP:unseen_acc"
+ },
+ "c3:split_counterfactual:MLP:unseen_acc:sd": {
+  "value": "0.007",
+  "source": "experiments/campaign3/aggregate.json metrics.split_counterfactual.MLP:unseen_acc"
+ },
+ "design:frames:test_known": {
+  "value": "400",
+  "source": "experiments/campaign2/scorer_bench_seed0.json frames"
+ },
+ "design:frames:test_unknown": {
+  "value": "200",
+  "source": "experiments/campaign2/scorer_bench_seed0.json frames"
+ },
+ "design:frames:train_aux": {
+  "value": "800",
+  "source": "experiments/campaign2/scorer_bench_seed0.json frames"
+ },
+ "design:frames:train_known": {
+  "value": "3200",
+  "source": "experiments/campaign2/scorer_bench_seed0.json frames"
+ },
+ "design:frames:val_calib": {
+  "value": "200",
+  "source": "experiments/campaign2/scorer_bench_seed0.json frames"
+ },
+ "design:frames:val_select": {
+  "value": "200",
+  "source": "experiments/campaign2/scorer_bench_seed0.json frames"
+ },
+ "design:n_known_test": {
+  "value": "400",
+  "source": "experiments/campaign2/scorer_bench_seed0.json"
+ },
+ "design:n_seen_test": {
+  "value": "6720",
+  "source": "experiments/campaign3/split_counterfactual_seed0.json"
+ },
+ "design:n_unknown_test": {
+  "value": "200",
+  "source": "experiments/campaign2/scorer_bench_seed0.json"
+ },
+ "design:n_unseen_test": {
+  "value": "5600",
+  "source": "experiments/campaign3/split_counterfactual_seed0.json"
+ },
+ "design:outliers:OS-16PSK+MSP": {
+  "value": "400",
+  "source": "experiments/campaign3/arm_control_seed0.json train_outliers"
+ },
+ "design:outliers:OS-8PAM+MSP": {
+  "value": "400",
+  "source": "experiments/campaign3/arm_control_seed0.json train_outliers"
+ },
+ "design:outliers:OS-full+MSP": {
+  "value": "800",
+  "source": "experiments/campaign3/arm_control_seed0.json train_outliers"
+ },
+ "h:H10:diff": {
+  "value": "$+$0.012",
+  "source": "experiments/campaign3/aggregate.json hypotheses.H10_cnn_seen_minus_unseen_acc"
+ },
+ "h:H10:hi": {
+  "value": "$+$0.040",
+  "source": "experiments/campaign3/aggregate.json hypotheses.H10_cnn_seen_minus_unseen_acc"
+ },
+ "h:H10:lo": {
+  "value": "$-$0.000",
+  "source": "experiments/campaign3/aggregate.json hypotheses.H10_cnn_seen_minus_unseen_acc"
+ },
+ "h:H10:pool": {
+  "value": "9/10",
+  "source": "experiments/campaign3/aggregate.json hypotheses.H10_cnn_seen_minus_unseen_acc"
+ },
+ "h:H10:poolsupported": {
+  "value": "yes",
+  "source": "experiments/campaign3/aggregate.json hypotheses.H10_cnn_seen_minus_unseen_acc"
+ },
+ "h:H10:sd": {
+  "value": "0.013",
+  "source": "experiments/campaign3/aggregate.json hypotheses.H10_cnn_seen_minus_unseen_acc"
+ },
+ "h:H1:diff": {
+  "value": "$+$0.433",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H1_dist_minus_msp_auroc"
+ },
+ "h:H1:hi": {
+  "value": "$+$0.549",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H1_dist_minus_msp_auroc"
+ },
+ "h:H1:lo": {
+  "value": "$+$0.283",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H1_dist_minus_msp_auroc"
+ },
+ "h:H1:orig": {
+  "value": "5/5",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H1_dist_minus_msp_auroc"
+ },
+ "h:H1:pool": {
+  "value": "10/10",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H1_dist_minus_msp_auroc"
+ },
+ "h:H1:poolsupported": {
+  "value": "yes",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H1_dist_minus_msp_auroc"
+ },
+ "h:H1:rep": {
+  "value": "5/5",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H1_dist_minus_msp_auroc"
+ },
+ "h:H1:replicated": {
+  "value": "yes",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H1_dist_minus_msp_auroc"
+ },
+ "h:H1:sd": {
+  "value": "0.088",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H1_dist_minus_msp_auroc"
+ },
+ "h:H2:diff": {
+  "value": "$+$0.128",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H2_obj_minus_msp_unk_reject"
+ },
+ "h:H2:hi": {
+  "value": "$+$0.215",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H2_obj_minus_msp_unk_reject"
+ },
+ "h:H2:lo": {
+  "value": "$+$0.045",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H2_obj_minus_msp_unk_reject"
+ },
+ "h:H2:orig": {
+  "value": "5/5",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H2_obj_minus_msp_unk_reject"
+ },
+ "h:H2:pool": {
+  "value": "10/10",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H2_obj_minus_msp_unk_reject"
+ },
+ "h:H2:poolsupported": {
+  "value": "yes",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H2_obj_minus_msp_unk_reject"
+ },
+ "h:H2:rep": {
+  "value": "5/5",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H2_obj_minus_msp_unk_reject"
+ },
+ "h:H2:replicated": {
+  "value": "yes",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H2_obj_minus_msp_unk_reject"
+ },
+ "h:H2:sd": {
+  "value": "0.064",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H2_obj_minus_msp_unk_reject"
+ },
+ "h:H3:diff": {
+  "value": "$+$0.122",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H3_fp_impaired_minus_ideal_acc"
+ },
+ "h:H3:hi": {
+  "value": "$+$0.197",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H3_fp_impaired_minus_ideal_acc"
+ },
+ "h:H3:lo": {
+  "value": "$+$0.040",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H3_fp_impaired_minus_ideal_acc"
+ },
+ "h:H3:orig": {
+  "value": "5/5",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H3_fp_impaired_minus_ideal_acc"
+ },
+ "h:H3:pool": {
+  "value": "10/10",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H3_fp_impaired_minus_ideal_acc"
+ },
+ "h:H3:poolsupported": {
+  "value": "yes",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H3_fp_impaired_minus_ideal_acc"
+ },
+ "h:H3:rep": {
+  "value": "5/5",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H3_fp_impaired_minus_ideal_acc"
+ },
+ "h:H3:replicated": {
+  "value": "yes",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H3_fp_impaired_minus_ideal_acc"
+ },
+ "h:H3:sd": {
+  "value": "0.055",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H3_fp_impaired_minus_ideal_acc"
+ },
+ "h:H4:diff": {
+  "value": "$+$0.022",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H4_mod_ideal_minus_impaired_cnn"
+ },
+ "h:H4:hi": {
+  "value": "$+$0.083",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H4_mod_ideal_minus_impaired_cnn"
+ },
+ "h:H4:lo": {
+  "value": "$-$0.044",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H4_mod_ideal_minus_impaired_cnn"
+ },
+ "h:H4:orig": {
+  "value": "3/5",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H4_mod_ideal_minus_impaired_cnn"
+ },
+ "h:H4:pool": {
+  "value": "7/10",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H4_mod_ideal_minus_impaired_cnn"
+ },
+ "h:H4:poolsupported": {
+  "value": "no",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H4_mod_ideal_minus_impaired_cnn"
+ },
+ "h:H4:rep": {
+  "value": "4/5",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H4_mod_ideal_minus_impaired_cnn"
+ },
+ "h:H4:replicated": {
+  "value": "yes",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H4_mod_ideal_minus_impaired_cnn"
+ },
+ "h:H4:sd": {
+  "value": "0.043",
+  "source": "experiments/pooled/campaign1/aggregate.json hypotheses.H4_mod_ideal_minus_impaired_cnn"
+ },
+ "h:H5:diff": {
+  "value": "$-$0.031",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H5_mahal_minus_euclid_auroc"
+ },
+ "h:H5:hi": {
+  "value": "$-$0.018",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H5_mahal_minus_euclid_auroc"
+ },
+ "h:H5:lo": {
+  "value": "$-$0.056",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H5_mahal_minus_euclid_auroc"
+ },
+ "h:H5:orig": {
+  "value": "0/5",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H5_mahal_minus_euclid_auroc"
+ },
+ "h:H5:pool": {
+  "value": "0/10",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H5_mahal_minus_euclid_auroc"
+ },
+ "h:H5:poolsupported": {
+  "value": "no",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H5_mahal_minus_euclid_auroc"
+ },
+ "h:H5:rep": {
+  "value": "0/5",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H5_mahal_minus_euclid_auroc"
+ },
+ "h:H5:replicated": {
+  "value": "no",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H5_mahal_minus_euclid_auroc"
+ },
+ "h:H5:sd": {
+  "value": "0.011",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H5_mahal_minus_euclid_auroc"
+ },
+ "h:H6:diff": {
+  "value": "$-$0.067",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H6_energy_minus_msp_auroc"
+ },
+ "h:H6:hi": {
+  "value": "$+$0.035",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H6_energy_minus_msp_auroc"
+ },
+ "h:H6:lo": {
+  "value": "$-$0.159",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H6_energy_minus_msp_auroc"
+ },
+ "h:H6:orig": {
+  "value": "2/5",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H6_energy_minus_msp_auroc"
+ },
+ "h:H6:pool": {
+  "value": "2/10",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H6_energy_minus_msp_auroc"
+ },
+ "h:H6:poolsupported": {
+  "value": "no",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H6_energy_minus_msp_auroc"
+ },
+ "h:H6:rep": {
+  "value": "0/5",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H6_energy_minus_msp_auroc"
+ },
+ "h:H6:replicated": {
+  "value": "no",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H6_energy_minus_msp_auroc"
+ },
+ "h:H6:sd": {
+  "value": "0.068",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H6_energy_minus_msp_auroc"
+ },
+ "h:H7:diff": {
+  "value": "$+$0.344",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H7_pamarm_minus_pskarm_4pam_reject"
+ },
+ "h:H7:hi": {
+  "value": "$+$0.840",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H7_pamarm_minus_pskarm_4pam_reject"
+ },
+ "h:H7:lo": {
+  "value": "$+$0.050",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H7_pamarm_minus_pskarm_4pam_reject"
+ },
+ "h:H7:orig": {
+  "value": "5/5",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H7_pamarm_minus_pskarm_4pam_reject"
+ },
+ "h:H7:pool": {
+  "value": "10/10",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H7_pamarm_minus_pskarm_4pam_reject"
+ },
+ "h:H7:poolsupported": {
+  "value": "yes",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H7_pamarm_minus_pskarm_4pam_reject"
+ },
+ "h:H7:rep": {
+  "value": "5/5",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H7_pamarm_minus_pskarm_4pam_reject"
+ },
+ "h:H7:replicated": {
+  "value": "yes",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H7_pamarm_minus_pskarm_4pam_reject"
+ },
+ "h:H7:sd": {
+  "value": "0.226",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H7_pamarm_minus_pskarm_4pam_reject"
+ },
+ "h:H7s:diff": {
+  "value": "$+$0.414",
+  "source": "experiments/campaign3/aggregate.json hypotheses.H7s_pamarm_minus_pskarm_4pam_reject_shared_seed"
+ },
+ "h:H7s:hi": {
+  "value": "$+$0.670",
+  "source": "experiments/campaign3/aggregate.json hypotheses.H7s_pamarm_minus_pskarm_4pam_reject_shared_seed"
+ },
+ "h:H7s:lo": {
+  "value": "$+$0.050",
+  "source": "experiments/campaign3/aggregate.json hypotheses.H7s_pamarm_minus_pskarm_4pam_reject_shared_seed"
+ },
+ "h:H7s:pool": {
+  "value": "10/10",
+  "source": "experiments/campaign3/aggregate.json hypotheses.H7s_pamarm_minus_pskarm_4pam_reject_shared_seed"
+ },
+ "h:H7s:poolsupported": {
+  "value": "yes",
+  "source": "experiments/campaign3/aggregate.json hypotheses.H7s_pamarm_minus_pskarm_4pam_reject_shared_seed"
+ },
+ "h:H7s:sd": {
+  "value": "0.186",
+  "source": "experiments/campaign3/aggregate.json hypotheses.H7s_pamarm_minus_pskarm_4pam_reject_shared_seed"
+ },
+ "h:H8:diff": {
+  "value": "$+$0.028",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H8_msp_low_minus_high_auroc"
+ },
+ "h:H8:hi": {
+  "value": "$+$0.173",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H8_msp_low_minus_high_auroc"
+ },
+ "h:H8:lo": {
+  "value": "$-$0.130",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H8_msp_low_minus_high_auroc"
+ },
+ "h:H8:orig": {
+  "value": "4/5",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H8_msp_low_minus_high_auroc"
+ },
+ "h:H8:pool": {
+  "value": "7/10",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H8_msp_low_minus_high_auroc"
+ },
+ "h:H8:poolsupported": {
+  "value": "no",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H8_msp_low_minus_high_auroc"
+ },
+ "h:H8:rep": {
+  "value": "3/5",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H8_msp_low_minus_high_auroc"
+ },
+ "h:H8:replicated": {
+  "value": "no",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H8_msp_low_minus_high_auroc"
+ },
+ "h:H8:sd": {
+  "value": "0.092",
+  "source": "experiments/pooled/campaign2/aggregate.json hypotheses.H8_msp_low_minus_high_auroc"
+ },
+ "h:H9:diff": {
+  "value": "$+$0.002",
+  "source": "experiments/campaign3/aggregate.json hypotheses.H9_mlp_seen_minus_unseen_acc"
+ },
+ "h:H9:hi": {
+  "value": "$+$0.015",
+  "source": "experiments/campaign3/aggregate.json hypotheses.H9_mlp_seen_minus_unseen_acc"
+ },
+ "h:H9:lo": {
+  "value": "$-$0.013",
+  "source": "experiments/campaign3/aggregate.json hypotheses.H9_mlp_seen_minus_unseen_acc"
+ },
+ "h:H9:pool": {
+  "value": "6/10",
+  "source": "experiments/campaign3/aggregate.json hypotheses.H9_mlp_seen_minus_unseen_acc"
+ },
+ "h:H9:poolsupported": {
+  "value": "no",
+  "source": "experiments/campaign3/aggregate.json hypotheses.H9_mlp_seen_minus_unseen_acc"
+ },
+ "h:H9:sd": {
+  "value": "0.008",
+  "source": "experiments/campaign3/aggregate.json hypotheses.H9_mlp_seen_minus_unseen_acc"
+ },
+ "p1:fingerprint:test_acc:max": {
+  "value": "0.300",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint.test_acc"
+ },
+ "p1:fingerprint:test_acc:mean": {
+  "value": "0.221",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint.test_acc"
+ },
+ "p1:fingerprint:test_acc:min": {
+  "value": "0.138",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint.test_acc"
+ },
+ "p1:fingerprint:test_acc:pm": {
+  "value": "0.221 \\pm 0.052",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint.test_acc"
+ },
+ "p1:fingerprint:test_acc:sd": {
+  "value": "0.052",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint.test_acc"
+ },
+ "p1:fingerprint:test_n:max": {
+  "value": "600.000",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint.test_n"
+ },
+ "p1:fingerprint:test_n:mean": {
+  "value": "600.000",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint.test_n"
+ },
+ "p1:fingerprint:test_n:min": {
+  "value": "600.000",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint.test_n"
+ },
+ "p1:fingerprint:test_n:pm": {
+  "value": "600.000 \\pm 0.000",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint.test_n"
+ },
+ "p1:fingerprint:test_n:sd": {
+  "value": "0.000",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint.test_n"
+ },
+ "p1:fingerprint_ideal:test_acc:max": {
+  "value": "0.118",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint_ideal.test_acc"
+ },
+ "p1:fingerprint_ideal:test_acc:mean": {
+  "value": "0.099",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint_ideal.test_acc"
+ },
+ "p1:fingerprint_ideal:test_acc:min": {
+  "value": "0.080",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint_ideal.test_acc"
+ },
+ "p1:fingerprint_ideal:test_acc:pm": {
+  "value": "0.099 \\pm 0.011",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint_ideal.test_acc"
+ },
+ "p1:fingerprint_ideal:test_acc:sd": {
+  "value": "0.011",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint_ideal.test_acc"
+ },
+ "p1:fingerprint_ideal:test_n:max": {
+  "value": "600.000",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint_ideal.test_n"
+ },
+ "p1:fingerprint_ideal:test_n:mean": {
+  "value": "600.000",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint_ideal.test_n"
+ },
+ "p1:fingerprint_ideal:test_n:min": {
+  "value": "600.000",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint_ideal.test_n"
+ },
+ "p1:fingerprint_ideal:test_n:pm": {
+  "value": "600.000 \\pm 0.000",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint_ideal.test_n"
+ },
+ "p1:fingerprint_ideal:test_n:sd": {
+  "value": "0.000",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.fingerprint_ideal.test_n"
+ },
+ "p1:modulation:cnn_overall_acc:max": {
+  "value": "0.798",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.cnn_overall_acc"
+ },
+ "p1:modulation:cnn_overall_acc:mean": {
+  "value": "0.749",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.cnn_overall_acc"
+ },
+ "p1:modulation:cnn_overall_acc:min": {
+  "value": "0.705",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.cnn_overall_acc"
+ },
+ "p1:modulation:cnn_overall_acc:pm": {
+  "value": "0.749 \\pm 0.032",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.cnn_overall_acc"
+ },
+ "p1:modulation:cnn_overall_acc:sd": {
+  "value": "0.032",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.cnn_overall_acc"
+ },
+ "p1:modulation:cnn_train_acc:max": {
+  "value": "0.937",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.cnn_train_acc"
+ },
+ "p1:modulation:cnn_train_acc:mean": {
+  "value": "0.832",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.cnn_train_acc"
+ },
+ "p1:modulation:cnn_train_acc:min": {
+  "value": "0.777",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.cnn_train_acc"
+ },
+ "p1:modulation:cnn_train_acc:pm": {
+  "value": "0.832 \\pm 0.050",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.cnn_train_acc"
+ },
+ "p1:modulation:cnn_train_acc:sd": {
+  "value": "0.050",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.cnn_train_acc"
+ },
+ "p1:modulation:mlp_overall_acc:max": {
+  "value": "0.260",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.mlp_overall_acc"
+ },
+ "p1:modulation:mlp_overall_acc:mean": {
+  "value": "0.251",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.mlp_overall_acc"
+ },
+ "p1:modulation:mlp_overall_acc:min": {
+  "value": "0.240",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.mlp_overall_acc"
+ },
+ "p1:modulation:mlp_overall_acc:pm": {
+  "value": "0.251 \\pm 0.007",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.mlp_overall_acc"
+ },
+ "p1:modulation:mlp_overall_acc:sd": {
+  "value": "0.007",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.mlp_overall_acc"
+ },
+ "p1:modulation:mlp_train_acc:max": {
+  "value": "0.997",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.mlp_train_acc"
+ },
+ "p1:modulation:mlp_train_acc:mean": {
+  "value": "0.868",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.mlp_train_acc"
+ },
+ "p1:modulation:mlp_train_acc:min": {
+  "value": "0.659",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.mlp_train_acc"
+ },
+ "p1:modulation:mlp_train_acc:pm": {
+  "value": "0.868 \\pm 0.129",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.mlp_train_acc"
+ },
+ "p1:modulation:mlp_train_acc:sd": {
+  "value": "0.129",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation.mlp_train_acc"
+ },
+ "p1:modulation_ideal:cnn_overall_acc:max": {
+  "value": "0.798",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation_ideal.cnn_overall_acc"
+ },
+ "p1:modulation_ideal:cnn_overall_acc:mean": {
+  "value": "0.770",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation_ideal.cnn_overall_acc"
+ },
+ "p1:modulation_ideal:cnn_overall_acc:min": {
+  "value": "0.747",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation_ideal.cnn_overall_acc"
+ },
+ "p1:modulation_ideal:cnn_overall_acc:pm": {
+  "value": "0.770 \\pm 0.019",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation_ideal.cnn_overall_acc"
+ },
+ "p1:modulation_ideal:cnn_overall_acc:sd": {
+  "value": "0.019",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation_ideal.cnn_overall_acc"
+ },
+ "p1:modulation_ideal:mlp_overall_acc:max": {
+  "value": "0.262",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation_ideal.mlp_overall_acc"
+ },
+ "p1:modulation_ideal:mlp_overall_acc:mean": {
+  "value": "0.251",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation_ideal.mlp_overall_acc"
+ },
+ "p1:modulation_ideal:mlp_overall_acc:min": {
+  "value": "0.242",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation_ideal.mlp_overall_acc"
+ },
+ "p1:modulation_ideal:mlp_overall_acc:pm": {
+  "value": "0.251 \\pm 0.006",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation_ideal.mlp_overall_acc"
+ },
+ "p1:modulation_ideal:mlp_overall_acc:sd": {
+  "value": "0.006",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.modulation_ideal.mlp_overall_acc"
+ },
+ "p1:open_set:dist_auroc:max": {
+  "value": "0.832",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_auroc"
+ },
+ "p1:open_set:dist_auroc:mean": {
+  "value": "0.786",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_auroc"
+ },
+ "p1:open_set:dist_auroc:min": {
+  "value": "0.760",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_auroc"
+ },
+ "p1:open_set:dist_auroc:pm": {
+  "value": "0.786 \\pm 0.021",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_auroc"
+ },
+ "p1:open_set:dist_auroc:sd": {
+  "value": "0.021",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_auroc"
+ },
+ "p1:open_set:dist_closed_acc_accepted:max": {
+  "value": "0.858",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_closed_acc_accepted"
+ },
+ "p1:open_set:dist_closed_acc_accepted:mean": {
+  "value": "0.820",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_closed_acc_accepted"
+ },
+ "p1:open_set:dist_closed_acc_accepted:min": {
+  "value": "0.741",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_closed_acc_accepted"
+ },
+ "p1:open_set:dist_closed_acc_accepted:pm": {
+  "value": "0.820 \\pm 0.034",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_closed_acc_accepted"
+ },
+ "p1:open_set:dist_closed_acc_accepted:sd": {
+  "value": "0.034",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_closed_acc_accepted"
+ },
+ "p1:open_set:dist_known_accept:max": {
+  "value": "0.975",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_known_accept"
+ },
+ "p1:open_set:dist_known_accept:mean": {
+  "value": "0.951",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_known_accept"
+ },
+ "p1:open_set:dist_known_accept:min": {
+  "value": "0.932",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_known_accept"
+ },
+ "p1:open_set:dist_known_accept:pm": {
+  "value": "0.951 \\pm 0.013",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_known_accept"
+ },
+ "p1:open_set:dist_known_accept:sd": {
+  "value": "0.013",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_known_accept"
+ },
+ "p1:open_set:dist_unk_reject:max": {
+  "value": "0.570",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_unk_reject"
+ },
+ "p1:open_set:dist_unk_reject:mean": {
+  "value": "0.522",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_unk_reject"
+ },
+ "p1:open_set:dist_unk_reject:min": {
+  "value": "0.460",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_unk_reject"
+ },
+ "p1:open_set:dist_unk_reject:pm": {
+  "value": "0.522 \\pm 0.029",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_unk_reject"
+ },
+ "p1:open_set:dist_unk_reject:sd": {
+  "value": "0.029",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.dist_unk_reject"
+ },
+ "p1:open_set:msp_auroc:max": {
+  "value": "0.509",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_auroc"
+ },
+ "p1:open_set:msp_auroc:mean": {
+  "value": "0.353",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_auroc"
+ },
+ "p1:open_set:msp_auroc:min": {
+  "value": "0.216",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_auroc"
+ },
+ "p1:open_set:msp_auroc:pm": {
+  "value": "0.353 \\pm 0.088",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_auroc"
+ },
+ "p1:open_set:msp_auroc:sd": {
+  "value": "0.088",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_auroc"
+ },
+ "p1:open_set:msp_closed_acc_accepted:max": {
+  "value": "0.897",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_closed_acc_accepted"
+ },
+ "p1:open_set:msp_closed_acc_accepted:mean": {
+  "value": "0.793",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_closed_acc_accepted"
+ },
+ "p1:open_set:msp_closed_acc_accepted:min": {
+  "value": "0.685",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_closed_acc_accepted"
+ },
+ "p1:open_set:msp_closed_acc_accepted:pm": {
+  "value": "0.793 \\pm 0.070",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_closed_acc_accepted"
+ },
+ "p1:open_set:msp_closed_acc_accepted:sd": {
+  "value": "0.070",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_closed_acc_accepted"
+ },
+ "p1:open_set:msp_known_accept:max": {
+  "value": "0.988",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_known_accept"
+ },
+ "p1:open_set:msp_known_accept:mean": {
+  "value": "0.951",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_known_accept"
+ },
+ "p1:open_set:msp_known_accept:min": {
+  "value": "0.882",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_known_accept"
+ },
+ "p1:open_set:msp_known_accept:pm": {
+  "value": "0.951 \\pm 0.029",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_known_accept"
+ },
+ "p1:open_set:msp_known_accept:sd": {
+  "value": "0.029",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_known_accept"
+ },
+ "p1:open_set:msp_unk_reject:max": {
+  "value": "0.050",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_unk_reject"
+ },
+ "p1:open_set:msp_unk_reject:mean": {
+  "value": "0.028",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_unk_reject"
+ },
+ "p1:open_set:msp_unk_reject:min": {
+  "value": "0.000",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_unk_reject"
+ },
+ "p1:open_set:msp_unk_reject:pm": {
+  "value": "0.028 \\pm 0.015",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_unk_reject"
+ },
+ "p1:open_set:msp_unk_reject:sd": {
+  "value": "0.015",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.msp_unk_reject"
+ },
+ "p1:open_set:obj_auroc:max": {
+  "value": "0.564",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_auroc"
+ },
+ "p1:open_set:obj_auroc:mean": {
+  "value": "0.526",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_auroc"
+ },
+ "p1:open_set:obj_auroc:min": {
+  "value": "0.476",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_auroc"
+ },
+ "p1:open_set:obj_auroc:pm": {
+  "value": "0.526 \\pm 0.026",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_auroc"
+ },
+ "p1:open_set:obj_auroc:sd": {
+  "value": "0.026",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_auroc"
+ },
+ "p1:open_set:obj_closed_acc_accepted:max": {
+  "value": "0.850",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_closed_acc_accepted"
+ },
+ "p1:open_set:obj_closed_acc_accepted:mean": {
+  "value": "0.752",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_closed_acc_accepted"
+ },
+ "p1:open_set:obj_closed_acc_accepted:min": {
+  "value": "0.691",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_closed_acc_accepted"
+ },
+ "p1:open_set:obj_closed_acc_accepted:pm": {
+  "value": "0.752 \\pm 0.052",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_closed_acc_accepted"
+ },
+ "p1:open_set:obj_closed_acc_accepted:sd": {
+  "value": "0.052",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_closed_acc_accepted"
+ },
+ "p1:open_set:obj_known_accept:max": {
+  "value": "0.978",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_known_accept"
+ },
+ "p1:open_set:obj_known_accept:mean": {
+  "value": "0.940",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_known_accept"
+ },
+ "p1:open_set:obj_known_accept:min": {
+  "value": "0.910",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_known_accept"
+ },
+ "p1:open_set:obj_known_accept:pm": {
+  "value": "0.940 \\pm 0.024",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_known_accept"
+ },
+ "p1:open_set:obj_known_accept:sd": {
+  "value": "0.024",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_known_accept"
+ },
+ "p1:open_set:obj_unk_reject:max": {
+  "value": "0.240",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_unk_reject"
+ },
+ "p1:open_set:obj_unk_reject:mean": {
+  "value": "0.155",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_unk_reject"
+ },
+ "p1:open_set:obj_unk_reject:min": {
+  "value": "0.080",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_unk_reject"
+ },
+ "p1:open_set:obj_unk_reject:pm": {
+  "value": "0.155 \\pm 0.057",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_unk_reject"
+ },
+ "p1:open_set:obj_unk_reject:sd": {
+  "value": "0.057",
+  "source": "experiments/pooled/campaign1/aggregate.json metrics.open_set.obj_unk_reject"
+ },
+ "p2:CE+MSP:auroc:max": {
+  "value": "0.509",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:auroc"
+ },
+ "p2:CE+MSP:auroc:mean": {
+  "value": "0.353",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:auroc"
+ },
+ "p2:CE+MSP:auroc:min": {
+  "value": "0.216",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:auroc"
+ },
+ "p2:CE+MSP:auroc:pm": {
+  "value": "0.353 \\pm 0.088",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:auroc"
+ },
+ "p2:CE+MSP:auroc:sd": {
+  "value": "0.088",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:auroc"
+ },
+ "p2:CE+MSP:auroc_high_ge10:max": {
+  "value": "0.464",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:auroc_high_ge10"
+ },
+ "p2:CE+MSP:auroc_high_ge10:mean": {
+  "value": "0.338",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:auroc_high_ge10"
+ },
+ "p2:CE+MSP:auroc_high_ge10:min": {
+  "value": "0.169",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:auroc_high_ge10"
+ },
+ "p2:CE+MSP:auroc_high_ge10:pm": {
+  "value": "0.338 \\pm 0.097",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:auroc_high_ge10"
+ },
+ "p2:CE+MSP:auroc_high_ge10:sd": {
+  "value": "0.097",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:auroc_high_ge10"
+ },
+ "p2:CE+MSP:auroc_low_le2:max": {
+  "value": "0.493",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:auroc_low_le2"
+ },
+ "p2:CE+MSP:auroc_low_le2:mean": {
+  "value": "0.366",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:auroc_low_le2"
+ },
+ "p2:CE+MSP:auroc_low_le2:min": {
+  "value": "0.236",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:auroc_low_le2"
+ },
+ "p2:CE+MSP:auroc_low_le2:pm": {
+  "value": "0.366 \\pm 0.082",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:auroc_low_le2"
+ },
+ "p2:CE+MSP:auroc_low_le2:sd": {
+  "value": "0.082",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:auroc_low_le2"
+ },
+ "p2:CE+MSP:known_accept:max": {
+  "value": "0.988",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:known_accept"
+ },
+ "p2:CE+MSP:known_accept:mean": {
+  "value": "0.951",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:known_accept"
+ },
+ "p2:CE+MSP:known_accept:min": {
+  "value": "0.882",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:known_accept"
+ },
+ "p2:CE+MSP:known_accept:pm": {
+  "value": "0.951 \\pm 0.029",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:known_accept"
+ },
+ "p2:CE+MSP:known_accept:sd": {
+  "value": "0.029",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:known_accept"
+ },
+ "p2:CE+MSP:oscr_auc:max": {
+  "value": "0.487",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:oscr_auc"
+ },
+ "p2:CE+MSP:oscr_auc:mean": {
+  "value": "0.333",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:oscr_auc"
+ },
+ "p2:CE+MSP:oscr_auc:min": {
+  "value": "0.211",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:oscr_auc"
+ },
+ "p2:CE+MSP:oscr_auc:pm": {
+  "value": "0.333 \\pm 0.083",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:oscr_auc"
+ },
+ "p2:CE+MSP:oscr_auc:sd": {
+  "value": "0.083",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:oscr_auc"
+ },
+ "p2:CE+MSP:reject_4PAM:max": {
+  "value": "0.030",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:reject_4PAM"
+ },
+ "p2:CE+MSP:reject_4PAM:mean": {
+  "value": "0.009",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:reject_4PAM"
+ },
+ "p2:CE+MSP:reject_4PAM:min": {
+  "value": "0.000",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:reject_4PAM"
+ },
+ "p2:CE+MSP:reject_4PAM:pm": {
+  "value": "0.009 \\pm 0.012",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:reject_4PAM"
+ },
+ "p2:CE+MSP:reject_4PAM:sd": {
+  "value": "0.012",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:reject_4PAM"
+ },
+ "p2:CE+MSP:reject_64QAM:max": {
+  "value": "0.080",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:reject_64QAM"
+ },
+ "p2:CE+MSP:reject_64QAM:mean": {
+  "value": "0.046",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:reject_64QAM"
+ },
+ "p2:CE+MSP:reject_64QAM:min": {
+  "value": "0.000",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:reject_64QAM"
+ },
+ "p2:CE+MSP:reject_64QAM:pm": {
+  "value": "0.046 \\pm 0.028",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:reject_64QAM"
+ },
+ "p2:CE+MSP:reject_64QAM:sd": {
+  "value": "0.028",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:reject_64QAM"
+ },
+ "p2:CE+MSP:unk_reject:max": {
+  "value": "0.050",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:unk_reject"
+ },
+ "p2:CE+MSP:unk_reject:mean": {
+  "value": "0.028",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:unk_reject"
+ },
+ "p2:CE+MSP:unk_reject:min": {
+  "value": "0.000",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:unk_reject"
+ },
+ "p2:CE+MSP:unk_reject:pm": {
+  "value": "0.028 \\pm 0.015",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:unk_reject"
+ },
+ "p2:CE+MSP:unk_reject:sd": {
+  "value": "0.015",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+MSP:unk_reject"
+ },
+ "p2:CE+distance:auroc:max": {
+  "value": "0.814",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:auroc"
+ },
+ "p2:CE+distance:auroc:mean": {
+  "value": "0.779",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:auroc"
+ },
+ "p2:CE+distance:auroc:min": {
+  "value": "0.742",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:auroc"
+ },
+ "p2:CE+distance:auroc:pm": {
+  "value": "0.779 \\pm 0.020",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:auroc"
+ },
+ "p2:CE+distance:auroc:sd": {
+  "value": "0.020",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:auroc"
+ },
+ "p2:CE+distance:known_accept:max": {
+  "value": "0.988",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:known_accept"
+ },
+ "p2:CE+distance:known_accept:mean": {
+  "value": "0.954",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:known_accept"
+ },
+ "p2:CE+distance:known_accept:min": {
+  "value": "0.927",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:known_accept"
+ },
+ "p2:CE+distance:known_accept:pm": {
+  "value": "0.954 \\pm 0.016",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:known_accept"
+ },
+ "p2:CE+distance:known_accept:sd": {
+  "value": "0.016",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:known_accept"
+ },
+ "p2:CE+distance:oscr_auc:max": {
+  "value": "0.695",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:oscr_auc"
+ },
+ "p2:CE+distance:oscr_auc:mean": {
+  "value": "0.608",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:oscr_auc"
+ },
+ "p2:CE+distance:oscr_auc:min": {
+  "value": "0.514",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:oscr_auc"
+ },
+ "p2:CE+distance:oscr_auc:pm": {
+  "value": "0.608 \\pm 0.060",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:oscr_auc"
+ },
+ "p2:CE+distance:oscr_auc:sd": {
+  "value": "0.060",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:oscr_auc"
+ },
+ "p2:CE+distance:unk_reject:max": {
+  "value": "0.565",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:unk_reject"
+ },
+ "p2:CE+distance:unk_reject:mean": {
+  "value": "0.512",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:unk_reject"
+ },
+ "p2:CE+distance:unk_reject:min": {
+  "value": "0.450",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:unk_reject"
+ },
+ "p2:CE+distance:unk_reject:pm": {
+  "value": "0.512 \\pm 0.034",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:unk_reject"
+ },
+ "p2:CE+distance:unk_reject:sd": {
+  "value": "0.034",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+distance:unk_reject"
+ },
+ "p2:CE+energy:auroc:max": {
+  "value": "0.386",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:auroc"
+ },
+ "p2:CE+energy:auroc:mean": {
+  "value": "0.286",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:auroc"
+ },
+ "p2:CE+energy:auroc:min": {
+  "value": "0.184",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:auroc"
+ },
+ "p2:CE+energy:auroc:pm": {
+  "value": "0.286 \\pm 0.068",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:auroc"
+ },
+ "p2:CE+energy:auroc:sd": {
+  "value": "0.068",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:auroc"
+ },
+ "p2:CE+energy:known_accept:max": {
+  "value": "0.975",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:known_accept"
+ },
+ "p2:CE+energy:known_accept:mean": {
+  "value": "0.943",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:known_accept"
+ },
+ "p2:CE+energy:known_accept:min": {
+  "value": "0.887",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:known_accept"
+ },
+ "p2:CE+energy:known_accept:pm": {
+  "value": "0.943 \\pm 0.026",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:known_accept"
+ },
+ "p2:CE+energy:known_accept:sd": {
+  "value": "0.026",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:known_accept"
+ },
+ "p2:CE+energy:oscr_auc:max": {
+  "value": "0.331",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:oscr_auc"
+ },
+ "p2:CE+energy:oscr_auc:mean": {
+  "value": "0.252",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:oscr_auc"
+ },
+ "p2:CE+energy:oscr_auc:min": {
+  "value": "0.176",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:oscr_auc"
+ },
+ "p2:CE+energy:oscr_auc:pm": {
+  "value": "0.252 \\pm 0.057",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:oscr_auc"
+ },
+ "p2:CE+energy:oscr_auc:sd": {
+  "value": "0.057",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:oscr_auc"
+ },
+ "p2:CE+energy:unk_reject:max": {
+  "value": "0.060",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:unk_reject"
+ },
+ "p2:CE+energy:unk_reject:mean": {
+  "value": "0.034",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:unk_reject"
+ },
+ "p2:CE+energy:unk_reject:min": {
+  "value": "0.020",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:unk_reject"
+ },
+ "p2:CE+energy:unk_reject:pm": {
+  "value": "0.034 \\pm 0.014",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:unk_reject"
+ },
+ "p2:CE+energy:unk_reject:sd": {
+  "value": "0.014",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+energy:unk_reject"
+ },
+ "p2:CE+mahalanobis:auroc:max": {
+  "value": "0.788",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:auroc"
+ },
+ "p2:CE+mahalanobis:auroc:mean": {
+  "value": "0.748",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:auroc"
+ },
+ "p2:CE+mahalanobis:auroc:min": {
+  "value": "0.705",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:auroc"
+ },
+ "p2:CE+mahalanobis:auroc:pm": {
+  "value": "0.748 \\pm 0.024",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:auroc"
+ },
+ "p2:CE+mahalanobis:auroc:sd": {
+  "value": "0.024",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:auroc"
+ },
+ "p2:CE+mahalanobis:known_accept:max": {
+  "value": "0.975",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:known_accept"
+ },
+ "p2:CE+mahalanobis:known_accept:mean": {
+  "value": "0.947",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:known_accept"
+ },
+ "p2:CE+mahalanobis:known_accept:min": {
+  "value": "0.907",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:known_accept"
+ },
+ "p2:CE+mahalanobis:known_accept:pm": {
+  "value": "0.947 \\pm 0.022",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:known_accept"
+ },
+ "p2:CE+mahalanobis:known_accept:sd": {
+  "value": "0.022",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:known_accept"
+ },
+ "p2:CE+mahalanobis:oscr_auc:max": {
+  "value": "0.677",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:oscr_auc"
+ },
+ "p2:CE+mahalanobis:oscr_auc:mean": {
+  "value": "0.587",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:oscr_auc"
+ },
+ "p2:CE+mahalanobis:oscr_auc:min": {
+  "value": "0.513",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:oscr_auc"
+ },
+ "p2:CE+mahalanobis:oscr_auc:pm": {
+  "value": "0.587 \\pm 0.060",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:oscr_auc"
+ },
+ "p2:CE+mahalanobis:oscr_auc:sd": {
+  "value": "0.060",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:oscr_auc"
+ },
+ "p2:CE+mahalanobis:unk_reject:max": {
+  "value": "0.500",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:unk_reject"
+ },
+ "p2:CE+mahalanobis:unk_reject:mean": {
+  "value": "0.472",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:unk_reject"
+ },
+ "p2:CE+mahalanobis:unk_reject:min": {
+  "value": "0.450",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:unk_reject"
+ },
+ "p2:CE+mahalanobis:unk_reject:pm": {
+  "value": "0.472 \\pm 0.017",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:unk_reject"
+ },
+ "p2:CE+mahalanobis:unk_reject:sd": {
+  "value": "0.017",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+mahalanobis:unk_reject"
+ },
+ "p2:CE+maxlogit:auroc:max": {
+  "value": "0.368",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:auroc"
+ },
+ "p2:CE+maxlogit:auroc:mean": {
+  "value": "0.278",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:auroc"
+ },
+ "p2:CE+maxlogit:auroc:min": {
+  "value": "0.181",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:auroc"
+ },
+ "p2:CE+maxlogit:auroc:pm": {
+  "value": "0.278 \\pm 0.065",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:auroc"
+ },
+ "p2:CE+maxlogit:auroc:sd": {
+  "value": "0.065",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:auroc"
+ },
+ "p2:CE+maxlogit:known_accept:max": {
+  "value": "0.980",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:known_accept"
+ },
+ "p2:CE+maxlogit:known_accept:mean": {
+  "value": "0.944",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:known_accept"
+ },
+ "p2:CE+maxlogit:known_accept:min": {
+  "value": "0.882",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:known_accept"
+ },
+ "p2:CE+maxlogit:known_accept:pm": {
+  "value": "0.944 \\pm 0.028",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:known_accept"
+ },
+ "p2:CE+maxlogit:known_accept:sd": {
+  "value": "0.028",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:known_accept"
+ },
+ "p2:CE+maxlogit:oscr_auc:max": {
+  "value": "0.324",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:oscr_auc"
+ },
+ "p2:CE+maxlogit:oscr_auc:mean": {
+  "value": "0.249",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:oscr_auc"
+ },
+ "p2:CE+maxlogit:oscr_auc:min": {
+  "value": "0.174",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:oscr_auc"
+ },
+ "p2:CE+maxlogit:oscr_auc:pm": {
+  "value": "0.249 \\pm 0.055",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:oscr_auc"
+ },
+ "p2:CE+maxlogit:oscr_auc:sd": {
+  "value": "0.055",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:oscr_auc"
+ },
+ "p2:CE+maxlogit:unk_reject:max": {
+  "value": "0.080",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:unk_reject"
+ },
+ "p2:CE+maxlogit:unk_reject:mean": {
+  "value": "0.033",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:unk_reject"
+ },
+ "p2:CE+maxlogit:unk_reject:min": {
+  "value": "0.010",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:unk_reject"
+ },
+ "p2:CE+maxlogit:unk_reject:pm": {
+  "value": "0.033 \\pm 0.019",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:unk_reject"
+ },
+ "p2:CE+maxlogit:unk_reject:sd": {
+  "value": "0.019",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.CE+maxlogit:unk_reject"
+ },
+ "p2:OS-16PSK+MSP:auroc:max": {
+  "value": "0.402",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:auroc"
+ },
+ "p2:OS-16PSK+MSP:auroc:mean": {
+  "value": "0.312",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:auroc"
+ },
+ "p2:OS-16PSK+MSP:auroc:min": {
+  "value": "0.206",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:auroc"
+ },
+ "p2:OS-16PSK+MSP:auroc:pm": {
+  "value": "0.312 \\pm 0.070",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:auroc"
+ },
+ "p2:OS-16PSK+MSP:auroc:sd": {
+  "value": "0.070",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:auroc"
+ },
+ "p2:OS-16PSK+MSP:known_accept:max": {
+  "value": "0.975",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:known_accept"
+ },
+ "p2:OS-16PSK+MSP:known_accept:mean": {
+  "value": "0.941",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:known_accept"
+ },
+ "p2:OS-16PSK+MSP:known_accept:min": {
+  "value": "0.897",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:known_accept"
+ },
+ "p2:OS-16PSK+MSP:known_accept:pm": {
+  "value": "0.941 \\pm 0.025",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:known_accept"
+ },
+ "p2:OS-16PSK+MSP:known_accept:sd": {
+  "value": "0.025",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:known_accept"
+ },
+ "p2:OS-16PSK+MSP:oscr_auc:max": {
+  "value": "0.364",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:oscr_auc"
+ },
+ "p2:OS-16PSK+MSP:oscr_auc:mean": {
+  "value": "0.289",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:oscr_auc"
+ },
+ "p2:OS-16PSK+MSP:oscr_auc:min": {
+  "value": "0.193",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:oscr_auc"
+ },
+ "p2:OS-16PSK+MSP:oscr_auc:pm": {
+  "value": "0.289 \\pm 0.059",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:oscr_auc"
+ },
+ "p2:OS-16PSK+MSP:oscr_auc:sd": {
+  "value": "0.059",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:oscr_auc"
+ },
+ "p2:OS-16PSK+MSP:reject_4PAM:max": {
+  "value": "0.010",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:reject_4PAM"
+ },
+ "p2:OS-16PSK+MSP:reject_4PAM:mean": {
+  "value": "0.004",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:reject_4PAM"
+ },
+ "p2:OS-16PSK+MSP:reject_4PAM:min": {
+  "value": "0.000",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:reject_4PAM"
+ },
+ "p2:OS-16PSK+MSP:reject_4PAM:pm": {
+  "value": "0.004 \\pm 0.005",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:reject_4PAM"
+ },
+ "p2:OS-16PSK+MSP:reject_4PAM:sd": {
+  "value": "0.005",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:reject_4PAM"
+ },
+ "p2:OS-16PSK+MSP:reject_64QAM:max": {
+  "value": "0.170",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:reject_64QAM"
+ },
+ "p2:OS-16PSK+MSP:reject_64QAM:mean": {
+  "value": "0.062",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:reject_64QAM"
+ },
+ "p2:OS-16PSK+MSP:reject_64QAM:min": {
+  "value": "0.020",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:reject_64QAM"
+ },
+ "p2:OS-16PSK+MSP:reject_64QAM:pm": {
+  "value": "0.062 \\pm 0.050",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:reject_64QAM"
+ },
+ "p2:OS-16PSK+MSP:reject_64QAM:sd": {
+  "value": "0.050",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:reject_64QAM"
+ },
+ "p2:OS-16PSK+MSP:unk_reject:max": {
+  "value": "0.085",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:unk_reject"
+ },
+ "p2:OS-16PSK+MSP:unk_reject:mean": {
+  "value": "0.033",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:unk_reject"
+ },
+ "p2:OS-16PSK+MSP:unk_reject:min": {
+  "value": "0.010",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:unk_reject"
+ },
+ "p2:OS-16PSK+MSP:unk_reject:pm": {
+  "value": "0.033 \\pm 0.024",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:unk_reject"
+ },
+ "p2:OS-16PSK+MSP:unk_reject:sd": {
+  "value": "0.024",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-16PSK+MSP:unk_reject"
+ },
+ "p2:OS-8PAM+MSP:auroc:max": {
+  "value": "0.713",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:auroc"
+ },
+ "p2:OS-8PAM+MSP:auroc:mean": {
+  "value": "0.581",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:auroc"
+ },
+ "p2:OS-8PAM+MSP:auroc:min": {
+  "value": "0.478",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:auroc"
+ },
+ "p2:OS-8PAM+MSP:auroc:pm": {
+  "value": "0.581 \\pm 0.068",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:auroc"
+ },
+ "p2:OS-8PAM+MSP:auroc:sd": {
+  "value": "0.068",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:auroc"
+ },
+ "p2:OS-8PAM+MSP:known_accept:max": {
+  "value": "0.978",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:known_accept"
+ },
+ "p2:OS-8PAM+MSP:known_accept:mean": {
+  "value": "0.936",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:known_accept"
+ },
+ "p2:OS-8PAM+MSP:known_accept:min": {
+  "value": "0.863",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:known_accept"
+ },
+ "p2:OS-8PAM+MSP:known_accept:pm": {
+  "value": "0.936 \\pm 0.033",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:known_accept"
+ },
+ "p2:OS-8PAM+MSP:known_accept:sd": {
+  "value": "0.033",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:known_accept"
+ },
+ "p2:OS-8PAM+MSP:oscr_auc:max": {
+  "value": "0.541",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:oscr_auc"
+ },
+ "p2:OS-8PAM+MSP:oscr_auc:mean": {
+  "value": "0.487",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:oscr_auc"
+ },
+ "p2:OS-8PAM+MSP:oscr_auc:min": {
+  "value": "0.411",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:oscr_auc"
+ },
+ "p2:OS-8PAM+MSP:oscr_auc:pm": {
+  "value": "0.487 \\pm 0.044",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:oscr_auc"
+ },
+ "p2:OS-8PAM+MSP:oscr_auc:sd": {
+  "value": "0.044",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:oscr_auc"
+ },
+ "p2:OS-8PAM+MSP:reject_4PAM:max": {
+  "value": "0.840",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:reject_4PAM"
+ },
+ "p2:OS-8PAM+MSP:reject_4PAM:mean": {
+  "value": "0.348",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:reject_4PAM"
+ },
+ "p2:OS-8PAM+MSP:reject_4PAM:min": {
+  "value": "0.050",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:reject_4PAM"
+ },
+ "p2:OS-8PAM+MSP:reject_4PAM:pm": {
+  "value": "0.348 \\pm 0.225",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:reject_4PAM"
+ },
+ "p2:OS-8PAM+MSP:reject_4PAM:sd": {
+  "value": "0.225",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:reject_4PAM"
+ },
+ "p2:OS-8PAM+MSP:reject_64QAM:max": {
+  "value": "0.160",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:reject_64QAM"
+ },
+ "p2:OS-8PAM+MSP:reject_64QAM:mean": {
+  "value": "0.064",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:reject_64QAM"
+ },
+ "p2:OS-8PAM+MSP:reject_64QAM:min": {
+  "value": "0.010",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:reject_64QAM"
+ },
+ "p2:OS-8PAM+MSP:reject_64QAM:pm": {
+  "value": "0.064 \\pm 0.050",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:reject_64QAM"
+ },
+ "p2:OS-8PAM+MSP:reject_64QAM:sd": {
+  "value": "0.050",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:reject_64QAM"
+ },
+ "p2:OS-8PAM+MSP:unk_reject:max": {
+  "value": "0.500",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:unk_reject"
+ },
+ "p2:OS-8PAM+MSP:unk_reject:mean": {
+  "value": "0.206",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:unk_reject"
+ },
+ "p2:OS-8PAM+MSP:unk_reject:min": {
+  "value": "0.030",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:unk_reject"
+ },
+ "p2:OS-8PAM+MSP:unk_reject:pm": {
+  "value": "0.206 \\pm 0.129",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:unk_reject"
+ },
+ "p2:OS-8PAM+MSP:unk_reject:sd": {
+  "value": "0.129",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-8PAM+MSP:unk_reject"
+ },
+ "p2:OS-full+MSP:auroc:max": {
+  "value": "0.595",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:auroc"
+ },
+ "p2:OS-full+MSP:auroc:mean": {
+  "value": "0.536",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:auroc"
+ },
+ "p2:OS-full+MSP:auroc:min": {
+  "value": "0.383",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:auroc"
+ },
+ "p2:OS-full+MSP:auroc:pm": {
+  "value": "0.536 \\pm 0.061",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:auroc"
+ },
+ "p2:OS-full+MSP:auroc:sd": {
+  "value": "0.061",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:auroc"
+ },
+ "p2:OS-full+MSP:known_accept:max": {
+  "value": "0.975",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:known_accept"
+ },
+ "p2:OS-full+MSP:known_accept:mean": {
+  "value": "0.945",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:known_accept"
+ },
+ "p2:OS-full+MSP:known_accept:min": {
+  "value": "0.892",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:known_accept"
+ },
+ "p2:OS-full+MSP:known_accept:pm": {
+  "value": "0.945 \\pm 0.024",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:known_accept"
+ },
+ "p2:OS-full+MSP:known_accept:sd": {
+  "value": "0.024",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:known_accept"
+ },
+ "p2:OS-full+MSP:oscr_auc:max": {
+  "value": "0.538",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:oscr_auc"
+ },
+ "p2:OS-full+MSP:oscr_auc:mean": {
+  "value": "0.464",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:oscr_auc"
+ },
+ "p2:OS-full+MSP:oscr_auc:min": {
+  "value": "0.334",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:oscr_auc"
+ },
+ "p2:OS-full+MSP:oscr_auc:pm": {
+  "value": "0.464 \\pm 0.059",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:oscr_auc"
+ },
+ "p2:OS-full+MSP:oscr_auc:sd": {
+  "value": "0.059",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:oscr_auc"
+ },
+ "p2:OS-full+MSP:reject_4PAM:max": {
+  "value": "0.510",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:reject_4PAM"
+ },
+ "p2:OS-full+MSP:reject_4PAM:mean": {
+  "value": "0.331",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:reject_4PAM"
+ },
+ "p2:OS-full+MSP:reject_4PAM:min": {
+  "value": "0.090",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:reject_4PAM"
+ },
+ "p2:OS-full+MSP:reject_4PAM:pm": {
+  "value": "0.331 \\pm 0.117",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:reject_4PAM"
+ },
+ "p2:OS-full+MSP:reject_4PAM:sd": {
+  "value": "0.117",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:reject_4PAM"
+ },
+ "p2:OS-full+MSP:reject_64QAM:max": {
+  "value": "0.170",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:reject_64QAM"
+ },
+ "p2:OS-full+MSP:reject_64QAM:mean": {
+  "value": "0.058",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:reject_64QAM"
+ },
+ "p2:OS-full+MSP:reject_64QAM:min": {
+  "value": "0.020",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:reject_64QAM"
+ },
+ "p2:OS-full+MSP:reject_64QAM:pm": {
+  "value": "0.058 \\pm 0.045",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:reject_64QAM"
+ },
+ "p2:OS-full+MSP:reject_64QAM:sd": {
+  "value": "0.045",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:reject_64QAM"
+ },
+ "p2:OS-full+MSP:unk_reject:max": {
+  "value": "0.295",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:unk_reject"
+ },
+ "p2:OS-full+MSP:unk_reject:mean": {
+  "value": "0.194",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:unk_reject"
+ },
+ "p2:OS-full+MSP:unk_reject:min": {
+  "value": "0.055",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:unk_reject"
+ },
+ "p2:OS-full+MSP:unk_reject:pm": {
+  "value": "0.194 \\pm 0.067",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:unk_reject"
+ },
+ "p2:OS-full+MSP:unk_reject:sd": {
+  "value": "0.067",
+  "source": "experiments/pooled/campaign2/aggregate.json metrics.scorer_bench.OS-full+MSP:unk_reject"
+ },
+ "prov:c1:wall": {
+  "value": "1045",
+  "source": "experiments/campaign/aggregate.json wall_time_s"
+ },
+ "prov:c1rep:wall": {
+  "value": "749",
+  "source": "experiments/campaign_rep/aggregate.json wall_time_s"
+ },
+ "prov:c2:wall": {
+  "value": "1093",
+  "source": "experiments/campaign2/aggregate.json wall_time_s"
+ },
+ "prov:c2rep:wall": {
+  "value": "505",
+  "source": "experiments/campaign2_rep/aggregate.json wall_time_s"
+ },
+ "prov:c3:commit": {
+  "value": "48bfee0",
+  "source": "experiments/campaign3/aggregate.json provenance.git_commit"
+ },
+ "prov:c3:wall": {
+  "value": "1176",
+  "source": "experiments/campaign3/aggregate.json wall_time_s"
+ },
+ "prov:p1:original:commit": {
+  "value": "c9e9c9f",
+  "source": "experiments/pooled/campaign1/aggregate.json provenance.original.git_commit"
+ },
+ "prov:p1:replication:commit": {
+  "value": "a3b3296",
+  "source": "experiments/pooled/campaign1/aggregate.json provenance.replication.git_commit"
+ },
+ "prov:p2:original:commit": {
+  "value": "2dbc00e",
+  "source": "experiments/pooled/campaign2/aggregate.json provenance.original.git_commit"
+ },
+ "prov:p2:replication:commit": {
+  "value": "a3b3296",
+  "source": "experiments/pooled/campaign2/aggregate.json provenance.replication.git_commit"
+ }
+}

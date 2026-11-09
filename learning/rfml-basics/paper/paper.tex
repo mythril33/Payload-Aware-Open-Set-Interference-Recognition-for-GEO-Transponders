@@ -1,0 +1,577 @@
+% Submission source. Every result number is produced by make_numbers.py from the
+% campaign aggregates and enters the text through \Num{key}; build with build.sh.
+\documentclass[journal]{IEEEtran}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{cite}
+\usepackage{url}
+\input{generated/numbers}
+\graphicspath{{figures/}}
+\newcommand{\pmnum}[1]{$\Num{#1:pm}$}
+\hyphenation{Objecto-sphere Maha-la-no-bis}
+
+\begin{document}
+
+\title{A Pre-Registered Synthetic Benchmark for Open-Set Radio Signal
+Classification under Transmitter-Level Splits}
+
+\author{Anonymous Authors% anonymised for double-blind review
+\thanks{Code, pre-registrations, per-seed results and the scripts that generate
+every number and figure of this paper accompany the submission.}}
+
+\maketitle
+
+\begin{abstract}
+Open-set recognition asks a classifier to label known classes and to reject
+inputs from classes it never saw. We present a small synthetic benchmark for
+open-set radio signal classification in which every nuisance factor is
+explicit: each simulated transmitter has its own IQ imbalance, amplifier
+compression, phase noise and DC offset, and data are split by transmitter.
+Hypotheses and pass criteria were fixed before the runs and then tested again
+on five fresh seeds. On four known modulations and two held-out ones, five
+post-hoc scores were compared on the same trained network. Euclidean distance
+to class centroids in embedding space reaches an AUROC of
+\pmnum{p2:CE+distance:auroc} over ten seeds; maximum softmax probability,
+max-logit and energy reach \pmnum{p2:CE+MSP:auroc}, \pmnum{p2:CE+maxlogit:auroc}
+and \pmnum{p2:CE+energy:auroc}, below chance. Mahalanobis scoring is worse than
+the Euclidean score in all ten seeds. Training against auxiliary outliers
+helps only when the outliers resemble the unknowns: with the training seed
+held fixed, rejection of 4PAM unknowns is \pmnum{c3:arm_control:OS-8PAM+MSP:reject_4PAM}
+with 8PAM outliers and \pmnum{c3:arm_control:OS-16PSK+MSP:reject_4PAM} with 16PSK
+outliers. Four of eight initial hypotheses replicated, two negative results
+replicated, one effect did not replicate, one was inconsistent between the
+two seed sets, and one of our own interpretations was refuted by a follow-up
+experiment. The benchmark is a measurement
+instrument on synthetic data, not a new method.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Open-set recognition, radio signal classification, modulation classification,
+hardware impairments, out-of-distribution detection, pre-registration,
+reproducibility.
+\end{IEEEkeywords}
+
+\section{Introduction}
+\IEEEPARstart{D}{eep} classifiers for radio signals are usually evaluated on
+test classes that were all present in training. A deployed monitor does not
+have that guarantee: new emitters, waveforms and interference types appear,
+and the useful answer for them is ``unknown'', not the nearest known label.
+Open-set recognition (OSR) addresses this case \cite{scheirer2013openset,geng2021survey}.
+
+OSR results on radio data are hard to interpret for two reasons. Public
+datasets entangle channel, hardware and capture session, so it is unclear what
+a rejection score reacts to. And hardware impairments are themselves learnable
+signatures, which is the basis of RF fingerprinting \cite{sankhe2019oracle}; a
+split by frame therefore lets a model succeed by recognising devices.
+
+This paper goes the other way from realism. It studies a deliberately small
+synthetic benchmark in which each factor is controlled and published. Each
+transmitter draws its impairment parameters once; data are split by
+transmitter; unknown classes take no part in training, model selection or
+threshold calibration; and the threshold is set on known validation data at a
+fixed acceptance target. Inside this instrument we ask how standard open-set
+scores behave when the unknown classes are structurally related to the known
+ones (64QAM to 16QAM, 4PAM to BPSK).
+
+The second concern of the paper is the reliability of its own conclusions.
+Every hypothesis and its pass criterion was written down before the
+corresponding runs. The first eight hypotheses were then tested again on five
+fresh seeds, and three follow-up hypotheses addressed weaknesses that an
+internal review found in the first analysis. We report what replicated, what
+did not, and where our interpretation was wrong.
+
+The contributions are:
+\begin{enumerate}
+\item an open benchmark for open-set radio signal classification with explicit
+per-transmitter impairments and transmitter-level roles for training, model
+selection, calibration and test;
+\item a comparison of five post-hoc scores on the same trained network per
+seed, and of the Objectosphere loss \cite{dhamija2018objectosphere} under
+three auxiliary-outlier pools with the training seed held fixed;
+\item a pre-registered analysis with a replication on fresh seeds, including
+two replicated negative results, one effect that did not replicate, and one
+refuted interpretation.
+\end{enumerate}
+
+\section{Related Work}
+OSR was formalised for visual classifiers by Scheirer \emph{et al.}
+\cite{scheirer2013openset} and extended to deep networks by OpenMax
+\cite{bendale2016openmax}; Geng \emph{et al.} survey the field
+\cite{geng2021survey}. The scores compared here are standard: the maximum
+softmax probability (MSP) baseline \cite{hendrycks2017msp}, the max-logit
+score \cite{hendrycks2022scaling}, the energy score \cite{liu2020energy}, and
+class-conditional distances in feature space, of which the Mahalanobis
+detector \cite{lee2018mahalanobis} is the best-known form. The Objectosphere
+loss \cite{dhamija2018objectosphere} trains against auxiliary known outliers.
+Detection quality is summarised by the area under the ROC curve
+\cite{fawcett2006roc}.
+
+Deep modulation classification was established on synthetic and over-the-air
+data by O'Shea \emph{et al.} \cite{oshea2016radioml,oshea2018ota}, who showed
+that hardware and channel effects change the results. Open-set formulations
+have been applied to transmitter authorisation \cite{hanna2021openset} and to
+modulation recognition with signal-domain features \cite{li2023amosr}.
+RF fingerprinting shows that impairments such as IQ imbalance and DC offset
+identify a device \cite{sankhe2019oracle}; this is why the benchmark splits by
+transmitter. We do not propose a method and claim no superiority of any score
+beyond the conditions measured.
+
+\section{System Model and Problem Formulation}
+\subsection{Signal model}
+A frame is a complex baseband sequence of $N=512$ samples at 8 samples per
+symbol. Symbols are drawn uniformly from the constellation of the
+transmitter's modulation and shaped by a unit-energy root-raised-cosine
+filter (roll-off 0.35, span 6 symbols); the frame is a window taken after the
+filter transient. The transmitter then applies, in this order,
+\begin{align}
+y_1[n] &= x[n]\,\bigl(1+(|x[n]|/A_\mathrm{sat})^{2p}\bigr)^{-1/(2p)}, \label{eq:rapp}\\
+y_2[n] &= \mu\,y_1[n]+\nu\,y_1^{*}[n], \label{eq:iq}\\
+y_3[n] &= y_2[n]\,e^{j\theta[n]}+d, \label{eq:pn}
+\end{align}
+where \eqref{eq:rapp} is the Rapp amplifier model \cite{rapp1991hpa},
+\eqref{eq:iq} is IQ imbalance with $\mu=(1+g e^{-j\phi})/2$ and
+$\nu=(1-g e^{j\phi})/2$, $\theta[n]$ is a Gaussian random walk (phase noise)
+and $d$ is a DC offset. The frame then receives a carrier-frequency offset
+$f\sim\mathcal{U}(-0.01,0.01)$ cycles per sample with a random initial phase,
+and complex white Gaussian noise at a stated signal-to-noise ratio (SNR),
+defined on the impaired, frequency-shifted signal.
+
+A transmitter fixes its modulation and impairment parameters once:
+$g\sim\mathcal{U}(0.9,1.1)$, $\phi\sim\mathcal{U}(-5^\circ,5^\circ)$, real and
+imaginary parts of $d$ from $\mathcal{U}(-0.05,0.05)$, phase-noise standard
+deviation log-uniform in $[2\times10^{-3},10^{-2}]$~rad per sample,
+$A_\mathrm{sat}\sim\mathcal{U}(1.0,1.6)$ and $p\sim\mathcal{U}(2,3)$. An
+\emph{ideal} device sets all of these to their identity values. No fading,
+multipath or receiver impairment is simulated.
+
+\subsection{Classes and roles}
+The known classes are BPSK, QPSK, 8PSK and 16QAM. The unknown classes, used
+only at test time, are 64QAM and 4PAM. Two further classes, 16PSK and 8PAM,
+serve as auxiliary training outliers for the Objectosphere variants. All
+frames of a device stay in one role: training, validation for model
+selection, validation for calibration, or test. Unknown-class frames
+influence no fit, no model selection and no threshold.
+
+\subsection{Decision rule}
+A score $s(\mathbf{x})$, larger meaning more unknown-like, is compared with a
+threshold $\tau$: the frame is accepted if $s(\mathbf{x})\le\tau$ and then
+receives the label of the largest logit. $\tau$ is the smallest value that
+accepts at least 95\% of the known calibration frames.
+
+\section{Scores and Training Variants}
+The embedding network (CNN1D) has three blocks of convolution (kernel 7),
+batch normalisation, ReLU and max pooling with 32, 64 and 128 channels,
+followed by global average pooling and a linear layer; the embedding
+dimension is 128. With logits $\mathbf{z}$, embedding $\mathbf{e}$ and class
+centroids $\mathbf{m}_c$ computed from the known training frames, the
+post-hoc scores are
+\begin{align}
+s_\mathrm{MSP} &= 1-\max_c \mathrm{softmax}(\mathbf{z})_c, \\
+s_\mathrm{logit} &= -\max_c z_c, \qquad
+s_\mathrm{energy} = -\log\textstyle\sum_c e^{z_c}, \\
+s_\mathrm{Euc} &= \min_c \lVert \mathbf{e}-\mathbf{m}_c\rVert_2, \\
+s_\mathrm{Mah} &= \min_c \bigl((\mathbf{e}-\mathbf{m}_c)^{\mathsf T}
+\boldsymbol{\Sigma}_\alpha^{-1}(\mathbf{e}-\mathbf{m}_c)\bigr)^{1/2},
+\end{align}
+with $\boldsymbol{\Sigma}_\alpha=(1-\alpha)\boldsymbol{\Sigma}
++\alpha\,(\mathrm{tr}\,\boldsymbol{\Sigma}/128)\,\mathbf{I}$, where
+$\boldsymbol{\Sigma}$ is the pooled within-class covariance of the known
+training embeddings and $\alpha$ is the shrinkage; $\alpha=0.1$ unless
+stated. At $\alpha=1$ the Mahalanobis score ranks frames exactly as the
+Euclidean score does.
+
+The Objectosphere variants \cite{dhamija2018objectosphere} add outlier frames
+to the training set. The loss pushes the logit norm of known frames above a
+margin $\xi=10$ and drives outlier frames toward uniform, small-norm logits
+with weight $\lambda=0.1$; the score is $s_\mathrm{MSP}$. Three outlier pools
+are compared: both auxiliary classes (\Num{design:outliers:OS-full+MSP}
+frames), 16PSK only and 8PAM only (\Num{design:outliers:OS-16PSK+MSP} frames
+each).
+
+\section{Experimental Setup}
+\label{sec:setup}
+\subsection{Data, training and metrics}
+Per seed and known class there are 40 training, 10 validation and 10 test
+devices, with 20, 10 and 10 frames per device; the validation devices are
+halved by device into model selection and calibration. There are 20 devices
+per auxiliary class and 10 per unknown class. This gives
+\Num{design:frames:train_known} known training frames,
+\Num{design:frames:val_calib} calibration frames, and
+\Num{design:n_known_test} known and \Num{design:n_unknown_test} unknown test
+frames per seed. SNRs are drawn from $-4$ to 20~dB in steps of 2~dB.
+Networks are trained with Adam (learning rate $10^{-3}$, weight decay
+$10^{-4}$, batch size 64) for at most 25 epochs, with early stopping
+(patience 5) on the accuracy over the model-selection devices.
+
+The AUROC takes the unknown class as positive \cite{fawcett2006roc}. The
+unknown rejection rate is the fraction of unknown test frames with
+$s>\tau$; the known acceptance rate is the fraction of known test frames with
+$s\le\tau$. The open-set classification rate (OSCR) curve
+\cite{dhamija2018objectosphere} plots the fraction of known test frames that
+are accepted and correctly labelled against the fraction of unknown frames
+accepted, as $\tau$ varies; we report its area. Frames of one device are
+correlated, so the seed is the unit of replication: all dispersions are
+sample standard deviations over seeds.
+
+Two companion tasks validate the simulator. Closed-set modulation
+classification is run with impaired and with ideal devices, for the CNN1D and
+for a multilayer perceptron (MLP; hidden widths 256 and 128) on the raw frame,
+and tested at $-6$ to 20~dB. A fingerprinting task asks a one-dimensional
+ResNet \cite{he2016resnet} to identify 10 devices that all send QPSK; here
+the device is the label, so the split is by frame (600 test frames per seed),
+and an ideal-device control must stay at the chance level of 0.10.
+
+\subsection{Pre-registration and replication}
+The study has three campaigns. Campaign~1 trains each open-set variant
+separately and runs the companion tasks (H1--H4). Campaign~2 trains one
+cross-entropy network per seed, evaluates the five post-hoc scores on it, and
+trains the three Objectosphere pools (H5--H8). Campaign~3 retrains the three
+pools with one shared training seed, so that only the pool differs (H7s);
+scores the campaign-1 classifiers on new frames of their training devices
+(H9, H10); and sweeps the shrinkage $\alpha$, which is exploratory.
+
+Campaigns~1 and~2 first ran on seeds 0--4 and were then repeated with
+unchanged code on fresh seeds 5--9. Each hypothesis predicts the sign of a
+per-seed paired difference. It is \emph{supported} on a set of five seeds if
+the predicted sign occurs in at least four, and on ten seeds if it occurs in
+at least eight. We call a hypothesis \emph{replicated} only if the fresh
+seeds meet the four-of-five criterion on their own. With five or ten seeds we
+report counts, not significance; for reference, the two-sided sign-test
+$p$-value is 0.002 at 10/10, 0.021 at 9/10, 0.109 at 8/10 and 0.344 at 7/10.
+
+The analysis plans of campaigns~2 and~3 and of the replication were committed
+to the repository before their runs started. The plan of campaign~1 was
+written before its run but committed about 3.5~minutes after the run began;
+its criteria were not changed afterwards, and its hypotheses are among those
+retested on fresh seeds. All runs used PyTorch on four CPU threads; the five
+campaign runs took \Num{prov:c1:wall}, \Num{prov:c1rep:wall},
+\Num{prov:c2:wall}, \Num{prov:c2rep:wall} and \Num{prov:c3:wall}~s. No run failed and no
+seed was excluded.
+
+\section{Results}
+Unless stated otherwise, values are means and sample standard deviations
+over seeds 0--9. Table~\ref{tab:hyp} lists every hypothesis with its counts.
+
+\begin{table*}[t]
+\centering
+\caption{Open-set results over ten seeds (mean $\pm$ standard deviation). The
+five post-hoc scores use the same cross-entropy network per seed; the
+Objectosphere rows are separately trained networks scored with MSP.
+\Num{design:n_known_test} known and \Num{design:n_unknown_test} unknown test
+frames per seed; calibration target 0.95.}
+\label{tab:main}
+\begin{tabular}{lcccc}
+\toprule
+Variant & AUROC & Unknown rejection & Known acceptance & OSCR area \\
+\midrule
+MSP & \pmnum{p2:CE+MSP:auroc} & \pmnum{p2:CE+MSP:unk_reject} & \pmnum{p2:CE+MSP:known_accept} & \pmnum{p2:CE+MSP:oscr_auc} \\
+Max-logit & \pmnum{p2:CE+maxlogit:auroc} & \pmnum{p2:CE+maxlogit:unk_reject} & \pmnum{p2:CE+maxlogit:known_accept} & \pmnum{p2:CE+maxlogit:oscr_auc} \\
+Energy & \pmnum{p2:CE+energy:auroc} & \pmnum{p2:CE+energy:unk_reject} & \pmnum{p2:CE+energy:known_accept} & \pmnum{p2:CE+energy:oscr_auc} \\
+Euclidean distance & \pmnum{p2:CE+distance:auroc} & \pmnum{p2:CE+distance:unk_reject} & \pmnum{p2:CE+distance:known_accept} & \pmnum{p2:CE+distance:oscr_auc} \\
+Mahalanobis ($\alpha=0.1$) & \pmnum{p2:CE+mahalanobis:auroc} & \pmnum{p2:CE+mahalanobis:unk_reject} & \pmnum{p2:CE+mahalanobis:known_accept} & \pmnum{p2:CE+mahalanobis:oscr_auc} \\
+\midrule
+Objectosphere, 16PSK + 8PAM outliers & \pmnum{p2:OS-full+MSP:auroc} & \pmnum{p2:OS-full+MSP:unk_reject} & \pmnum{p2:OS-full+MSP:known_accept} & \pmnum{p2:OS-full+MSP:oscr_auc} \\
+Objectosphere, 16PSK outliers & \pmnum{p2:OS-16PSK+MSP:auroc} & \pmnum{p2:OS-16PSK+MSP:unk_reject} & \pmnum{p2:OS-16PSK+MSP:known_accept} & \pmnum{p2:OS-16PSK+MSP:oscr_auc} \\
+Objectosphere, 8PAM outliers & \pmnum{p2:OS-8PAM+MSP:auroc} & \pmnum{p2:OS-8PAM+MSP:unk_reject} & \pmnum{p2:OS-8PAM+MSP:known_accept} & \pmnum{p2:OS-8PAM+MSP:oscr_auc} \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_auroc}
+\caption{AUROC of every open-set variant for each seed. Filled markers are
+the original seeds 0--4, open markers the replication seeds 5--9, and the bar
+is the mean of all ten.}
+\label{fig:auroc}
+\end{figure*}
+
+\subsection{Post-hoc scores on one network (H1, H5, H6)}
+Table~\ref{tab:main} and Fig.~\ref{fig:auroc} give the main result. On the
+same network, the three scores computed from the logits have a mean AUROC
+below 0.5: \pmnum{p2:CE+MSP:auroc} for MSP, \pmnum{p2:CE+maxlogit:auroc} for
+max-logit and \pmnum{p2:CE+energy:auroc} for energy. Max-logit and energy are
+below 0.5 in every seed (maxima \Num{p2:CE+maxlogit:auroc:max} and
+\Num{p2:CE+energy:auroc:max}); MSP is below 0.5 in nine seeds and reaches
+\Num{p2:CE+MSP:auroc:max} in one. A value below 0.5 means that the unknown
+frames receive, on average, \emph{more} confident outputs than the known
+ones. At the calibrated threshold MSP rejects a fraction
+\pmnum{p2:CE+MSP:unk_reject} of the unknown frames.
+
+The two scores computed from the embedding separate the classes: Euclidean
+distance reaches \pmnum{p2:CE+distance:auroc} and rejects
+\pmnum{p2:CE+distance:unk_reject} of the unknown frames at a known acceptance
+of \pmnum{p2:CE+distance:known_accept}. H1, tested in campaign~1 with
+separately trained networks, is supported in \Num{h:H1:orig} original and
+\Num{h:H1:rep} fresh seeds (mean AUROC difference \Num{h:H1:diff});
+campaign~2 shows the same gap on a single network, so it is not an effect of
+training variance. Fig.~\ref{fig:hists} shows the mechanism for one seed: in
+MSP the unknown frames concentrate at the confident end, on the accept side
+of the threshold, whereas in distance a large part of them lies beyond it.
+Fig.~\ref{fig:oscr} shows the corresponding OSCR curves.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_hists}
+\caption{Scores of the known and unknown test frames on one network (seed~0,
+\Num{design:n_known_test} known and \Num{design:n_unknown_test} unknown
+frames). The dashed line is the calibrated threshold; frames to its left are
+accepted.}
+\label{fig:hists}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_oscr}
+\caption{OSCR curves of three scores on one network (seed~0).}
+\label{fig:oscr}
+\end{figure}
+
+Two predictions failed, and both failures replicated. H5 predicted that the
+Mahalanobis score would beat the Euclidean score. It was lower in all ten
+seeds (\Num{h:H5:pool} in the predicted direction; mean difference
+\Num{h:H5:diff}). H6 predicted that the energy score would beat MSP. It did so
+in \Num{h:H6:orig} original and \Num{h:H6:rep} fresh seeds (mean difference
+\Num{h:H6:diff}).
+
+\subsection{Auxiliary outliers (H2, H7, H7s)}
+Training against both auxiliary classes raises unknown rejection above the
+MSP baseline in every seed (H2, \Num{h:H2:pool}; \pmnum{p1:open_set:obj_unk_reject}
+against \pmnum{p1:open_set:msp_unk_reject} in campaign~1), although it stays far
+below the Euclidean score. The outlier class 8PAM is close to the unknown
+class 4PAM, which we recorded as a confound before the first run. Campaign~2
+measured it by changing the outlier pool: rejection of 4PAM frames is
+\pmnum{p2:OS-8PAM+MSP:reject_4PAM} with 8PAM outliers and
+\pmnum{p2:OS-16PSK+MSP:reject_4PAM} with 16PSK outliers (H7, \Num{h:H7:orig}
+original and \Num{h:H7:rep} fresh seeds).
+
+In campaign~2 the three pools were also trained with different seeds.
+Campaign~3 removed that difference. With one training seed for all pools,
+4PAM rejection is \pmnum{c3:arm_control:OS-8PAM+MSP:reject_4PAM} with 8PAM
+outliers and \pmnum{c3:arm_control:OS-16PSK+MSP:reject_4PAM} with 16PSK outliers
+(H7s, \Num{h:H7s:pool}; per-seed difference from \Num{h:H7s:lo} to
+\Num{h:H7s:hi}). Rejection of 64QAM frames stays low under every pool
+(\pmnum{c3:arm_control:OS-full+MSP:reject_64QAM},
+\pmnum{c3:arm_control:OS-16PSK+MSP:reject_64QAM} and
+\pmnum{c3:arm_control:OS-8PAM+MSP:reject_64QAM}; Fig.~\ref{fig:confound}). The gain
+from outlier exposure in this benchmark is therefore transfer from 8PAM to
+4PAM. It is also unstable: with 8PAM outliers the per-seed 4PAM rejection
+ranges from \Num{c3:arm_control:OS-8PAM+MSP:reject_4PAM:min} to
+\Num{c3:arm_control:OS-8PAM+MSP:reject_4PAM:max}. The pool with 16PSK alone
+gives an AUROC of \pmnum{c3:arm_control:OS-16PSK+MSP:auroc}, below chance like
+the plain MSP baseline.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_confound}
+\caption{Unknown rejection per unknown class for three outlier pools trained
+with one shared seed (campaign~3). Bars are means over ten seeds, dots are
+seeds; 100 frames per unknown class and seed.}
+\label{fig:confound}
+\end{figure}
+
+\subsection{Dependence on SNR (H8)}
+H8 predicted that the MSP AUROC would be higher at low SNR ($\le 2$~dB) than
+at high SNR ($\ge 10$~dB), as an explanation by confidence suggests. It was
+supported on the original seeds (\Num{h:H8:orig}) and \emph{not replicated} on
+the fresh ones (\Num{h:H8:rep}; pooled \Num{h:H8:pool}, below the criterion).
+Over ten seeds the two bands give \pmnum{p2:CE+MSP:auroc_low_le2} and
+\pmnum{p2:CE+MSP:auroc_high_ge10}. We conclude that the benchmark does not show
+an SNR dependence of the MSP failure. Fig.~\ref{fig:snr} shows the AUROC per
+SNR; the cells are small (at most a few tens of frames per SNR and seed), and
+the Euclidean score stays above the MSP score at every SNR in the mean.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_snr_auroc}
+\caption{AUROC per SNR for MSP and Euclidean distance on the same network;
+mean and standard deviation over ten seeds.}
+\label{fig:snr}
+\end{figure}
+
+\subsection{Validation of the simulator (H3, H4)}
+With impaired devices the fingerprinting network identifies the device with
+accuracy \pmnum{p1:fingerprint:test_acc}; with ideal devices it scores
+\pmnum{p1:fingerprint_ideal:test_acc}, at the chance level of 0.10 (H3,
+\Num{h:H3:pool}). The impairment chain therefore carries the device identity
+and nothing else in the pipeline does.
+
+H4 predicted that removing the impairments would raise the closed-set
+accuracy of the CNN1D. The accuracies are \pmnum{p1:modulation_ideal:cnn_overall_acc}
+for ideal and \pmnum{p1:modulation:cnn_overall_acc} for impaired devices. The
+predicted sign occurred in \Num{h:H4:orig} original and \Num{h:H4:rep} fresh
+seeds, \Num{h:H4:pool} in all, which is below the ten-seed criterion; the mean
+difference is \Num{h:H4:diff}. If the impairments cost closed-set accuracy at
+these magnitudes, the cost is about two points and not consistently
+detectable with ten seeds. Fig.~\ref{fig:mod} shows the accuracy against SNR.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_modulation}
+\caption{Closed-set accuracy on unseen impaired devices against the test SNR;
+mean and standard deviation over ten seeds, 400 frames per SNR and seed.}
+\label{fig:mod}
+\end{figure}
+
+\subsection{What the MLP memorises (H9, H10)}
+The MLP reaches a training accuracy of \pmnum{c3:split_counterfactual:MLP:train_acc}
+but \pmnum{c3:split_counterfactual:MLP:unseen_acc} on unseen devices, the chance
+level of 0.25. An earlier draft of this paper read this as memorisation of
+the training \emph{devices}, which a split by frame would hide. Campaign~3
+tested that reading by scoring the same networks on new frames of the
+training devices (\Num{design:n_seen_test} frames per seed). H9 predicted a
+higher MLP accuracy there than on unseen devices. It was not supported
+(\Num{h:H9:pool}; mean difference \Num{h:H9:diff}): the MLP scores
+\pmnum{c3:split_counterfactual:MLP:seen_acc} on new frames of devices it was
+trained on. It memorises training frames, not devices, and fails on any new
+frame; the transmitter-level split is not what exposes it. Our earlier
+reading was wrong.
+
+For the CNN1D the device shift is measurable but small: accuracy is
+\pmnum{c3:split_counterfactual:CNN1D:seen_acc} on new frames of seen devices and
+\pmnum{c3:split_counterfactual:CNN1D:unseen_acc} on unseen devices (H10,
+\Num{h:H10:pool}; mean difference \Num{h:H10:diff}; Fig.~\ref{fig:seen}).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_seen_unseen}
+\caption{Closed-set accuracy on the training frames, on new frames of the
+training devices and on unseen devices (campaign~3). Bars are means over ten
+seeds, dots are seeds.}
+\label{fig:seen}
+\end{figure}
+
+\subsection{Mahalanobis shrinkage (exploratory)}
+Because H5 was tested at one shrinkage value, campaign~3 recomputed the
+Mahalanobis score on the same networks for five values of $\alpha$. This
+analysis was chosen after seeing campaign~2 and has no pass criterion. The
+AUROC is \Num{c3:arm_control:CE+mahalanobis@0.01:auroc:mean},
+\Num{c3:arm_control:CE+mahalanobis@0.1:auroc:mean},
+\Num{c3:arm_control:CE+mahalanobis@0.5:auroc:mean} and
+\Num{c3:arm_control:CE+mahalanobis@0.9:auroc:mean} at $\alpha=0.01$, 0.1, 0.5 and
+0.9, against \Num{c3:arm_control:CE+distance:auroc:mean} for the Euclidean score,
+which $\alpha=1$ reproduces exactly (Fig.~\ref{fig:shrink}). No tested amount
+of covariance whitening improved on the Euclidean score.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_shrinkage}
+\caption{Mahalanobis AUROC against the shrinkage $\alpha$ (exploratory); mean
+and standard deviation over ten seeds. $\alpha=1$ equals the Euclidean score.}
+\label{fig:shrink}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Pre-registered hypotheses. Counts are seeds with the predicted sign.
+H7s, H9 and H10 were run on ten seeds at once.}
+\label{tab:hyp}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}llcccl@{}}
+\toprule
+ & Prediction & 0--4 & 5--9 & All & Outcome \\
+\midrule
+H1 & Euclidean $>$ MSP (AUROC) & \Num{h:H1:orig} & \Num{h:H1:rep} & \Num{h:H1:pool} & replicated \\
+H2 & Objectosph.\ $>$ MSP (rejection) & \Num{h:H2:orig} & \Num{h:H2:rep} & \Num{h:H2:pool} & replicated \\
+H3 & fingerprint: impaired $>$ ideal & \Num{h:H3:orig} & \Num{h:H3:rep} & \Num{h:H3:pool} & replicated \\
+H4 & CNN1D: ideal $>$ impaired & \Num{h:H4:orig} & \Num{h:H4:rep} & \Num{h:H4:pool} & inconsistent \\
+H5 & Mahalanobis $>$ Euclidean & \Num{h:H5:orig} & \Num{h:H5:rep} & \Num{h:H5:pool} & refuted \\
+H6 & energy $>$ MSP & \Num{h:H6:orig} & \Num{h:H6:rep} & \Num{h:H6:pool} & refuted \\
+H7 & 4PAM rej.: 8PAM $>$ 16PSK pool & \Num{h:H7:orig} & \Num{h:H7:rep} & \Num{h:H7:pool} & replicated \\
+H7s & as H7, shared training seed & -- & -- & \Num{h:H7s:pool} & supported \\
+H8 & MSP AUROC: low $>$ high SNR & \Num{h:H8:orig} & \Num{h:H8:rep} & \Num{h:H8:pool} & not replicated \\
+H9 & MLP: seen $>$ unseen devices & -- & -- & \Num{h:H9:pool} & not supported \\
+H10 & CNN1D: seen $>$ unseen devices & -- & -- & \Num{h:H10:pool} & supported \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Discussion}
+The pattern in Table~\ref{tab:main} is that the logits are the wrong place to
+look for these unknowns. A 64QAM frame contains the amplitude and phase
+structure of 16QAM, and a 4PAM frame that of BPSK; the classifier maps both
+to a known class with high confidence, and every functional of the logits
+inherits that confidence. Changing the functional (H6) did not help. The
+embedding still separates the constellations, and the plain Euclidean
+distance uses that separation best; whitening by the within-class covariance
+(H5 and the sweep) removed part of it. Feature-space scores are known to
+outperform output-space confidence under semantic similarity
+\cite{lee2018mahalanobis,geng2021survey}; the benchmark quantifies this under
+a controlled shift and adds that the simpler distance was the better one
+here.
+
+The outlier-pool experiment is a caution for outlier exposure in general.
+The measured gain came from the similarity between one outlier class and one
+unknown class, and it vanished when that outlier class was removed. A result
+obtained with an outlier pool therefore says little without a statement of
+how the pool relates to the unknowns under test.
+
+The replication changed the conclusions in three places. H8, supported on
+the first five seeds with a small effect, did not survive fresh seeds. The
+statement that MSP is below chance ``in every seed'' became nine of ten. And
+our reading of the MLP result was refuted by the experiment designed to test
+it. None of these would have been visible in the first five seeds alone.
+
+\section{Limitations and Threats to Validity}
+\emph{Synthetic data.} The transmitter model has no fading, multipath,
+filter mismatch, timing error or amplifier memory, and no receiver model.
+Nothing here predicts performance on measured signals.
+
+\emph{One architecture and one configuration.} One network, one SNR grid,
+one calibration target and one pair of Objectosphere parameters were used.
+The conclusions are specific to them.
+
+\emph{Choice of classes.} The known, unknown and auxiliary classes were fixed
+before the first run, but by us. The results concern unknowns that are close
+to known constellations; unrelated unknowns may behave differently.
+
+\emph{Statistical power.} Ten seeds support only large effects. The criteria
+are sign counts, not significance tests, and effects of a few points (H4,
+H10) are at the edge of what the design resolves.
+
+\emph{Pre-registration record.} The plan of campaign~1 was committed after
+its run had started, as stated in Section~\ref{sec:setup}; its hypotheses were retested on
+fresh seeds under a plan committed beforehand. The shrinkage sweep is
+exploratory.
+
+\emph{Correlated frames.} Frames of one device are correlated, so frame
+counts overstate the number of independent samples; per-SNR cells are small.
+
+\section{Conclusion}
+In a synthetic benchmark with explicit transmitter impairments and
+transmitter-level splits, scores computed from the logits (MSP, max-logit,
+energy) did not detect unknown modulations that resemble known ones: their
+mean AUROC was below chance on the same network on which the Euclidean
+distance to class centroids reached \pmnum{p2:CE+distance:auroc}. Mahalanobis
+scoring did not improve on the Euclidean distance at any tested shrinkage,
+and the benefit of training against auxiliary outliers was transfer from one
+outlier class to one similar unknown class. These findings held on fresh
+seeds. An SNR dependence of the MSP failure did not, and our interpretation
+of the MLP's failure was refuted by a follow-up experiment.
+
+The benchmark is small enough to rerun in under an hour and a half on four CPU
+threads, and its
+plans, per-seed results and generators are released so that it can be
+extended: with a channel model, with outlier pools that are disjoint from the
+unknowns by construction, with further architectures, and above all with a
+measured dataset that has per-device labels
+\cite{sankhe2019oracle,hanna2021openset}.
+
+\section*{Reproducibility}
+One command per campaign regenerates the per-seed results from the seeds;
+the numbers in this paper are generated from those results by a script, and
+the build fails if a number is missing. The repository also contains the
+three analysis plans with their commit history and an export of the data of
+one seed.
+
+\section*{Disclosure}
+An AI assistant (Claude, Anthropic) was used for software development,
+experiment orchestration and drafting of this manuscript.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

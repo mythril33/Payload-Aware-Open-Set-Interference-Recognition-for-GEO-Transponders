@@ -10,7 +10,7 @@ was not run here.
 
 | Suite | Command | Result |
 | --- | --- | --- |
-| Track B full suite | `cd learning/rfml-basics && .venv/bin/python -m pytest -q` | 187 passed (after the campaign-2 code landed; 166 before it) |
+| Track B full suite | `cd learning/rfml-basics && .venv/bin/python -m pytest -q` | 203 passed (2026-11-09, after campaign 3 and the paper tests; 187 after campaign 2, 166 before it) |
 | Campaign runner smokes | `pytest -q tests/test_campaign.py tests/test_campaign2.py` (subprocess, quick scale) | passing (included above) |
 
 Track A's suite was not rerun in this session; the latest recorded full CI is
@@ -78,6 +78,52 @@ numerics with brute-force OSCR cross-checks) with zero findings.
 Internal consistency check: CE+MSP per-seed AUROCs in campaign 2 equal
 campaign 1's exactly (same seed → same CE model), confirming end-to-end
 determinism across the two campaigns.
+
+## 2c. Replication and campaign 3 (pre-registered, 2026-11-09)
+
+Plan: `experiments/PREREGISTRATION_V3.md`, committed and pushed at
+22:55:01Z (`3536b46`); the run chain started at 22:55:13Z. Unchanged runners
+for the replication; new additive code (`rfml/experiments_v3.py`) for
+campaign 3. All five campaign runs: zero failures, no seed excluded.
+
+| Hypothesis | Seeds 0–4 | Seeds 5–9 | All ten | Outcome |
+| --- | --- | --- | --- | --- |
+| H1 Euclidean > MSP (AUROC) | 5/5 | 5/5 | 10/10 | replicated |
+| H2 Objectosphere > MSP (unknown rejection) | 5/5 | 5/5 | 10/10 | replicated |
+| H3 fingerprint impaired > ideal | 5/5 | 5/5 | 10/10 | replicated |
+| H4 CNN1D ideal > impaired | 3/5 | 4/5 | 7/10 | inconsistent (pooled below 8/10) |
+| H5 Mahalanobis > Euclidean | 0/5 | 0/5 | 0/10 | refuted; the negative result replicated |
+| H6 energy > MSP | 2/5 | 0/5 | 2/10 | refuted; the negative result replicated |
+| H7 4PAM rejection, 8PAM pool > 16PSK pool | 5/5 | 5/5 | 10/10 | replicated |
+| H7s the same with one shared training seed | – | – | 10/10 | supported (seed confound removed) |
+| H8 MSP AUROC low SNR > high SNR | 4/5 | 3/5 | 7/10 | **not replicated** |
+| H9 MLP seen devices > unseen devices | – | – | 6/10 | **not supported**: the MLP memorises frames, not devices |
+| H10 CNN1D seen devices > unseen devices | – | – | 9/10 | supported (about one point) |
+
+Corrections this forced on earlier statements: MSP is below chance in nine of
+ten seeds, not in every seed (seed 6: 0.509); H8 is withdrawn as an effect;
+the "MLP memorises devices" reading is replaced by the measured one.
+
+Pre-registered checks, enforced by `paper/make_numbers.py` (the paper build
+stops if one fails): campaign 3's full outlier pool reproduces campaign 2's
+exactly on all ten seeds; the campaign-3 classifiers reproduce campaign 1's
+unseen-device accuracies exactly; Mahalanobis at shrinkage 1 equals the
+Euclidean score; campaign 2's MSP equals campaign 1's. All four pass.
+
+Exploratory (no pass criterion): Mahalanobis AUROC is 0.764, 0.748, 0.753
+and 0.769 at shrinkage 0.01, 0.1, 0.5 and 0.9, against 0.779 for the
+Euclidean score.
+
+## 2d. Paper build
+
+`sh learning/rfml-basics/paper/build.sh` regenerates the numbers and the
+eight figures and compiles `paper.pdf` (7 pages, IEEEtran, all fonts
+embedded). The LaTeX source contains no hand-typed result: values enter
+through `\Num{key}`, and three tests (`tests/test_paper_numbers.py`) check
+that every key exists, that no three-decimal literal other than the quoted
+sign-test p-values remains in the source, and that citations and
+bibliography entries match one to one. The Markdown draft `paper.md` is
+superseded and removed.
 
 ### Reading rules
 

@@ -1,7 +1,8 @@
 """Export the synthetic data of one seed as files (the data are otherwise generated on the fly).
 
-Writes, under --out, one compressed .npz per role of the open-set stage and of
-the closed-set stage, plus a manifest with shapes, counts and SHA-256 sums.
+Writes, under --out, one compressed .npz per role of the open-set stage (and of
+the closed-set stage with --closed-set), plus a manifest with shapes, counts
+and SHA-256 sums.
 The arrays are exactly what the campaigns train and test on for that seed
 (same role streams), so the export can be checked against a rerun.
 
@@ -53,6 +54,8 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--scale", default="full", choices=sorted(ex.SCALES))
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--closed-set", action="store_true",
+                    help="also export the closed-set (campaign 1 modulation) data; roughly triples the size")
     args = ap.parse_args()
 
     scale = ex.get_scale(args.scale)
@@ -93,12 +96,13 @@ def main() -> int:
             names = np.array(ex.KNOWN)[data["label"]]
         save(f"openset_{role}", data, names)
 
-    # Closed-set stage (campaign 1 modulation data, impaired devices).
-    train, val, test_by_snr = ex.build_modulation_data(scale, True, args.seed)
-    save("closedset_train", train, np.array(ex.KNOWN)[train["label"]])
-    save("closedset_val_select", val, np.array(ex.KNOWN)[val["label"]])
-    test = ex.concat_frames([test_by_snr[s] for s in ex.MOD_TEST_SNRS])
-    save("closedset_test_unseen_devices", test, np.array(ex.KNOWN)[test["label"]])
+    # Closed-set stage (campaign 1 modulation data, impaired devices), on request.
+    if args.closed_set:
+        train, val, test_by_snr = ex.build_modulation_data(scale, True, args.seed)
+        save("closedset_train", train, np.array(ex.KNOWN)[train["label"]])
+        save("closedset_val_select", val, np.array(ex.KNOWN)[val["label"]])
+        test = ex.concat_frames([test_by_snr[s] for s in ex.MOD_TEST_SNRS])
+        save("closedset_test_unseen_devices", test, np.array(ex.KNOWN)[test["label"]])
 
     (args.out / "MANIFEST.json").write_text(json.dumps(manifest, indent=2))
     total = sum(f["frames"] for f in manifest["files"].values())

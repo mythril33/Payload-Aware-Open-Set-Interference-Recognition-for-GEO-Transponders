@@ -53,17 +53,19 @@ The repository holds two tracks:
   CFO, device-level splits, MLP/CNN1D/ResNet1D, MSP / distance /
   Objectosphere, known-val threshold calibration), 187 passing tests,
   Streamlit UI, lessons 01–04 with full-run results.
-- Pre-registered multi-seed campaigns 1 and 2
-  (`learning/rfml-basics/experiments/PREREGISTRATION.md` and
-  `PREREGISTRATION_V2.md`, `run_campaign.py`, `run_campaign2.py`); results
-  in `learning/rfml-basics/experiments/campaign*/` and
-  `VALIDATION_REPORT.md`. Outcomes: H1/H2/H3/H7 supported, H8 weakly
-  supported, H4/H5/H6 honestly negative; all output-space scores below
-  chance, Euclidean distance best, Objectosphere gain shown to be
-  outlier-similarity transfer.
-- Benchmark paper draft v1.0 with six generated figures
-  (`learning/rfml-basics/paper/`), every number traceable to the committed
-  aggregates.
+- Three pre-registered campaigns and a replication on fresh seeds
+  (`learning/rfml-basics/experiments/PREREGISTRATION*.md`, `run_campaign*.py`,
+  `pool_replication.py`); results in `learning/rfml-basics/experiments/` and
+  `VALIDATION_REPORT.md`. Outcome over ten seeds: H1, H2, H3 and H7
+  replicated; the negative results H5 and H6 replicated; H7s and H10
+  supported; H8 not replicated; H4 inconsistent; H9 not supported (the MLP
+  memorises frames, not devices, which corrected an earlier reading).
+- Submission-format paper (`learning/rfml-basics/paper/paper.pdf`, IEEEtran,
+  anonymised): every printed number is generated from the aggregates by
+  `make_numbers.py`, and `build.sh` refuses a build with a missing number,
+  an undefined reference or an overfull box. Remaining before submission are
+  author decisions only: the author line, the venue and its page limit, and
+  a human read-through.
 
 ## 2. Remaining work, prioritized
 

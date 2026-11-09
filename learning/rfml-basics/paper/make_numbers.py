@@ -120,13 +120,49 @@ def main() -> int:
         n.put(f"h:{short}:lo", signed(min(h["per_seed_diff"])), src)
         n.put(f"h:{short}:hi", signed(max(h["per_seed_diff"])), src)
     n.put("prov:c3:commit", c3["provenance"]["git_commit"][:7], f"{rel} provenance.git_commit")
+    n.put("prov:c3:wall", f"{c3['wall_time_s']:.0f}", f"{rel} wall_time_s")
+
+    # --- pre-registered cross-checks: the build stops if one fails --------------
+    p1 = load(EXP / "pooled" / "campaign1" / "aggregate.json")["metrics"]
+    p2 = load(EXP / "pooled" / "campaign2" / "aggregate.json")["metrics"]["scorer_bench"]
+    arm, split = c3["metrics"]["arm_control"], c3["metrics"]["split_counterfactual"]
+    checks = {
+        # Same seed, same data: campaign 3's full arm is campaign 2's full arm (ten seeds).
+        "full_arm_reproduces_campaign2": arm["OS-full+MSP:auroc"]["per_seed"] == p2["OS-full+MSP:auroc"]["per_seed"],
+        # The campaign-3 models are campaign 1's models.
+        "unseen_accuracy_equals_campaign1": (
+            split["CNN1D:unseen_acc"]["per_seed"] == p1["modulation"]["cnn_overall_acc"]["per_seed"]
+            and split["MLP:unseen_acc"]["per_seed"] == p1["modulation"]["mlp_overall_acc"]["per_seed"]
+        ),
+        # Shrinkage 1 is a scaled identity: the ranking is the Euclidean score's.
+        "shrinkage_one_equals_euclidean": all(
+            abs(a - b) < 1e-12
+            for a, b in zip(arm["CE+mahalanobis@1:auroc"]["per_seed"], arm["CE+distance:auroc"]["per_seed"])
+        ),
+        # One CE model per seed: campaign 2's MSP is campaign 1's MSP.
+        "campaign2_msp_equals_campaign1": p2["CE+MSP:auroc"]["per_seed"] == p1["open_set"]["msp_auroc"]["per_seed"],
+    }
+    failed = [name for name, ok in checks.items() if not ok]
+    if failed:
+        sys.exit(f"cross-checks failed: {failed}")
+    print("cross-checks passed:", ", ".join(checks))
 
     # --- design counts, read back from a per-seed file as a check --------------
     seed0 = load(EXP / "campaign2" / "scorer_bench_seed0.json")
     report = seed0["variants"]["CE+MSP"]["report"]
     n.put("design:n_known_test", str(report["n_known"]), "experiments/campaign2/scorer_bench_seed0.json")
     n.put("design:n_unknown_test", str(report["n_unknown"]), "experiments/campaign2/scorer_bench_seed0.json")
-    n.put("design:n_train_known", str(seed0["frames"]["train_known"]), "experiments/campaign2/scorer_bench_seed0.json")
+    for role, count in seed0["frames"].items():
+        n.put(f"design:frames:{role}", str(count), "experiments/campaign2/scorer_bench_seed0.json frames")
+    arm0 = load(EXP / "campaign3" / "arm_control_seed0.json")["variants"]
+    for arm_name in ("OS-full+MSP", "OS-16PSK+MSP", "OS-8PAM+MSP"):
+        n.put(f"design:outliers:{arm_name}", str(arm0[arm_name]["train_outliers"]),
+              "experiments/campaign3/arm_control_seed0.json train_outliers")
+    split0 = load(EXP / "campaign3" / "split_counterfactual_seed0.json")["models"]["MLP"]
+    n.put("design:n_seen_test", str(split0["seen_devices_new_frames"]["overall"]["n"]),
+          "experiments/campaign3/split_counterfactual_seed0.json")
+    n.put("design:n_unseen_test", str(split0["unseen_devices"]["overall"]["n"]),
+          "experiments/campaign3/split_counterfactual_seed0.json")
 
     OUT.mkdir(parents=True, exist_ok=True)
     lines = [
