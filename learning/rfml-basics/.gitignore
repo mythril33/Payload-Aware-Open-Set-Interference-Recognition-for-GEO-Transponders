@@ -4,3 +4,10 @@ __pycache__/
 results/*.png
 experiments/campaign*/raw/
 !experiments/campaign2/raw/scorer_bench_seed0.json
+experiments/dataset_seed*/
+release/
+paper/*.aux
+paper/*.log
+paper/*.blg
+paper/*.out
+paper/paper.txt

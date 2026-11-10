@@ -233,11 +233,15 @@ learning/rfml-basics/
     04_open_set.py
   tests/                 pytest suite (section below)
   results/               JSON (tracked) and PNG (git-ignored), written by the lessons
-  experiments/           pre-registered multi-seed campaign (see experiments/README.md)
-    PREREGISTRATION.md   hypotheses H1-H4 and success criteria, fixed before the runs
-    run_campaign.py      runs all stages over several seeds, writes campaign/aggregate.json
-    campaign/            per-seed metrics and the aggregate (raw/ with score arrays is git-ignored)
-  paper/                 benchmark paper draft (paper.md) and verified references.bib
+  experiments/           three pre-registered campaigns and a replication (see experiments/README.md)
+    PREREGISTRATION*.md  the analysis plans: hypotheses H1-H10 and their pass criteria
+    run_campaign*.py     the campaign runners; each writes per-seed results and an aggregate
+    pool_replication.py  pools a campaign with its replication on fresh seeds
+    campaign*/, pooled/  per-seed results and aggregates (raw score arrays are git-ignored)
+    make_figures.py      the paper's figures; export_dataset.py, make_bundle.py: data and results bundle
+  paper/                 the paper: paper.tex, paper.pdf, references.bib, build.sh
+    make_numbers.py      writes every number the paper prints, from the aggregates
+    generated/, figures/ the generated numbers and figures
 ```
 
 Run the tests with `.venv/bin/python -m pytest -q`, or `bash setup.sh --test`. `pytest.ini` points pytest at `tests/`. The count changes when tests are added; `VALIDATION_REPORT.md` at the repository root records the counts actually observed.

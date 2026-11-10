@@ -191,6 +191,8 @@ def main() -> int:
     scale = ex.get_scale(args.scale)
     out: Path = args.out
     (out / "raw").mkdir(parents=True, exist_ok=True)
+    # Provenance is taken now, so the recorded commit is the one the run started from.
+    prov = provenance(scale, list(args.seeds), started_utc)
 
     t0 = time.perf_counter()
     results: dict[str, dict[int, dict]] = {s: {} for s in METRICS}
@@ -211,7 +213,7 @@ def main() -> int:
             print(f"[seed {seed}] {stage}: done in {r['campaign']['stage_wall_time_s']} s", flush=True)
 
     aggregate = {
-        "provenance": provenance(scale, list(args.seeds), started_utc),
+        "provenance": prov,
         "metrics": {},
         "hypotheses": {},
         "failures": failures,
