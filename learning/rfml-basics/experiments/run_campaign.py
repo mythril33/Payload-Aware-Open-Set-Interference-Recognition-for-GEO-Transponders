@@ -127,7 +127,7 @@ def summarize(values: list[float]) -> dict:
     }
 
 
-def provenance(scale: ex.Scale, seeds: list[int]) -> dict:
+def provenance(scale: ex.Scale, seeds: list[int], started_utc: str) -> dict:
     try:
         rev = subprocess.run(
             ["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True
@@ -143,7 +143,7 @@ def provenance(scale: ex.Scale, seeds: list[int]) -> dict:
         "scale": ex._scale_dict(scale),
         "seeds": seeds,
         "open_set_params": {"xi": 10.0, "lam": 0.1, "target_known_accept": 0.95},
-        "started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "started_utc": started_utc,
     }
 
 
@@ -186,10 +186,13 @@ def main() -> int:
     ap.add_argument("--threads", type=int, default=4)
     args = ap.parse_args()
 
+    started_utc = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     torch.set_num_threads(args.threads)
     scale = ex.get_scale(args.scale)
     out: Path = args.out
     (out / "raw").mkdir(parents=True, exist_ok=True)
+    # Provenance is taken now, so the recorded commit is the one the run started from.
+    prov = provenance(scale, list(args.seeds), started_utc)
 
     t0 = time.perf_counter()
     results: dict[str, dict[int, dict]] = {s: {} for s in METRICS}
@@ -210,7 +213,7 @@ def main() -> int:
             print(f"[seed {seed}] {stage}: done in {r['campaign']['stage_wall_time_s']} s", flush=True)
 
     aggregate = {
-        "provenance": provenance(scale, list(args.seeds)),
+        "provenance": prov,
         "metrics": {},
         "hypotheses": {},
         "failures": failures,

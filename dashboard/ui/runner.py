@@ -9,6 +9,7 @@ import streamlit as st
 
 from geodash import commands as C
 from geodash import jobs as J
+from geodash import pilot
 from geodash.paths import LocationError, run_home
 
 from .state import job_manager
@@ -54,8 +55,12 @@ def _active_panel(job_id: str) -> None:
 def _show_outputs(status: J.JobStatus) -> None:
     if status.key == "real-exercise":
         report_path = status.job_dir / "exercise" / "exercise.json"
-        if report_path.is_file():
-            report = json.loads(report_path.read_text(encoding="utf-8"))
+        try:
+            report = json.loads(report_path.read_text(encoding="utf-8")) if report_path.is_file() else None
+        except (OSError, ValueError):
+            report = None
+            st.warning("exercise.json exists but is not readable JSON; it is not a success.")
+        if isinstance(report, dict):
             st.subheader("Exercise report (exercise.json)")
             st.write("Boundary fields as recorded by the script:")
             st.table(pd.DataFrame([{
@@ -74,6 +79,9 @@ def _show_outputs(status: J.JobStatus) -> None:
             st.download_button("Download exercise.json", report_path.read_bytes(), file_name="exercise.json")
             with st.expander("Full report"):
                 st.json(report, expanded=False)
+    pilot_path = status.job_dir / "pilot.json"
+    if status.key == "real-exercise" and pilot_path.is_file():
+        st.download_button("Download pilot.json", pilot_path.read_bytes(), file_name="pilot.json")
     host_path = status.job_dir / "host.json"
     if host_path.is_file():
         st.download_button("Download host.json", host_path.read_bytes(), file_name="host.json")
@@ -92,6 +100,38 @@ def _find_history(report: dict) -> list[dict] | None:
                 if all(numeric):
                     return numeric
     return None
+
+
+def _pilot_record(job_dir) -> dict | None:
+    try:
+        value = json.loads((job_dir / "pilot.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return value if isinstance(value, dict) else None
+
+
+def _pilot_history_rows(jobs: list[J.JobStatus]) -> list[dict]:
+    """One row per real-exercise job. The state column is the JobManager's; pilot.json only adds identity."""
+    rows = []
+    for job in jobs:
+        if job.key != pilot.PILOT_KEY:
+            continue
+        record = _pilot_record(job.job_dir)
+        written = record is not None
+        source = record.get("source") if written and isinstance(record.get("source"), dict) else {}
+        engine = record.get("engine") if written and isinstance(record.get("engine"), dict) else {}
+        rows.append({
+            "job": job.job_id,
+            "state": job.state,
+            "groups": job.values.get("groups"),
+            "verified": job.state == J.SUCCEEDED and C._exercise_success(job.job_dir)[0],
+            "started_at": job.started_at,
+            "finished_at": record.get("finished_at") if written else None,
+            "engine": engine.get("id"),
+            "source": " ".join(str(v) for v in (source.get("mode"), (source.get("commit") or "")[:12]) if v) or None,
+            "pilot.json": "yes" if written else ("unreadable" if (job.job_dir / "pilot.json").is_file() else "no"),
+        })
+    return rows
 
 
 def render() -> None:
@@ -144,6 +184,13 @@ def render() -> None:
     table = pd.DataFrame([{"job": j.job_id, "command": j.key, "state": j.state, "elapsed (s)": round(j.elapsed_s),
                            "reason": j.reason} for j in jobs])
     st.dataframe(table, hide_index=True, width="stretch")
+
+    history = _pilot_history_rows(jobs)
+    if history:
+        st.subheader("Pilot geçmişi")
+        st.caption("Bounded development pilots only (real-exercise). verified = succeeded and exercise.json "
+                   "passes its boundary check; it proves the functional flow, not recognition performance.")
+        st.dataframe(pd.DataFrame(history), hide_index=True, width="stretch")
 
     chosen = st.selectbox("Inspect a job", [j.job_id for j in jobs], index=0)
     status = manager.status(chosen)

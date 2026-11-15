@@ -53,12 +53,16 @@ from rfml.dataset import (
     make_transmitters,
     split_frames_stratified,
 )
-from rfml.metrics import accuracy, confusion_matrix, open_set_report
+from rfml.metrics import accuracy, auroc, confusion_matrix, open_set_report
 from rfml.models import CNN1D, MLP, ResNet1D
 from rfml.openset import (
     calibrate_threshold,
     class_centroids,
     distance_unknown_score,
+    energy_unknown_score,
+    fit_shared_covariance,
+    mahalanobis_unknown_score,
+    maxlogit_unknown_score,
     msp_unknown_score,
     objectosphere_loss,
 )
@@ -840,6 +844,355 @@ def run_open_set(
         "n_samples": N_SAMPLES,
         "snr_db": list(TRAIN_SNRS),
         "chance": {"closed_set": CHANCE_CLOSED_SET, "auroc": CHANCE_AUROC},
+        "devices": {
+            "known_train_per_class": scale.tx_train,
+            "known_val_per_class": scale.tx_val,
+            "known_val_select_per_class": scale.tx_val - scale.tx_val // 2,
+            "known_val_calib_per_class": scale.tx_val // 2,
+            "known_test_per_class": scale.tx_test,
+            "aux_outlier_per_class": scale.tx_aux,
+            "unknown_test_per_class": scale.tx_unknown,
+        },
+        "frames": {name: int(f["label"].size) for name, f in frames.items()},
+        "variants": variants,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Campaign 2: scorer bench (experiments/PREREGISTRATION_V2.md) — additive only
+# ---------------------------------------------------------------------------
+
+MAHALANOBIS_SHRINKAGE = 0.1  # pre-registered shrinkage toward the scaled identity
+LOW_SNR_MAX_DB = 2.0  # low band: snr_db <= 2
+HIGH_SNR_MIN_DB = 10.0  # high band: snr_db >= 10
+OSCR_FPR_OPERATING_POINT = 0.10
+
+# The five post-hoc scorers share ONE CE-trained model per seed. The three
+# Objectosphere arms train their own models at seed + offset and score with MSP.
+SCORER_BENCH_POSTHOC = ("CE+MSP", "CE+maxlogit", "CE+energy", "CE+distance", "CE+mahalanobis")
+SCORER_BENCH_ARMS: tuple[tuple[str, tuple[str, ...], int], ...] = (
+    ("OS-full+MSP", ("16PSK", "8PAM"), 101),
+    ("OS-16PSK+MSP", ("16PSK",), 102),
+    ("OS-8PAM+MSP", ("8PAM",), 103),
+)
+
+
+def oscr_points(
+    known_scores: np.ndarray,
+    known_correct: np.ndarray,
+    unknown_scores: np.ndarray,
+) -> dict:
+    """OSCR operating points: correct-classification rate over unknown false accepts.
+
+    known_correct is a boolean array aligned with known_scores (closed-set
+    argmax equals the true label). Acceptance rule: accept if score <= t.
+
+        CCR(t) = fraction of ALL known test frames with score <= t AND correct
+                 (positive = accepted-and-correct known; denominator = n_known)
+        FPR(t) = fraction of unknown frames with score <= t (falsely accepted;
+                 denominator = n_unknown)
+
+    Thresholds sweep every finite score value (known and unknown pooled), so
+    both rates are non-decreasing in t and the points come out sorted by FPR.
+    The endpoints (0, 0) (t = -inf: nothing accepted) and (1, CCR at t = +inf:
+    everything accepted) are included in the returned lists. oscr_auc is the
+    trapezoid area of CCR over FPR in [0, 1]; ccr_at_fpr10 is the max CCR
+    among points with FPR <= 0.10 (0.0 if none).
+    """
+    known = np.asarray(known_scores, dtype=np.float64).ravel()
+    correct = np.asarray(known_correct, dtype=bool).ravel()
+    unknown = np.asarray(unknown_scores, dtype=np.float64).ravel()
+    if known.shape != correct.shape:
+        raise ValueError("known_scores and known_correct disagree on N")
+    if known.size == 0 or unknown.size == 0:
+        raise ValueError("oscr_points needs at least one known and one unknown score")
+    if not (np.all(np.isfinite(known)) and np.all(np.isfinite(unknown))):
+        raise ValueError("scores contain NaN or inf")
+
+    thresholds = np.unique(np.concatenate([known, unknown]))
+    correct_sorted = np.sort(known[correct])
+    unknown_sorted = np.sort(unknown)
+    ccr = np.searchsorted(correct_sorted, thresholds, side="right") / known.size
+    fpr = np.searchsorted(unknown_sorted, thresholds, side="right") / unknown.size
+    # Endpoints: t = -inf accepts nothing; t = +inf accepts everything.
+    fpr = np.concatenate([[0.0], fpr, [1.0]])
+    ccr = np.concatenate([[0.0], ccr, [correct_sorted.size / known.size]])
+    auc = float(np.sum((fpr[1:] - fpr[:-1]) * (ccr[1:] + ccr[:-1]) / 2.0))
+    at_10 = ccr[fpr <= OSCR_FPR_OPERATING_POINT]
+    return {
+        "fpr": [float(v) for v in fpr],
+        "ccr": [float(v) for v in ccr],
+        "oscr_auc": auc,
+        "ccr_at_fpr10": float(at_10.max()) if at_10.size else 0.0,
+    }
+
+
+def _frame_class_names(tx_id: np.ndarray, classes: tuple[str, ...], devices_per_class: int) -> np.ndarray:
+    """Per-frame modulation names, recovered from the device grouping.
+
+    make_transmitters draws devices_per_class devices per modulation, grouped
+    by modulation in input order, and build_frames writes tx_id as the index
+    into that list, so tx_id // devices_per_class is the class index. This is
+    the same grouping invariant split_val_devices relies on.
+    """
+    idx = np.asarray(tx_id, dtype=np.int64) // int(devices_per_class)
+    if idx.size and (idx.min() < 0 or idx.max() >= len(classes)):
+        raise ValueError("tx_id does not match the devices-per-class grouping")
+    return np.asarray(classes, dtype=object)[idx]
+
+
+def _masked_auroc(
+    known_s: np.ndarray,
+    unknown_s: np.ndarray,
+    known_mask: np.ndarray,
+    unknown_mask: np.ndarray,
+) -> dict:
+    """AUROC (positive = unknown) with BOTH sides restricted to their masks."""
+    return {
+        "n_known": int(known_mask.sum()),
+        "n_unknown": int(unknown_mask.sum()),
+        "auroc": auroc(unknown_s[unknown_mask], known_s[known_mask]),
+    }
+
+
+def _scorer_bench_variant(
+    kind: str,
+    calib_s: np.ndarray,
+    known_s: np.ndarray,
+    unknown_s: np.ndarray,
+    known_pred: np.ndarray,
+    known_labels: np.ndarray,
+    known_snr: np.ndarray,
+    unknown_snr: np.ndarray,
+    unknown_names: np.ndarray,
+    target_known_accept: float,
+    hist: dict,
+    train_frames: int,
+    train_outliers: int,
+) -> dict:
+    """Calibrate on known val-calib scores, then summarise the test splits.
+
+    All scores follow the convention larger = more unknown-like. The threshold
+    comes from known val-calib frames only; unknown frames are read afterwards.
+    """
+    thr = calibrate_threshold(calib_s, target_known_accept)  # known val-calib only
+    report = open_set_report(known_s, unknown_s, thr)
+    known_correct = known_pred == known_labels
+
+    per_unknown_class = {}
+    for name in UNKNOWN:
+        mask = unknown_names == name
+        n = int(mask.sum())
+        per_unknown_class[name] = {
+            "n": n,
+            # positive class = this unknown class; negatives = ALL known test frames
+            "auroc": _masked_auroc(known_s, unknown_s, np.ones(known_s.size, dtype=bool), mask)["auroc"],
+            # positive = rejected (score > threshold); denominator = this class's n
+            "reject_rate": float(np.mean(unknown_s[mask] > thr)) if n else None,
+        }
+
+    per_snr_auroc = [
+        {"snr_db": snr}
+        | _masked_auroc(
+            known_s,
+            unknown_s,
+            np.isclose(known_snr, snr, atol=1e-3),
+            np.isclose(unknown_snr, snr, atol=1e-3),
+        )
+        for snr in TRAIN_SNRS
+    ]
+    low = _masked_auroc(known_s, unknown_s, known_snr <= LOW_SNR_MAX_DB, unknown_snr <= LOW_SNR_MAX_DB)
+    high = _masked_auroc(known_s, unknown_s, known_snr >= HIGH_SNR_MIN_DB, unknown_snr >= HIGH_SNR_MIN_DB)
+
+    oscr = oscr_points(known_s, known_correct, unknown_s)
+    accepted = known_s <= thr
+    return {
+        "kind": kind,
+        "report": report,
+        "threshold": thr,
+        "n_calib_known": int(calib_s.size),
+        "per_unknown_class": per_unknown_class,
+        "per_snr_auroc": per_snr_auroc,
+        "snr_band_auroc": {
+            "low_le2": low["auroc"],
+            "high_ge10": high["auroc"],
+            "n_known_low": low["n_known"],
+            "n_unknown_low": low["n_unknown"],
+            "n_known_high": high["n_known"],
+            "n_unknown_high": high["n_unknown"],
+        },
+        "oscr": {"oscr_auc": oscr["oscr_auc"], "ccr_at_fpr10": oscr["ccr_at_fpr10"]},
+        "closed_set_on_accepted": {
+            "positive_denominator": "known test frames accepted (score <= threshold)",
+            "n": int(accepted.sum()),
+            "n_correct": int((known_pred[accepted] == known_labels[accepted]).sum()),
+            "accuracy": accuracy(known_pred[accepted], known_labels[accepted]),
+        },
+        "train_frames": int(train_frames),
+        "train_outliers": int(train_outliers),
+        "epochs_run": len(hist["train_loss"]),
+        "best_epoch": hist["best_epoch"],
+        "val_select_accuracy_best": hist["val_score"][hist["best_epoch"]],
+        "scores": {
+            "known": [float(v) for v in known_s],
+            "unknown": [float(v) for v in unknown_s],
+            "unknown_class": [str(v) for v in unknown_names],
+            "known_snr": [float(v) for v in known_snr],
+            "unknown_snr": [float(v) for v in unknown_snr],
+            "known_correct": [int(v) for v in known_correct],
+        },
+    }
+
+
+def run_scorer_bench(
+    scale: Scale,
+    seed: int,
+    xi: float = 10.0,
+    lam: float = 0.1,
+    target_known_accept: float = 0.95,
+    progress: ProgressFn | None = None,
+) -> dict:
+    """Campaign-2 stage: five post-hoc scorers on ONE CE model, three Objectosphere arms.
+
+    One CE-trained CNN1D per seed (set_seed(seed), val-select on known
+    val-select frames, exactly like run_open_set's CE variant), then five
+    post-hoc unknown scores on that same model: MSP, max-logit, energy,
+    Euclidean distance to known-train centroids, and Mahalanobis distance with
+    the shared shrunk covariance (shrinkage 0.1), all fitted on known TRAIN
+    embeddings only. Three Objectosphere arms train at seeds seed+101/102/103
+    with MSP scoring; they share the full arm's aux device pools, and the
+    single-class arms simply drop the other class's frames.
+
+    Data comes from build_open_set_data, so the known roles and the unknown
+    test frames are drawn from the SAME role streams as run_open_set — no new
+    role is appended to ROLES (if a future stage ever needs one, it must be
+    appended at the END of the spawn list so existing streams stay unchanged).
+    Per-frame unknown/aux class names are recovered from the device grouping
+    (make_transmitters groups devices by modulation in input order).
+
+    Honesty: unknown test classes (64QAM, 4PAM) never influence training,
+    model selection, centroids, covariance or thresholds. Thresholds come from
+    known val-calib frames only, at target_known_accept. Larger score = more
+    unknown-like for every scorer.
+    """
+    _check_seed(seed)
+    if not (math.isfinite(xi) and xi > 0.0):
+        raise ValueError(f"xi must be a positive finite number, got {xi!r}")
+    if not (math.isfinite(lam) and lam >= 0.0):
+        raise ValueError(f"lam must be a non-negative finite number, got {lam!r}")
+    if not (0.0 < target_known_accept <= 1.0):
+        raise ValueError("target_known_accept must lie in (0, 1]")
+
+    _emit(progress, "Veri üretiliyor (her rol ayrı)…")
+    frames = build_open_set_data(scale, seed)
+    train_known = frames["train_known"]
+    unknown_names = _frame_class_names(frames["test_unknown"]["tx_id"], UNKNOWN, scale.tx_unknown)
+    aux_names = _frame_class_names(frames["train_aux"]["tx_id"], AUX, scale.tx_aux)
+    known_labels = frames["test_known"]["label"]
+    known_snr = frames["test_known"]["snr_db"]
+    unknown_snr = frames["test_unknown"]["snr_db"]
+
+    def common(calib_s, known_s, unknown_s, known_pred, kind, hist, n_train, n_outlier):
+        return _scorer_bench_variant(
+            kind, calib_s, known_s, unknown_s, known_pred, known_labels, known_snr,
+            unknown_snr, unknown_names, target_known_accept, hist, n_train, n_outlier,
+        )
+
+    # --- one CE model, five post-hoc scorers ------------------------------
+    _emit(progress, "CE modeli eğitiliyor…")
+    set_seed(seed)
+    ce_model = CNN1D(n_classes=N_CLASSES)
+    ce_hist = train_model(
+        ce_model,
+        ModulationDataset(train_known),
+        ModulationDataset(frames["val_select"]),  # known only: no outliers in selection
+        ce_loss,
+        TrainConfig(epochs=scale.epochs, patience=scale.patience, seed=seed),
+        _epoch_scorer(progress, "CE", scale.epochs),
+    )
+    _emit(progress, "CE: art-niyetli olmayan beş skor hesaplanıyor…")
+    logits = {k: predict_logits(ce_model, frames[k]["iq"]) for k in ("val_calib", "test_known", "test_unknown")}
+    embed = {k: predict_embeddings(ce_model, frames[k]["iq"]) for k in ("val_calib", "test_known", "test_unknown")}
+    train_emb = predict_embeddings(ce_model, train_known["iq"])
+    # Centroids and the shared covariance fit on known TRAIN embeddings only.
+    centroids = class_centroids(train_emb, train_known["label"], N_CLASSES)
+    means, precision = fit_shared_covariance(
+        train_emb, train_known["label"], N_CLASSES, shrinkage=MAHALANOBIS_SHRINKAGE
+    )
+    posthoc_scorers: dict[str, Callable[[str], np.ndarray]] = {
+        "CE+MSP": lambda k: msp_unknown_score(logits[k]),
+        "CE+maxlogit": lambda k: maxlogit_unknown_score(logits[k]),
+        "CE+energy": lambda k: energy_unknown_score(logits[k]),
+        "CE+distance": lambda k: distance_unknown_score(embed[k], centroids),
+        "CE+mahalanobis": lambda k: mahalanobis_unknown_score(embed[k], means, precision),
+    }
+    ce_pred = logits["test_known"].argmax(axis=1)
+    n_ce_train = int(train_known["label"].size)
+
+    variants: dict[str, dict] = {}
+    for name in SCORER_BENCH_POSTHOC:
+        score = posthoc_scorers[name]
+        variants[name] = common(
+            score("val_calib"), score("test_known"), score("test_unknown"),
+            ce_pred, "posthoc", ce_hist, n_ce_train, 0,
+        )
+
+    # --- three Objectosphere arms ------------------------------------------
+    for arm_name, aux_classes, offset in SCORER_BENCH_ARMS:
+        mask = np.isin(aux_names, aux_classes)
+        aux_part = {k: v[mask] for k, v in frames["train_aux"].items()}
+        train_c = concat_frames([train_known, aux_part])
+        v_seed = seed + offset
+        _emit(progress, f"{arm_name} eğitiliyor…")
+        set_seed(v_seed)
+        model = CNN1D(n_classes=N_CLASSES)
+        hist = train_model(
+            model,
+            ModulationDataset(train_c),
+            ModulationDataset(frames["val_select"]),  # known only: no outliers in selection
+            _objectosphere_fn(xi, lam),
+            TrainConfig(epochs=scale.epochs, patience=scale.patience, seed=v_seed),
+            _epoch_scorer(progress, arm_name, scale.epochs),
+        )
+        arm_logits = {k: predict_logits(model, frames[k]["iq"]) for k in ("val_calib", "test_known", "test_unknown")}
+        variants[arm_name] = common(
+            msp_unknown_score(arm_logits["val_calib"]),
+            msp_unknown_score(arm_logits["test_known"]),
+            msp_unknown_score(arm_logits["test_unknown"]),
+            arm_logits["test_known"].argmax(axis=1),
+            "objectosphere",
+            hist,
+            int(train_c["label"].size),
+            int((train_c["label"] == -1).sum()),
+        )
+
+    return {
+        "stage": "scorer_bench",
+        "scale": _scale_dict(scale),
+        "seed": int(seed),
+        "split": (
+            "device-level; one CE model per seed with five post-hoc scorers and three "
+            "Objectosphere arms; thresholds from known val-calib frames; unknown test "
+            "frames (64QAM, 4PAM) influence no fit, selection or threshold"
+        ),
+        "known_classes": list(KNOWN),
+        "aux_outlier_classes_train_only": list(AUX),
+        "unknown_classes_test_only": list(UNKNOWN),
+        "target_known_accept": float(target_known_accept),
+        "objectosphere": {"xi": float(xi), "lam": float(lam)},
+        "mahalanobis_shrinkage": MAHALANOBIS_SHRINKAGE,
+        "n_samples": N_SAMPLES,
+        "snr_db": list(TRAIN_SNRS),
+        "snr_bands": {"low_le2": "snr_db <= 2", "high_ge10": "snr_db >= 10"},
+        "chance": {"closed_set": CHANCE_CLOSED_SET, "auroc": CHANCE_AUROC},
+        "rate_definitions": {
+            "unknown_score": "larger = more unknown-like, for every scorer",
+            "per_unknown_class.auroc": "positive class = that unknown class; negatives = all known test frames",
+            "per_unknown_class.reject_rate": "positive = rejected (score > threshold); denominator = that class's n",
+            "per_snr_auroc_and_bands": "positive class = unknown; BOTH sides conditioned on the SNR value or band",
+            "oscr.ccr": "positive = accepted AND correct; denominator = all known test frames",
+            "oscr.fpr": "positive = unknown frame accepted (score <= t); denominator = all unknown test frames",
+        },
         "devices": {
             "known_train_per_class": scale.tx_train,
             "known_val_per_class": scale.tx_val,

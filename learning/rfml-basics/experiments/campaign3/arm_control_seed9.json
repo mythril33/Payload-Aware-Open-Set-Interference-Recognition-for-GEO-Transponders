@@ -1,0 +1,1206 @@
+{
+  "stage": "arm_control",
+  "scale": {
+    "name": "full",
+    "description": "lesson defaults",
+    "tx_train": 40,
+    "tx_val": 10,
+    "tx_test": 10,
+    "tx_aux": 20,
+    "tx_unknown": 10,
+    "frames_train": 20,
+    "frames_val": 10,
+    "frames_test": 10,
+    "fp_devices": 10,
+    "fp_frames": 300,
+    "epochs": 25,
+    "patience": 5
+  },
+  "seed": 9,
+  "arm_train_seed": 110,
+  "split": "device-level; campaign-2 data and CE model; the three Objectosphere arms share one training seed and differ only in the auxiliary-outlier pool; unknown test frames (64QAM, 4PAM) influence no fit, selection or threshold",
+  "shrinkage_sweep": [
+    0.01,
+    0.1,
+    0.5,
+    0.9,
+    1.0
+  ],
+  "target_known_accept": 0.95,
+  "objectosphere": {
+    "xi": 10.0,
+    "lam": 0.1
+  },
+  "chance": {
+    "closed_set": 0.25,
+    "auroc": 0.5
+  },
+  "frames": {
+    "train_known": 3200,
+    "train_aux": 800,
+    "val_select": 200,
+    "val_calib": 200,
+    "test_known": 400,
+    "test_unknown": 200
+  },
+  "variants": {
+    "CE+distance": {
+      "kind": "posthoc",
+      "report": {
+        "n_known": 400,
+        "n_unknown": 200,
+        "known_accept_rate": 0.945,
+        "unknown_reject_rate": 0.515,
+        "auroc": 0.780025,
+        "threshold": 3.3040922030502373
+      },
+      "threshold": 3.3040922030502373,
+      "n_calib_known": 200,
+      "per_unknown_class": {
+        "64QAM": {
+          "n": 100,
+          "auroc": 0.5921,
+          "reject_rate": 0.16
+        },
+        "4PAM": {
+          "n": 100,
+          "auroc": 0.96795,
+          "reject_rate": 0.87
+        }
+      },
+      "per_snr_auroc": [
+        {
+          "snr_db": -4.0,
+          "n_known": 32,
+          "n_unknown": 14,
+          "auroc": 0.49107142857142855
+        },
+        {
+          "snr_db": -2.0,
+          "n_known": 37,
+          "n_unknown": 16,
+          "auroc": 0.5709459459459459
+        },
+        {
+          "snr_db": 0.0,
+          "n_known": 31,
+          "n_unknown": 18,
+          "auroc": 0.7670250896057348
+        },
+        {
+          "snr_db": 2.0,
+          "n_known": 38,
+          "n_unknown": 14,
+          "auroc": 0.6823308270676691
+        },
+        {
+          "snr_db": 4.0,
+          "n_known": 28,
+          "n_unknown": 11,
+          "auroc": 0.6428571428571429
+        },
+        {
+          "snr_db": 6.0,
+          "n_known": 33,
+          "n_unknown": 15,
+          "auroc": 0.802020202020202
+        },
+        {
+          "snr_db": 8.0,
+          "n_known": 35,
+          "n_unknown": 19,
+          "auroc": 0.837593984962406
+        },
+        {
+          "snr_db": 10.0,
+          "n_known": 24,
+          "n_unknown": 19,
+          "auroc": 0.8859649122807017
+        },
+        {
+          "snr_db": 12.0,
+          "n_known": 33,
+          "n_unknown": 13,
+          "auroc": 0.9207459207459208
+        },
+        {
+          "snr_db": 14.0,
+          "n_known": 31,
+          "n_unknown": 18,
+          "auroc": 0.8566308243727598
+        },
+        {
+          "snr_db": 16.0,
+          "n_known": 19,
+          "n_unknown": 11,
+          "auroc": 0.7511961722488039
+        },
+        {
+          "snr_db": 18.0,
+          "n_known": 24,
+          "n_unknown": 14,
+          "auroc": 0.8303571428571429
+        },
+        {
+          "snr_db": 20.0,
+          "n_known": 35,
+          "n_unknown": 18,
+          "auroc": 0.8428571428571429
+        }
+      ],
+      "snr_band_auroc": {
+        "low_le2": 0.673562412342216,
+        "high_ge10": 0.8471952325430755,
+        "n_known_low": 138,
+        "n_unknown_low": 62,
+        "n_known_high": 166,
+        "n_unknown_high": 93
+      },
+      "oscr": {
+        "oscr_auc": 0.5635125,
+        "ccr_at_fpr10": 0.235
+      },
+      "closed_set_on_accepted": {
+        "positive_denominator": "known test frames accepted (score <= threshold)",
+        "n": 378,
+        "n_correct": 275,
+        "accuracy": 0.7275132275132276
+      },
+      "train_frames": 3200,
+      "train_outliers": 0,
+      "epochs_run": 13,
+      "best_epoch": 7,
+      "val_select_accuracy_best": 0.765
+    },
+    "CE+mahalanobis@0.01": {
+      "kind": "posthoc",
+      "report": {
+        "n_known": 400,
+        "n_unknown": 200,
+        "known_accept_rate": 0.945,
+        "unknown_reject_rate": 0.415,
+        "auroc": 0.7468125,
+        "threshold": 11.950030286312428
+      },
+      "threshold": 11.950030286312428,
+      "n_calib_known": 200,
+      "per_unknown_class": {
+        "64QAM": {
+          "n": 100,
+          "auroc": 0.530275,
+          "reject_rate": 0.01
+        },
+        "4PAM": {
+          "n": 100,
+          "auroc": 0.96335,
+          "reject_rate": 0.82
+        }
+      },
+      "per_snr_auroc": [
+        {
+          "snr_db": -4.0,
+          "n_known": 32,
+          "n_unknown": 14,
+          "auroc": 0.5625
+        },
+        {
+          "snr_db": -2.0,
+          "n_known": 37,
+          "n_unknown": 16,
+          "auroc": 0.5304054054054054
+        },
+        {
+          "snr_db": 0.0,
+          "n_known": 31,
+          "n_unknown": 18,
+          "auroc": 0.8530465949820788
+        },
+        {
+          "snr_db": 2.0,
+          "n_known": 38,
+          "n_unknown": 14,
+          "auroc": 0.6973684210526315
+        },
+        {
+          "snr_db": 4.0,
+          "n_known": 28,
+          "n_unknown": 11,
+          "auroc": 0.6298701298701299
+        },
+        {
+          "snr_db": 6.0,
+          "n_known": 33,
+          "n_unknown": 15,
+          "auroc": 0.7737373737373737
+        },
+        {
+          "snr_db": 8.0,
+          "n_known": 35,
+          "n_unknown": 19,
+          "auroc": 0.8240601503759398
+        },
+        {
+          "snr_db": 10.0,
+          "n_known": 24,
+          "n_unknown": 19,
+          "auroc": 0.7807017543859649
+        },
+        {
+          "snr_db": 12.0,
+          "n_known": 33,
+          "n_unknown": 13,
+          "auroc": 0.8787878787878788
+        },
+        {
+          "snr_db": 14.0,
+          "n_known": 31,
+          "n_unknown": 18,
+          "auroc": 0.8189964157706093
+        },
+        {
+          "snr_db": 16.0,
+          "n_known": 19,
+          "n_unknown": 11,
+          "auroc": 0.7511961722488039
+        },
+        {
+          "snr_db": 18.0,
+          "n_known": 24,
+          "n_unknown": 14,
+          "auroc": 0.7678571428571429
+        },
+        {
+          "snr_db": 20.0,
+          "n_known": 35,
+          "n_unknown": 18,
+          "auroc": 0.8317460317460318
+        }
+      ],
+      "snr_band_auroc": {
+        "low_le2": 0.6630434782608695,
+        "high_ge10": 0.8001036403679233,
+        "n_known_low": 138,
+        "n_unknown_low": 62,
+        "n_known_high": 166,
+        "n_unknown_high": 93
+      },
+      "oscr": {
+        "oscr_auc": 0.5425,
+        "ccr_at_fpr10": 0.22
+      },
+      "closed_set_on_accepted": {
+        "positive_denominator": "known test frames accepted (score <= threshold)",
+        "n": 378,
+        "n_correct": 271,
+        "accuracy": 0.716931216931217
+      },
+      "train_frames": 3200,
+      "train_outliers": 0,
+      "epochs_run": 13,
+      "best_epoch": 7,
+      "val_select_accuracy_best": 0.765
+    },
+    "CE+mahalanobis@0.1": {
+      "kind": "posthoc",
+      "report": {
+        "n_known": 400,
+        "n_unknown": 200,
+        "known_accept_rate": 0.94,
+        "unknown_reject_rate": 0.455,
+        "auroc": 0.741425,
+        "threshold": 7.72304158653198
+      },
+      "threshold": 7.72304158653198,
+      "n_calib_known": 200,
+      "per_unknown_class": {
+        "64QAM": {
+          "n": 100,
+          "auroc": 0.50555,
+          "reject_rate": 0.02
+        },
+        "4PAM": {
+          "n": 100,
+          "auroc": 0.9773,
+          "reject_rate": 0.89
+        }
+      },
+      "per_snr_auroc": [
+        {
+          "snr_db": -4.0,
+          "n_known": 32,
+          "n_unknown": 14,
+          "auroc": 0.6517857142857143
+        },
+        {
+          "snr_db": -2.0,
+          "n_known": 37,
+          "n_unknown": 16,
+          "auroc": 0.643581081081081
+        },
+        {
+          "snr_db": 0.0,
+          "n_known": 31,
+          "n_unknown": 18,
+          "auroc": 0.8046594982078853
+        },
+        {
+          "snr_db": 2.0,
+          "n_known": 38,
+          "n_unknown": 14,
+          "auroc": 0.6729323308270677
+        },
+        {
+          "snr_db": 4.0,
+          "n_known": 28,
+          "n_unknown": 11,
+          "auroc": 0.5487012987012987
+        },
+        {
+          "snr_db": 6.0,
+          "n_known": 33,
+          "n_unknown": 15,
+          "auroc": 0.7595959595959596
+        },
+        {
+          "snr_db": 8.0,
+          "n_known": 35,
+          "n_unknown": 19,
+          "auroc": 0.7984962406015037
+        },
+        {
+          "snr_db": 10.0,
+          "n_known": 24,
+          "n_unknown": 19,
+          "auroc": 0.7719298245614035
+        },
+        {
+          "snr_db": 12.0,
+          "n_known": 33,
+          "n_unknown": 13,
+          "auroc": 0.8787878787878788
+        },
+        {
+          "snr_db": 14.0,
+          "n_known": 31,
+          "n_unknown": 18,
+          "auroc": 0.7939068100358423
+        },
+        {
+          "snr_db": 16.0,
+          "n_known": 19,
+          "n_unknown": 11,
+          "auroc": 0.6507177033492823
+        },
+        {
+          "snr_db": 18.0,
+          "n_known": 24,
+          "n_unknown": 14,
+          "auroc": 0.7380952380952381
+        },
+        {
+          "snr_db": 20.0,
+          "n_known": 35,
+          "n_unknown": 18,
+          "auroc": 0.7714285714285715
+        }
+      ],
+      "snr_band_auroc": {
+        "low_le2": 0.7043010752688172,
+        "high_ge10": 0.7712138878093017,
+        "n_known_low": 138,
+        "n_unknown_low": 62,
+        "n_known_high": 166,
+        "n_unknown_high": 93
+      },
+      "oscr": {
+        "oscr_auc": 0.5341625,
+        "ccr_at_fpr10": 0.185
+      },
+      "closed_set_on_accepted": {
+        "positive_denominator": "known test frames accepted (score <= threshold)",
+        "n": 376,
+        "n_correct": 267,
+        "accuracy": 0.7101063829787234
+      },
+      "train_frames": 3200,
+      "train_outliers": 0,
+      "epochs_run": 13,
+      "best_epoch": 7,
+      "val_select_accuracy_best": 0.765
+    },
+    "CE+mahalanobis@0.5": {
+      "kind": "posthoc",
+      "report": {
+        "n_known": 400,
+        "n_unknown": 200,
+        "known_accept_rate": 0.9575,
+        "unknown_reject_rate": 0.5,
+        "auroc": 0.7489,
+        "threshold": 6.33915625997791
+      },
+      "threshold": 6.33915625997791,
+      "n_calib_known": 200,
+      "per_unknown_class": {
+        "64QAM": {
+          "n": 100,
+          "auroc": 0.514275,
+          "reject_rate": 0.07
+        },
+        "4PAM": {
+          "n": 100,
+          "auroc": 0.983525,
+          "reject_rate": 0.93
+        }
+      },
+      "per_snr_auroc": [
+        {
+          "snr_db": -4.0,
+          "n_known": 32,
+          "n_unknown": 14,
+          "auroc": 0.7008928571428571
+        },
+        {
+          "snr_db": -2.0,
+          "n_known": 37,
+          "n_unknown": 16,
+          "auroc": 0.6824324324324325
+        },
+        {
+          "snr_db": 0.0,
+          "n_known": 31,
+          "n_unknown": 18,
+          "auroc": 0.7921146953405018
+        },
+        {
+          "snr_db": 2.0,
+          "n_known": 38,
+          "n_unknown": 14,
+          "auroc": 0.6447368421052632
+        },
+        {
+          "snr_db": 4.0,
+          "n_known": 28,
+          "n_unknown": 11,
+          "auroc": 0.5746753246753247
+        },
+        {
+          "snr_db": 6.0,
+          "n_known": 33,
+          "n_unknown": 15,
+          "auroc": 0.795959595959596
+        },
+        {
+          "snr_db": 8.0,
+          "n_known": 35,
+          "n_unknown": 19,
+          "auroc": 0.7879699248120301
+        },
+        {
+          "snr_db": 10.0,
+          "n_known": 24,
+          "n_unknown": 19,
+          "auroc": 0.8289473684210527
+        },
+        {
+          "snr_db": 12.0,
+          "n_known": 33,
+          "n_unknown": 13,
+          "auroc": 0.8951048951048951
+        },
+        {
+          "snr_db": 14.0,
+          "n_known": 31,
+          "n_unknown": 18,
+          "auroc": 0.8207885304659498
+        },
+        {
+          "snr_db": 16.0,
+          "n_known": 19,
+          "n_unknown": 11,
+          "auroc": 0.6363636363636364
+        },
+        {
+          "snr_db": 18.0,
+          "n_known": 24,
+          "n_unknown": 14,
+          "auroc": 0.7559523809523809
+        },
+        {
+          "snr_db": 20.0,
+          "n_known": 35,
+          "n_unknown": 18,
+          "auroc": 0.7904761904761904
+        }
+      ],
+      "snr_band_auroc": {
+        "low_le2": 0.7116643291257597,
+        "high_ge10": 0.7887031998963596,
+        "n_known_low": 138,
+        "n_unknown_low": 62,
+        "n_known_high": 166,
+        "n_unknown_high": 93
+      },
+      "oscr": {
+        "oscr_auc": 0.535525,
+        "ccr_at_fpr10": 0.175
+      },
+      "closed_set_on_accepted": {
+        "positive_denominator": "known test frames accepted (score <= threshold)",
+        "n": 383,
+        "n_correct": 272,
+        "accuracy": 0.7101827676240209
+      },
+      "train_frames": 3200,
+      "train_outliers": 0,
+      "epochs_run": 13,
+      "best_epoch": 7,
+      "val_select_accuracy_best": 0.765
+    },
+    "CE+mahalanobis@0.9": {
+      "kind": "posthoc",
+      "report": {
+        "n_known": 400,
+        "n_unknown": 200,
+        "known_accept_rate": 0.9425,
+        "unknown_reject_rate": 0.51,
+        "auroc": 0.7679,
+        "threshold": 9.18124635167614
+      },
+      "threshold": 9.18124635167614,
+      "n_calib_known": 200,
+      "per_unknown_class": {
+        "64QAM": {
+          "n": 100,
+          "auroc": 0.55785,
+          "reject_rate": 0.11
+        },
+        "4PAM": {
+          "n": 100,
+          "auroc": 0.97795,
+          "reject_rate": 0.91
+        }
+      },
+      "per_snr_auroc": [
+        {
+          "snr_db": -4.0,
+          "n_known": 32,
+          "n_unknown": 14,
+          "auroc": 0.6540178571428571
+        },
+        {
+          "snr_db": -2.0,
+          "n_known": 37,
+          "n_unknown": 16,
+          "auroc": 0.5962837837837838
+        },
+        {
+          "snr_db": 0.0,
+          "n_known": 31,
+          "n_unknown": 18,
+          "auroc": 0.7741935483870968
+        },
+        {
+          "snr_db": 2.0,
+          "n_known": 38,
+          "n_unknown": 14,
+          "auroc": 0.6578947368421053
+        },
+        {
+          "snr_db": 4.0,
+          "n_known": 28,
+          "n_unknown": 11,
+          "auroc": 0.6461038961038961
+        },
+        {
+          "snr_db": 6.0,
+          "n_known": 33,
+          "n_unknown": 15,
+          "auroc": 0.7919191919191919
+        },
+        {
+          "snr_db": 8.0,
+          "n_known": 35,
+          "n_unknown": 19,
+          "auroc": 0.806015037593985
+        },
+        {
+          "snr_db": 10.0,
+          "n_known": 24,
+          "n_unknown": 19,
+          "auroc": 0.8706140350877193
+        },
+        {
+          "snr_db": 12.0,
+          "n_known": 33,
+          "n_unknown": 13,
+          "auroc": 0.8904428904428905
+        },
+        {
+          "snr_db": 14.0,
+          "n_known": 31,
+          "n_unknown": 18,
+          "auroc": 0.8566308243727598
+        },
+        {
+          "snr_db": 16.0,
+          "n_known": 19,
+          "n_unknown": 11,
+          "auroc": 0.6555023923444976
+        },
+        {
+          "snr_db": 18.0,
+          "n_known": 24,
+          "n_unknown": 14,
+          "auroc": 0.7857142857142857
+        },
+        {
+          "snr_db": 20.0,
+          "n_known": 35,
+          "n_unknown": 18,
+          "auroc": 0.834920634920635
+        }
+      ],
+      "snr_band_auroc": {
+        "low_le2": 0.6917952314165497,
+        "high_ge10": 0.8225158699313383,
+        "n_known_low": 138,
+        "n_unknown_low": 62,
+        "n_known_high": 166,
+        "n_unknown_high": 93
+      },
+      "oscr": {
+        "oscr_auc": 0.5510625,
+        "ccr_at_fpr10": 0.1825
+      },
+      "closed_set_on_accepted": {
+        "positive_denominator": "known test frames accepted (score <= threshold)",
+        "n": 377,
+        "n_correct": 271,
+        "accuracy": 0.7188328912466844
+      },
+      "train_frames": 3200,
+      "train_outliers": 0,
+      "epochs_run": 13,
+      "best_epoch": 7,
+      "val_select_accuracy_best": 0.765
+    },
+    "CE+mahalanobis@1": {
+      "kind": "posthoc",
+      "report": {
+        "n_known": 400,
+        "n_unknown": 200,
+        "known_accept_rate": 0.945,
+        "unknown_reject_rate": 0.515,
+        "auroc": 0.780025,
+        "threshold": 17.29547328655763
+      },
+      "threshold": 17.29547328655763,
+      "n_calib_known": 200,
+      "per_unknown_class": {
+        "64QAM": {
+          "n": 100,
+          "auroc": 0.5921,
+          "reject_rate": 0.16
+        },
+        "4PAM": {
+          "n": 100,
+          "auroc": 0.96795,
+          "reject_rate": 0.87
+        }
+      },
+      "per_snr_auroc": [
+        {
+          "snr_db": -4.0,
+          "n_known": 32,
+          "n_unknown": 14,
+          "auroc": 0.49107142857142855
+        },
+        {
+          "snr_db": -2.0,
+          "n_known": 37,
+          "n_unknown": 16,
+          "auroc": 0.5709459459459459
+        },
+        {
+          "snr_db": 0.0,
+          "n_known": 31,
+          "n_unknown": 18,
+          "auroc": 0.7670250896057348
+        },
+        {
+          "snr_db": 2.0,
+          "n_known": 38,
+          "n_unknown": 14,
+          "auroc": 0.6823308270676691
+        },
+        {
+          "snr_db": 4.0,
+          "n_known": 28,
+          "n_unknown": 11,
+          "auroc": 0.6428571428571429
+        },
+        {
+          "snr_db": 6.0,
+          "n_known": 33,
+          "n_unknown": 15,
+          "auroc": 0.802020202020202
+        },
+        {
+          "snr_db": 8.0,
+          "n_known": 35,
+          "n_unknown": 19,
+          "auroc": 0.837593984962406
+        },
+        {
+          "snr_db": 10.0,
+          "n_known": 24,
+          "n_unknown": 19,
+          "auroc": 0.8859649122807017
+        },
+        {
+          "snr_db": 12.0,
+          "n_known": 33,
+          "n_unknown": 13,
+          "auroc": 0.9207459207459208
+        },
+        {
+          "snr_db": 14.0,
+          "n_known": 31,
+          "n_unknown": 18,
+          "auroc": 0.8566308243727598
+        },
+        {
+          "snr_db": 16.0,
+          "n_known": 19,
+          "n_unknown": 11,
+          "auroc": 0.7511961722488039
+        },
+        {
+          "snr_db": 18.0,
+          "n_known": 24,
+          "n_unknown": 14,
+          "auroc": 0.8303571428571429
+        },
+        {
+          "snr_db": 20.0,
+          "n_known": 35,
+          "n_unknown": 18,
+          "auroc": 0.8428571428571429
+        }
+      ],
+      "snr_band_auroc": {
+        "low_le2": 0.673562412342216,
+        "high_ge10": 0.8471952325430755,
+        "n_known_low": 138,
+        "n_unknown_low": 62,
+        "n_known_high": 166,
+        "n_unknown_high": 93
+      },
+      "oscr": {
+        "oscr_auc": 0.5635125,
+        "ccr_at_fpr10": 0.235
+      },
+      "closed_set_on_accepted": {
+        "positive_denominator": "known test frames accepted (score <= threshold)",
+        "n": 378,
+        "n_correct": 275,
+        "accuracy": 0.7275132275132276
+      },
+      "train_frames": 3200,
+      "train_outliers": 0,
+      "epochs_run": 13,
+      "best_epoch": 7,
+      "val_select_accuracy_best": 0.765
+    },
+    "OS-full+MSP": {
+      "kind": "objectosphere",
+      "report": {
+        "n_known": 400,
+        "n_unknown": 200,
+        "known_accept_rate": 0.96,
+        "unknown_reject_rate": 0.17,
+        "auroc": 0.511975,
+        "threshold": 0.6297444462592405
+      },
+      "threshold": 0.6297444462592405,
+      "n_calib_known": 200,
+      "per_unknown_class": {
+        "64QAM": {
+          "n": 100,
+          "auroc": 0.3846,
+          "reject_rate": 0.02
+        },
+        "4PAM": {
+          "n": 100,
+          "auroc": 0.63935,
+          "reject_rate": 0.32
+        }
+      },
+      "per_snr_auroc": [
+        {
+          "snr_db": -4.0,
+          "n_known": 32,
+          "n_unknown": 14,
+          "auroc": 0.6049107142857143
+        },
+        {
+          "snr_db": -2.0,
+          "n_known": 37,
+          "n_unknown": 16,
+          "auroc": 0.49324324324324326
+        },
+        {
+          "snr_db": 0.0,
+          "n_known": 31,
+          "n_unknown": 18,
+          "auroc": 0.5770609318996416
+        },
+        {
+          "snr_db": 2.0,
+          "n_known": 38,
+          "n_unknown": 14,
+          "auroc": 0.4924812030075188
+        },
+        {
+          "snr_db": 4.0,
+          "n_known": 28,
+          "n_unknown": 11,
+          "auroc": 0.538961038961039
+        },
+        {
+          "snr_db": 6.0,
+          "n_known": 33,
+          "n_unknown": 15,
+          "auroc": 0.4101010101010101
+        },
+        {
+          "snr_db": 8.0,
+          "n_known": 35,
+          "n_unknown": 19,
+          "auroc": 0.5774436090225564
+        },
+        {
+          "snr_db": 10.0,
+          "n_known": 24,
+          "n_unknown": 19,
+          "auroc": 0.4057017543859649
+        },
+        {
+          "snr_db": 12.0,
+          "n_known": 33,
+          "n_unknown": 13,
+          "auroc": 0.5011655011655012
+        },
+        {
+          "snr_db": 14.0,
+          "n_known": 31,
+          "n_unknown": 18,
+          "auroc": 0.7132616487455197
+        },
+        {
+          "snr_db": 16.0,
+          "n_known": 19,
+          "n_unknown": 11,
+          "auroc": 0.5167464114832536
+        },
+        {
+          "snr_db": 18.0,
+          "n_known": 24,
+          "n_unknown": 14,
+          "auroc": 0.6845238095238095
+        },
+        {
+          "snr_db": 20.0,
+          "n_known": 35,
+          "n_unknown": 18,
+          "auroc": 0.5238095238095238
+        }
+      ],
+      "snr_band_auroc": {
+        "low_le2": 0.528284244974287,
+        "high_ge10": 0.5606943904650862,
+        "n_known_low": 138,
+        "n_unknown_low": 62,
+        "n_known_high": 166,
+        "n_unknown_high": 93
+      },
+      "oscr": {
+        "oscr_auc": 0.43095000000000006,
+        "ccr_at_fpr10": 0.2675
+      },
+      "closed_set_on_accepted": {
+        "positive_denominator": "known test frames accepted (score <= threshold)",
+        "n": 384,
+        "n_correct": 263,
+        "accuracy": 0.6848958333333334
+      },
+      "train_frames": 4000,
+      "train_outliers": 800,
+      "epochs_run": 14,
+      "best_epoch": 8,
+      "val_select_accuracy_best": 0.72,
+      "train_seed": 110
+    },
+    "OS-16PSK+MSP": {
+      "kind": "objectosphere",
+      "report": {
+        "n_known": 400,
+        "n_unknown": 200,
+        "known_accept_rate": 0.925,
+        "unknown_reject_rate": 0.01,
+        "auroc": 0.2725875,
+        "threshold": 0.6221994526673388
+      },
+      "threshold": 0.6221994526673388,
+      "n_calib_known": 200,
+      "per_unknown_class": {
+        "64QAM": {
+          "n": 100,
+          "auroc": 0.3273,
+          "reject_rate": 0.02
+        },
+        "4PAM": {
+          "n": 100,
+          "auroc": 0.217875,
+          "reject_rate": 0.0
+        }
+      },
+      "per_snr_auroc": [
+        {
+          "snr_db": -4.0,
+          "n_known": 32,
+          "n_unknown": 14,
+          "auroc": 0.29017857142857145
+        },
+        {
+          "snr_db": -2.0,
+          "n_known": 37,
+          "n_unknown": 16,
+          "auroc": 0.15033783783783783
+        },
+        {
+          "snr_db": 0.0,
+          "n_known": 31,
+          "n_unknown": 18,
+          "auroc": 0.24551971326164876
+        },
+        {
+          "snr_db": 2.0,
+          "n_known": 38,
+          "n_unknown": 14,
+          "auroc": 0.2894736842105263
+        },
+        {
+          "snr_db": 4.0,
+          "n_known": 28,
+          "n_unknown": 11,
+          "auroc": 0.2727272727272727
+        },
+        {
+          "snr_db": 6.0,
+          "n_known": 33,
+          "n_unknown": 15,
+          "auroc": 0.13535353535353536
+        },
+        {
+          "snr_db": 8.0,
+          "n_known": 35,
+          "n_unknown": 19,
+          "auroc": 0.26766917293233083
+        },
+        {
+          "snr_db": 10.0,
+          "n_known": 24,
+          "n_unknown": 19,
+          "auroc": 0.1206140350877193
+        },
+        {
+          "snr_db": 12.0,
+          "n_known": 33,
+          "n_unknown": 13,
+          "auroc": 0.27505827505827507
+        },
+        {
+          "snr_db": 14.0,
+          "n_known": 31,
+          "n_unknown": 18,
+          "auroc": 0.40860215053763443
+        },
+        {
+          "snr_db": 16.0,
+          "n_known": 19,
+          "n_unknown": 11,
+          "auroc": 0.3588516746411483
+        },
+        {
+          "snr_db": 18.0,
+          "n_known": 24,
+          "n_unknown": 14,
+          "auroc": 0.44345238095238093
+        },
+        {
+          "snr_db": 20.0,
+          "n_known": 35,
+          "n_unknown": 18,
+          "auroc": 0.30634920634920637
+        }
+      ],
+      "snr_band_auroc": {
+        "low_le2": 0.2507012622720898,
+        "high_ge10": 0.3099494753206374,
+        "n_known_low": 138,
+        "n_unknown_low": 62,
+        "n_known_high": 166,
+        "n_unknown_high": 93
+      },
+      "oscr": {
+        "oscr_auc": 0.267025,
+        "ccr_at_fpr10": 0.015
+      },
+      "closed_set_on_accepted": {
+        "positive_denominator": "known test frames accepted (score <= threshold)",
+        "n": 370,
+        "n_correct": 297,
+        "accuracy": 0.8027027027027027
+      },
+      "train_frames": 3600,
+      "train_outliers": 400,
+      "epochs_run": 22,
+      "best_epoch": 16,
+      "val_select_accuracy_best": 0.75,
+      "train_seed": 110
+    },
+    "OS-8PAM+MSP": {
+      "kind": "objectosphere",
+      "report": {
+        "n_known": 400,
+        "n_unknown": 200,
+        "known_accept_rate": 0.9375,
+        "unknown_reject_rate": 0.19,
+        "auroc": 0.579425,
+        "threshold": 0.5827445847583412
+      },
+      "threshold": 0.5827445847583412,
+      "n_calib_known": 200,
+      "per_unknown_class": {
+        "64QAM": {
+          "n": 100,
+          "auroc": 0.4539,
+          "reject_rate": 0.06
+        },
+        "4PAM": {
+          "n": 100,
+          "auroc": 0.70495,
+          "reject_rate": 0.32
+        }
+      },
+      "per_snr_auroc": [
+        {
+          "snr_db": -4.0,
+          "n_known": 32,
+          "n_unknown": 14,
+          "auroc": 0.29910714285714285
+        },
+        {
+          "snr_db": -2.0,
+          "n_known": 37,
+          "n_unknown": 16,
+          "auroc": 0.24662162162162163
+        },
+        {
+          "snr_db": 0.0,
+          "n_known": 31,
+          "n_unknown": 18,
+          "auroc": 0.37992831541218636
+        },
+        {
+          "snr_db": 2.0,
+          "n_known": 38,
+          "n_unknown": 14,
+          "auroc": 0.6109022556390977
+        },
+        {
+          "snr_db": 4.0,
+          "n_known": 28,
+          "n_unknown": 11,
+          "auroc": 0.5454545454545454
+        },
+        {
+          "snr_db": 6.0,
+          "n_known": 33,
+          "n_unknown": 15,
+          "auroc": 0.5858585858585859
+        },
+        {
+          "snr_db": 8.0,
+          "n_known": 35,
+          "n_unknown": 19,
+          "auroc": 0.7428571428571429
+        },
+        {
+          "snr_db": 10.0,
+          "n_known": 24,
+          "n_unknown": 19,
+          "auroc": 0.6535087719298246
+        },
+        {
+          "snr_db": 12.0,
+          "n_known": 33,
+          "n_unknown": 13,
+          "auroc": 0.6899766899766899
+        },
+        {
+          "snr_db": 14.0,
+          "n_known": 31,
+          "n_unknown": 18,
+          "auroc": 0.7652329749103942
+        },
+        {
+          "snr_db": 16.0,
+          "n_known": 19,
+          "n_unknown": 11,
+          "auroc": 0.5980861244019139
+        },
+        {
+          "snr_db": 18.0,
+          "n_known": 24,
+          "n_unknown": 14,
+          "auroc": 0.7797619047619048
+        },
+        {
+          "snr_db": 20.0,
+          "n_known": 35,
+          "n_unknown": 18,
+          "auroc": 0.6634920634920635
+        }
+      ],
+      "snr_band_auroc": {
+        "low_le2": 0.37213651238896683,
+        "high_ge10": 0.6943904650861511,
+        "n_known_low": 138,
+        "n_unknown_low": 62,
+        "n_known_high": 166,
+        "n_unknown_high": 93
+      },
+      "oscr": {
+        "oscr_auc": 0.497625,
+        "ccr_at_fpr10": 0.29
+      },
+      "closed_set_on_accepted": {
+        "positive_denominator": "known test frames accepted (score <= threshold)",
+        "n": 375,
+        "n_correct": 287,
+        "accuracy": 0.7653333333333333
+      },
+      "train_frames": 3600,
+      "train_outliers": 400,
+      "epochs_run": 25,
+      "best_epoch": 21,
+      "val_select_accuracy_best": 0.795,
+      "train_seed": 110
+    }
+  },
+  "campaign": {
+    "stage_wall_time_s": 92.5
+  }
+}

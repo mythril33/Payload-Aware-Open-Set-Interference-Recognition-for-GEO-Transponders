@@ -1,0 +1,296 @@
+{
+  "stage": "modulation",
+  "scale": {
+    "name": "full",
+    "description": "lesson defaults",
+    "tx_train": 40,
+    "tx_val": 10,
+    "tx_test": 10,
+    "tx_aux": 20,
+    "tx_unknown": 10,
+    "frames_train": 20,
+    "frames_val": 10,
+    "frames_test": 10,
+    "fp_devices": 10,
+    "fp_frames": 300,
+    "epochs": 25,
+    "patience": 5
+  },
+  "impaired": false,
+  "seed": 9,
+  "split": "device-level: train, val-select and test devices are disjoint",
+  "classes": [
+    "BPSK",
+    "QPSK",
+    "8PSK",
+    "16QAM"
+  ],
+  "chance_level": 0.25,
+  "n_samples": 512,
+  "train_snr_db": [
+    -4.0,
+    -2.0,
+    0.0,
+    2.0,
+    4.0,
+    6.0,
+    8.0,
+    10.0,
+    12.0,
+    14.0,
+    16.0,
+    18.0,
+    20.0
+  ],
+  "test_snr_db": [
+    -6.0,
+    -4.0,
+    -2.0,
+    0.0,
+    2.0,
+    4.0,
+    6.0,
+    8.0,
+    10.0,
+    12.0,
+    14.0,
+    16.0,
+    18.0,
+    20.0
+  ],
+  "devices_per_class": {
+    "train": 40,
+    "val_select": 10,
+    "test": 10
+  },
+  "frames_per_device": {
+    "train": 20,
+    "val_select": 10,
+    "test_per_snr": 10
+  },
+  "frames": {
+    "train": 3200,
+    "val_select": 400
+  },
+  "models": {
+    "MLP": {
+      "epochs_run": 10,
+      "best_epoch": 4,
+      "val_select_accuracy_best": 0.305,
+      "train_accuracy": 0.9475,
+      "per_snr": [
+        {
+          "snr_db": -6.0,
+          "n": 400,
+          "accuracy": 0.2425
+        },
+        {
+          "snr_db": -4.0,
+          "n": 400,
+          "accuracy": 0.26
+        },
+        {
+          "snr_db": -2.0,
+          "n": 400,
+          "accuracy": 0.2875
+        },
+        {
+          "snr_db": 0.0,
+          "n": 400,
+          "accuracy": 0.2575
+        },
+        {
+          "snr_db": 2.0,
+          "n": 400,
+          "accuracy": 0.2
+        },
+        {
+          "snr_db": 4.0,
+          "n": 400,
+          "accuracy": 0.255
+        },
+        {
+          "snr_db": 6.0,
+          "n": 400,
+          "accuracy": 0.245
+        },
+        {
+          "snr_db": 8.0,
+          "n": 400,
+          "accuracy": 0.2675
+        },
+        {
+          "snr_db": 10.0,
+          "n": 400,
+          "accuracy": 0.2575
+        },
+        {
+          "snr_db": 12.0,
+          "n": 400,
+          "accuracy": 0.245
+        },
+        {
+          "snr_db": 14.0,
+          "n": 400,
+          "accuracy": 0.2325
+        },
+        {
+          "snr_db": 16.0,
+          "n": 400,
+          "accuracy": 0.29
+        },
+        {
+          "snr_db": 18.0,
+          "n": 400,
+          "accuracy": 0.2525
+        },
+        {
+          "snr_db": 20.0,
+          "n": 400,
+          "accuracy": 0.3075
+        }
+      ],
+      "overall": {
+        "n": 5600,
+        "accuracy": 0.2571428571428571
+      },
+      "confusion_overall": [
+        [
+          340,
+          217,
+          558,
+          285
+        ],
+        [
+          311,
+          284,
+          551,
+          254
+        ],
+        [
+          293,
+          277,
+          537,
+          293
+        ],
+        [
+          309,
+          264,
+          548,
+          279
+        ]
+      ]
+    },
+    "CNN1D": {
+      "epochs_run": 19,
+      "best_epoch": 13,
+      "val_select_accuracy_best": 0.845,
+      "train_accuracy": 0.878125,
+      "per_snr": [
+        {
+          "snr_db": -6.0,
+          "n": 400,
+          "accuracy": 0.4775
+        },
+        {
+          "snr_db": -4.0,
+          "n": 400,
+          "accuracy": 0.6225
+        },
+        {
+          "snr_db": -2.0,
+          "n": 400,
+          "accuracy": 0.6575
+        },
+        {
+          "snr_db": 0.0,
+          "n": 400,
+          "accuracy": 0.75
+        },
+        {
+          "snr_db": 2.0,
+          "n": 400,
+          "accuracy": 0.765
+        },
+        {
+          "snr_db": 4.0,
+          "n": 400,
+          "accuracy": 0.8175
+        },
+        {
+          "snr_db": 6.0,
+          "n": 400,
+          "accuracy": 0.8675
+        },
+        {
+          "snr_db": 8.0,
+          "n": 400,
+          "accuracy": 0.865
+        },
+        {
+          "snr_db": 10.0,
+          "n": 400,
+          "accuracy": 0.8825
+        },
+        {
+          "snr_db": 12.0,
+          "n": 400,
+          "accuracy": 0.8875
+        },
+        {
+          "snr_db": 14.0,
+          "n": 400,
+          "accuracy": 0.895
+        },
+        {
+          "snr_db": 16.0,
+          "n": 400,
+          "accuracy": 0.9025
+        },
+        {
+          "snr_db": 18.0,
+          "n": 400,
+          "accuracy": 0.8975
+        },
+        {
+          "snr_db": 20.0,
+          "n": 400,
+          "accuracy": 0.88
+        }
+      ],
+      "overall": {
+        "n": 5600,
+        "accuracy": 0.7976785714285715
+      },
+      "confusion_overall": [
+        [
+          1341,
+          3,
+          13,
+          43
+        ],
+        [
+          10,
+          878,
+          415,
+          97
+        ],
+        [
+          7,
+          366,
+          923,
+          104
+        ],
+        [
+          11,
+          20,
+          44,
+          1325
+        ]
+      ]
+    }
+  },
+  "campaign": {
+    "stage_wall_time_s": 34.3
+  }
+}

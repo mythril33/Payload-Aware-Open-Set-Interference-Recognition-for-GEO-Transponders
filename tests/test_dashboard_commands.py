@@ -236,3 +236,11 @@ def test_allowlisted_cpu_test_files_exist_and_read_no_generated_directory(relati
     tree = ast.parse(path.read_text(encoding="utf-8"))
     literals = [node.value for node in ast.walk(tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)]
     assert not [s for s in literals if s.startswith("data/") or s.startswith("runs/")], relative
+
+
+def test_the_dashboard_test_list_includes_the_pilot_tests_and_matches_the_readme():
+    assert "tests/test_geo_pilot.py" in C.DASHBOARD_TESTS
+    for relative in C.DASHBOARD_TESTS:
+        assert (ROOT / relative).is_file(), relative
+    readme = (ROOT / "dashboard" / "README.md").read_text(encoding="utf-8")
+    assert "python -m pytest -q " + " ".join(C.DASHBOARD_TESTS) in readme

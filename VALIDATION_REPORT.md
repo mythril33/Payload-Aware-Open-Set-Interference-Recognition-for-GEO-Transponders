@@ -10,8 +10,8 @@ was not run here.
 
 | Suite | Command | Result |
 | --- | --- | --- |
-| Track B full suite | `cd learning/rfml-basics && .venv/bin/python -m pytest -q` | 166 passed (see §6; rerun after the campaign) |
-| Campaign runner smoke | `pytest -q tests/test_campaign.py` (subprocess, quick scale) | 1 passed |
+| Track B full suite | `cd learning/rfml-basics && .venv/bin/python -m pytest -q` | 203 passed (2026-11-09, after campaign 3 and the paper tests; 187 after campaign 2, 166 before it) |
+| Campaign runner smokes | `pytest -q tests/test_campaign.py tests/test_campaign2.py` (subprocess, quick scale) | passing (included above) |
 
 Track A's suite was not rerun in this session; the latest recorded full CI is
 run 40389841693 (107 E4 + 4,867 passed / 1 failed / 7 environment skips; the
@@ -58,6 +58,128 @@ completed). Full numbers:
 | H3 fingerprint impaired − ideal accuracy | +0.152 | 5/5 | **Supported**; control at chance |
 | H4 modulation ideal − impaired CNN accuracy | +0.015 | 3/5 | **Not supported** — honest negative; prediction did not replicate |
 
+## 2b. Campaign 2 (scorer bench, pre-registered amendment)
+
+Plan: `experiments/PREREGISTRATION_V2.md`, committed (`99dd4f2`) before any
+campaign-2 run. Command: `experiments/run_campaign2.py --scale full --seeds
+0 1 2 3 4`. Provenance: commit `2dbc00e`, wall time 1093 s, zero failures
+(the first attempt was killed by a container restart and the campaign was
+rerun whole; determinism is test-verified). Code passed two independent
+reviews (leakage/protocol with a perturbation test on unknown inputs, and
+numerics with brute-force OSCR cross-checks) with zero findings.
+
+| Hypothesis | Mean paired diff | Positive seeds | Verdict |
+| --- | --- | --- | --- |
+| H5 Mahalanobis − Euclidean AUROC | −0.030 | 0/5 | **Not supported** — Mahalanobis consistently worse |
+| H6 energy − MSP AUROC | −0.027 | 2/5 | **Not supported** — all output-space scores below chance |
+| H7 4PAM rejection, 8PAM-arm − 16PSK-arm | +0.402 | 5/5 | **Supported** — Objectosphere gain is similarity transfer |
+| H8 CE+MSP AUROC, low − high SNR band | +0.042 | 4/5 | **Supported, weak** — within one sd, curve not monotone |
+
+Internal consistency check: CE+MSP per-seed AUROCs in campaign 2 equal
+campaign 1's exactly (same seed → same CE model), confirming end-to-end
+determinism across the two campaigns.
+
+## 2c. Replication and campaign 3 (pre-registered, 2026-11-09)
+
+Plan: `experiments/PREREGISTRATION_V3.md`, committed and pushed at
+22:55:01Z (`3536b46`); the run chain started at 22:55:13Z. Unchanged runners
+for the replication; new additive code (`rfml/experiments_v3.py`) for
+campaign 3. All five campaign runs: zero failures, no seed excluded.
+
+| Hypothesis | Seeds 0–4 | Seeds 5–9 | All ten | Outcome |
+| --- | --- | --- | --- | --- |
+| H1 Euclidean > MSP (AUROC) | 5/5 | 5/5 | 10/10 | replicated |
+| H2 Objectosphere > MSP (unknown rejection) | 5/5 | 5/5 | 10/10 | replicated |
+| H3 fingerprint impaired > ideal | 5/5 | 5/5 | 10/10 | replicated |
+| H4 CNN1D ideal > impaired | 3/5 | 4/5 | 7/10 | inconsistent (pooled below 8/10) |
+| H5 Mahalanobis > Euclidean | 0/5 | 0/5 | 0/10 | refuted; the negative result replicated |
+| H6 energy > MSP | 2/5 | 0/5 | 2/10 | refuted; the negative result replicated |
+| H7 4PAM rejection, 8PAM pool > 16PSK pool | 5/5 | 5/5 | 10/10 | replicated |
+| H7s the same with one shared training seed | – | – | 10/10 | supported (seed confound removed) |
+| H8 MSP AUROC low SNR > high SNR | 4/5 | 3/5 | 7/10 | **not replicated** |
+| H9 MLP seen devices > unseen devices | – | – | 6/10 | **not supported**: the MLP memorises frames, not devices |
+| H10 CNN1D seen devices > unseen devices | – | – | 9/10 | supported (about one point) |
+
+Corrections this forced on earlier statements: MSP is below chance in nine of
+ten seeds, not in every seed (seed 6: 0.509); H8 is withdrawn as an effect;
+the "MLP memorises devices" reading is replaced by the measured one.
+
+Pre-registered checks, enforced by `paper/make_numbers.py` (the paper build
+stops if one fails): campaign 3's full outlier pool reproduces campaign 2's
+exactly on all ten seeds; the campaign-3 classifiers reproduce campaign 1's
+unseen-device accuracies exactly; Mahalanobis at shrinkage 1 equals the
+Euclidean score; campaign 2's MSP equals campaign 1's. All four pass.
+
+Exploratory (no pass criterion): Mahalanobis AUROC is 0.764, 0.748, 0.753
+and 0.769 at shrinkage 0.01, 0.1, 0.5 and 0.9, against 0.779 for the
+Euclidean score.
+
+## 2d. Paper build
+
+`sh learning/rfml-basics/paper/build.sh` regenerates the numbers and the
+eight figures and compiles `paper.pdf` (7 pages, IEEEtran, all fonts
+embedded). The LaTeX source contains no hand-typed result: values enter
+through `\Num{key}`, and three tests (`tests/test_paper_numbers.py`) check
+that every key exists, that no three-decimal literal other than the quoted
+sign-test p-values remains in the source, and that citations and
+bibliography entries match one to one. The Markdown draft `paper.md` is
+superseded and removed.
+
+## 2e. Independent audit of the submission paper (2026-11-09)
+
+A separate auditor recomputed, from the per-seed files only, 530 of the 553
+values the paper then printed (means, sample sds, minima, maxima and every
+hypothesis field): **0 mismatches** at three decimals; the remaining 23
+(design counts, wall times, commits) were checked directly. From the raw
+per-frame scores it recomputed AUROC (brute-force Mann-Whitney), rejection
+and acceptance at the stored thresholds, per-class and per-SNR AUROC, the
+SNR bands and the OSCR area: **4170 checks, 0 failures**. All design facts in
+the paper matched the code. Verdict: pass with fixes. The fixes applied:
+
+- **The embedding-distance result is a 4PAM result (high severity,
+  interpretation).** Per unknown class over ten seeds, the Euclidean score has
+  AUROC 0.990 on 4PAM and 0.569 on 64QAM; logit scores are inverted on 4PAM
+  (energy 0.123) and no score detects 64QAM (0.335 to 0.569). The pooled
+  0.779 is the mean of a detected and an undetected class. The paper now
+  reports per-class AUROC and rejection for every variant (its Table III,
+  generated from the per-seed files) and its abstract, results, discussion
+  and conclusion are rewritten around the split. Per-class reporting had
+  been listed in the campaign-2 plan and was missing from the first version.
+- **Campaign-1 record stated precisely.** The plan was committed 4.4 minutes
+  after the run began (3.5 minutes after the first output file), when all
+  seed-0 stages had finished, and pushed after the run ended; one seed per
+  stage (2, 3, 4) had been run as a pilot before the plan was written. The
+  paper and `experiments/README.md` say so. `PREREGISTRATION_V3.md` keeps its
+  original "about 3.5 minutes" wording because committed plans are not
+  edited.
+- **Loss named honestly.** The outlier-training loss penalises the logit norm
+  and scores with MSP; the cited Objectosphere method uses the deep-feature
+  magnitude. The paper calls it Objectosphere-style and states the
+  difference.
+- **Overclaims weakened.** "Transfer from 8PAM to 4PAM" became "the gain
+  appeared only with 8PAM in the pool and almost only on 4PAM", with the
+  statement that one outlier pair and one unknown pair cannot separate
+  similarity from other properties; the explanation of why the logits fail
+  is marked as an untested conjecture; an unverifiable literature claim was
+  removed.
+- Smaller items: the labels "refuted" and "inconsistent" are defined and
+  marked as not pre-registered; H3's second clause (ideal accuracy within
+  three binomial standard errors of chance, 10/10 seeds) is reported;
+  missing design facts added (unit-power normalisation, MLP dropout, ResNet
+  width, closed-set selection); per-SNR cell sizes stated (17 to 49 known,
+  3 to 27 unknown frames); the O'Shea and West dataset paper is no longer
+  cited for a classification result.
+- **Provenance timing.** In every aggregate written before this audit,
+  `provenance.git_commit` and (for campaigns 1 and 2) `started_utc` were
+  taken at the end of the run. No commit in between touched `rfml/` or the
+  runners, so the results are unaffected; the runners now record both at the
+  start. Committed aggregates were not altered.
+
+What could not be checked: bibliographic records against arxiv.org, doi.org
+and dblp.org, which this environment cannot reach. Six entries were confirmed
+by web search on 2026-11-09 and 2026-10-28; the ORACLE DOI remains
+unconfirmed and is not printed.
+
 ### Reading rules
 
 - AUROC positive class = unknown; larger score = more unknown-like. Known
@@ -89,6 +211,38 @@ completed). Full numbers:
   and the 15 mandatory fits DR-05; held-out read not authorized;
   `benchmark_complete=false`. These block any Track A performance claim.
 
+## 4b. Peer review of the paper (subagent panel)
+
+Three independent reviewers (methods/statistics; a scripted number audit of
+every value in the paper against the aggregates, 135 checks; claims versus
+evidence) examined draft v1.0. Verdicts: PASS, PASS, FAIL — 27 findings, of
+which 18 were applied, 4 deferred (immutable pre-registration texts and
+follow-up experiments), 0 rejected. The substantive corrections:
+
+- Campaign 1's CE+MSP vs CE+distance comparison used **separately trained**
+  models (seed offsets 0/1/2); the "identical network" wording was wrong and
+  is fixed — the paired same-model claim belongs to campaign 2 only.
+- **Pre-registration timing, stated honestly:** campaign 1's plan file was
+  committed (`07792b9`, 21:49:06Z) about 3.5 minutes *after* the campaign's
+  first output existed (21:45:36Z); the plan text was written beforehand,
+  but the auditable record only proves post-start commitment. Campaign 2's
+  pre-registration commit (`99dd4f2`) verifiably precedes its runs.
+- The Objectosphere arms differ in training seed as well as outlier pool
+  (offsets +101/102/103); "differ only in the aux pool" was corrected and
+  outlier frame counts (800/400/400) added.
+- H4's dispersion corrected to ±0.054; "every output-space score"
+  universalization narrowed to the three scores tested; the He et al.
+  citation moved off the skip-free CNN1D; missing n values and the
+  CCR@FPR=0.1 column added; sign-test p for 4/5 (0.375) stated.
+- The number audit found exactly one numeric error in 135 checks (the H4
+  sd last digit); all six figures regenerate **byte-identically** from
+  `make_figures.py`, and the raw seed-0 score file used by Figures 2 and 6
+  is now committed.
+- Historical note: in aggregates produced before 2026-10-28T23:30Z the
+  provenance field `started_utc` was recorded at aggregation time (end of
+  run), not start; the runners now record the true start. Committed
+  aggregates were not altered.
+
 ## 5. Known issues found and their disposition
 
 | Issue | Disposition |
@@ -107,3 +261,9 @@ bash setup.sh --test                 # venv + deps + full test suite
 .venv/bin/python experiments/run_campaign.py --scale full --seeds 0 1 2 3 4
 .venv/bin/streamlit run app.py       # interactive UI
 ```
+
+Windows (PowerShell, no Linux/WSL): `setup.ps1 -Test`, then
+`.venv\Scripts\python experiments\run_campaign.py ...` and
+`.venv\Scripts\python -m streamlit run app.py`. The PowerShell script was
+not exercised on a real Windows machine here; the manual commands in the
+project README are the fallback.

@@ -11,7 +11,11 @@ Bu proje, PyTorch ile radyo sinyalleri üzerinde makine öğrenmesini dört aşa
 
 ## Quick start
 
-Run everything from this folder (`learning/rfml-basics`).
+Run everything from this folder (`learning/rfml-basics`). The code is pure
+Python (CPU only) and runs on Windows, Linux and macOS alike; only the setup
+script differs per platform.
+
+**Linux / macOS:**
 
 ```bash
 bash setup.sh          # creates .venv/, installs requirements.txt, prints a smoke check
@@ -27,7 +31,36 @@ bash setup.sh --test   # the same, then runs pytest -q
 .venv/bin/python lessons/04_open_set.py --quick
 ```
 
-For the interactive UI, run `.venv/bin/streamlit run app.py` from this folder. It opens in the browser and has four stages, each with its own controls and a run button. The UI and the lessons share the stage functions in `rfml/experiments.py`. The UI screens themselves are not covered by the tests.
+**Windows (no Linux or WSL needed):** install Python 3.11+ from python.org
+(tick "Add python.exe to PATH" in the installer), open PowerShell in this
+folder, then:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File setup.ps1          # create .venv, install, smoke check
+powershell -ExecutionPolicy Bypass -File setup.ps1 -Test    # the same, then pytest -q
+```
+
+or do the same by hand (works in cmd.exe too):
+
+```powershell
+py -3 -m venv .venv
+.venv\Scripts\python -m pip install -r requirements.txt
+.venv\Scripts\python -m pytest -q
+.venv\Scripts\python lessons\01_tensors_autograd.py
+.venv\Scripts\python lessons\02_modulation_classification.py --quick
+```
+
+On Windows, `pip install torch` fetches the CPU-only wheel, which is what
+this project uses everywhere. `setup.ps1` was written alongside `setup.sh`
+but has not been exercised on a real Windows machine by this repository's
+CI; if a step fails, the manual commands above are the fallback.
+
+For the interactive UI, run `.venv/bin/streamlit run app.py` (Windows:
+`.venv\Scripts\python -m streamlit run app.py`) from this folder. It opens
+in the browser and has four stages, each with its own controls and a run
+button. The UI and the lessons share the stage functions in
+`rfml/experiments.py`. The UI screens themselves are not covered by the
+tests.
 
 `--quick` is a smoke run: 2 epochs and very few devices. It checks that the code runs and nothing more. In the checks made for this README, each quick run took from a few seconds to about 15 seconds. Drop the flag for the full run. Full runs train several networks for up to 25 epochs, so expect minutes rather than seconds on a CPU. The scripts set PyTorch to 4 threads.
 
@@ -179,6 +212,7 @@ Each exercise fits in about an hour. A full run takes minutes, and every run ove
 learning/rfml-basics/
   README.md              this file
   setup.sh               creates .venv/, installs requirements.txt, smoke check; --test also runs pytest
+  setup.ps1              the same for Windows PowerShell; -Test also runs pytest
   requirements.txt       numpy, torch, matplotlib, pytest, streamlit (versions not pinned)
   app.py                 Streamlit UI for the four stages (run with streamlit run app.py)
   pytest.ini             testpaths = tests, pythonpath = .
@@ -199,11 +233,15 @@ learning/rfml-basics/
     04_open_set.py
   tests/                 pytest suite (section below)
   results/               JSON (tracked) and PNG (git-ignored), written by the lessons
-  experiments/           pre-registered multi-seed campaign (see experiments/README.md)
-    PREREGISTRATION.md   hypotheses H1-H4 and success criteria, fixed before the runs
-    run_campaign.py      runs all stages over several seeds, writes campaign/aggregate.json
-    campaign/            per-seed metrics and the aggregate (raw/ with score arrays is git-ignored)
-  paper/                 benchmark paper draft (paper.md) and verified references.bib
+  experiments/           three pre-registered campaigns and a replication (see experiments/README.md)
+    PREREGISTRATION*.md  the analysis plans: hypotheses H1-H10 and their pass criteria
+    run_campaign*.py     the campaign runners; each writes per-seed results and an aggregate
+    pool_replication.py  pools a campaign with its replication on fresh seeds
+    campaign*/, pooled/  per-seed results and aggregates (raw score arrays are git-ignored)
+    make_figures.py      the paper's figures; export_dataset.py, make_bundle.py: data and results bundle
+  paper/                 the paper: paper.tex, paper.pdf, references.bib, build.sh
+    make_numbers.py      writes every number the paper prints, from the aggregates
+    generated/, figures/ the generated numbers and figures
 ```
 
 Run the tests with `.venv/bin/python -m pytest -q`, or `bash setup.sh --test`. `pytest.ini` points pytest at `tests/`. The count changes when tests are added; `VALIDATION_REPORT.md` at the repository root records the counts actually observed.

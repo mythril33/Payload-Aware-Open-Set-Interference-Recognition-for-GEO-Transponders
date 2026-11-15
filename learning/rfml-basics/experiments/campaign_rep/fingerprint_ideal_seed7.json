@@ -1,0 +1,125 @@
+{
+  "stage": "fingerprint",
+  "scale": {
+    "name": "full",
+    "description": "lesson defaults",
+    "tx_train": 40,
+    "tx_val": 10,
+    "tx_test": 10,
+    "tx_aux": 20,
+    "tx_unknown": 10,
+    "frames_train": 20,
+    "frames_val": 10,
+    "frames_test": 10,
+    "fp_devices": 10,
+    "fp_frames": 300,
+    "epochs": 25,
+    "patience": 5
+  },
+  "impaired": false,
+  "seed": 7,
+  "modulation": "QPSK",
+  "n_samples": 512,
+  "n_devices": 10,
+  "frames_per_device": 300,
+  "split": "frame-level within each device (device is the label); fractions train/val/test 0.6/0.2/0.2",
+  "train_snr_db": [
+    -4.0,
+    -2.0,
+    0.0,
+    2.0,
+    4.0,
+    6.0,
+    8.0,
+    10.0,
+    12.0,
+    14.0,
+    16.0,
+    18.0,
+    20.0
+  ],
+  "chance_level": 0.1,
+  "frames": {
+    "train": 1800,
+    "val_select": 600,
+    "test": 600
+  },
+  "devices_in_test": 10,
+  "epochs_run": 6,
+  "best_epoch": 0,
+  "val_select_accuracy_best": 0.10666666666666667,
+  "per_snr": [
+    {
+      "snr_db": -4.0,
+      "n": 65,
+      "accuracy": 0.06153846153846154
+    },
+    {
+      "snr_db": -2.0,
+      "n": 45,
+      "accuracy": 0.1111111111111111
+    },
+    {
+      "snr_db": 0.0,
+      "n": 47,
+      "accuracy": 0.0851063829787234
+    },
+    {
+      "snr_db": 2.0,
+      "n": 39,
+      "accuracy": 0.07692307692307693
+    },
+    {
+      "snr_db": 4.0,
+      "n": 51,
+      "accuracy": 0.058823529411764705
+    },
+    {
+      "snr_db": 6.0,
+      "n": 51,
+      "accuracy": 0.17647058823529413
+    },
+    {
+      "snr_db": 8.0,
+      "n": 31,
+      "accuracy": 0.16129032258064516
+    },
+    {
+      "snr_db": 10.0,
+      "n": 45,
+      "accuracy": 0.08888888888888889
+    },
+    {
+      "snr_db": 12.0,
+      "n": 37,
+      "accuracy": 0.02702702702702703
+    },
+    {
+      "snr_db": 14.0,
+      "n": 54,
+      "accuracy": 0.09259259259259259
+    },
+    {
+      "snr_db": 16.0,
+      "n": 50,
+      "accuracy": 0.14
+    },
+    {
+      "snr_db": 18.0,
+      "n": 41,
+      "accuracy": 0.14634146341463414
+    },
+    {
+      "snr_db": 20.0,
+      "n": 44,
+      "accuracy": 0.06818181818181818
+    }
+  ],
+  "overall": {
+    "n": 600,
+    "accuracy": 0.09833333333333333
+  },
+  "campaign": {
+    "stage_wall_time_s": 4.5
+  }
+}

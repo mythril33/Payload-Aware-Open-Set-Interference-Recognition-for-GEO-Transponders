@@ -2,13 +2,15 @@
 #   -App dashboard : Track A, GEO research dashboard (ports 8501-8510)
 #   -App rfml      : Track B, RF-ML learning app     (ports 8511-8520)
 # Writes "pid;port" to windows\logs\<app>.pid, output to windows\logs\<app>.log
-# (stderr to <app>.err.log), waits for /_stcore/health, then opens the browser.
+# (stderr to <app>.err.log), waits for /_stcore/health, then opens the browser
+# (unless -NoBrowser, used by CI and by geo_workbench.ps1 -NoBrowser).
 # Console output is ASCII-transliterated Turkish.
 
 param(
     [Parameter(Mandatory = $true)]
     [ValidateSet('dashboard', 'rfml')]
-    [string]$App
+    [string]$App,
+    [switch]$NoBrowser
 )
 
 $ErrorActionPreference = 'Continue'
@@ -46,7 +48,7 @@ if (Test-Path $PidFile) {
         $running = Get-Process -Id $oldPid -ErrorAction SilentlyContinue
         if ($running) {
             Write-Host ("[OK]    " + $DisplayName + " zaten calisiyor (PID " + $oldPid + ", port " + $oldPort + "). Tarayici aciliyor.")
-            Start-Process ("http://127.0.0.1:" + $oldPort)
+            if (-not $NoBrowser) { Start-Process ("http://127.0.0.1:" + $oldPort) }
             exit 0
         }
     }
@@ -120,7 +122,7 @@ while ((Get-Date) -lt $deadline) {
 
 if ($healthy) {
     Write-Host ("[OK]    " + $DisplayName + " hazir: http://127.0.0.1:" + $Port)
-    Start-Process ("http://127.0.0.1:" + $Port)
+    if (-not $NoBrowser) { Start-Process ("http://127.0.0.1:" + $Port) }
     exit 0
 }
 

@@ -81,6 +81,35 @@ def test_cancel_stops_the_process_group_and_records_the_cancellation(tmp_path):
     assert not J._pid_alive(status.pid)
 
 
+def test_the_owner_records_the_reaped_exit_status_of_a_job_it_cancels(tmp_path):
+    manager = _manager(tmp_path, {"slow": _spec("slow", 30)})
+    job_id = manager.start("slow")
+    status = manager.cancel(job_id)
+    proc = manager.owned_process(job_id)
+    assert status.state == J.CANCELLED and proc.returncode is not None and proc.returncode != 0
+    record = json.loads(_job_json(tmp_path, job_id).read_text())
+    assert record["state"] == J.CANCELLED and record["returncode"] == proc.returncode == status.returncode
+
+
+def test_the_owner_fills_in_the_exit_status_after_another_process_cancelled(tmp_path):
+    registry = {"slow": _spec("slow", 30)}
+    owner = _manager(tmp_path, registry)
+    job_id = owner.start("slow")
+    other = _manager(tmp_path, registry)
+    assert other.cancel(job_id).state == J.CANCELLED
+    path = _job_json(tmp_path, job_id)
+    assert json.loads(path.read_text())["returncode"] is None, "a non-owner cannot know the exit status"
+    assert other.status(job_id).returncode is None and json.loads(path.read_text())["returncode"] is None
+    status = owner.status(job_id)
+    record = json.loads(path.read_text())
+    assert status.state == record["state"] == J.CANCELLED and record["reason"] == J.CANCEL_REASON
+    assert record["returncode"] == owner.owned_process(job_id).returncode is not None
+    # The fill-in never changes a state and never replaces a recorded exit status.
+    kept = owner._finish(job_id, record, J.SUCCEEDED, 0, "would be an upgrade")
+    assert kept["state"] == J.CANCELLED and kept["returncode"] == record["returncode"]
+    assert owner._finish(job_id, record, J.CANCELLED, 12345, "other")["returncode"] == record["returncode"]
+
+
 def test_a_job_that_exceeds_its_gui_timeout_is_stopped_and_marked_timed_out(tmp_path):
     manager = _manager(tmp_path, {"forever": _spec("forever", 60, timeout_s=1)})
     job_id = manager.start("forever")
@@ -280,8 +309,182 @@ def test_a_non_owner_process_does_not_record_the_outcome_of_a_job_it_did_not_sta
     job_json = tmp_path / "home" / "jobs" / job_id / "job.json"
     record = json.loads(job_json.read_text())
     record["owner_pid"] = os.getppid()  # a different, live process owns it
+    record["owner_start_token"] = J.process_start_token(os.getppid())
     job_json.write_text(json.dumps(record))
     other = _manager(tmp_path, registry)
     seen = other.status(job_id)
     assert seen.state == J.RUNNING and "will record the exit status" in seen.reason
     assert json.loads(job_json.read_text())["state"] == J.RUNNING, "a non-owner must not write the outcome"
+
+
+# ---- start tokens, recycled pids, unreadable records, settling races ------------------------------------
+
+def _job_json(tmp_path, job_id):
+    return tmp_path / "home" / "jobs" / job_id / "job.json"
+
+
+def test_job_json_records_the_start_tokens_of_the_job_and_its_owner(tmp_path):
+    manager = _manager(tmp_path, {"slow": _spec("slow", 30)})
+    job_id = manager.start("slow")
+    try:
+        record = json.loads(_job_json(tmp_path, job_id).read_text())
+        assert record["pid_start_token"] == J.process_start_token(record["pid"])
+        assert record["owner_start_token"] == J.process_start_token(os.getpid())
+    finally:
+        manager.cancel(job_id)
+
+
+def test_a_record_without_start_tokens_still_loads_and_settles(tmp_path):
+    """Records written before tokens existed (no pid_start_token/owner_start_token) keep the old rules."""
+    registry = {"quick": _spec("quick", 0.1, success=lambda job_dir: (True, "outputs verified"))}
+    first = _manager(tmp_path, registry)
+    job_id = first.start("quick")
+    path = _job_json(tmp_path, job_id)
+    record = json.loads(path.read_text())
+    record.pop("pid_start_token")
+    record.pop("owner_start_token")
+    path.write_text(json.dumps(record))
+    deadline = time.time() + 20
+    while J._pid_alive(record["pid"]) and time.time() < deadline:
+        time.sleep(0.1)
+    assert _manager(tmp_path, registry).status(job_id).state == J.FINISHED_UNRECORDED
+
+
+def test_a_recorded_token_with_an_unreadable_current_token_is_not_the_process(monkeypatch):
+    """Access denied (Windows) or no /proc entry: with a recorded token, the pid is never taken for the job."""
+    monkeypatch.setattr(J, "pid_alive", lambda pid: True)
+    monkeypatch.setattr(J, "process_start_token", lambda pid: None)
+    assert J.process_alive(4242, "123") is False and J.pid_recycled(4242, "123") is True
+    assert J.process_alive(4242, None) is True and J.pid_recycled(4242, None) is False  # legacy record
+    monkeypatch.setattr(J, "process_start_token", lambda pid: "123")
+    assert J.process_alive(4242, "123") is True and J.process_alive(4242, "124") is False
+
+
+def test_a_live_pid_whose_token_cannot_be_read_is_never_signalled_and_does_not_hold_the_runner(tmp_path,
+                                                                                            monkeypatch):
+    stranger = J.subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
+    try:
+        registry = {"quick": _spec("quick", 0.1)}
+        manager = _manager(tmp_path, registry)
+        job_id = manager.start("quick")
+        _wait_for(manager, job_id, {J.SUCCEEDED, J.FAILED})
+        path = _job_json(tmp_path, job_id)
+        record = json.loads(path.read_text())
+        record.update({"state": J.RUNNING, "returncode": None, "pid": stranger.pid, "pid_start_token": "1",
+                       "owner_pid": stranger.pid, "owner_start_token": "1"})
+        record.pop("finished_at", None)
+        path.write_text(json.dumps(record))
+        monkeypatch.setattr(J, "process_start_token", lambda pid: None)
+        fresh = _manager(tmp_path, registry)
+        status = fresh.cancel(job_id)
+        assert status.state == J.FINISHED_UNRECORDED  # settled by the ordinary rules, neither running nor cancelled
+        assert stranger.poll() is None and J._pid_alive(stranger.pid), "the pid must not be signalled"
+    finally:
+        stranger.kill()
+        stranger.wait(timeout=30)
+
+
+def test_an_unreadable_record_blocks_every_new_start_until_its_folder_is_moved(tmp_path):
+    manager = _manager(tmp_path, {"quick": _spec("quick", 0.1)})
+    bad = manager.jobs_dir / "20260101T000000-bad000"
+    bad.mkdir()
+    (bad / "job.json").write_text("{corrupt")
+    with pytest.raises(J.RecordUnreadable) as refused:
+        manager.start("quick")
+    assert isinstance(refused.value, J.ActiveJobError) and refused.value.job_dir == bad
+    assert str(bad) in str(refused.value)
+    assert sorted(p.name for p in manager.jobs_dir.iterdir()) == [bad.name]
+    assert (bad / "job.json").read_text() == "{corrupt"
+    bad.rename(tmp_path / "moved-aside")
+    job_id = manager.start("quick")
+    assert _wait_for(manager, job_id, {J.SUCCEEDED, J.FAILED}).state == J.SUCCEEDED
+
+
+def test_a_recycled_pid_is_not_the_job_and_is_never_signalled(tmp_path):
+    """A live pid whose start token differs from the recorded one belongs to another process."""
+    stranger = J.subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
+    try:
+        registry = {"quick": _spec("quick", 0.1)}
+        manager = _manager(tmp_path, registry)
+        job_id = manager.start("quick")
+        _wait_for(manager, job_id, {J.SUCCEEDED, J.FAILED})
+        path = _job_json(tmp_path, job_id)
+        record = json.loads(path.read_text())
+        record.update({"state": J.RUNNING, "returncode": None, "pid": stranger.pid, "pid_start_token": "1",
+                       "owner_pid": None})
+        record.pop("finished_at", None)
+        path.write_text(json.dumps(record))
+        assert J.pid_recycled(stranger.pid, "1") and not J.process_alive(stranger.pid, "1")
+        status = _manager(tmp_path, registry).cancel(job_id)
+        assert status.state == J.FINISHED_UNRECORDED and status.returncode is None  # settled, not cancelled
+        assert stranger.poll() is None and J._pid_alive(stranger.pid), "the recycled pid must not be signalled"
+    finally:
+        stranger.kill()
+        stranger.wait(timeout=30)
+
+
+@pytest.mark.parametrize("content", ["{not json", "[1, 2]", json.dumps({"key": "quick", "state": "running"}),
+                                     json.dumps({"job_id": "x", "key": "quick", "title": "t", "scope": "s",
+                                                 "state": "running", "values": {}, "argv": [], "started_at": "",
+                                                 "started_epoch": "yesterday", "timeout_s": 60, "pid": 1})])
+def test_an_unreadable_job_record_is_reported_never_rewritten_and_never_success(tmp_path, content):
+    manager = _manager(tmp_path, {"quick": _spec("quick", 0.1)})
+    job_dir = manager.jobs_dir / "20260101T000000-bad000"
+    job_dir.mkdir()
+    (job_dir / "job.json").write_text(content)
+    jobs = manager.list_jobs()
+    assert [j.state for j in jobs] == [J.RECORD_UNREADABLE]
+    assert J.RECORD_UNREADABLE in J.FINAL_STATES and jobs[0].is_final
+    assert "could not be read" in jobs[0].reason
+    assert manager.cancel(job_dir.name).state == J.RECORD_UNREADABLE
+    assert (job_dir / "job.json").read_text() == content, "an unreadable record must be left unchanged"
+
+
+def test_a_corrupt_record_does_not_hide_the_other_jobs(tmp_path):
+    manager = _manager(tmp_path, {"quick": _spec("quick", 0.1)})
+    good = manager.start("quick")
+    _wait_for(manager, good, {J.SUCCEEDED, J.FAILED})
+    bad = manager.jobs_dir / "00000000T000000-bad000"
+    bad.mkdir()
+    (bad / "job.json").write_text("\x00\x01")
+    states = {j.job_id: j.state for j in manager.list_jobs()}
+    assert states == {good: J.SUCCEEDED, bad.name: J.RECORD_UNREADABLE}
+
+
+def test_a_requested_cancellation_is_recorded_even_if_another_process_settles_first(tmp_path):
+    """The canceller marks the record before it signals; a supervisor that then sees the killed process exit
+    records CANCELLED, not FAILED."""
+    manager = _manager(tmp_path, {"slow": _spec("slow", 30)})
+    job_id = manager.start("slow")
+    path = _job_json(tmp_path, job_id)
+    record = json.loads(path.read_text())
+    record["cancel_requested_at"] = "2026-01-01T00:00:00+00:00"
+    path.write_text(json.dumps(record))
+    manager.owned_process(job_id).kill()
+    status = _wait_for(manager, job_id, J.FINAL_STATES)
+    assert status.state == J.CANCELLED and json.loads(path.read_text())["state"] == J.CANCELLED
+
+
+def test_the_first_final_state_written_wins(tmp_path):
+    manager = _manager(tmp_path, {"slow": _spec("slow", 30)})
+    job_id = manager.start("slow")
+    path = _job_json(tmp_path, job_id)
+    record = json.loads(path.read_text())
+    record.update({"state": J.CANCELLED, "reason": "another process cancelled it"})
+    path.write_text(json.dumps(record))
+    try:
+        kept = manager._finish(job_id, record, J.SUCCEEDED, 0, "would be an upgrade")
+        assert kept["state"] == J.CANCELLED and json.loads(path.read_text())["state"] == J.CANCELLED
+    finally:
+        manager.owned_process(job_id).kill()
+        manager.owned_process(job_id).wait(timeout=30)
+
+
+def test_an_unreadable_exercise_report_is_not_success(tmp_path):
+    job = tmp_path / "job"
+    (job / "exercise").mkdir(parents=True)
+    (job / "exercise" / "exercise.json").write_text("{truncated", encoding="utf-8")
+    assert C._exercise_success(job) == (False, "exercise.json is not readable JSON")
+    (job / "exercise" / "exercise.json").write_text("[]", encoding="utf-8")
+    ok, reason = C._exercise_success(job)
+    assert not ok and "not a JSON object" in reason

@@ -1,16 +1,15 @@
 # Research roadmap
 
-Status date: 2026-11-04 (previous: 2026-10-28, branch
-`claude/serene-johnson-urtxgj`, base main `8911fee`). Since then the Windows
-workbench packaging merged (PR #58, main `c6f6cb4`); it is software-only
-delivery and changes no gate or scientific status.
+Status date: 2026-11-15, reconciled against main `ea68e99` (PR #66 merged).
+The Windows workbench and Track B updates on main are retained alongside the
+4 November CPU development delivery. No B2 gate or scientific status changes.
 This file tracks the route from the current state to publication.
 It summarizes and links evidence; it never replaces the protocol documents
 (`docs/plan/P18_b2_protocol.md` and the frozen stages) or the researcher
 decision records. Where this file and a protocol disagree, the protocol wins.
 
-**Delivery target: Sunday 2026-11-08, code + experiment results + report** (latest user
-instruction, 2026-11-04). Manuscripts and figures remain included. See the
+**Delivery scope: code + experiment results + report**, including manuscripts and
+figures. The original 8 November deadline is historical; see the
 [dated delivery plan](docs/plan/DELIVERY_2026-11-08.md).
 The existing evidence supports the comparative/observability draft; the separate
 GEO draft remains a methods/design paper until its experiments actually run.
@@ -60,16 +59,27 @@ The repository holds two tracks:
   (V1, 14 audited citations, claim–evidence manifest) and the GEO
   experimental paper whose Results §7.2 is entirely NOT RUN.
 
-### Track B (this branch)
+### Track B (merged on main; separate from GEO results)
 
 - `rfml` package (signals with IQ imbalance / Rapp PA / phase noise / DC /
   CFO, device-level splits, MLP/CNN1D/ResNet1D, MSP / distance /
-  Objectosphere, known-val threshold calibration), 165 passing tests,
+  Objectosphere, known-val threshold calibration), 187 passing tests,
   Streamlit UI, lessons 01–04 with full-run results.
-- Pre-registered multi-seed campaign
-  (`learning/rfml-basics/experiments/PREREGISTRATION.md`, `run_campaign.py`);
-  results in `learning/rfml-basics/experiments/campaign/` and
-  `VALIDATION_REPORT.md`.
+- Three pre-registered campaigns and a replication on fresh seeds
+  (`learning/rfml-basics/experiments/PREREGISTRATION*.md`, `run_campaign*.py`,
+  `pool_replication.py`); results in `learning/rfml-basics/experiments/` and
+  `VALIDATION_REPORT.md`. Outcome over ten seeds: H1, H2, H3 and H7
+  replicated; the negative results H5 and H6 replicated; H7s and H10
+  supported; H8 not replicated; H4 inconsistent; H9 not supported (the MLP
+  memorises frames, not devices, which corrected an earlier reading). Per
+  unknown class the picture splits: embedding distance detects 4PAM almost
+  perfectly (AUROC 0.990) and no score detects 64QAM (0.335 to 0.569).
+- Submission-format paper (`learning/rfml-basics/paper/paper.pdf`, IEEEtran,
+  anonymised): every printed number is generated from the aggregates by
+  `make_numbers.py`, and `build.sh` refuses a build with a missing number,
+  an undefined reference or an overfull box. Remaining before submission are
+  author decisions only: the author line, the venue and its page limit, and
+  a human read-through.
 
 ## 2. Remaining work, prioritized
 

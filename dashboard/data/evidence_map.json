@@ -171,7 +171,7 @@
         "3200000-3200499": 35,
         "3300000-3300149": 0
       },
-      "rationale": "Metadata-only drift disclosure derived from committed K17d audit; not a new production evaluation"
+      "rationale": "title: # B2 K17d / M-14 — co-feed missing-carrier level-drift disclosure"
     },
     "docs/results/B2_P1_RESOURCE_ERRATA.md": {
       "class": "DERIVED_DOCUMENTATION",
@@ -179,7 +179,7 @@
         "3200000-3200499": 0,
         "3300000-3300149": 0
       },
-      "rationale": "Dated arithmetic clarification of historical resource estimates; no reservation"
+      "rationale": "title: # P1 / M-11 — resource-arithmetic clarification (non-authoritative estimate)"
     },
     "docs/results/B2_RESOURCE_RECONCILIATION.md": {
       "class": "DERIVED_DOCUMENTATION",

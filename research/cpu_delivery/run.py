@@ -8,13 +8,15 @@ import os
 import signal
 from pathlib import Path
 import shutil
-import subprocess
 import sys
-import time
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
+
+from research.cpu_delivery.execution import (
+    campaign_lock, run_step, stop_process_tree, termination_signals,
+)
 
 
 def digest(path):
@@ -26,19 +28,6 @@ def write_json(path, data):
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(data, indent=2, allow_nan=False) + "\n")
     temporary.replace(path)
-
-
-def stop_process_tree(process, log):
-    """Stop child generators too, including on a user's Ctrl-C."""
-    if os.name == "posix":
-        try:
-            os.killpg(process.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-    else:
-        subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
-                       stdout=log, stderr=subprocess.STDOUT, check=False)
-    process.wait()
 
 
 def prepare(out, resume=False):
@@ -66,6 +55,7 @@ def prepare(out, resume=False):
     source = _source_identity()
     record = {"campaign": cfg["campaign"], "config": cfg,
               "config_sha256": digest(config_path), "runner_sha256": digest(__file__),
+              "execution_code_sha256": digest(Path(__file__).with_name("execution.py")),
               "summary_code_sha256": digest(Path(__file__).with_name("summarize.py")),
               "preregistration_sha256": digest(Path(__file__).with_name("PREREGISTRATION.md")),
               "scientific_sources_sha256": source["files_sha256"],
@@ -92,6 +82,14 @@ def prepare(out, resume=False):
 
 
 def run(out, resume=False):
+    out = Path(out).resolve()
+    if out == ROOT or ROOT in out.parents:
+        raise ValueError("generated data/models must stay outside the repository")
+    with termination_signals(), campaign_lock(out):
+        _run_locked(out, resume)
+
+
+def _run_locked(out, resume):
     cfg, out = prepare(out, resume)
     env = dict(os.environ)
     env.update(OMP_NUM_THREADS="2", OPENBLAS_NUM_THREADS="2", MKL_NUM_THREADS="2",
@@ -113,27 +111,8 @@ def run(out, resume=False):
         steps.append((f"seed-{seed}", args, 1800))
     for name, args, timeout in steps:
         print(f"Starting {name}; log: {out / (name + '.log')}", flush=True)
-        start = time.monotonic()
-        with (out / f"{name}.log").open("a") as log:
-            process = None
-            try:
-                process = subprocess.Popen([sys.executable, *args], cwd=ROOT, env=env,
-                                           stdout=log, stderr=subprocess.STDOUT,
-                                           start_new_session=(os.name == "posix"))
-                status = {"returncode": process.wait(timeout=timeout), "timed_out": False}
-            except subprocess.TimeoutExpired:
-                stop_process_tree(process, log)
-                status = {"returncode": None, "timed_out": True}
-            except BaseException:
-                if process is not None:
-                    stop_process_tree(process, log)
-                raise
-        status.update(step=name, elapsed_s=time.monotonic() - start,
-                      command=[sys.executable, *args], resume=resume)
-        with (out / "execution.jsonl").open("a") as ledger:
-            ledger.write(json.dumps(status, allow_nan=False) + "\n")
-        if status["returncode"] != 0:
-            raise RuntimeError(f"{name} failed/timed out; inspect its log; campaign incomplete")
+        status = run_step(out, name, [sys.executable, *args], cwd=ROOT,
+                          env=env, timeout=timeout, resume=resume)
         print(f"Completed {name} in {status['elapsed_s']:.1f}s", flush=True)
     # Keep result aggregation separate from model/threshold selection.
     from research.cpu_delivery.summarize import summarize
