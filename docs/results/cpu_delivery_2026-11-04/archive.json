@@ -1,0 +1,16 @@
+{
+  "schema": "CPU-delivery-archive/1",
+  "scope": "aggregate results, curves and figures; no model or observations",
+  "files_sha256": {
+    "docs/results/cpu_delivery_2026-11-04/campaign.json": "c309fd4cf6d75248d23a5b5859033537a255e5cc14f3c3bc47247f8a538a6867",
+    "docs/results/cpu_delivery_2026-11-04/seed-1.json": "677622f8fcebc1fbe2349fb3a7c84db862cb7205e84adf3654a6f2c19921249e",
+    "docs/results/cpu_delivery_2026-11-04/seed-2.json": "a9d13dfdd634079a73b1bee2474566e90c175ec35be9c2bf4d5cff28a8f8146c",
+    "docs/results/cpu_delivery_2026-11-04/seed-0.json": "46dcdfa1b5bfed63835a4e428a5be1e398e65ca834d7ece000fcfbab6d628e95",
+    "docs/figures/cpu_delivery/cpu_family_auroc.pdf": "1a3e19567fbf25d6ff33ee6c883fe2fee7a712f3136f4f2bdc706e62416f205f",
+    "docs/figures/cpu_delivery/cpu_unknown_roc.pdf": "e25395780120b6c0ac39a7d6c8db6d60d9d936f70344e11cc9ac397d8c1f1cdc",
+    "docs/figures/cpu_delivery/cpu_unknown_roc.png": "a7677f9364d6c6b5d01e15e5234fc6bb230fae7898f85a0e0dcafb2ff6428d95",
+    "docs/figures/cpu_delivery/cpu_family_auroc.png": "1bf6ba7e7352ec4a5520046767d5cd399c8496ba43433c9d6e49d5b128fba407",
+    "docs/results/cpu_delivery_2026-11-04.json": "8c47bdfb8c8a56cabfa804622d0ecf99f508848756bd6955f343fb04080a949d",
+    "docs/results/cpu_delivery_2026-11-04/runner-used.py": "116c1e6c338baef90355e269cfd64f39930bb9b8e0d51243833659362e335b42"
+  }
+}

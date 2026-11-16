@@ -4,6 +4,14 @@ Read/edit [geo_b2_manuscript.md](geo_b2_manuscript.md); read the typeset
 [PDF](geo_b2_manuscript.pdf). The original `manuscript.*`, its bibliography and
 the independent literature review are preserved.
 
+The 2026-11-04 documentation update adds the same ETSI provenance disclosure to
+both manuscripts: the historical 36 MHz reference-table agreement, unchecked
+72 MHz responses, unquantified TWTA digitization error, and explicit placeholders
+for the written permission reference, date and scope. Researcher-reported
+permission is not represented as independently verified. The evidence manifests
+bind the [provenance record](../docs/research/ETSI_DERIVED_DATA_PROVENANCE.md);
+no reference model or result is changed.
+
 This draft contains the physical system, recognition and calibration methods,
 separate H1/H2/H3 comparisons, existing simulated diagnostics, and validity
 limitations. Production recognition results are **NOT RUN**. Mahalanobis is

@@ -1,0 +1,90 @@
+{
+  "schema": "delivery-development-evidence/1",
+  "date": "2026-11-04",
+  "baseline_commit": "3f26393",
+  "scope": "BOUNDED_DEVELOPMENT",
+  "benchmark_complete": false,
+  "source_report_sha256": "cd30e42451228ed70766a1f0f32dde6943c02344e9f9d23f55681ef719ff2f01",
+  "execution_adapter_sha256": "81169bc9d662a9cb5c07af50bf11b43d82ac9cb77bdf0c97026629b28e69a34a",
+  "command": "PYTHONPATH=src OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 MKL_NUM_THREADS=2 PYTHONHASHSEED=0 CUDA_VISIBLE_DEVICES='' python scripts/b2_real_execution.py --out /workspace/geo-development-20261104 --groups 1",
+  "environment": {
+    "python": "3.12.14",
+    "numpy": "2.3.5",
+    "scipy": "1.17.0",
+    "torch": "2.15.0+cpu"
+  },
+  "roles": [
+    "train",
+    "val-select",
+    "val-calib"
+  ],
+  "groups_per_role": 1,
+  "observations": 24,
+  "generation_measurement": {
+    "elapsed_s": 40.366,
+    "cpu_user_s": 47.062,
+    "cpu_sys_s": 2.384,
+    "peak_rss_kib": 582228,
+    "exit_code": 0
+  },
+  "training": {
+    "dual_residual": {
+      "checkpoint_sha256": "143bdd63c5e556155293a0a98a47dae8975ce1dab5604729051ce10f2354d5b4",
+      "history": [
+        {
+          "epoch": 0,
+          "train_loss": 5.468474864959717,
+          "val_macro_f1": 0.027777777777777776,
+          "val_plan_accuracy": 1.0
+        },
+        {
+          "epoch": 1,
+          "train_loss": 5.132362365722656,
+          "val_macro_f1": 0.0,
+          "val_plan_accuracy": 1.0
+        }
+      ],
+      "selected_epoch": 0
+    }
+  },
+  "calibration": {
+    "dual_residual": {
+      "alarm": {
+        "n_clean_calibration": 1,
+        "rule": "R10 higher empirical quantile at 1-pfa (clean_alarm_threshold); alarm strictly score > threshold",
+        "threshold": 0.8625772001907921
+      },
+      "rejection": {
+        "energy": {
+          "method": "energy",
+          "n_calibration": 8,
+          "provenance": "2ecd6b0b2d41dc3c024835c329093432ef8db7d0b46c44458e193285817665ef",
+          "target_acceptance": 0.95,
+          "temperature": 1.0,
+          "threshold": -2.1309959193946497
+        },
+        "mahalanobis": {
+          "method": "mahalanobis",
+          "n_calibration": 8,
+          "provenance": "2ecd6b0b2d41dc3c024835c329093432ef8db7d0b46c44458e193285817665ef",
+          "target_acceptance": 0.95,
+          "temperature": 1.0,
+          "threshold": 157021.76512633986
+        },
+        "msp": {
+          "method": "msp",
+          "n_calibration": 8,
+          "provenance": "2ecd6b0b2d41dc3c024835c329093432ef8db7d0b46c44458e193285817665ef",
+          "target_acceptance": 0.95,
+          "temperature": 1.0,
+          "threshold": 0.8608868503952486
+        }
+      }
+    }
+  },
+  "heldout_reads": 0,
+  "gpu_exercised": false,
+  "model_backup_reverified": true,
+  "independent_backup_verified": false,
+  "interpretation": "Functional development exercise only. No test metrics, production recognition claim or qualified independent backup. Validation macro-F1 is descriptive on eight correlated observations, not a generalization estimate."
+}

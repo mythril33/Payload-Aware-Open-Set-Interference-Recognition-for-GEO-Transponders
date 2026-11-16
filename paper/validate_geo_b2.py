@@ -24,6 +24,16 @@ def main():
     for name, anchors in manifest["source_anchors"].items():
         source = checked[name].read_text()
         assert all(anchor in source for anchor in anchors), name
+    provenance = manifest["etsi_provenance"]
+    assert provenance["source"] in manifest["claims"]["E02"]
+    assert provenance["permission_status"] == "RESEARCHER_REPORTED_WRITTEN_RECORD_NOT_VERIFIED"
+    assert all(provenance[field] is None for field in (
+        "permission_reference", "permission_date", "permission_scope"
+    )), "a verified permission record requires a reviewed evidence update"
+    for manuscript in ("manuscript.md", "geo_b2_manuscript.md"):
+        content = (PAPER / manuscript).read_text()
+        for fragment in provenance["manuscript_required_fragments"]:
+            assert fragment in content, (manuscript, fragment)
     assert set(manifest["claims"]) == {f"E{n:02d}" for n in range(1, 19)}
     for key, files in manifest["claims"].items():
         assert files and all(name in checked for name in files), key

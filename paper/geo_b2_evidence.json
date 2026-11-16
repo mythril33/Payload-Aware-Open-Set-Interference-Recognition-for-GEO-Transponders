@@ -17,7 +17,8 @@
       "src/geosim/polarization.py",
       "src/geosim/phase_noise.py",
       "src/geosim/sensor.py",
-      "src/geosim/payload.py"
+      "src/geosim/payload.py",
+      "docs/research/ETSI_DERIVED_DATA_PROVENANCE.md"
     ],
     "E03": [
       "docs/plan/P19_b2_base_observations.md",
@@ -150,7 +151,7 @@
     "paper/figures/asi_cuc_observability.png": "23fc84191c1fae368e7eae0549b2ef260849c917e41fba9e94c168c66e6ca753",
     "paper/geo_b2_display_specs.md": "812b94c1489998f27a6881e73c1d5006be4dd07aa9e9dd2c90a99040d8e00af9",
     "paper/literature_audit.md": "b0880bf19343ba780ac199b9806fc65503f17fa348050e9f6a8ec05021ed640e",
-    "paper/manuscript.md": "3e6196c588abc765b1071df115dcb73051729af9a46b0663fbdd2a4fe7da37d0",
+    "paper/manuscript.md": "9f71a5f05b254d8eda902bbb4777f7e331d78fe5e3d2dfc58e1cff59bc104370",
     "scripts/b2_real_generation.py": "34b1a80ef93de636b6d76930222e1c4dd50779c548462d769798fed2efd66722",
     "src/geoml/b2_c2.py": "3168f193192ff8e5fa7d2b908603877f415b4edb35f63dd679bc0d5c1026db06",
     "src/geoml/b2_campaign.py": "cdb86fb2b2410cb08e57aff8df242a0438a59fa8c9eee6adb7cc49ce00a1bfc0",
@@ -175,7 +176,8 @@
     "src/geosim/polarization.py": "0d8c4c20a5d38b1e02287bbb74e81ad86172437b4d2b3d10beefaeedcf7ca7f7",
     "src/geosim/sensor.py": "e78151a893e617b7eaa3af8016b4e47ee25a61e15eb30e37093bbf84971c3226",
     "paper/geo_b2_references.bib": "321155a52ae16e8d97f6202077b1976e51f277ec11acfe297d019011869f9d2b",
-    "paper/geo_b2_literature_sources.md": "33837627829bec821f1b41e55d9fd226d044b02b2d1b5c864c11028dcb812a5d"
+    "paper/geo_b2_literature_sources.md": "33837627829bec821f1b41e55d9fd226d044b02b2d1b5c864c11028dcb812a5d",
+    "docs/research/ETSI_DERIVED_DATA_PROVENANCE.md": "41a62a4b5d3caae37de465bba593f6ac0c0772d20b932389be37f170318d401d"
   },
   "source_anchors": {
     "docs/plan/P2_sistem_modeli.md": [
@@ -199,6 +201,13 @@
     "src/geoml/b2_campaign.py": [
       "evaluation_step",
       "primary_scorer"
+    ],
+    "docs/research/ETSI_DERIVED_DATA_PROVENANCE.md": [
+      "0.07 dB (IMUX) and below 0.005 dB (OMUX)",
+      "801 table frequencies per table",
+      "Only the 36 MHz tables were checked numerically.",
+      "digitization error is not quantified",
+      "No written permission is stored in this repository"
     ]
   },
   "numeric_assertions": [
@@ -291,5 +300,25 @@
     "saleh1981twta",
     "scheirer2013openset",
     "wen2016center"
-  ]
+  ],
+  "etsi_provenance": {
+    "source": "docs/research/ETSI_DERIVED_DATA_PROVENANCE.md",
+    "documented_check_revision": "3a6bd910e61ed0fced4abeace929f73163ebe742",
+    "permission_status": "RESEARCHER_REPORTED_WRITTEN_RECORD_NOT_VERIFIED",
+    "permission_reference": null,
+    "permission_date": null,
+    "permission_scope": null,
+    "statement_date": "2026-10-27",
+    "manuscript_required_fragments": [
+      "801 table frequencies per filter",
+      "within 0.07 dB (IMUX) and below 0.005 dB (OMUX) where the table gain is at least $-20$ dB",
+      "have not been checked against a separate table",
+      "digitization error has not been quantified",
+      "ETSI permission record pending",
+      "no written permission record is stored in the repository or independently verified",
+      "permission reference **[to be filled in]**",
+      "date **[to be filled in]**",
+      "public repository use and publication **[to be filled in]**"
+    ]
+  }
 }

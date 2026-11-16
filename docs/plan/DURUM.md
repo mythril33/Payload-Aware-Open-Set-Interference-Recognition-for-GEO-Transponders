@@ -1,11 +1,65 @@
 # Proje durumu ve eksik kaydı
 
+## CPU tesliminin entegrasyonu ve kesinti yönetimi — 2026-11-15
+
+- Ana dal `ea68e991` (PR #66) ile 4 Kasım CPU teslimi uzlaştırıldı; Windows
+  çalışma aracı ve ayrı Track B değişiklikleri korundu. Tarihsel deney sonuçları,
+  grafikler, PDF/Word çıktıları ve gerçekten kullanılan çalıştırıcı değiştirilmedi.
+- CPU çalıştırıcısı aynı çıktı yoluna ikinci yazarı reddediyor. Başarısız başlatma,
+  hata, zaman aşımı ve kesinti günlüğe yazılıyor; Ctrl+C/TERM/HUP çocuk süreçleri
+  temizliyor. Yeni yardımcı kaynak kimliğine dahil; eski kampanya çıktısına bu
+  sürümle devam etmek yerine yeni klasör gerekiyor. Bilimsel tarif aynı.
+- Linux/Python 3.12.14: 12 süreç testi geçti; gerçek çocuk/torun süreçlerle
+  zaman aşımı ve üç sinyal, eşzamanlı yazar reddi, kilit bırakma ve hata sonrası
+  özet üretmeme doğrulandı. Windows yolu uygulanmış, burada çalıştırılmadı.
+- CPU arşiv denetimi: 10 dosya/şekil hash'i, üç sabit fit, 45 ROC/AP/OSCR
+  popülasyonu geçti. İki makale denetimi: 21/66 kaynak hash'i, 206 kesin değer,
+  30/18 iddia grubu; GEO taslağında sekiz NOT RUN satırı korundu.
+- Bu ortamda GitHub'dan hash doğrulanmış kaynak anlık görüntüsü kullanıldı;
+  Git geçmişi üretilmedi. PyTorch/pytest kurulu değil; tam test paketi ve yeni
+  RF eğitimi bu tarihte çalıştırılmadı. Sonuçlar 4 Kasım deneyine aittir.
+  Üretim B2, GPU ve nihai held-out değerlendirmesi tamamlanmış değildir.
+
 ## Windows one-click workbench (spec: WINDOWS_ONE_CLICK_COMPLETION.md) — 2026-11-05
 
 - Base main `2d9f5a0bf3d5c9885651dc674ddf55a26acc00a5`; branch `claude/windows-one-click-workbench`, PR #64. Implemented: desktop shortcuts GEO Workbench / GEO Pilot Başlat / GEO İşlem Durdur / GEO Workbench Kapat / GEO WSL Kurulumu; a WSL-side supervisor (`dashboard/geo_pilot.py`, `geodash/pilot.py`) that runs the existing allowlisted `real-exercise` through the existing JobManager with ownership tokens, a versioned `pilot.json`, safe cancel and fixed exit codes; consent-gated WSL2 setup that clones the package's full-history Git bundle into WSL ext4; Turkish pilot panel and status badges in the dashboard; Windows CI for installer, launchers and WSL-absent fail-closed. Caps, roles, `requires_posix`, the argv guard, timeouts and gates are unchanged.
 - Genuine evidence (Linux = the WSL2 userland, CPU, groups=1, dev roles only): pilot `20261105T090036-6d7822` from a clone of the package bundle succeeded in 154 s (24 observations; observed `heldout_reads=0`, `gpu_exercised=false`, `benchmark_complete=false`); a duplicate start exited 10 with the running job id; a cancel at ~45 s ended `cancelled` with all outputs kept. A pilot from a manifest-only snapshot failed in training because `src/geoml/experiment.py:103` records Git provenance; hence the Git bundle (no credentials, no synthesised history; the bundle is as private as the repository).
 - Windows CI on `91f3589`: both jobs green (run 41992475401: installer, two venvs, Turkish shortcut names, PS 5.1/7, WSL-absent fail-closed, Track B). On `dc1774a` GitHub Actions assigned no runner to any job (`runner_id 0`, re-run identical): round-2 PowerShell changes are NOT yet run on Windows; Actions capacity must be restored. Local: 627 passed / 14 skipped.
 - Not done: real WSL2 end-to-end on a physical Windows PC (GitHub runners cannot run WSL2) — checklist in [the test report](../engineering/WINDOWS_ONECLICK_TEST_REPORT.md). No generation beyond the bounded pilot, no GPU, LOKO or held-out read. `benchmark_complete=false`; DR-04/DR-05/held-out gates closed.
+
+## Pazar teslim hazırlığı — 2026-11-04
+
+- Son kullanıcı yönlendirmesi: deneyleri bu ortama uyarlayıp burada çalıştırmak.
+  [CPU-delivery-B1/1 ön kaydı](../../research/cpu_delivery/PREREGISTRATION.md)
+  ve çalıştırıcısı `4f4b74a` commit'inde sonuçlardan önce kaydedildi.
+  Dört bilinen/dört bilinmeyen, üç eğitim tohumu, en fazla 720 gözlem;
+  A1 fizik ve B1-dev/2 ayrımı korunuyor, B2 kapıları/held-out verisi açılmıyor.
+  Gerçek kampanya tamamlandı: 716 gözlem, 355,07 s alt-süreç toplamı; bilinen
+  doğruluk ortalama %70,25, bilinmeyen AUROC MSP/energy/Mahalanobis
+  0,6191/0,5647/0,3314. [Rapor ve grafikler](../results/CPU_DELIVERY_2026-11-04.md)
+  düşük bilinmeyen reddini ve olumsuz sonuçları koruyor. On arşiv/şekil
+  hash'i ve 45 ROC/AP/OSCR popülasyonu denetlendi; yeni B2 sonucu iddia edilmedi.
+- Kullanıcının son hedefi **8 Kasım Pazar: kod + deney sonuçları + rapor**.
+  [Somut teslim planı](DELIVERY_2026-11-08.md) ve
+  [bu oturumun doğrulama kaydı](../results/DELIVERY_VALIDATION_2026-11-04.md)
+  hazırlandı. Taban `3f26393`; tam GEO benchmark hâlâ tamamlanmadı.
+- İki makalenin ETSI kaynak/izin açıklamaları ve kanıt manifestleri güncellendi;
+  iki kanıt denetimi ve PDF derlemesi geçti. Düzenlenebilir Word çıktıları ve
+  uyarıda durdurulan aktarım komutu eklendi; GEO denklem sözdizimi anlamı
+  değişmeden Word ile uyumlu hale getirildi. Sekiz NOT RUN sonuç satırı korundu.
+- E9 yayın kontrol listesi E10/E12 kararlarıyla uzlaştırıldı; kaynak tablosu
+  zorunlu 15 fit'i dokuz-fit tahminlerinden ayırıyor. Yol haritasında mevcut
+  üretim/eğitim adaptörleri ve hâlâ eksik üretim held-out yolu doğru ayrıldı.
+- Gerçek-fizik CPU zinciri 24 train/validation gözlemiyle çalıştı; iki epoch,
+  üç skor için kalibrasyon, freeze ve yerel yedek hash doğrulaması geçti.
+  Test okuması sıfır; validation macro-F1 0,02778/0, tanıma başarısı kanıtı değil.
+  İlgili 58 test geçti. Tam test sonucu doğrulama kaydında ayrı tutulur.
+- Tam test: 5.073 geçti / 2 envanter hatası / 10 ortam-platform atlaması.
+  İki hata ve yeni CPU çalıştırıcı sınırları 28 odaklı testle doğrulandı;
+  eksik kanıt envanteri kayıtları doğru belge/pilot sınıfıyla eklendi.
+- Donmuş bilimsel kaynaklar, kararlar, veri rolleri ve compute izinleri
+  değiştirilmedi; üretim, GPU ve nihai değerlendirme çalıştırılmadı.
+  `benchmark_complete=false`.
 
 ## P1 readiness reconciliation, M-14 drift and M-11 erratum — 2026-11-03
 

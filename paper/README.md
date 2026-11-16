@@ -34,7 +34,7 @@ code/protocol commitment before metrics is `13f79f9ffc824029d91c74299cbfe83131ea
 |---|---|
 | `manuscript.md`, `.tex`, `.pdf` | Editable source, compilable generated TeX and complete rendered paper |
 | `references.bib`, [literature_audit.md](literature_audit.md) | Fourteen primary citations; metadata/full-text/access limits and honest novelty assessment |
-| `evidence.json`, `audit_evidence.py` | Twenty hashed source files, 206 exact JSON-pointer values, 29 claim groups; aggregate-only numerical audit |
+| `evidence.json`, `audit_evidence.py` | Twenty-one hashed source files, 206 exact JSON-pointer values, 30 claim groups; aggregate-only numerical audit, including the documented ETSI provenance |
 | `figures/` | Four existing derived figures, PNG/PDF pairs copied byte-for-byte; original paths/source hashes in evidence manifest |
 | `build.sh`, `preamble.tex` | Document rendering only, two LaTeX passes, no shell escape; no simulations, data downloads or fitting |
 
@@ -49,6 +49,7 @@ Claim IDs map to the paper as follows:
 | T4 physical diagnostics | `T4.npr`, `.asi`, `.cuc`, `.cancellation`; distinct committed simulator summaries |
 | S1 exploratory failures | `S1.*`; historical pilot count matrices/results or explicitly preserved Pilot A report |
 | Historical B2 boundary | `M.P18_boundary`, `M.scientific_boundary`; frozen protocol and ratification register |
+| ETSI reference-data provenance | `M.etsi_provenance`; documented 36 MHz checks, 72 MHz/digitization limits and unverified written-permission placeholders |
 
 The verifier checks hashes and exact values, reconstructs all six AUROC/AP/FPR95
 summaries from stored grouped ROC endpoints, checks rate/count/class arithmetic,
@@ -59,6 +60,12 @@ observations. Those thresholds/intervals remain traced to their committed result
 Hash equality establishes consistency with a source, not independent truth of it.
 
 ## Verify and build
+
+Editable Word copies are also available as `manuscript.docx` and
+`geo_b2_manuscript.docx`. Regenerate both with `sh paper/export_docx.sh` from
+the repository root. The script audits the evidence first and fails on Pandoc
+warnings, including unsupported equations. Word pagination should be checked in
+the receiving word processor; the checked PDFs remain the layout reference.
 
 From the repository root:
 
@@ -130,6 +137,9 @@ invented for these documentation/arithmetic checks.
    discrepancy for the intended derived publication; retain attribution and
    avoid raw-file redistribution. OpenDPD code licensing is not a new independent
    measurement-data license. This package does not relicense third-party data.
+   ETSI permission is researcher-reported; its written reference, date and scope
+   remain unverified placeholders in both manuscripts. See the
+   [provenance record](../docs/research/ETSI_DERIVED_DATA_PROVENANCE.md).
 2. **Authorship and venue:** agree authors, affiliations, contributions and a
    reproducibility/comparative-methods venue. Primary-source checks do not prove
    priority or sufficient novelty for a new-method research article.
