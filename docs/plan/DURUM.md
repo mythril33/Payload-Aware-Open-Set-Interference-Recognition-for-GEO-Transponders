@@ -1,5 +1,22 @@
 # Proje durumu ve eksik kaydı
 
+## Windows kaynak kimliği düzeltmesi — 2026-11-16
+
+- PR #67'nin `0f02988` commit'inde makale denetimi ve iki PDF derlemesi geçti
+  (Actions 43869451119). Windows tek-tık kurulum/başlatma/kapatma işi geçti;
+  ayrı test işi 485 geçti / 2 hata / 11 atlama ile durdu (43869451074).
+- İki hata `install-git` sonrası kaynak baytlarının LF yerine CRLF olmasıydı.
+  Kullanıcının `core.autocrlf` / `core.eol` ayarı klona taşınıyordu. Hata gerçek
+  geçici Git bundle ile Linux'ta da yeniden üretildi.
+- Kurulum yeni klonda, checkout öncesi yerel `core.autocrlf=false` ve
+  `core.eol=lf` ayarlıyor. Kullanıcının genel ayarları değişmiyor; depoda açıkça
+  belirtilen `.gitattributes` CRLF kuralları korunuyor. Byte-eşitlik testleri
+  gevşetilmedi; üç farklı devralınan ayar için regresyon testleri eklendi.
+- Yerel gerçek Git entegrasyonu üç ayarda geçti: kaynak LF baytları, açık CRLF
+  launcher kuralı, temiz/tam geçmişli checkout ve genel ayarların korunması.
+  Windows ve tam depo pytest sonuçları yeni commit'in CI'ında doğrulanacak.
+  Bilimsel kaynak, deney reçetesi ve geçmiş sonuçlar değişmedi.
+
 ## CPU tesliminin entegrasyonu ve kesinti yönetimi — 2026-11-15
 
 - Ana dal `ea68e991` (PR #66) ile 4 Kasım CPU teslimi uzlaştırıldı; Windows

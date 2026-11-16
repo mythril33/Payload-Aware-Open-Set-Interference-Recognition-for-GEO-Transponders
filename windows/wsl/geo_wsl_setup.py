@@ -28,7 +28,10 @@ Subcommands
     and move the clone into place with the ``install`` replace rules (13, 14).
     Training records ``git rev-parse HEAD`` as checkpoint provenance, so the
     WSL source must be a genuine checkout of the packaged commit. ``git``
-    missing from PATH exits 17 (this script never installs it); any clone or
+    is configured locally with ``core.autocrlf=false`` and ``core.eol=lf``
+    before checkout so inherited Windows settings cannot rewrite source LF
+    bytes. Committed ``.gitattributes`` rules still apply.
+    Git missing from PATH exits 17 (this script never installs it); any clone or
     verification failure exits 20 and leaves the staging directory in place.
 ``venv [--src DEST] [--json]``
     Accept DEST when it is a Git checkout (HEAD resolves, no change under
@@ -415,7 +418,11 @@ def install_git(bundle: Path | str, commit: str, dest: Path | str = DEFAULT_DEST
                         f"{message}; the staging clone is kept for inspection at {staging}",
                         staging=str(staging), steps=steps, output=tail, **base)
 
-    cloned = step("clone", "--no-checkout", str(bundle), str(staging))
+    # Checkpoints bind source bytes, not just the commit id. Configure the new
+    # repository before checkout; the user's global settings remain untouched.
+    # Explicit eol attributes (e.g. CRLF launchers) continue to take precedence.
+    cloned = step("clone", "--no-checkout", "--config", "core.autocrlf=false",
+                  "--config", "core.eol=lf", str(bundle), str(staging))
     if cloned.returncode != 0:
         return failed("git clone of the bundle failed", cloned.output)
     checkout = step("-C", str(staging), "checkout", "--detach", commit)
@@ -612,3 +619,4 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
