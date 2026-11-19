@@ -358,6 +358,26 @@ def test_install_git_checks_out_an_older_commit_detached(source_repo, tmp_path):
     assert _git(dest, "symbolic-ref", "-q", "HEAD").returncode != 0
 
 
+@pytest.mark.parametrize("autocrlf", ["true", "input", "false"])
+def test_install_git_preserves_source_bytes_under_inherited_line_endings(
+        source_repo, tmp_path, monkeypatch, autocrlf):
+    repo, ids, bundle = source_repo
+    global_config = tmp_path / "global.gitconfig"
+    settings = f"[core]\n\tautocrlf = {autocrlf}\n\teol = crlf\n"
+    global_config.write_text(settings, encoding="utf-8")
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(global_config))
+    dest = tmp_path / "dest"
+    assert W.install_git(bundle, ids[-1], dest)["exit_code"] == 0
+    original = subprocess.run(["git", "-C", str(repo), "show",
+                               f"{ids[-1]}:src/geosim/x.py"],
+                              check=True, capture_output=True).stdout
+    assert (dest / "src/geosim/x.py").read_bytes() == original == b"X = 2\n"
+    assert _git_out(dest, "config", "--local", "core.autocrlf") == "false"
+    assert _git_out(dest, "config", "--local", "core.eol") == "lf"
+    assert global_config.read_text(encoding="utf-8") == settings
+    _assert_genuine_checkout(dest, ids[-1])
+
+
 def test_install_git_refuses_a_commit_absent_from_the_bundle_and_keeps_staging(source_repo, tmp_path,
                                                                                 capsys):
     repo, ids, bundle = source_repo
@@ -700,3 +720,4 @@ def test_verify_agrees_with_pilot_source_identity(tmp_path, case):
     assert theirs["verified"] == mine["verified"], (mine["problems"], theirs["problems"])
     assert theirs["manifest_sha256"] == mine["manifest_sha256"]
     assert theirs["commit"] == mine["commit"]
+
