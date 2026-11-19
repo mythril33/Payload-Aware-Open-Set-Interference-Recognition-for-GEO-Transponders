@@ -1,5 +1,12 @@
 # Payload-Aware Open-Set Interference Recognition for GEO Transponders
 
+**19 Kasım 2026 — tam B2 değerlendirme kodu:** Kullanıcının 17 Kasım kararıyla
+birincil skor **Mahalanobis**; MSP ve Energy de raporlanacak. Donmuş 15 modeli
+değerlendiren ve kayıtlı tahminlerden H1/H2/H3 tabloları ile PNG/PDF grafik
+üreten yol eklendi. [Çalıştırma kılavuzu](docs/engineering/B2_PRODUCTION_EVALUATION.md).
+Tam veri üretimi ve 15 modelin gerçek eğitimi henüz yapılmadı; aşağıdaki CPU
+sonuçları ayrı B1 geliştirme deneyidir. Tarihli eski durum notları tarihsel kayıttır.
+
 **CPU deneyi tamamlandı — 2026-11-04:** 716 fiziksel gözlem ve üç eğitim tohumu,
 yaklaşık altı dakika alt-süreç duvar süresi. Dört bilinen sınıfta ortalama doğruluk
 %70,25; açık-küme reddi zayıf. Bu tek-pol **B1-dev/2 geliştirme** sonucudur;

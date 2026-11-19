@@ -77,6 +77,14 @@
       },
       "rationale": "status SCIENTIFIC_PROTOCOL_APPROVED_NOT_EXECUTABLE; approved record, no executor"
     },
+    "docs/plan/b2_primary_scorer_2026-11-17.json": {
+      "class": "GATE_OR_APPROVAL",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "explicit pre-test Mahalanobis primary-scorer designation; not compute or held-out access authority"
+    },
     "docs/plan/b2_readiness_gates_2026-10-21.json": {
       "class": "GATE_OR_APPROVAL",
       "heldout_raw_matches": {

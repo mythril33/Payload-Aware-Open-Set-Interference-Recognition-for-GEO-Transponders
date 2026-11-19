@@ -1,0 +1,6 @@
+{
+  "primary_scorer": "mahalanobis",
+  "approved_by": "Researcher: explicit user reply in the project conversation on 2026-11-17",
+  "approved_at": "2026-11-17T10:53:10+03:00",
+  "record": "User selected 'Mahalanobis — mevcut öneri' in reply to request_user_input_async call_d5422da28d7b4f0abd67aca4de29946b, item 0, before the full GEO held-out evaluation. The question stated that MSP and Energy would also be reported. approved_at is the time this existing approval was recorded, not a claimed exact message timestamp. Scope: primary scorer for B2-C2 and D-4 only; no compute, GPU or held-out access authorization is supplied by this record. See docs/engineering/B2_PRODUCTION_EVALUATION.md."
+}
