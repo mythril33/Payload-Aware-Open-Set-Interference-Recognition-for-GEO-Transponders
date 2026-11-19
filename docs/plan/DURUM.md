@@ -1,5 +1,41 @@
 # Proje durumu ve eksik kaydı
 
+## Tam B2 değerlendirme ve raporlama uygulaması — 2026-11-19
+
+- Kullanıcının 17 Kasım açık yanıtıyla birincil skor **Mahalanobis** olarak
+  [kaydedildi](b2_primary_scorer_2026-11-17.json). MSP ve Energy karşılaştırma
+  skorlarıdır. Eski kayıtlardaki NOT DESIGNATED ifadeleri o tarihlere aittir.
+- Yeni `geoml.b2_production_evaluation` iki donmuş envanterin 9 + 6 modelini
+  kanonik → eşleşmiş sırasıyla değerlendirir. Yalnız bilinen kalibrasyonla
+  dondurulmuş eşikler kullanılır; yeniden eğitim veya eşik seçimi yapılmaz.
+  Gerçek K17d metadata kontrolü gözlemlerden önce yapılır; D-1 498/148 ve
+  K17d 35/465 alt grupları ayrıca raporlanır. Harici günlük tamamlanmadan
+  çıktı tamamlandı sayılmaz. Gerçek portlar bu ortamda kurulmuş değildir.
+- Yeni `geoml.b2_production_reporting`, iki profilin çıktı hash'lerini,
+  tam tohum/görünüm listesini, örnek kimliklerini ve ortak kökenini doğrular;
+  yakın-aile FPR@95TPR değerlerini kaydedilen skorlardan yeniden hesaplar.
+  H1/H2/H3 eşleşmiş senaryo-grubu bootstrap tabloları ve PNG/PDF grafikleri
+  üretir. Birincil skoru kampanyadan alır; sonuç sonrası seçim seçeneği yoktur.
+- İncelemede üretim envanterinin kaynak hash haritasıyla tam kaynak nesnesi
+  arasındaki uyumsuzluk ve eşleşmiş kümede alarm çıkarma-toplama yuvarlama
+  farkı düzeltildi. Yeni yolda alarm kalibrasyonu, metrikler ve kayıtlı
+  kararlar aynı D-6 `sum(P(non-clean))` hesabını kullanır. Eski hash'li
+  bilimsel modüller ve arşivlenmiş sonuçlar değiştirilmedi.
+- Windows düzeltmesi PR #68 başında hem Windows paket CI'ından
+  (44040289028) hem tam B2 readiness CI'ından (44040289052) geçti.
+  Bu CI sonuçları yeni değerlendirme modüllerine ait değildir.
+- Yerel Linux/Python 3.12, PyTorch 2.15 CPU: değerlendirme, raporlama, üretim
+  eğitimi, kampanya, C2 kontrast ve E14 metadata testlerinde **197 geçti**.
+  Gerçek bootstrap/PNG/PDF üretimi sentetik skorlarla doğrulandı; RF sonucu
+  olarak arşivlenmedi. CPU arşivi ve iki makalenin kanıt denetimleri geçti:
+  10/21/66 dosya hash'i, 45 ROC/AP/OSCR popülasyonu, 206 kesin değer;
+  GEO taslağındaki sekiz NOT RUN sonuç satırı korundu.
+- Tam B2 veri üretimi, 15 fit, gerçek held-out değerlendirmesi ve fiziksel
+  Windows/WSL2 kurulumu hâlâ yapılmadı. Dahili GPU'lu 16 GB RAM Windows 11
+  bilgisayarı için CPU/WSL yolu belgeli; tam süre ölçülmedi. Yeni yazılımın
+  sentetik doğrulaması tanıma başarısı değildir; `benchmark_complete=false`.
+  [API ve çalıştırma kılavuzu](../engineering/B2_PRODUCTION_EVALUATION.md).
+
 ## Windows kaynak kimliği düzeltmesi — 2026-11-16
 
 - PR #67'nin `0f02988` commit'inde makale denetimi ve iki PDF derlemesi geçti
