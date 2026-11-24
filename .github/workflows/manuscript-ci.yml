@@ -29,3 +29,5 @@ jobs:
         run: sh paper/build.sh
       - name: Compile separate GEO manuscript (no shell escape, no raw data)
         run: sh paper/build_geo_b2.sh
+      - name: Build GEO CNN experiment paper in Word and PDF
+        run: sh paper/build_geo_cnn.sh

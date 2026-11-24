@@ -1,4 +1,17 @@
-# Complete manuscript V1
+# GEO deep learning paper
+
+**Deep Learning for Satellite Interference Recognition** reports two CNN
+experiments on simulated GEO downlinks and measured Fraunhofer FIOT GNSS
+laboratory spectrograms.
+Download the [editable Word paper](geo_cnn_paper.docx) or [PDF](geo_cnn_paper.pdf).
+The [Markdown source](geo_cnn_paper.md) is shared by both formats. The project
+[quick start](../README.md) links both experimental procedures and results.
+
+Run `sh paper/build_geo_cnn.sh` from the repository root to rebuild both formats
+with Pandoc, Python and pdfLaTeX installed. The build checks the experiment archive
+before rendering. The earlier comparative manuscript is indexed below.
+
+## Complete manuscript V1
 
 **Observable-Dependent Interference Detection: Measured GNSS Evidence and
 Payload-Aware GEO Simulation** — 26 October 2026.

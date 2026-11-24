@@ -1,355 +1,70 @@
-# Payload-Aware Open-Set Interference Recognition for GEO Transponders
+# GEO uydu girişimini derin öğrenmeyle tanıma
 
-**19 Kasım 2026 — tam B2 değerlendirme kodu:** Kullanıcının 17 Kasım kararıyla
-birincil skor **Mahalanobis**; MSP ve Energy de raporlanacak. Donmuş 15 modeli
-değerlendiren ve kayıtlı tahminlerden H1/H2/H3 tabloları ile PNG/PDF grafik
-üreten yol eklendi. [Çalıştırma kılavuzu](docs/engineering/B2_PRODUCTION_EVALUATION.md).
-Tam veri üretimi ve 15 modelin gerçek eğitimi henüz yapılmadı; aşağıdaki CPU
-sonuçları ayrı B1 geliştirme deneyidir. Tarihli eski durum notları tarihsel kayıttır.
+Bir GEO uydusunun alıcıda gözlenen spektrumundan girişim türü tanınabilir mi?
+Bu projede PyTorch ile eğitilen küçük bir **ResNet**, simüle edilmiş tek
+kutuplu downlink spektrogramını ve planlanan taşıyıcıların frekans maskesini
+işler. Model temiz sinyali, sürekli dalgayı (CW), yetkisiz taşıyıcıyı ve
+yükseltecin aşırı sürülmesini sınıflandırır. Deney ayrıca üç açık küme
+skorunun eğitimde bulunmayan sinyal türlerini ayırt etme başarısını ölçer.
 
-**CPU deneyi tamamlandı — 2026-11-04:** 716 fiziksel gözlem ve üç eğitim tohumu,
-yaklaşık altı dakika alt-süreç duvar süresi. Dört bilinen sınıfta ortalama doğruluk
-%70,25; açık-küme reddi zayıf. Bu tek-pol **B1-dev/2 geliştirme** sonucudur;
-sekiz sınıflı çift-pol B2 sonucu değildir.
-[Sonuçlar ve grafikler](docs/results/CPU_DELIVERY_2026-11-04.md) ·
-[PDF rapor](docs/results/CPU_DELIVERY_2026-11-04.pdf) ·
-[Word rapor](docs/results/CPU_DELIVERY_2026-11-04.docx) ·
-[CPU üzerinde tekrarlama](research/cpu_delivery/README.md).
+[Makale (Word)](paper/geo_cnn_paper.docx) ·
+[Makale (PDF)](paper/geo_cnn_paper.pdf) · [Markdown kaynak](paper/geo_cnn_paper.md)
 
-**8 Kasım Pazar teslimi — 2026-11-04:** hedef kod + deney sonuçları + rapor.
-[Teslim planı](docs/plan/DELIVERY_2026-11-08.md),
-[gerçek çalıştırma ve doğrulama kaydı](docs/results/DELIVERY_VALIDATION_2026-11-04.md),
-[GEO taslağı (PDF)](paper/geo_b2_manuscript.pdf) / [Word](paper/geo_b2_manuscript.docx),
-[mevcut ölçülmüş sonuçlara dayalı ayrı makale (PDF)](paper/manuscript.pdf) /
-[Word](paper/manuscript.docx). GEO sonuç tabloları **NOT RUN**; yeni küçük CPU
-çalıştırması eğitim/kalibrasyon hattını doğrular, tam B2 tanıma başarısını değil.
+Fraunhofer FIOT ölçümleriyle ikinci bir deney tamamlandı. CNN, hazır RGB
+spektrogramları üzerinde yeniden eğitildi ve 227 bilinen GNSS test kaydında
+**%91,63 doğruluk** elde etti. Energy skoru, eğitim dışında bırakılan 16 Chirp
+kaydının her eğitimde 5–8'ini reddetti. Bu deneyin eğitim ve test etiketleri
+Fraunhofer'a ait. [FIOT sonuçları ve grafik](docs/results/FIOT_CNN_2026-11-24.md)
 
-**Status update — 2026-11-03 (baseline `8aa6645`).** E9/E12 scientific-method decisions are approved, but **no full-scale compute, GPU qualification/training, LOKO or final held-out read is authorized**. Readiness checklist: PASS 39 / FAIL 0 / BLOCKED 16 / NOT_RUN 1; `benchmark_complete=false`. The B2 readiness and Windows package GitHub Actions runs on baseline main passed. This is a working research software stack, **not a completed GEO recognition benchmark**. See [current decisions and gates](CLAUDE.md), [project log](docs/plan/DURUM.md), [K17d M-14 drift table](docs/results/B2_K17D_M14_DRIFT_TABLE.md) and [M-11 estimate erratum](docs/results/B2_P1_RESOURCE_ERRATA.md). Sections below contain dated historical implementation snapshots.
+## Deney ne gösterdi?
 
+4 Kasım 2026'da tamamlanan CPU deneyinde **716 simülasyon gözlemi** üretildi.
+Aynı eğitim ve test verileriyle üç farklı başlangıçtan, her biri 10 epoch
+olacak şekilde model eğitildi. CNN'in 158 bilinen test örneğindeki ortalama
+doğruluğu **%70,25** oldu (üç eğitimde %69,62–%70,89). Testte ayrıca 160
+bilinmeyen örnek kullanıldı. Bilinmeyen örnekler eşik ve model seçiminden
+ayrı tutuldu.
 
-**E7b execution engineering (2026-10-24):** verified base main
-`ed65eb54632fc4373accebc88452ddf0ff9fadfe` includes merged PR #22 and
-PR #23. The additive [P31 execution path](docs/plan/P31_b2_e7b_isolated_execution.md)
-separates `train-only`, `calibrate`, `freeze` and `evaluate`: fitting and
-Mahalanobis statistics read train only, selection reads val-select, and a
-separate known-val-calib step freezes thresholds. Proposed-full evaluation
-verifies all three views × three explicit seeds before the first test
-observation or inference. The new modes are capped CPU smoke only
-(two groups/role, two epochs, width≤8, batch≤32); legacy coupled pilots
-remain available with at most12groups/role. Bounded LOKO plans seven
-non-clean holdouts × three seeds × selected views, but an immutable output
-selection can execute at most two smoke cells; no21/63-fit launch exists.
-See [delivery evidence](docs/results/b2_e7b_execution.md) for actual E7b
-tests and [R1–R10 recommendations](docs/plan/B2_E7B_DECISION_RECOMMENDATIONS.md)
-for unapproved choices. Source-hash changes invalidate historical checkpoint
-reuse; no checkpoint is relabelled. Width16 is a candidate, not an
-authorization. All researcher/production gates remain pending/closed and
-`benchmark_complete=false`.
+| Açık küme skoru | Bilinmeyen AUROC | Sabit eşikte bilinmeyen reddi |
+| --- | ---: | ---: |
+| Maksimum softmax olasılığı (MSP) | 0,6191 | %2,29 |
+| Energy | 0,5647 | %1,25 |
+| Mahalanobis | 0,3314 | %1,67 |
 
-The base PR #23 head `7a46f5774ddcf9f99af425265a6b0cc2b0ebdb57` passed
-[run40047344666/job120731984575](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40047344666/job/120731984575):
-107E4 tests in106.48s plus1525passed/7skipped in716.07s,1632passed
-in total. The raw `-q` log did not print skip reasons; no particular skip
-node or cause is inferred. This is base-head evidence, not E7b-head CI.
-The E7a readiness paragraph below is a historical snapshot.
+Tablo üç eğitim tohumunun ortalamasıdır. AUROC'da bilinmeyen örnekler
+pozitiftir ve skor büyüdükçe örnek daha bilinmeyen sayılır. Eşikler yalnız
+bilinen kalibrasyon örneklerinde belirlendi. CNN bilinen sınıfları ayırt
+edebildi, ancak bu eşiklerde bilinmeyenlerin büyük çoğunluğunu kabul etti.
+Bulgular tek kutuplu simülasyon ve bu test örnekleriyle sınırlıdır.
+[Deney raporu ve grafikler](docs/results/CPU_DELIVERY_2026-11-04.md) ·
+[Sayısal sonuçlar](docs/results/cpu_delivery_2026-11-04.json)
 
-**B2 production supervisor (E7a, merged; post-merge hotfix 2026-10-24):** verified main `0e8c467` contains merged PR #22 (the independent-review hardening; Actions [run 40035525938](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/40035525938): 1486 passed, 7 skipped + E4 step) after PR #21 (first E7a state), PR #20 (E6, run 40004028017: 1333 passed). E7a adds a fail-closed [staged production supervisor](docs/plan/P30_b2_e7a_production_supervisor.md) (dry run by default; known -> test-only -> matched; immutable lock, anchored hash-chained journal, ceilings, heartbeats, first-shard timing gate, interruption and orphan quarantine; bounded to two groups per stage, the production launch is not implemented), observation-only K18 training diagnostics, a candidate [training specification](docs/plan/B2_E7_TRAINING_SPEC_PROPOSAL.md) (not frozen, not approved; decisions R1-R10) and a capped real-physics [verification](docs/results/b2_e7a_supervisor_verification.md). The hotfix branch adds the fixes of a second read-only audit. [Readiness checklist](docs/plan/B2_E6_PRODUCTION_READINESS_CHECKLIST.md): PASS 31 / FAIL 1 / BLOCKED 15 / NOT_RUN 1. No full generation, GPU training or LOKO was run; all gates remain closed and `benchmark_complete=false`. Earlier sections below are historical development records; [current status](docs/plan/DURUM.md) supersedes their pending-work snapshots.
+## Windows 11'de çalıştırma
 
-## Windows research workbench (software, not benchmark evidence)
+Bu CPU deneyi için Git ve Python 3.12 yeterli. WSL2 veya CUDA gerekmez.
+PowerShell'de şu komutları çalıştır:
 
-The repository ships a native Windows package (installer `windows/KURULUM.bat`, no
-admin rights, no GPU, no API key) that installs two **separate** applications with
-separate virtual environments (`.venv-dashboard`, `.venv-rfml`), launched via desktop
-shortcuts: the governed **Track A** research dashboard (`dashboard/app.py`) and the
-independent **Track B** learning app (`learning/rfml-basics/app.py`). The Track A /
-Track B separation is strict: the two apps share no data, no models and no scientific
-claims. The apps are Python/Streamlit script launchers (`.bat` + PowerShell), not a
-standalone `.exe`. The package is built and smoke-tested by the "Windows package CI"
-workflow on `windows-latest` and distributed as the `Payload-Aware-GEO-Workbench-Windows`
-CI artifact; no GitHub Release is published. This is a SOFTWARE delivery only: it
-executes no gated experiment and changes no scientific status (`benchmark_complete=false`;
-production, GPU, LOKO and held-out evaluation remain unauthorized). See
-[windows/BENIOKU.md](windows/BENIOKU.md) (Turkish quick start) and
-[dashboard/README.md](dashboard/README.md) (including its Native Windows section).
-
-**One-click bounded pilot (WSL2).** The desktop shortcuts *GEO Workbench*, *GEO Pilot
-Başlat*, *GEO İşlem Durdur* and *GEO Workbench Kapat* open the workbench, start the
-existing allowlisted `real-exercise` (one group per development role, CPU only,
-train/val-select/val-calib only), cancel it safely and close the services. The genuine RF
-pipeline needs POSIX, so it runs in WSL2 Ubuntu: the one-time, consent-gated *GEO WSL
-Kurulumu* clones the package's full-history Git bundle (`geo-source.bundle`, the exact
-packaged commit) into WSL and creates its virtual environment. Without WSL2 the
-workbench opens natively in inspection mode and the pilot is refused with setup
-guidance. A pilot proves the functional generate → train → calibrate → freeze flow; it is
-not a recognition-performance result and not the 21,350-observation benchmark. Test
-evidence: [docs/engineering/WINDOWS_ONECLICK_TEST_REPORT.md](docs/engineering/WINDOWS_ONECLICK_TEST_REPORT.md).
-
-GEO bent-pipe transponderindeki girişimi, operatörün downlink spektrum izlemesinden tanıyan derin öğrenme çalışması. Ders projesi; makaleye genişletilecek.
-
-- Plan ve kararlar: `docs/plan/` (`00_ana_plan.md` ile başlayın)
-- Simülatör: `src/geosim/` — şartname `docs/plan/P2_sistem_modeli.md`, kullanım `docs/plan/P4_simulator_tasarim.md`
-
-```
-pip install -e .[dev]
-pytest
+```powershell
+git clone https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders.git geo-cnn
+Set-Location geo-cnn
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install "torch==2.15.0+cpu" --index-url https://download.pytorch.org/whl/cpu
+.\.venv\Scripts\python.exe -m pip install -e ".[dev,ml]"
+.\.venv\Scripts\python.exe research/cpu_delivery/run.py --out "$env:USERPROFILE\geo-cnn-results"
 ```
 
-Simülatör, DVB-S2 referans transponderinden türetilmiş verilerle birlikte gelir (`src/geosim/data/`). Ham ETSI dosyaları depoda değildir; yeniden üretmek için `docs/plan/kaynak_transponder_modeli.md` içindeki bağlantılardan indirip `data/` altına koyun ve `scripts/` altındaki iki betiği çalıştırın.
+Çıktı için depo dışında yeni bir klasör seç. Deney veri üretimini, üç
+eğitimi, değerlendirmeyi ve grafik üretimini sırayla yapar. Sonuçları çıktı
+klasöründeki `summary.md`, `summary.json` ve `figures/` altında bulabilirsin.
+Arşivlenen Linux çalıştırmasında veri üretimi ve eğitim alt süreçleri yaklaşık
+6 dakika sürdü. Windows'ta uçtan uca çalıştırma henüz doğrulanmadı.
+[Linux komutları ve deney kılavuzu](research/cpu_delivery/README.md)
 
-## First open-set development experiment
+## Kod
 
-The `B1-dev/1` runner connects the existing ResNet to MSP and energy rejection.
-By default, `swept_cw` is excluded from training, model selection and calibration,
-then evaluated as an unknown family. `clean` remains a known reference.
+- [Simülatör](src/geosim/dataset.py) ve [bilinmeyen sinyal üretimi](src/geosim/unknowns.py)
+- [ResNet modeli](src/geoml/model.py), [eğitim](src/geoml/train.py) ve [açık küme değerlendirmesi](src/geoml/experiment.py)
+- [Tek komutla çalıştırıcı](research/cpu_delivery/run.py) ve [deney ayarları](configs/cpu_delivery.json)
 
-```bash
-pip install -e '.[dev,ml]'
-export OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2
-python -m geosim.dataset --out data/openset-pilot --splits train_nl val_nl test_id_nl --limit-seeds 6 --workers 2
-python -m geoml.experiment --config configs/stage_b_openset.json --data data/openset-pilot --out runs/openset-pilot
-```
-
-In the prepared cloud environment, activate `/workspace/.venvs/geosim/bin/activate`
-instead of reinstalling dependencies. Reports, predictions, checkpoint and rejection
-calibrators are saved under the output directory. Add `--reuse` to the experiment
-command to reuse matching artifacts. Use a fresh data directory when generation
-parameters or generator source change; existing shards are validated before reuse.
-
-This tiny run validates execution, not recognition quality. It does not implement
-the final eight-class/dual-polarization benchmark. See the [implementation plan](docs/plan/P10_implementation_structure.md)
-and [development protocol and commands](docs/plan/P11_openset_development.md).
-
-## Extended unknown-family experiment
-
-`B1-dev/2` adds test-only pulsed, wideband-noise and intermittent-burst sources,
-training-only regularized Mahalanobis scoring, and unknown-positive AUROC/AP plus
-OSCR curves. It reports each family separately and pooled, using the same frozen
-known-only calibration for all test families.
-
-```bash
-python -m geosim.dataset --out data/openset-v2 --splits train_nl val_nl test_id_nl --limit-seeds 6 --workers 1
-python -m geosim.unknowns --out data/unknowns-v1 --n-seeds 6
-python -m geoml.experiment --config configs/stage_b_unknowns.json --data data/openset-v2 --unknown-data data/unknowns-v1 --out runs/openset-v2
-```
-
-See [unknown-source definitions](docs/plan/P12_unknown_events.md) and
-[extended protocol, metric conventions and reuse](docs/plan/P13_extended_openset.md).
-Reusable coding-agent briefs are versioned in [.agents/](.agents/README.md), with
-repository instructions in [AGENTS.md](AGENTS.md).
-
-## Dual-polarization leakage development
-
-`D1-dev/1` adds separate polarization payload paths, physical uplink/downlink
-coupling and receiver calibration from independent pilots. Each feed has its own
-operator carrier plan. The matched models use co-pol spectrum/plan (two channels)
-or both spectra/plans (four channels), with one shared power reference.
-
-```bash
-python -m geosim.dual_dataset --out data/dual-pilot --n-seeds 6
-python -m geoml.dual_experiment --config configs/dual_polarization.json --data data/dual-pilot --out runs/dual-pilot
-```
-
-This controlled `clean` versus `cross_pol` experiment tests a simulated uplink-XPD
-change. It is not the final eight-class open-set benchmark or proof of a unique
-physical cause. Calibration corrects instrument response while retaining
-propagation leakage. See [physics, data and experiment details](docs/plan/P14_dual_polarization.md).
-
-## Phase noise and received interference
-
-`E1-dev/1` adds common satellite/receiver oscillator phase noise and a paired
-three-class task: clean, carrier-under-carrier uplink interference and received
-adjacent-satellite interference. The downlink event bypasses the wanted payload.
-Both model views share scenario partitions and training budgets.
-
-```bash
-python -m geosim.event_dataset --config configs/interference_events_data.json --out data/events-pilot
-python -m geoml.dual_experiment --config configs/interference_events.json --data data/events-pilot --out runs/events-pilot
-```
-
-The linewidth and power ranges are exploratory engineering assumptions. This
-closed-set task tests simulator causes; PSD alone does not uniquely establish
-satellite origin or authorization. See [physical stages, contracts and reuse](docs/plan/P15_phase_noise_and_events.md).
-
-## Robustness evaluation (R1-eval/1)
-
-Test-only splits with their own protocol name and seeds: a back-off sweep (nominal
-5–14 dB, overdrive 0–5 dB), a Rapp SSPA and two memory polynomials fitted to OpenDPD
-solid-state Doherty PA measurements (nominal back-off only). The evaluator reloads
-Stage A checkpoints without retraining and reports the payload gap per 1 dB back-off
-bin, ECE, FPR@95TPR and thresholded detection. Keep R1 data in its own directory.
-
-```bash
-python -m geosim.dataset --protocol R1-eval/1 --out data/r1 --workers 4
-python -m geoml.robustness --data data/stageA --runs runs/stageA --r1 data/r1 --out runs/r1
-```
-
-The OpenDPD devices are not TWTAs; the measured-RMS-to-back-off mapping and memory-tap
-scaling are assumptions. See [protocol, assumptions and validation](docs/plan/P17_r1_robustness_eval.md).
-
-## B2 known physical observations
-
-The completed preliminary `B2-base/1` artifact stage connected the frozen B2/1
-roles and eight known classes. Operator plans remain intact when a planned
-carrier is absent, with fixed nominal gain and preserved waveform RNG streams.
-
-```bash
-python -m geosim.b2_dataset --config configs/b2_base.json --out data/b2-base-pilot --limit-groups 2 --groups-per-shard 1
-```
-
-This historical stage emits paired spectra, operator masks and a separate
-plan-consistency target. It has no cancellation channel, and its manifest marks
-the benchmark incomplete. See [contracts, sampling assumptions and reuse](docs/plan/P19_b2_base_observations.md).
-
-## B2 cancellation residual and five-channel model
-
-`B2-feat/1` adds the observation-based co-pol cancellation residual (fifth model
-channel, P18 §5) computed at generation time from the calibrated co-pol monitor IQ
-and the co-pol operator plan only. `geoml.b2_experiment` trains matched
-`co`/`dual`/`dual_residual` models with an independent `plan_consistency` head and a
-pre-registered center-loss weight on the frozen P18 roles.
-
-```bash
-python -m geosim.b2_dataset --config configs/b2_base.json --cancellation configs/cancellation.json --out data/b2-feat-pilot --limit-groups 2 --groups-per-shard 1
-python scripts/check_b2_cancellation.py --data data/b2-feat-pilot --out runs/b2-feat-pilot/cancellation_check.json
-python -m geoml.b2_experiment --config configs/b2_feat.json --data data/b2-feat-pilot --out runs/b2-feat-pilot
-```
-
-The pilot shows the paired clean/under-carrier visibility rising from 1 dB to 6.5 dB
-median after cancellation; the tiny learning run is at chance and proves execution only.
-Unknown families, CID overlays and the matched ASI set are not generated yet. See
-[P20](docs/plan/P20_b2_cancellation_residual.md) and the [pilot report](docs/results/b2_feat_pilot.md).
-Claude Code context lives in [CLAUDE.md](CLAUDE.md), `.claude/rules/` and `.claude/skills/`.
-
-## B2 test-only families and open-set evaluation
-
-`B2-test/1` generates the five pre-registered test-only families (`pulsed`,
-`intermittent_bursts`, `adjacent_satellite_downlink`, `wideband_noise`, `cid_overlay`) for
-frozen test groups only, bound to a verified known artifact (same plans, streams and
-receiver calibration). `geoml.b2_experiment --unknown-data` scores them with the frozen
-checkpoints and thresholds; the K17b training plan-shift augmentation is enabled in
-`configs/b2_feat.json`.
-
-```bash
-python -m geosim.b2_test_dataset --out data/b2-test-pilot --known data/b2-feat-pilot --config configs/b2_base.json --cancellation configs/cancellation.json --limit-groups 2 --groups-per-shard 1
-python scripts/check_b2_test_families.py --known data/b2-feat-pilot --test data/b2-test-pilot --out runs/b2-test-pilot/family_check.json
-python -m geoml.b2_experiment --config configs/b2_feat.json --data data/b2-feat-pilot --unknown-data data/b2-test-pilot --out runs/b2-feat-pilot-os
-```
-
-The pilot run is at chance and proves execution only. The matched ASI set is implemented below; full LOKO rotations and
-full production remain. See [P21](docs/plan/P21_b2_test_families.md) and the
-[pilot report](docs/results/b2_test_pilot.md).
-
-## B2 level-matched ASI versus unauthorized set (K17c)
-
-`B2-match/1` generates the frozen `test-matched` role (groups 3 300 000–3 300 149): per group a
-`clean`, an `adjacent_satellite` and an `unauthorized` variant that share plans, link, streams,
-activity, calibration, cancellation setting, carrier descriptor and one C/I_psd target from
-U(4, 13) dB, differing only in placement (plan overlap versus free gap). It is a controlled
-intervention, not the natural level distribution. `geoml.b2_experiment --matched-data` scores it
-with frozen checkpoints and thresholds (2×2 among the pair with clean/other/rejected counted,
-per-bin metrics, natural comparison, paired spectrogram figures).
-
-```bash
-python -m geosim.b2_matched_dataset --out data/b2-match-pilot --known data/b2-feat-pilot --config configs/b2_base.json --cancellation configs/cancellation.json --limit-groups 2 --groups-per-shard 1
-python scripts/check_b2_matched.py --matched data/b2-match-pilot --out runs/b2-match-pilot/matched_check.json --oracle-groups 2
-python -m geoml.b2_experiment --config configs/b2_feat.json --data data/b2-feat-pilot --unknown-data data/b2-test-pilot --matched-data data/b2-match-pilot --out runs/b2-full-pilot
-python scripts/profile_b2_generation.py --stage matched --known data/b2-feat-pilot --config configs/b2_base.json --cancellation configs/cancellation.json --groups 20 --groups-per-shard 4 --out-data data/b2-match-profile --report runs/profile/matched_20_cancel.json
-```
-
-See [P22](docs/plan/P22_b2_matched_asi.md), the [matched pilot](docs/results/b2_matched_pilot.md) and the
-[production budget](docs/results/b2_production_budget.md). Pilots are at chance; full production and
-GPU training wait for the researcher's authorization (K18, K17d, compute).
-
-## B2 streaming data path (E1)
-
-`geoml.b2_experiment` no longer loads whole roles: `geoml.b2_stream` verifies each artifact once, shard
-by shard, keeps only small per-sample arrays resident, trains on windows of `window_shards` verified
-shards (deterministic shard/sample order, exact `ceil(N/batch)` steps per epoch) and infers one shard at a
-time. With a single window the result is bit-identical to the former in-memory path; the memory bound is
-measured on fixtures, not claimed for full scale.
-
-```bash
-python scripts/profile_b2_experiment_memory.py --data data/b2-feat-pilot --window-shards 1 4 --epochs 3 --report runs/profile/e1_pilot.json
-python scripts/profile_b2_experiment_memory.py --synthetic-groups 48 --fixture-dir data/e1-synthetic-48 --window-shards 1 4 --report runs/profile/e1_synthetic_48.json
-```
-
-See [P24](docs/plan/P24_b2_e1_streaming_loader.md) and the [measurements](docs/results/b2_streaming_memory.md).
-
-## Research dossier (2026-10-20)
-
-This is an evolving research project, **not** a completed dual-polarization, eight-class open-set system.
-
-- [P1 literature review and novelty audit](docs/plan/P1_literatur.md)
-- [P8 external dataset/source and license audit](docs/plan/P8_dis_veri.md)
-- [P9 roadmap and risks](docs/plan/P9_yol_haritasi.md)
-- [P16 post-literature-review correction and completion programme](docs/plan/P16_literatur_duzeltme_programi.md)
-- [Proposed open-set benchmark and identifiability protocol](docs/research/open_set_protocol.md)
-- [Primary/original source URLs and provenance](sources/ORIGINALS.md)
-- [Original user-supplied project brief — text transcription](sources/original_proposal.md)
-- [Literature bibliography (BibTeX)](references/references.bib)
-- [Detailed current Stage A status](docs/plan/DURUM.md) and [pilot-only results](docs/results/pilot_A.md)
-
-**Current research boundary:** Stage A is single-polarization/five known classes, with a small pilot. B2-base/1 and B2-feat/1 connect the eight frozen known classes, the fifth channel and the two-output model. B2-features/1 and B2-observed-dev/1 provide a separate observed-receiver development stage with distinct artifacts and training conventions. The separate canonical B2-test/1 and B2-match/1 artifacts supply test-only unknown/CID and level-matched evaluations. E1 streams these stages; P25 adds a bounded A8 harness. Full-scale training and production LOKO remain unexecuted. B1-dev/1 implements known-class holdout rejection with MSP and energy; B1-dev/2 adds unknown families, Mahalanobis and ranking metrics. D1-dev/1 adds calibrated dual-polarization observations and a controlled two-class leakage task. E1-dev/1 adds phase noise and two modulated-interference mechanisms in a separate three-class task. Full-data results and the unified eight-class dual-polarization open-set benchmark remain outstanding. The pilots are not evidence of field/deployment performance. The code repository does not currently specify a top-level license; third-party PDF/data licenses and redistribution conditions must be handled separately. Official primary-source links are preserved instead of automatically mirroring restricted documents.
-
-### A8 LOKO engineering harness (2026-10-22)
-
-See [P25](docs/plan/P25_b2_e2_loko_harness.md) and [verification](docs/results/b2_loko_harness.md). `python -m geoml.b2_loko --config configs/b2_feat.json --data data/b2-feat-pilot --out runs/b2-loko-plan` creates a deterministic plan only. One CPU smoke fold is available with `configs/b2_loko_smoke.json` and `--smoke-holdout cw`, on an existing artifact with <=2 groups/role. Production scheduling and seed aggregation remain open; no production authorization or benchmark completion is implied.
-
-### E3a EDSC binary baseline
-
-`python -m geoml.b2_edsc --data data/b2-readiness-known --unknown-data data/b2-readiness-test --matched-data data/b2-readiness-matched --out runs/b2-e3a-edsc-smoke --smoke --with-cfar`
-streams existing verified P20 residuals, freezes a clean-only val-calib alarm
-threshold, and reports binary detection and unknown-positive rankings. Paths
-refer to local artifacts outside Git. EDSC provides no class predictions or
-OSCR; two-group smoke evidence cannot establish population Pfa or recognition
-performance. See [P26](docs/plan/P26_b2_e3a_edsc_baseline.md) and
-[bounded verification](docs/results/b2_edsc_baseline.md). The merged XGBoost
-baseline is described below; researcher and production gates remain pending.
-
-### E3b expert-feature/XGBoost CPU baseline
-
-With Python >=3.12, install the pinned CPU dependency with
-`pip install -e '.[dev,ml,xgb]'` (xgboost-cpu 3.4.1 requires Python >=3.12).
-`python -m geoml.b2_xgb --config configs/b2_xgb_smoke.json --data data/b2-readiness-known --unknown-data data/b2-readiness-test --matched-data data/b2-readiness-matched --out runs/b2-e3b-xgb-smoke --smoke --with-baselines`
-streams 26 fixed observation-only features from existing P20 artifacts, fits
-train only, selects one of two preregistered boosting prefixes on val-select,
-then freezes clean-only val-calib alarms before test scoring. The binary
-`1-P(clean)` score shares the EDSC/CFAR comparison contract; multiclass and
-MSP/OSCR reports are separate. See [P27](docs/plan/P27_b2_e3b_xgboost_baseline.md)
-and [bounded results](docs/results/b2_xgb_baseline.md). Tiny pilot values do
-not establish recognition quality or population Pfa; no production run is implied.
-
-### E4 dual-pol A5 operator-plan corruption
-
-`python -m geoml.b2_a5 --config configs/b2_a5_smoke.json --data data/b2-feat-pilot --runs runs/b2-feat-pilot --out runs/b2-a5-smoke`
-asks how frozen recognizers behave when the *operator plan* is wrong (shifted, stale, with a dropped or phantom carrier,
-or authorizing an observed intruder) while the *received signal* stays physically identical. The scene is replayed with
-the source artifact's own request and verified calibration (the `none` replay must satisfy P28's exact/toleranced parity checks), the
-co and/or cross belief is corrupted, both masks are rebuilt, and the residual is recomputed by the frozen `obs-cancel/1` from the
-co-pol IQ and the corrupted co belief (`RECEIVER_CONSISTENT`); the stored-residual `MASK_ONLY` run is only the weaker control.
-Checkpoints, scorers and thresholds come from a `geoml.b2_experiment` run directory and are never trained, fitted or
-recalibrated here; counterfactual outputs are descriptive agreement with the original label, not accuracy. Execution is capped
-(2 groups, 2 classes, one perturbation configuration, 16 replays, 24 cancellations) and CPU only. See
-[P28](docs/plan/P28_b2_e4_dual_pol_a5.md), [context](docs/engineering/B2_E4_CONTEXT.md) and the
-[bounded pilot](docs/results/b2_a5_dual_pol_pilot.md). PR #15's exact head
-`a595bcfae465e30dd8263cbeb57fae29b7dc9102` passed
-[run 39947778403](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39947778403),
-[job 120394555595](https://github.com/mythril33/Payload-Aware-Open-Set-Interference-Recognition-for-GEO-Transponders/actions/runs/39947778403/job/120394555595):
-95 E4 tests plus 1087 other repository tests, with no skips or failures. These are historical merge-head CI results,
-separate from post-merge recovery checks.
-
-The earlier merge contained references to absent pilot/review documents; those references alone did not establish measured evidence.
-Recovery follows the predeclared [nine-invocation plan](docs/engineering/B2_E4_POSTMERGE_EXECUTION.json), a subset of the
-25-invocation inventory; all 16 unselected invocations remain pending. The matrix driver enters the bounded CLI even for
-completed outputs so current provenance is checked before reuse, retains per-attempt logs and propagates subprocess failures.
-A successful selected subset returns exit 3 (`PARTIAL`); only all 25 verified invocations can report a complete matrix.
-The measured recovery subset completed9/25,16pending, with32exact replay parity checks;
-local regression was1220passed+1environment RSS skip, followed by7final affected summary tests.
-The tiny CPU stand-in checkpoints and paired counterfactual metrics establish execution only; no result here establishes
-robustness or recognition performance. K18/K17d/OBS-CANCEL/2 remain pending and `benchmark_complete=false`.
-
-That nine-invocation record is preserved as [partial recovery record](docs/results/b2_a5_postmerge_partial_pilot.md) (with its
-[review](docs/research/b2_e4_postmerge_review.md)). A follow-up reconciliation unified the two parallel hardenings (one checksummed
-`B2-A5-scene-state/2` format, the matrix wrapper over `scripts/b2_a5_matrix.py`) and re-ran the complete 25-invocation inventory on the
-unified code: `COMPLETE 25/25`, 90 exact replay-parity checks, full local suite 1228 passed; see the
-[bounded pilot](docs/results/b2_a5_dual_pol_pilot.md). Same limits: stand-in checkpoints, two groups per stage, execution evidence only.
+Çift kutuplu B2 deneylerinin tasarımı ve Windows/WSL çalışma ortamı
+[ayrıntılı araştırma kılavuzunda](RESEARCH_GUIDE.md) yer alıyor.
