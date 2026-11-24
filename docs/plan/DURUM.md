@@ -1,5 +1,27 @@
 # Proje durumu ve eksik kaydı
 
+## CNN projesi ve kısa makale teslimi — 2026-11-24
+
+- Kullanıcının istediği sade teslim tek bir CPU deneyini anlatıyor. PyTorch
+  SmallResNet, tek kutuplu spektrogram ve taşıyıcı planıyla dört bilinen sınıfı
+  öğreniyor. [Word](../../paper/geo_cnn_paper.docx) ve [PDF](../../paper/geo_cnn_paper.pdf)
+  aynı makale kaynağından üretildi. Makale %70,25 bilinen doğruluğunu ve düşük
+  bilinmeyen reddini iki tablo ve iki grafikle açıklıyor.
+- [Ana sayfa](../../README.md) deney komutunu, sonuçları ve kod bağlantılarını
+  tek yerde gösteriyor. Önceki ayrıntılı ana sayfa
+  [araştırma kılavuzunda](../../RESEARCH_GUIDE.md) bulunuyor. CPU çalıştırıcısı
+  Windows komutlarıyla belgeli. Uçtan uca doğrulama Linux üzerinde yapıldı.
+- 24 Kasım Linux CPU tekrarı, `a95bdc15a3b2610dfbf0a0c968154a6cdceaa7c5`
+  kaynak revizyonunda 596 A1 ve 120 U1 gözlemi üretti, üç ağı 10 epoch eğitti
+  ve dört grafik dosyası oluşturdu. Beş alt süreç 523,16 saniyede tamamlandı.
+  Rol sayıları, 9 birleşik ve 36 aile bazlı skor satırı, arşivle tam eşleşti.
+  Veri kimlikleri yeni üretimde farklıdır. Bu tekrar aynı senaryo tohumlarını
+  kullanır. Ham veriler ve ağırlıklar depo dışında tutuldu.
+- CPU arşiv denetimi, önceki iki makalenin kanıt denetimi ve 157 süreç/CI
+  testi geçti. Yeni PDF dört sayfa. Word dosyasında iki düzenlenebilir tablo
+  ve iki gömülü grafik doğrulandı. Bu teslim tamamlanan tek kutuplu CPU
+  deneyini kapsıyor. Daha geniş B2 deneyi proje kılavuzunda ayrı yer alıyor.
+
 ## Tam B2 değerlendirme ve raporlama uygulaması — 2026-11-19
 
 - Kullanıcının 17 Kasım açık yanıtıyla birincil skor **Mahalanobis** olarak
