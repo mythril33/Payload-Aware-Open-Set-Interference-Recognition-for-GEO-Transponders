@@ -861,6 +861,22 @@
       },
       "rationale": "title: # Plan maskesi kısa yolu testi (A5) — pilot"
     },
+    "docs/results/FIOT_CNN_2026-11-24.md": {
+      "class": "DERIVED_DOCUMENTATION",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "write-up of the measured FIOT GNSS laboratory CNN experiment"
+    },
+    "docs/results/fiot_cnn_2026-11-24.json": {
+      "class": "DEVELOPMENT_PILOT",
+      "heldout_raw_matches": {
+        "3200000-3200499": 0,
+        "3300000-3300149": 0
+      },
+      "rationale": "aggregate FIOT GNSS laboratory CNN results, separate from the GEO benchmark"
+    },
     "docs/results/public_data_baselines.json": {
       "class": "VERIFIED_HISTORICAL",
       "heldout_raw_matches": {

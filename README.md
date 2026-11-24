@@ -10,6 +10,12 @@ skorunun eğitimde bulunmayan sinyal türlerini ayırt etme başarısını ölç
 [Makale (Word)](paper/geo_cnn_paper.docx) ·
 [Makale (PDF)](paper/geo_cnn_paper.pdf) · [Markdown kaynak](paper/geo_cnn_paper.md)
 
+Fraunhofer FIOT ölçümleriyle ikinci bir deney tamamlandı. CNN, hazır RGB
+spektrogramları üzerinde yeniden eğitildi ve 227 bilinen GNSS test kaydında
+**%91,63 doğruluk** elde etti. Energy skoru, eğitim dışında bırakılan 16 Chirp
+kaydının her eğitimde 5–8'ini reddetti. Bu deneyin eğitim ve test etiketleri
+Fraunhofer'a ait. [FIOT sonuçları ve grafik](docs/results/FIOT_CNN_2026-11-24.md)
+
 ## Deney ne gösterdi?
 
 4 Kasım 2026'da tamamlanan CPU deneyinde **716 simülasyon gözlemi** üretildi.

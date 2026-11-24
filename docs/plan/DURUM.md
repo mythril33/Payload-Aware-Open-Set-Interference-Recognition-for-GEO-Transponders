@@ -1,5 +1,25 @@
 # Proje durumu ve eksik kaydı
 
+## Fraunhofer FIOT ile CNN deneyi — 2026-11-24
+
+- Gerçek GNSS laboratuvar verisindeki 1.121 RGB spektrogram, yayımlanan
+  ayrımdan ana kayıt başına bir kırpım seçilerek çıkarıldı. Arşiv ve ayrım
+  dosyalarının SHA-256 değerleri doğrulandı. Kod ve deney planı sonuçlardan
+  önce `161835c` commit'inde kaydedildi. [FIOT protokolü](../../research/public_data/FIOT_CNN_PROTOCOL.md)
+- Küçük ResNet CPU'da üç kez eğitildi. Sekiz bilinen etikette 227 test kaydının
+  208'i her eğitimde doğru (%91,63). Makro F1 ortalama 0,784. Energy'nin
+  bilinmeyen-pozitif AUROC'u 0,8911. Sabit kalibrasyon eşiklerinde 16 Chirp
+  kaydından 6/5/8'i reddedildi. Mahalanobis 0/16, 0/16, 0/16. Sonuçlar
+  [rapor ve grafikte](../results/FIOT_CNN_2026-11-24.md) paydalarıyla verildi.
+- FIOT ölçüm bölümü ve grafiği [Word](../../paper/geo_cnn_paper.docx) ve
+  [PDF](../../paper/geo_cnn_paper.pdf) makalesine eklendi. Bu deney GNSS
+  laboratuvar gözlemlerinde baştan eğitilen CNN'i değerlendirir. Akış ham IQ,
+  taşıyıcı planı veya ölçülmüş GEO gözlemi kullanmaz.
+- Kamusal veri, kanıt envanteri ve CI politikası testlerinde 230 test geçti.
+  Kaynak hash'leri, 30 epoch kaydı, dokuz ROC eğrisinin AUROC hesabı ve
+  ortalamalar yeniden doğrulandı. Word'de üç tablo ve üç gömülü grafik,
+  PDF'de beş sayfa ve FIOT sonuç sayfasının yerleşimi kontrol edildi.
+
 ## CNN projesi ve kısa makale teslimi — 2026-11-24
 
 - Kullanıcının istediği sade teslim tek bir CPU deneyini anlatıyor. PyTorch

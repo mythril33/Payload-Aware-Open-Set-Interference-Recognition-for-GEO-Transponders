@@ -1,8 +1,18 @@
-# Public interference data pilot
+# Public interference data
 
-This research directory is independent of frozen B2/1. It imports no B2 data,
-generates no RF, trains no neural model and uses no GPU. Only generic NumPy metric
-arithmetic is reused from `geoml`. Read the current [P8 audit](../../docs/plan/P8_dis_veri.md).
+The [FIOT CNN experiment](FIOT_CNN_PROTOCOL.md) uses the published Fraunhofer
+spectrograms to train a CPU SmallResNet. See the
+[CNN results and figures](../../docs/results/FIOT_CNN_2026-11-24.md).
+
+To redraw the aggregate figure from the archived numbers:
+
+```bash
+python -m research.public_data.fiot_cnn_figures \
+  --summary docs/results/fiot_cnn_2026-11-24.json --out /path/to/figures
+```
+
+The baseline pilot documented below uses generic NumPy metric arithmetic and
+independent public-data readers. Read the [P8 audit](../../docs/plan/P8_dis_veri.md).
 
 `protocol.json` is fixed **before the first test metrics**. Three scores are
 reported without choosing a winner or changing direction from test performance:
